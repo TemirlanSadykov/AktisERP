@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Edit Operation: {{ operation.name }}</h2>
+  <h2>{% trans "Edit Operation: %(name)s" %}{{ operation.name }}</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Update</button>
+    <button type="submit">{% trans "Update" %}</button>
   </form>
-  <a href="{% url 'operation_detail' operation.pk %}">Cancel</a>
+  <a href="{% url 'operation_detail' operation.pk %}">{% trans "Cancel" %}</a>
 {% endblock %}

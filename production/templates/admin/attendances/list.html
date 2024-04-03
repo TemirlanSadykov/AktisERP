@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Attendance List</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Show Attendances</button>
-    </form>
+  <h1>{% trans "Attendance List" %}</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{% trans "Show Attendances" %}</button>
+  </form>
 
-    {% if attendances %}
-        <h2>Attendance Records:</h2>
-        <ul>
-        {% for attendance in attendances %}
-            <li>{{ attendance.employee }} - {{ attendance.timestamp }}</li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No attendance records found.</p>
-    {% endif %}
+  {% if attendances %}
+    <h2>{% trans "Attendance Records:" %}</h2>
+    <ul>
+      {% for attendance in attendances %}
+        <li>{{ attendance.employee }} - {{ attendance.timestamp }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>{% trans "No attendance records found." %}</p>
+  {% endif %}
 {% endblock %}

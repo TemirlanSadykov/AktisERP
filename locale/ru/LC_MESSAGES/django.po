@@ -1,0 +1,762 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-04-04 00:34+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+#: .\production\templates\admin\attendances\list.html:4
+msgid "Attendance List"
+msgstr ""
+
+#: .\production\templates\admin\attendances\list.html:8
+msgid "Show Attendances"
+msgstr ""
+
+#: .\production\templates\admin\attendances\list.html:12
+msgid "Attendance Records:"
+msgstr ""
+
+#: .\production\templates\admin\attendances\list.html:19
+msgid "No attendance records found."
+msgstr ""
+
+#: .\production\templates\admin\employees\create.html:4
+msgid "Create New User"
+msgstr ""
+
+#: .\production\templates\admin\employees\create.html:8
+#: .\production\templates\admin\orders\create.html:8
+#: .\production\templates\technologist\assortments\create.html:8
+#: .\production\templates\technologist\clients\create.html:8
+#: .\production\templates\technologist\models\create.html:8
+#: .\production\templates\technologist\operations\create.html:8
+#: .\production\templates\technologist\passports\create.html:8
+msgid "Create"
+msgstr ""
+
+#: .\production\templates\admin\employees\delete.html:6
+#, python-format
+msgid "Are you sure you want to delete %%(full_name)s?"
+msgstr ""
+
+#: .\production\templates\admin\employees\delete.html:7
+msgid "Confirm"
+msgstr ""
+
+#: .\production\templates\admin\employees\delete.html:8
+#: .\production\templates\admin\orders\delete.html:12
+#: .\production\templates\admin\orders\edit.html:10
+#: .\production\templates\technologist\assortments\delete.html:12
+#: .\production\templates\technologist\assortments\edit.html:10
+#: .\production\templates\technologist\clients\delete.html:12
+#: .\production\templates\technologist\clients\edit.html:10
+#: .\production\templates\technologist\models\delete.html:12
+#: .\production\templates\technologist\models\edit.html:10
+#: .\production\templates\technologist\operations\delete.html:9
+#: .\production\templates\technologist\operations\edit.html:10
+#: .\production\templates\technologist\passports\delete.html:10
+msgid "Cancel"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:4
+#, python-format
+msgid "Employee Details: %%(full_name)s"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:5
+msgid "Employee ID:"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:6
+#: .\production\templates\technologist\operations\detail.html:7
+msgid "Type:"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:7
+#: .\production\templates\admin\orders\detail.html:18
+msgid "Status:"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:8
+msgid "Station:"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:10
+#: .\production\templates\admin\orders\detail.html:24
+#: .\production\templates\technologist\assortments\detail.html:5
+#: .\production\templates\technologist\clients\detail.html:6
+#: .\production\templates\technologist\models\detail.html:19
+#: .\production\templates\technologist\operations\detail.html:13
+#: .\production\templates\technologist\passports\create_size_quantity.html:18
+#: .\production\templates\technologist\passports\detail.html:9
+msgid "Edit"
+msgstr ""
+
+#: .\production\templates\admin\employees\detail.html:11
+#: .\production\templates\admin\orders\detail.html:25
+#: .\production\templates\technologist\assortments\detail.html:6
+#: .\production\templates\technologist\clients\detail.html:7
+#: .\production\templates\technologist\models\detail.html:20
+#: .\production\templates\technologist\operations\detail.html:14
+#: .\production\templates\technologist\passports\create_size_quantity.html:19
+#: .\production\templates\technologist\passports\detail.html:10
+msgid "Delete"
+msgstr ""
+
+#: .\production\templates\admin\employees\edit.html:4
+msgid "Edit Employee Details"
+msgstr ""
+
+#: .\production\templates\admin\employees\edit.html:8
+#: .\production\templates\admin\orders\edit.html:8
+#: .\production\templates\technologist\assortments\edit.html:8
+#: .\production\templates\technologist\clients\edit.html:8
+#: .\production\templates\technologist\models\edit.html:8
+#: .\production\templates\technologist\operations\edit.html:8
+#: .\production\templates\technologist\passports\edit.html:8
+msgid "Update"
+msgstr ""
+
+#: .\production\templates\admin\employees\list.html:4
+msgid "Create Employee"
+msgstr ""
+
+#: .\production\templates\admin\orders\create.html:4
+#: .\production\templates\admin\orders\list.html:4
+msgid "Create New Order"
+msgstr ""
+
+#: .\production\templates\admin\orders\create.html:10
+#: .\production\templates\admin\orders\delete.html:13
+#: .\production\templates\admin\orders\detail.html:26
+#: .\production\templates\admin\orders\edit.html:11
+#: .\production\templates\technologist\assortments\create.html:10
+#: .\production\templates\technologist\assortments\delete.html:13
+#: .\production\templates\technologist\assortments\detail.html:7
+#: .\production\templates\technologist\assortments\edit.html:11
+#: .\production\templates\technologist\clients\create.html:10
+#: .\production\templates\technologist\clients\delete.html:13
+#: .\production\templates\technologist\clients\detail.html:8
+#: .\production\templates\technologist\clients\edit.html:11
+#: .\production\templates\technologist\models\create.html:10
+#: .\production\templates\technologist\models\delete.html:13
+#: .\production\templates\technologist\models\detail.html:21
+#: .\production\templates\technologist\models\edit.html:11
+#: .\production\templates\technologist\operations\create.html:10
+#: .\production\templates\technologist\operations\delete.html:10
+#: .\production\templates\technologist\operations\detail.html:15
+msgid "Back"
+msgstr ""
+
+#: .\production\templates\admin\orders\delete.html:4
+#: .\production\templates\admin\orders\delete.html:9
+#: .\production\templates\technologist\assortments\delete.html:4
+#: .\production\templates\technologist\assortments\delete.html:9
+#: .\production\templates\technologist\clients\delete.html:4
+#: .\production\templates\technologist\clients\delete.html:9
+#: .\production\templates\technologist\models\delete.html:4
+#: .\production\templates\technologist\models\delete.html:9
+#: .\production\templates\technologist\operations\delete.html:7
+#: .\production\templates\technologist\passports\delete.html:9
+msgid "Confirm Delete"
+msgstr ""
+
+#: .\production\templates\admin\orders\delete.html:5
+#, python-format
+msgid "Are you sure you want to delete the order '%%(order_number)s'?"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:5
+#, python-format
+msgid "Order Details: %%(order_number)s"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:13
+msgid "Name:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:14
+#: .\production\templates\admin\passports\detail.html:8
+#: .\production\templates\technologist\passports\assign_operations.html:8
+msgid "Client:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:15
+#: .\production\templates\admin\passports\detail.html:7
+#: .\production\templates\admin\passports\list.html:8
+#: .\production\templates\technologist\passports\assign_operations.html:7
+msgid "Model:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:16
+#: .\production\templates\admin\passports\detail.html:9
+#: .\production\templates\technologist\passports\assign_operations.html:9
+msgid "Assortment:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:17
+#: .\production\templates\admin\passports\detail.html:10
+#: .\production\templates\technologist\passports\assign_operations.html:10
+msgid "Roll:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:19
+msgid "Quantity:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:20
+msgid "Completed Quantity:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:21
+#: .\production\templates\technologist\operations\detail.html:5
+msgid "Payment:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:22
+msgid "Term:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:29
+msgid "Associated Passports"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:34
+msgid "Passport ID:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:34
+msgid "Created on:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:34
+msgid "Completed:"
+msgstr ""
+
+#: .\production\templates\admin\orders\detail.html:39
+msgid "No associated passports."
+msgstr ""
+
+#: .\production\templates\admin\orders\edit.html:4
+#, python-format
+msgid "Edit Order: %%(order_number)s"
+msgstr ""
+
+#: .\production\templates\admin\passports\detail.html:5
+msgid "Operations Assigned for Passport"
+msgstr ""
+
+#: .\production\templates\admin\passports\detail.html:11
+#: .\production\templates\technologist\passports\assign_operations.html:11
+msgid "Color:"
+msgstr ""
+
+#: .\production\templates\admin\passports\detail.html:12
+#: .\production\templates\technologist\passports\assign_operations.html:12
+msgid "Fabrics:"
+msgstr ""
+
+#: .\production\templates\admin\passports\detail.html:13
+#: .\production\templates\technologist\passports\assign_operations.html:13
+msgid "Date:"
+msgstr ""
+
+#: .\production\templates\admin\passports\detail.html:19
+#: .\production\templates\technologist\passports\assign_operations.html:22
+msgid "Operation \\ Size"
+msgstr ""
+
+#: .\production\templates\admin\passports\detail.html:24
+#: .\production\templates\technologist\passports\assign_operations.html:26
+msgid "Qty:"
+msgstr ""
+
+#: .\production\templates\admin\passports\list.html:4
+#: .\production\templates\technologist\passports\list.html:4
+msgid "Create Passport"
+msgstr ""
+
+#: .\production\templates\admin\passports\list.html:8
+#: .\production\templates\technologist\passports\list.html:8
+msgid "Passport for"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:4
+msgid "Work Details for"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:7
+#: .\production\templates\admin\salaries\list.html:7
+msgid "Filter"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:12
+msgid "Operation (Size)"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:13
+#: .\production\templates\employee\works\done_list.html:24
+msgid "Quantity"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:14
+msgid "Payment per Unit"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:15
+msgid "Time Spent (seconds)"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:16
+msgid "Salary for Work"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:24
+#: .\production\templates\admin\salaries\detail.html:28
+#: .\production\templates\admin\salaries\list.html:13
+msgid "Som"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:28
+msgid "Total Salary:"
+msgstr ""
+
+#: .\production\templates\admin\salaries\detail.html:29
+msgid "Back to Salaries"
+msgstr ""
+
+#: .\production\templates\admin\salaries\list.html:4
+#: .\production\templates\admin_page.html:10
+msgid "Salaries"
+msgstr ""
+
+#: .\production\templates\admin\salaries\list.html:12
+msgid "Employee"
+msgstr ""
+
+#: .\production\templates\admin\salaries\list.html:13
+msgid "Salary"
+msgstr ""
+
+#: .\production\templates\admin_page.html:4
+msgid "Admin Dashboard"
+msgstr ""
+
+#: .\production\templates\admin_page.html:5
+#: .\production\templates\employee_page.html:5
+#: .\production\templates\technologist_page.html:5
+msgid "Welcome,"
+msgstr ""
+
+#: .\production\templates\admin_page.html:5
+msgid "You're logged in as an Admin."
+msgstr ""
+
+#: .\production\templates\admin_page.html:6
+msgid "Go to Technologist Page"
+msgstr ""
+
+#: .\production\templates\admin_page.html:7
+msgid "Go to Employee Page"
+msgstr ""
+
+#: .\production\templates\admin_page.html:8
+msgid ""
+"This is the admin page where you can manage users, view reports, and perform "
+"other administrative tasks."
+msgstr ""
+
+#: .\production\templates\admin_page.html:9
+msgid "Employees"
+msgstr ""
+
+#: .\production\templates\admin_page.html:11
+msgid "Attendances"
+msgstr ""
+
+#: .\production\templates\admin_page.html:12
+msgid "Orders"
+msgstr ""
+
+#: .\production\templates\base.html:12
+msgid "Home"
+msgstr ""
+
+#: .\production\templates\base.html:15
+msgid "Logout"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:6
+msgid "Completed Jobs"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:9
+msgid "Start Date"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:12
+msgid "End Date"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:15
+msgid "Search"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:22
+#: .\production\templates\employee\works\pending_list.html:8
+msgid "Operation"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:23
+#: .\production\templates\employee\works\pending_list.html:10
+msgid "Size"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:25
+msgid "Completed At"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:26
+msgid "Verified"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:27
+msgid "Completion Time"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:37
+msgid "Yes"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:37
+msgid "No"
+msgstr ""
+
+#: .\production\templates\employee\works\done_list.html:44
+msgid "No completed jobs found within the selected period."
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:4
+msgid "My Works"
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:11
+msgid "Assigned Quantity"
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:14
+#: .\production\templates\employee\works\pending_list.html:20
+msgid "Start"
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:15
+msgid "End"
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:15
+msgid "Done"
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:25
+msgid "Finish"
+msgstr ""
+
+#: .\production\templates\employee\works\pending_list.html:30
+msgid "No works found."
+msgstr ""
+
+#: .\production\templates\employee_page.html:4
+msgid "Employee Dashboard"
+msgstr ""
+
+#: .\production\templates\employee_page.html:5
+msgid "You're logged in as an Employee."
+msgstr ""
+
+#: .\production\templates\employee_page.html:6
+msgid ""
+"This is the employee page where you can see your tasks, update your "
+"progress, and view announcements."
+msgstr ""
+
+#: .\production\templates\employee_page.html:8
+msgid "You are accessing Employee page."
+msgstr ""
+
+#: .\production\templates\employee_page.html:13
+#: .\production\templates\technologist_page.html:13
+msgid "Clock Out"
+msgstr ""
+
+#: .\production\templates\employee_page.html:13
+#: .\production\templates\technologist_page.html:13
+msgid "Clock In"
+msgstr ""
+
+#: .\production\templates\employee_page.html:19
+msgid "Done Work"
+msgstr ""
+
+#: .\production\templates\employee_page.html:20
+msgid "Pending Work"
+msgstr ""
+
+#: .\production\templates\employee_page.html:23
+#: .\production\templates\technologist_page.html:26
+msgid "You need to be clocked in to access your tasks and updates."
+msgstr ""
+
+#: .\production\templates\registration\login.html:2
+#: .\production\templates\registration\login.html:7
+msgid "Login"
+msgstr ""
+
+#: .\production\templates\registration\login.html:11
+msgid "Your username and password didn't match. Please try again."
+msgstr ""
+
+#: .\production\templates\technologist\assortments\create.html:4
+#: .\production\templates\technologist\assortments\list.html:4
+msgid "Create New Assortment"
+msgstr ""
+
+#: .\production\templates\technologist\assortments\delete.html:5
+#, python-format
+msgid "Are you sure you want to delete the assortment '%%(name)s'?"
+msgstr ""
+
+#: .\production\templates\technologist\assortments\detail.html:4
+#, python-format
+msgid "Assortment Details: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\assortments\edit.html:4
+#, python-format
+msgid "Edit Assortment: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\clients\create.html:4
+#: .\production\templates\technologist\clients\list.html:4
+msgid "Create New Client"
+msgstr ""
+
+#: .\production\templates\technologist\clients\delete.html:5
+#, python-format
+msgid "Are you sure you want to delete the client '%%(name)s'?"
+msgstr ""
+
+#: .\production\templates\technologist\clients\detail.html:4
+#, python-format
+msgid "Client Details: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\clients\detail.html:5
+msgid "Contact Info:"
+msgstr ""
+
+#: .\production\templates\technologist\clients\edit.html:4
+#, python-format
+msgid "Edit Client: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\models\create.html:4
+#: .\production\templates\technologist\models\list.html:4
+msgid "Create New Model"
+msgstr ""
+
+#: .\production\templates\technologist\models\delete.html:5
+#, python-format
+msgid "Are you sure you want to delete the model '%%(name)s'?"
+msgstr ""
+
+#: .\production\templates\technologist\models\detail.html:4
+#, python-format
+msgid "Model Details: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\models\detail.html:6
+#: .\production\templates\technologist\passports\detail.html:12
+#: .\production\templates\technologist_page.html:19
+msgid "Operations"
+msgstr ""
+
+#: .\production\templates\technologist\models\detail.html:16
+msgid "No operations associated with this model."
+msgstr ""
+
+#: .\production\templates\technologist\models\edit.html:4
+#, python-format
+msgid "Edit Model: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\operations\create.html:4
+msgid "Add New Operation"
+msgstr ""
+
+#: .\production\templates\technologist\operations\delete.html:4
+#, python-format
+msgid "Are you sure you want to delete '%%(name)s'?"
+msgstr ""
+
+#: .\production\templates\technologist\operations\detail.html:4
+#, python-format
+msgid "Operation Details: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\operations\detail.html:6
+#: .\production\templates\technologist\operations\list.html:10
+msgid "Equipment:"
+msgstr ""
+
+#: .\production\templates\technologist\operations\detail.html:8
+msgid "Preferred Completion Time:"
+msgstr ""
+
+#: .\production\templates\technologist\operations\detail.html:10
+msgid "Average Completion Time:"
+msgstr ""
+
+#: .\production\templates\technologist\operations\detail.html:11
+msgid "Calculate Average"
+msgstr ""
+
+#: .\production\templates\technologist\operations\edit.html:4
+#, python-format
+msgid "Edit Operation: %%(name)s"
+msgstr ""
+
+#: .\production\templates\technologist\operations\list.html:4
+msgid "Create Operation"
+msgstr ""
+
+#: .\production\templates\technologist\operations\list.html:10
+msgid "Operation:"
+msgstr ""
+
+#: .\production\templates\technologist\operations\list.html:15
+msgid "No operations found."
+msgstr ""
+
+#: .\production\templates\technologist\passports\assign_operations.html:5
+msgid "Assign Operations for Passport"
+msgstr ""
+
+#: .\production\templates\technologist\passports\assign_operations.html:17
+#, python-format
+msgid ""
+"Enter employee ID and quantity in the format: '%%(format)s'. For multiple "
+"entries, separate them by a comma. For a single ID, the quantity is assumed "
+"to be the total."
+msgstr ""
+
+#: .\production\templates\technologist\passports\assign_operations.html:53
+msgid "ID (Quan.)"
+msgstr ""
+
+#: .\production\templates\technologist\passports\assign_operations.html:65
+#: .\production\templates\technologist\passports\detail.html:15
+msgid "Are you sure you want to mark this passport as completed?"
+msgstr ""
+
+#: .\production\templates\technologist\passports\assign_operations.html:65
+#: .\production\templates\technologist\passports\detail.html:16
+msgid "Complete"
+msgstr ""
+
+#: .\production\templates\technologist\passports\create.html:4
+msgid "Create New Passport"
+msgstr ""
+
+#: .\production\templates\technologist\passports\create_size_quantity.html:10
+msgid "Add"
+msgstr ""
+
+#: .\production\templates\technologist\passports\create_size_quantity.html:24
+msgid "Finish and Save"
+msgstr ""
+
+#: .\production\templates\technologist\passports\delete.html:7
+msgid "Are you sure you want to delete the passport for"
+msgstr ""
+
+#: .\production\templates\technologist\passports\detail.html:4
+msgid "Passport Details for"
+msgstr ""
+
+#: .\production\templates\technologist\passports\detail.html:5
+#: .\production\templates\technologist\passports\list.html:8
+msgid "Model"
+msgstr ""
+
+#: .\production\templates\technologist\passports\detail.html:6
+msgid "Assortment"
+msgstr ""
+
+#: .\production\templates\technologist\passports\detail.html:7
+msgid "Roll"
+msgstr ""
+
+#: .\production\templates\technologist\passports\detail.html:8
+msgid "Date"
+msgstr ""
+
+#: .\production\templates\technologist\passports\detail.html:11
+msgid "Size and Quantity"
+msgstr ""
+
+#: .\production\templates\technologist\passports\edit.html:4
+msgid "Edit Passport Details"
+msgstr ""
+
+#: .\production\templates\technologist_page.html:4
+msgid "Technologist Dashboard"
+msgstr ""
+
+#: .\production\templates\technologist_page.html:5
+msgid "You're logged in as a Technologist."
+msgstr ""
+
+#: .\production\templates\technologist_page.html:6
+msgid ""
+"This is the technologist page where you can access technical resources, "
+"manage projects, and collaborate with team members."
+msgstr ""
+
+#: .\production\templates\technologist_page.html:8
+msgid "You are accessing Technologist page."
+msgstr ""
+
+#: .\production\templates\technologist_page.html:18
+msgid "Passports"
+msgstr ""
+
+#: .\production\templates\technologist_page.html:20
+msgid "Rolls"
+msgstr ""
+
+#: .\production\templates\technologist_page.html:21
+msgid "Assortments"
+msgstr ""
+
+#: .\production\templates\technologist_page.html:22
+msgid "Models"
+msgstr ""
+
+#: .\production\templates\technologist_page.html:23
+msgid "Clients"
+msgstr ""

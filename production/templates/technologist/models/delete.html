@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Confirm Delete</h2>
-  <p>Are you sure you want to delete the model "{{ model.name }}"?</p>
+  <h2>{% trans "Confirm Delete" %}</h2>
+  <p>{% trans "Are you sure you want to delete the model '%(name)s'?" %}{{ model.name }}</p>
 
   <form method="post">
     {% csrf_token %}
-    <button type="submit">Confirm Delete</button>
+    <button type="submit">{% trans "Confirm Delete" %}</button>
   </form>
   
-  <a href="{% url 'model_detail' model.pk %}">Cancel</a> |
-  <a href="{% url 'model_list' %}">Back to Model List</a>
+  <a href="{% url 'model_detail' model.pk %}">{% trans "Cancel" %}</a> |
+  <a href="{% url 'model_list' %}">{% trans "Back" %}</a>
 {% endblock %}

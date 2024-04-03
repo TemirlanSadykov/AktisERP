@@ -1,29 +1,29 @@
 {% extends "base.html" %}
-{% load custom_filters %}
+{% load custom_filters %} 
 
 {% block content %}
-  <h2>Assign Operations for Passport</h2>
+  <h2>{% trans "Assign Operations for Passport" %}</h2>
   <p>
-    <strong>Model:</strong> {{ passport.order.model.name }},
-    <strong>Client:</strong> {{ passport.order.client.name }},
-    <strong>Assortment:</strong> {{ passport.order.assortment.name }},
-    <strong>Roll:</strong> {{ passport.order.roll.name }},
-    <strong>Color:</strong> {{ passport.order.roll.color }},
-    <strong>Fabrics:</strong> {{ passport.order.roll.fabrics }},
-    <strong>Date:</strong> {{ passport.date|date:"Y-m-d" }}
+    <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
+    <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
+    <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
+    <strong>{% trans "Roll:" %}</strong> {{ passport.order.roll.name }},
+    <strong>{% trans "Color:" %}</strong> {{ passport.order.roll.color }},
+    <strong>{% trans "Fabrics:" %}</strong> {{ passport.order.roll.fabrics }},
+    <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
   </p>
+
   <form method="post" id="operationAssignmentForm">
-    <p>Enter employee ID and quantity in the format: "ID (Quantity)". For multiple entries, separate them by a comma. For a single ID, the quantity is assumed to be the total.</p>
+    <p>{% trans "Enter employee ID and quantity in the format: '%(format)s'. For multiple entries, separate them by a comma. For a single ID, the quantity is assumed to be the total." %}{{ format="ID (Quantity)" | safe }}</p>
     {% csrf_token %}
     <table>
       <thead>
         <tr>
-          <th>Operation \ Size</th>
+          <th>{% trans "Operation \ Size" %}</th>
           {% for sq in size_quantities %}
             <th>
-              {{ sq.size }}
-              <br>
-              (Qty: {{ sq.quantity }})
+              {{ sq.size }}<br>
+              ({% trans "Qty:" %} {{ sq.quantity }})
             </th>
           {% endfor %}
         </tr>
@@ -35,27 +35,22 @@
             {% for sq in size_quantities %}
               <td>
                 {% get_work work_by_op_and_size operation.id sq.id as works %}
-                  {% if works %}
-                    {% for work in works %}
-                      {% if work.end_time %}
-                        {% if work.is_success %}
-                          <span class="{{ work.id }} editable" style="color: green;" data-work="{{ work.id }}">
-                        {% else %}
-                          <span class="{{ work.id }} editable" style="color: red;" data-work="{{ work.id }}">
-                        {% endif %}
-                        {{ work.employee.employee_id }} ({{ work.quantity }})
-                        {% if work.end_time %}
-                          <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
-                        {% endif %}
+                {% if works %}
+                  {% for work in works %}
+                    {% if work.end_time %}
+                      {% if work.is_success %}
+                        <span class="{{ work.id }} editable" style="color: green;" data-work="{{ work.id }}">
                       {% else %}
-                        <span class="{{ work.id }} editable" data-work="{{ work.id }}">
-                          {{ work.employee.employee_id }} ({{ work.quantity }})
-                        </span>
+                        <span class="{{ work.id }} editable" style="color: red;" data-work="{{ work.id }}">
+                      {% endif %}
+                      {{ work.employee.employee_id }} ({{ work.quantity }})
+                      {% if work.end_time %}
+                        <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
                       {% endif %}
                     </span>
-                    {% endfor %}
-                  {% else %}
-                  <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="ID (Quan.)" style="width: 80px;">
+                  {% endfor %}
+                {% else %}
+                  <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans "ID (Quan.)" %}" style="width: 80px;">
                 {% endif %}
               </td>
             {% endfor %}
@@ -64,9 +59,10 @@
       </tbody>
     </table>
   </form>
+
   <form method="post" action="{% url 'complete_passport' passport.id %}">
     {% csrf_token %}
-    <button type="submit" onclick="return confirm('Are you sure you want to mark this passport as completed?');">Complete</button>
+    <button type="submit" onclick="return confirm('{% trans "Are you sure you want to mark this passport as completed?" %}');">{% trans "Complete" %}</button>
   </form>
 
   <script>
@@ -93,7 +89,7 @@
         input.setAttribute('data-work', span.getAttribute('data-work'));
         span.parentNode.replaceChild(input, span);
         input.focus();
-    
+  
         const revertToSpan = () => {
           const newSpan = document.createElement('span');
           newSpan.innerText = input.value || originalText; // Revert to original text if input is empty
@@ -101,10 +97,10 @@
           newSpan.setAttribute('data-work', span.getAttribute('data-work'));
           input.parentNode.replaceChild(newSpan, input);
         };
-    
+  
         // Reverting to span on blur
         input.addEventListener('blur', revertToSpan);
-    
+  
         // Reverting to span on Enter and updating work
         input.addEventListener('keypress', function(e) {
           if (e.key === 'Enter') {
@@ -117,52 +113,52 @@
         });
       }
     });
-    
+  
     function updateWork(workId, newValue, inputElement) {
       const xhr = new XMLHttpRequest();
       const url = `/production/technologist/passports/update_work/`;
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-      
+  
       const csrftoken = getCookie('csrftoken');
       xhr.setRequestHeader('X-CSRFToken', csrftoken);
-      
+  
       const [newEmployeeId, quantity] = newValue.split('(');
       const data = { work_id: workId, new_employee_id: newEmployeeId.trim(), quantity: parseInt(quantity.trim(' )')) };
       xhr.send(JSON.stringify(data));
     }
+  
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('.success-checkbox').forEach(checkbox => {
-          checkbox.addEventListener('change', function() {
-              const workId = this.getAttribute('data-work');
-              const isChecked = this.checked;
+        checkbox.addEventListener('change', function() {
+          const workId = this.getAttribute('data-work');
+          const isChecked = this.checked;
   
-              const xhr = new XMLHttpRequest();
-              const url = `/production/technologist/passports/update_work_success/`; // Ensure you have this URL defined in your Django URLconf
-              xhr.open('POST', url, true);
-              xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+          const xhr = new XMLHttpRequest();
+          const url = `/production/technologist/passports/update_work_success/`; 
+          xhr.open('POST', url, true);
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
   
-              // Include the CSRF token from the cookie in the request header
-              const csrftoken = getCookie('csrftoken');
-              xhr.setRequestHeader('X-CSRFToken', csrftoken);
+          const csrftoken = getCookie('csrftoken');
+          xhr.setRequestHeader('X-CSRFToken', csrftoken);
   
-              xhr.onload = function() {
-                  if (xhr.status === 200) {
-                      const response = JSON.parse(xhr.responseText);
-                      if (response.status === 'success') {
-                          // Optionally, handle UI update for success
-                          alert('Work status updated successfully!');
-                      }
-                  } else {
-                      // Handle error
-                      alert('An error occurred while updating the work status.');
-                  }
-              };
+          xhr.onload = function() {
+            if (xhr.status === 200) {
+              const response = JSON.parse(xhr.responseText);
+              if (response.status === 'success') {
+                alert([% trans "Work status updated successfully!" %]);
+              } else {
+                alert([% trans "An error occurred while updating the work status." %]);
+              }
+            } else {
+              alert([% trans "An error occurred while updating the work status." %]);
+            }
+          };
   
-              xhr.send(`work_id=${workId}&is_success=${isChecked}`);
-          });
+          xhr.send(`work_id=<span class="math-inline">\{workId\}&is\_success\=</span>{isChecked}`);
+        });
       });
-  });
+    });
     // Function to get a cookie by name
     function getCookie(name) {
         let cookieValue = null;

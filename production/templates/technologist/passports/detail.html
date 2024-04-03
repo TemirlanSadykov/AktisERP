@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Passport Details for {{ passport.order.client.name }}</h2>
-  <!-- Display all passport details here -->
-  <p>Model: {{ passport.order.model.name }}</p>
-  <p>Assortment: {{ passport.order.assortment.name }}</p>
-  <p>Roll: {{ passport.order.roll.name }}</p>
-  <p>Date: {{ passport.date }}</p>
-  <a href="{% url 'passport_edit' passport.pk %}">Edit</a>
-  <a href="{% url 'passport_delete' passport.pk %}">Delete</a>
-  <a href="{% url 'create_size_quantity' passport.pk %}">Size and Qunatity</a>
-  <a href="{% url 'assign_operations' passport.pk %}">Operations</a>
+  <h2>{% trans "Passport Details for" %} {{ passport.order.client.name }}</h2>
+  <p>{% trans "Model" %}: {{ passport.order.model.name }}</p>
+  <p>{% trans "Assortment" %}: {{ passport.order.assortment.name }}</p>
+  <p>{% trans "Roll" %}: {{ passport.order.roll.name }}</p>
+  <p>{% trans "Date" %}: {{ passport.date }}</p>
+  <a href="{% url 'passport_edit' passport.pk %}">{% trans "Edit" %}</a>
+  <a href="{% url 'passport_delete' passport.pk %}">{% trans "Delete" %}</a>
+  <a href="{% url 'create_size_quantity' passport.pk %}">{% trans "Size and Quantity" %}</a>
+  <a href="{% url 'assign_operations' passport.pk %}">{% trans "Operations" %}</a>
   <form method="post" action="{% url 'complete_passport' passport.id %}">
     {% csrf_token %}
-    <button type="submit" onclick="return confirm('Are you sure you want to mark this passport as completed?');">Complete</button>
+    <button type="submit" onclick="return confirm('{% trans "Are you sure you want to mark this passport as completed?" %}');">
+      {% trans "Complete" %}
+    </button>
   </form>
 {% endblock %}

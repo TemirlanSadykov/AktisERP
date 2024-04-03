@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Work Details for {{ employee.user.get_full_name }}</h2>
+<h2>{% trans "Work Details for" %} {{ employee.user.get_full_name }}</h2>
 <form method="get">
-    {{ form.as_p }}
-    <button type="submit">Filter</button>
+  {{ form.as_p }}
+  <button type="submit">{% trans "Filter" %}</button>
 </form>
 
 <table>
   <tr>
-    <th>Operation (Size)</th>
-    <th>Quantity</th>
-    <th>Payment per Unit</th>
-    <th>Time Spent (seconds)</th>
-    <th>Salary for Work</th>
+    <th>{% trans "Operation (Size)" %}</th>
+    <th>{% trans "Quantity" %}</th>
+    <th>{% trans "Payment per Unit" %}</th>
+    <th>{% trans "Time Spent (seconds)" %}</th>
+    <th>{% trans "Salary for Work" %}</th>
   </tr>
   {% for work in works %}
   <tr>
@@ -21,10 +21,10 @@
     <td>{{ work.quantity }}</td>
     <td>{{ work.operation.payment|floatformat:2 }}</td>
     <td>{{ work.time_spent_seconds }}</td>
-    <td>{{ work.work_salary|floatformat:2 }} сом</td>
+    <td>{{ work.work_salary|floatformat:2 }} {% trans "Som" %}</td>
   </tr>
   {% endfor %}
 </table>
-<h3>Total Salary: {{ total_salary|floatformat:2 }} сом</h3>
-<a href="{% url 'salary_list' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">Back to Salaries</a>
+<h3>{% trans "Total Salary:" %} {{ total_salary|floatformat:2 }} {% trans "Som" %}</h3>
+<a href="{% url 'salary_list' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">{% trans "Back to Salaries" %}</a>
 {% endblock %}

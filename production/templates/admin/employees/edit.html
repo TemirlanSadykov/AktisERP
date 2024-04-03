@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Edit Employee Details</h2>
+  <h2>{% trans "Edit Employee Details" %}</h2>
   <form method="post">
     {% csrf_token %}
     {{ user_form.as_p }}
-    <button type="submit">Save Changes</button>
+    <button type="submit">{% trans "Update" %}</button>
   </form>
 {% endblock %}

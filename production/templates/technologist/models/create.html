@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>Create New Model</h2>
+  <h2>{% trans "Create New Model" %}</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Create Model</button>
+    <button type="submit">{% trans "Create" %}</button>
   </form>
-  <a href="{% url 'model_list' %}">Back to Model List</a>
+  <a href="{% url 'model_list' %}">{% trans "Back" %}</a>
 {% endblock %}
 
 {% block extra_js %}

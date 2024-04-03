@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Employee Details: {{ employee.user.get_full_name }}</h2>
-    <!-- Display all employee details here -->
-    <p><strong>Employee ID:</strong> {{ employee.employee_id }}</p>
-    <p><strong>Type:</strong> {{ employee.get_type_display }}</p>
-    <p><strong>Status:</strong> {{ employee.status|yesno:"Active,Inactive" }}</p>
-    <p><strong>Station:</strong> {{ employee.get_station_display }}</p>
+  <h2>{% trans "Employee Details: %(full_name)s" %}{{ employee.user.get_full_name }}</h2>
+  <p><strong>{% trans "Employee ID:" %}</strong> {{ employee.employee_id }}</p>
+  <p><strong>{% trans "Type:" %}</strong> {{ employee.get_type_display }}</p>
+  <p><strong>{% trans "Status:" %}</strong> {{ employee.status|yesno:"{% trans "Active" %},{% trans "Inactive" %}" }}</p>
+  <p><strong>{% trans "Station:" %}</strong> {{ employee.get_station_display }}</p>
 
-    <!-- Links to edit or delete the employee -->
-    <a href="{% url 'employee_edit' employee.pk %}">Edit</a> | 
-    <a href="{% url 'employee_delete' employee.pk %}" onclick="return confirm('Are you sure you want to delete this employee?');">Delete</a>
+  <a href="{% url 'employee_edit' employee.pk %}">{% trans "Edit" %}</a> | 
+  <a href="{% url 'employee_delete' employee.pk %}">{% trans "Delete" %}</a>
 {% endblock %}

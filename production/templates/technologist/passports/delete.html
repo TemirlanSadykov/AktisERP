@@ -3,8 +3,10 @@
 {% block content %}
   <form method="post">
     {% csrf_token %}
-    <p>Are you sure you want to delete the passport for "{{ passport.order.client.name }}"?</p>
-    <button type="submit">Confirm</button>
-    <a href="{% url 'passport_list' %}">Cancel</a>
+    <p>
+      {% trans "Are you sure you want to delete the passport for" %} "{{ passport.order.client.name }}"?
+    </p>
+    <button type="submit">{% trans "Confirm Delete" %}</button>
+    <a href="{% url 'passport_list' %}">{% trans "Cancel" %}</a>
   </form>
 {% endblock %}

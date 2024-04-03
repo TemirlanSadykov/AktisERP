@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>My Works</h1>
+  <h1>{% trans "My Works" %}</h1>
   <ul>
     {% for assigned_work in assigned_works %}
     <li>
-      Operation: {{ assigned_work.work.operation.name }} - 
+      {% trans "Operation" %}: {{ assigned_work.work.operation.name }} -
       {% if assigned_work.work.size_quantity %}
-        Size: {{ assigned_work.work.size_quantity.size }} - 
-        Assigned Quantity: {{ assigned_work.quantity }}
+        {% trans "Size" %}: {{ assigned_work.work.size_quantity.size }} -
+        {% trans "Assigned Quantity" %}: {{ assigned_work.quantity }}
       {% endif %}
       <p>
-          Start: {% if assigned_work.start_time %}{{ assigned_work.start_time|date:"Y-m-d H:i:s" }}{% else %} -- {% endif %} - 
-          End: {% if assigned_work.end_time %}{{ assigned_work.end_time|date:"Y-m-d H:i:s" }} Done {% else %} -- {% endif %}
+        {% trans "Start" %}: {% if assigned_work.start_time %}{{ assigned_work.start_time|date:"Y-m-d H:i:s" }}{% else %} -- {% endif %} -
+        {% trans "End" %}: {% if assigned_work.end_time %}{{ assigned_work.end_time|date:"Y-m-d H:i:s" }} {% trans "Done" %}{% else %} -- {% endif %}
       </p>
       {% if not assigned_work.start_time %}
         <form action="{% url 'start_work' assigned_work.id %}" method="post">
           {% csrf_token %}
-          <button type="submit">Start</button>
+          <button type="submit">{% trans "Start" %}</button>
         </form>
       {% elif assigned_work.start_time and not assigned_work.end_time %}
         <form action="{% url 'finish_work' assigned_work.id %}" method="post">
           {% csrf_token %}
-          <button type="submit">Finish</button>
+          <button type="submit">{% trans "Finish" %}</button>
         </form>
       {% endif %}
     </li>
     {% empty %}
-    <li>No works found.</li>
+    <li>{% trans "No works found." %}</li>
     {% endfor %}
   </ul>
 {% endblock %}

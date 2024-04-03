@@ -3,44 +3,44 @@
 {% load custom_filters %}
 
 {% block content %}
-<h2>Completed Jobs</h2>
+<h2>{% trans "Completed Jobs" %}</h2>
 
 <form method="get" action="">
-    <label for="start_date">Start Date:</label>
-    <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+  <label for="start_date">{% trans "Start Date" %}:</label>
+  <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
 
-    <label for="end_date">End Date:</label>
-    <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+  <label for="end_date">{% trans "End Date" %}:</label>
+  <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
 
-    <button type="submit">Search</button>
+  <button type="submit">{% trans "Search" %}</button>
 </form>
 
 {% if assigned_works %}
 <table>
-    <thead>
-        <tr>
-            <th>Operation</th>
-            <th>Size</th>
-            <th>Quantity</th>
-            <th>Completed At</th>
-            <th>Verified</th>
-            <th>Completion Time</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for assigned_work in assigned_works %}
-        <tr>
-            <td>{{ assigned_work.work.operation.name }}</td>
-            <td>{{ assigned_work.work.size_quantity.size }}</td>
-            <td>{{ assigned_work.quantity }}</td>
-            <td>{{ assigned_work.end_time|date:"Y-m-d H:i:s" }}</td>
-            <td>{% if assigned_work.is_success %} Yes {% else %} No {% endif %}</td>
-            <td>{{ assigned_work.start_time|duration:assigned_work.end_time }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
+  <thead>
+    <tr>
+      <th>{% trans "Operation" %}</th>
+      <th>{% trans "Size" %}</th>
+      <th>{% trans "Quantity" %}</th>
+      <th>{% trans "Completed At" %}</th>
+      <th>{% trans "Verified" %}</th>
+      <th>{% trans "Completion Time" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for assigned_work in assigned_works %}
+    <tr>
+      <td>{{ assigned_work.work.operation.name }}</td>
+      <td>{{ assigned_work.work.size_quantity.size }}</td>
+      <td>{{ assigned_work.quantity }}</td>
+      <td>{{ assigned_work.end_time|date:"Y-m-d H:i:s" }}</td>
+      <td>{% if assigned_work.is_success %} {% trans "Yes" %} {% else %} {% trans "No" %} {% endif %}</td>
+      <td>{{ assigned_work.start_time|duration:assigned_work.end_time }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% else %}
-<p>No completed jobs found within the selected period.</p>
+<p>{% trans "No completed jobs found within the selected period." %}</p>
 {% endif %}
 {% endblock %}
