@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
   <p><a href="{% url 'client_create' %}">{% trans "Create New Client" %}</a></p>
   {% for client in clients %}

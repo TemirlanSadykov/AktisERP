@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
   <h2>{% trans "Client Details: %(name)s" %}{{ client.name }}</h2>
   <p>{% trans "Contact Info:" %} {{ client.contact_info }}</p>

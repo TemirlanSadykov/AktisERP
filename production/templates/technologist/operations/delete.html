@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load i18n %}
 {% block content %}
   <h2>{% trans "Are you sure you want to delete '%(name)s'?" %}{{ operation.name }}</h2>
   <form method="post">

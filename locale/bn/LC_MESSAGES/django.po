@@ -19,23 +19,23 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 #: .\production\templates\admin\attendances\list.html:4
 msgid "Attendance List"
-msgstr ""
+msgstr "উপস্থিতির তালিকা"
 
 #: .\production\templates\admin\attendances\list.html:8
 msgid "Show Attendances"
-msgstr ""
+msgstr "উপস্থিতি দেখান"
 
 #: .\production\templates\admin\attendances\list.html:12
 msgid "Attendance Records:"
-msgstr ""
+msgstr "উপস্থিতির রেকর্ডসমূহ:"
 
 #: .\production\templates\admin\attendances\list.html:19
 msgid "No attendance records found."
-msgstr ""
+msgstr "কোন উপস্থিতির রেকর্ড পাওয়া যায়নি।"
 
 #: .\production\templates\admin\employees\create.html:4
 msgid "Create New User"
-msgstr ""
+msgstr "নতুন ব্যবহারকারী তৈরি করুন"
 
 #: .\production\templates\admin\employees\create.html:8
 #: .\production\templates\admin\orders\create.html:8
@@ -45,16 +45,16 @@ msgstr ""
 #: .\production\templates\technologist\operations\create.html:8
 #: .\production\templates\technologist\passports\create.html:8
 msgid "Create"
-msgstr ""
+msgstr "তৈরি করুন"
 
 #: .\production\templates\admin\employees\delete.html:6
 #, python-format
 msgid "Are you sure you want to delete %%(full_name)s?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত %%(full_name)s মুছে ফেলতে চান?"
 
 #: .\production\templates\admin\employees\delete.html:7
 msgid "Confirm"
-msgstr ""
+msgstr "নিশ্চিত করুন"
 
 #: .\production\templates\admin\employees\delete.html:8
 #: .\production\templates\admin\orders\delete.html:12
@@ -69,30 +69,30 @@ msgstr ""
 #: .\production\templates\technologist\operations\edit.html:10
 #: .\production\templates\technologist\passports\delete.html:10
 msgid "Cancel"
-msgstr ""
+msgstr "বাতিল করুন"
 
 #: .\production\templates\admin\employees\detail.html:4
 #, python-format
 msgid "Employee Details: %%(full_name)s"
-msgstr ""
+msgstr "কর্মচারীর বিস্তারিত: %%(full_name)s"
 
 #: .\production\templates\admin\employees\detail.html:5
 msgid "Employee ID:"
-msgstr ""
+msgstr "কর্মচারী আইডি:"
 
 #: .\production\templates\admin\employees\detail.html:6
 #: .\production\templates\technologist\operations\detail.html:7
 msgid "Type:"
-msgstr ""
+msgstr "প্রকার:"
 
 #: .\production\templates\admin\employees\detail.html:7
 #: .\production\templates\admin\orders\detail.html:18
 msgid "Status:"
-msgstr ""
+msgstr "অবস্থা:"
 
 #: .\production\templates\admin\employees\detail.html:8
 msgid "Station:"
-msgstr ""
+msgstr "স্টেশন:"
 
 #: .\production\templates\admin\employees\detail.html:10
 #: .\production\templates\admin\orders\detail.html:24
@@ -103,7 +103,7 @@ msgstr ""
 #: .\production\templates\technologist\passports\create_size_quantity.html:18
 #: .\production\templates\technologist\passports\detail.html:9
 msgid "Edit"
-msgstr ""
+msgstr "সম্পাদনা করুন"
 
 #: .\production\templates\admin\employees\detail.html:11
 #: .\production\templates\admin\orders\detail.html:25
@@ -114,11 +114,11 @@ msgstr ""
 #: .\production\templates\technologist\passports\create_size_quantity.html:19
 #: .\production\templates\technologist\passports\detail.html:10
 msgid "Delete"
-msgstr ""
+msgstr "মুছে ফেলুন"
 
 #: .\production\templates\admin\employees\edit.html:4
 msgid "Edit Employee Details"
-msgstr ""
+msgstr "কর্মচারীর বিস্তারিত সম্পাদনা করুন"
 
 #: .\production\templates\admin\employees\edit.html:8
 #: .\production\templates\admin\orders\edit.html:8
@@ -128,16 +128,16 @@ msgstr ""
 #: .\production\templates\technologist\operations\edit.html:8
 #: .\production\templates\technologist\passports\edit.html:8
 msgid "Update"
-msgstr ""
+msgstr "আপডেট"
 
 #: .\production\templates\admin\employees\list.html:4
 msgid "Create Employee"
-msgstr ""
+msgstr "কর্মচারী তৈরি করুন"
 
 #: .\production\templates\admin\orders\create.html:4
 #: .\production\templates\admin\orders\list.html:4
 msgid "Create New Order"
-msgstr ""
+msgstr "নতুন অর্ডার তৈরি করুন"
 
 #: .\production\templates\admin\orders\create.html:10
 #: .\production\templates\admin\orders\delete.html:13
@@ -159,7 +159,7 @@ msgstr ""
 #: .\production\templates\technologist\operations\delete.html:10
 #: .\production\templates\technologist\operations\detail.html:15
 msgid "Back"
-msgstr ""
+msgstr "পিছনে"
 
 #: .\production\templates\admin\orders\delete.html:4
 #: .\production\templates\admin\orders\delete.html:9
@@ -172,487 +172,487 @@ msgstr ""
 #: .\production\templates\technologist\operations\delete.html:7
 #: .\production\templates\technologist\passports\delete.html:9
 msgid "Confirm Delete"
-msgstr ""
+msgstr "মুছে ফেলার নিশ্চিতকরণ"
 
 #: .\production\templates\admin\orders\delete.html:5
 #, python-format
 msgid "Are you sure you want to delete the order '%%(order_number)s'?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত যে '%%(order_number)s' অর্ডারটি মুছে ফেলতে চান?"
 
 #: .\production\templates\admin\orders\detail.html:5
 #, python-format
 msgid "Order Details: %%(order_number)s"
-msgstr ""
+msgstr "অর্ডারের বিস্তারিত: %%(order_number)s"
 
 #: .\production\templates\admin\orders\detail.html:13
 msgid "Name:"
-msgstr ""
+msgstr "নাম:"
 
 #: .\production\templates\admin\orders\detail.html:14
 #: .\production\templates\admin\passports\detail.html:8
 #: .\production\templates\technologist\passports\assign_operations.html:8
 msgid "Client:"
-msgstr ""
+msgstr "ক্লায়েন্ট:"
 
 #: .\production\templates\admin\orders\detail.html:15
 #: .\production\templates\admin\passports\detail.html:7
 #: .\production\templates\admin\passports\list.html:8
 #: .\production\templates\technologist\passports\assign_operations.html:7
 msgid "Model:"
-msgstr ""
+msgstr "মডেল:"
 
 #: .\production\templates\admin\orders\detail.html:16
 #: .\production\templates\admin\passports\detail.html:9
 #: .\production\templates\technologist\passports\assign_operations.html:9
 msgid "Assortment:"
-msgstr ""
+msgstr "সংগ্রহ:"
 
 #: .\production\templates\admin\orders\detail.html:17
 #: .\production\templates\admin\passports\detail.html:10
 #: .\production\templates\technologist\passports\assign_operations.html:10
 msgid "Roll:"
-msgstr ""
+msgstr "রোল:"
 
 #: .\production\templates\admin\orders\detail.html:19
 msgid "Quantity:"
-msgstr ""
+msgstr "পরিমাণ:"
 
 #: .\production\templates\admin\orders\detail.html:20
 msgid "Completed Quantity:"
-msgstr ""
+msgstr "সম্পন্ন পরিমাণ:"
 
 #: .\production\templates\admin\orders\detail.html:21
 #: .\production\templates\technologist\operations\detail.html:5
 msgid "Payment:"
-msgstr ""
+msgstr "পেমেন্ট:"
 
 #: .\production\templates\admin\orders\detail.html:22
 msgid "Term:"
-msgstr ""
+msgstr "মেয়াদ:"
 
 #: .\production\templates\admin\orders\detail.html:29
 msgid "Associated Passports"
-msgstr ""
+msgstr "সংযুক্ত পাসপোর্টসমূহ"
 
 #: .\production\templates\admin\orders\detail.html:34
 msgid "Passport ID:"
-msgstr ""
+msgstr "পাসপোর্ট আইডি:"
 
 #: .\production\templates\admin\orders\detail.html:34
 msgid "Created on:"
-msgstr ""
+msgstr "তৈরির তারিখ:"
 
 #: .\production\templates\admin\orders\detail.html:34
 msgid "Completed:"
-msgstr ""
+msgstr "সম্পন্ন:"
 
 #: .\production\templates\admin\orders\detail.html:39
 msgid "No associated passports."
-msgstr ""
+msgstr "কোন সংযুক্ত পাসপোর্ট নেই।"
 
 #: .\production\templates\admin\orders\edit.html:4
 #, python-format
 msgid "Edit Order: %%(order_number)s"
-msgstr ""
+msgstr "অর্ডার সম্পাদনা করুন: %%(order_number)s"
 
 #: .\production\templates\admin\passports\detail.html:5
 msgid "Operations Assigned for Passport"
-msgstr ""
+msgstr "পাসপোর্টের জন্য নির্ধারিত অপারেশনসমূহ"
 
 #: .\production\templates\admin\passports\detail.html:11
 #: .\production\templates\technologist\passports\assign_operations.html:11
 msgid "Color:"
-msgstr ""
+msgstr "রঙ:"
 
 #: .\production\templates\admin\passports\detail.html:12
 #: .\production\templates\technologist\passports\assign_operations.html:12
 msgid "Fabrics:"
-msgstr ""
+msgstr "ফ্যাব্রিকস:"
 
 #: .\production\templates\admin\passports\detail.html:13
 #: .\production\templates\technologist\passports\assign_operations.html:13
 msgid "Date:"
-msgstr ""
+msgstr "তারিখ:"
 
 #: .\production\templates\admin\passports\detail.html:19
 #: .\production\templates\technologist\passports\assign_operations.html:22
 msgid "Operation \\ Size"
-msgstr ""
+msgstr "অপারেশন \\ আকার"
 
 #: .\production\templates\admin\passports\detail.html:24
 #: .\production\templates\technologist\passports\assign_operations.html:26
 msgid "Qty:"
-msgstr ""
+msgstr "পরিমাণ:"
 
 #: .\production\templates\admin\passports\list.html:4
 #: .\production\templates\technologist\passports\list.html:4
 msgid "Create Passport"
-msgstr ""
+msgstr "পাসপোর্ট তৈরি করুন"
 
 #: .\production\templates\admin\passports\list.html:8
 #: .\production\templates\technologist\passports\list.html:8
 msgid "Passport for"
-msgstr ""
+msgstr "পাসপোর্টের জন্য"
 
 #: .\production\templates\admin\salaries\detail.html:4
 msgid "Work Details for"
-msgstr ""
+msgstr "কাজের বিস্তারিত জন্য"
 
 #: .\production\templates\admin\salaries\detail.html:7
 #: .\production\templates\admin\salaries\list.html:7
 msgid "Filter"
-msgstr ""
+msgstr "ফিল্টার"
 
 #: .\production\templates\admin\salaries\detail.html:12
 msgid "Operation (Size)"
-msgstr ""
+msgstr "অপারেশন (আকার)"
 
 #: .\production\templates\admin\salaries\detail.html:13
 #: .\production\templates\employee\works\done_list.html:24
 msgid "Quantity"
-msgstr ""
+msgstr "পরিমাণ"
 
 #: .\production\templates\admin\salaries\detail.html:14
 msgid "Payment per Unit"
-msgstr ""
+msgstr "প্রতি ইউনিটে পেমেন্ট"
 
 #: .\production\templates\admin\salaries\detail.html:15
 msgid "Time Spent (seconds)"
-msgstr ""
+msgstr "সময় ব্যয় (সেকেন্ড)"
 
 #: .\production\templates\admin\salaries\detail.html:16
 msgid "Salary for Work"
-msgstr ""
+msgstr "কাজের জন্য বেতন"
 
 #: .\production\templates\admin\salaries\detail.html:24
 #: .\production\templates\admin\salaries\detail.html:28
 #: .\production\templates\admin\salaries\list.html:13
 msgid "Som"
-msgstr ""
+msgstr "সোম"
 
 #: .\production\templates\admin\salaries\detail.html:28
 msgid "Total Salary:"
-msgstr ""
+msgstr "মোট বেতন:"
 
 #: .\production\templates\admin\salaries\detail.html:29
 msgid "Back to Salaries"
-msgstr ""
+msgstr "বেতনে ফিরে যান"
 
 #: .\production\templates\admin\salaries\list.html:4
 #: .\production\templates\admin_page.html:10
 msgid "Salaries"
-msgstr ""
+msgstr "বেতন"
 
 #: .\production\templates\admin\salaries\list.html:12
 msgid "Employee"
-msgstr ""
+msgstr "কর্মচারী"
 
 #: .\production\templates\admin\salaries\list.html:13
 msgid "Salary"
-msgstr ""
+msgstr "বেতন"
 
 #: .\production\templates\admin_page.html:4
 msgid "Admin Dashboard"
-msgstr ""
+msgstr "অ্যাডমিন ড্যাশবোর্ড"
 
 #: .\production\templates\admin_page.html:5
 #: .\production\templates\employee_page.html:5
 #: .\production\templates\technologist_page.html:5
 msgid "Welcome,"
-msgstr ""
+msgstr "স্বাগতম,"
 
 #: .\production\templates\admin_page.html:5
 msgid "You're logged in as an Admin."
-msgstr ""
+msgstr "আপনি একজন অ্যাডমিন হিসাবে লগইন করেছেন।"
 
 #: .\production\templates\admin_page.html:6
 msgid "Go to Technologist Page"
-msgstr ""
+msgstr "টেকনোলজিস্ট পেজে যান"
 
 #: .\production\templates\admin_page.html:7
 msgid "Go to Employee Page"
-msgstr ""
+msgstr "কর্মচারী পৃষ্ঠায় যান"
 
 #: .\production\templates\admin_page.html:8
 msgid ""
 "This is the admin page where you can manage users, view reports, and perform "
 "other administrative tasks."
-msgstr ""
+msgstr "এটি অ্যাডমিন পেজ যেখানে আপনি ব্যবহারকারীদের পরিচালনা করতে, রিপোর্ট দেখতে এবং অন্যান্য প্রশাসনিক কাজ সম্পাদন করতে পারবেন।"
 
 #: .\production\templates\admin_page.html:9
 msgid "Employees"
-msgstr ""
+msgstr "কর্মচারীবৃন্দ"
 
 #: .\production\templates\admin_page.html:11
 msgid "Attendances"
-msgstr ""
+msgstr "উপস্থিতি"
 
 #: .\production\templates\admin_page.html:12
 msgid "Orders"
-msgstr ""
+msgstr "অর্ডারসমূহ"
 
 #: .\production\templates\base.html:12
 msgid "Home"
-msgstr ""
+msgstr "হোম"
 
 #: .\production\templates\base.html:15
 msgid "Logout"
-msgstr ""
+msgstr "লগ আউট"
 
 #: .\production\templates\employee\works\done_list.html:6
 msgid "Completed Jobs"
-msgstr ""
+msgstr "সম্পন্ন কাজগুলি"
 
 #: .\production\templates\employee\works\done_list.html:9
 msgid "Start Date"
-msgstr ""
+msgstr "শুরুর তারিখ"
 
 #: .\production\templates\employee\works\done_list.html:12
 msgid "End Date"
-msgstr ""
+msgstr "শেষ তারিখ"
 
 #: .\production\templates\employee\works\done_list.html:15
 msgid "Search"
-msgstr ""
+msgstr "অনুসন্ধান"
 
 #: .\production\templates\employee\works\done_list.html:22
 #: .\production\templates\employee\works\pending_list.html:8
 msgid "Operation"
-msgstr ""
+msgstr "অপারেশন"
 
 #: .\production\templates\employee\works\done_list.html:23
 #: .\production\templates\employee\works\pending_list.html:10
 msgid "Size"
-msgstr ""
+msgstr "আকার"
 
 #: .\production\templates\employee\works\done_list.html:25
 msgid "Completed At"
-msgstr ""
+msgstr "সম্পন্ন হয়েছে"
 
 #: .\production\templates\employee\works\done_list.html:26
 msgid "Verified"
-msgstr ""
+msgstr "যাচাই করা হয়েছে"
 
 #: .\production\templates\employee\works\done_list.html:27
 msgid "Completion Time"
-msgstr ""
+msgstr "সমাপ্তির সময়"
 
 #: .\production\templates\employee\works\done_list.html:37
 msgid "Yes"
-msgstr ""
+msgstr "হ্যাঁ"
 
 #: .\production\templates\employee\works\done_list.html:37
 msgid "No"
-msgstr ""
+msgstr "না"
 
 #: .\production\templates\employee\works\done_list.html:44
 msgid "No completed jobs found within the selected period."
-msgstr ""
+msgstr "নির্বাচিত সময়ের মধ্যে কোন সম্পন্ন কাজ পাওয়া যায়নি।"
 
 #: .\production\templates\employee\works\pending_list.html:4
 msgid "My Works"
-msgstr ""
+msgstr "আমার কাজগুলো"
 
 #: .\production\templates\employee\works\pending_list.html:11
 msgid "Assigned Quantity"
-msgstr ""
+msgstr "নির্ধারিত পরিমাণ"
 
 #: .\production\templates\employee\works\pending_list.html:14
 #: .\production\templates\employee\works\pending_list.html:20
 msgid "Start"
-msgstr ""
+msgstr "শুরু"
 
 #: .\production\templates\employee\works\pending_list.html:15
 msgid "End"
-msgstr ""
+msgstr "শেষ"
 
 #: .\production\templates\employee\works\pending_list.html:15
 msgid "Done"
-msgstr ""
+msgstr "সম্পন্ন"
 
 #: .\production\templates\employee\works\pending_list.html:25
 msgid "Finish"
-msgstr ""
+msgstr "শেষ"
 
 #: .\production\templates\employee\works\pending_list.html:30
 msgid "No works found."
-msgstr ""
+msgstr "কোনো কাজ পাওয়া যায়নি।"
 
 #: .\production\templates\employee_page.html:4
 msgid "Employee Dashboard"
-msgstr ""
+msgstr "কর্মচারী ড্যাশবোর্ড"
 
 #: .\production\templates\employee_page.html:5
 msgid "You're logged in as an Employee."
-msgstr ""
+msgstr "আপনি একজন কর্মচারী হিসেবে লগ ইন করেছেন।"
 
 #: .\production\templates\employee_page.html:6
 msgid ""
 "This is the employee page where you can see your tasks, update your "
 "progress, and view announcements."
-msgstr ""
+msgstr "এটি কর্মচারী পাতা যেখানে আপনি আপনার কাজ, আপনার অগ্রগতি আপডেট এবং ঘোষণা দেখতে পারেন।"
 
 #: .\production\templates\employee_page.html:8
 msgid "You are accessing Employee page."
-msgstr ""
+msgstr "আপনি কর্মচারী পাতা অ্যাক্সেস করছেন।"
 
 #: .\production\templates\employee_page.html:13
 #: .\production\templates\technologist_page.html:13
 msgid "Clock Out"
-msgstr ""
+msgstr "ঘড়ি বন্ধ করুন"
 
 #: .\production\templates\employee_page.html:13
 #: .\production\templates\technologist_page.html:13
 msgid "Clock In"
-msgstr ""
+msgstr "ঘড়ি চালু করুন"
 
 #: .\production\templates\employee_page.html:19
 msgid "Done Work"
-msgstr ""
+msgstr "কাজ সম্পন্ন"
 
 #: .\production\templates\employee_page.html:20
 msgid "Pending Work"
-msgstr ""
+msgstr "মুলতুবি কাজ"
 
 #: .\production\templates\employee_page.html:23
 #: .\production\templates\technologist_page.html:26
 msgid "You need to be clocked in to access your tasks and updates."
-msgstr ""
+msgstr "আপনার কাজ এবং আপডেট অ্যাক্সেস করতে আপনাকে সময় নিবন্ধন করতে হবে।"
 
 #: .\production\templates\registration\login.html:2
 #: .\production\templates\registration\login.html:7
 msgid "Login"
-msgstr ""
+msgstr "লগইন"
 
 #: .\production\templates\registration\login.html:11
 msgid "Your username and password didn't match. Please try again."
-msgstr ""
+msgstr "আপনার ব্যবহারকারীর নাম এবং পাসওয়ার্ড মেলেনি। অনুগ্রহ করে আবার চেষ্টা করুন।"
 
 #: .\production\templates\technologist\assortments\create.html:4
 #: .\production\templates\technologist\assortments\list.html:4
 msgid "Create New Assortment"
-msgstr ""
+msgstr "নতুন বৈচিত্র্য তৈরি করুন"
 
 #: .\production\templates\technologist\assortments\delete.html:5
 #, python-format
 msgid "Are you sure you want to delete the assortment '%%(name)s'?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত '%%(name)s' বৈচিত্র্যটি মুছে ফেলতে চান?"
 
 #: .\production\templates\technologist\assortments\detail.html:4
 #, python-format
 msgid "Assortment Details: %%(name)s"
-msgstr ""
+msgstr "বৈচিত্র্যের বিস্তারিত: %%(name)s"
 
 #: .\production\templates\technologist\assortments\edit.html:4
 #, python-format
 msgid "Edit Assortment: %%(name)s"
-msgstr ""
+msgstr "বৈচিত্র্য সম্পাদনা করুন: %%(name)s"
 
 #: .\production\templates\technologist\clients\create.html:4
 #: .\production\templates\technologist\clients\list.html:4
 msgid "Create New Client"
-msgstr ""
+msgstr "নতুন ক্লায়েন্ট তৈরি করুন"
 
 #: .\production\templates\technologist\clients\delete.html:5
 #, python-format
 msgid "Are you sure you want to delete the client '%%(name)s'?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত '%%(name)s' ক্লায়েন্টটি মুছে ফেলতে চান?"
 
 #: .\production\templates\technologist\clients\detail.html:4
 #, python-format
 msgid "Client Details: %%(name)s"
-msgstr ""
+msgstr "ক্লায়েন্টের বিস্তারিত: %%(name)s"
 
 #: .\production\templates\technologist\clients\detail.html:5
 msgid "Contact Info:"
-msgstr ""
+msgstr "যোগাযোগের তথ্য:"
 
 #: .\production\templates\technologist\clients\edit.html:4
 #, python-format
 msgid "Edit Client: %%(name)s"
-msgstr ""
+msgstr "ক্লায়েন্ট সম্পাদনা করুন: %%(name)s"
 
 #: .\production\templates\technologist\models\create.html:4
 #: .\production\templates\technologist\models\list.html:4
 msgid "Create New Model"
-msgstr ""
+msgstr "নতুন মডেল তৈরি করুন"
 
 #: .\production\templates\technologist\models\delete.html:5
 #, python-format
 msgid "Are you sure you want to delete the model '%%(name)s'?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত '%%(name)s' মডেলটি মুছে ফেলতে চান?"
 
 #: .\production\templates\technologist\models\detail.html:4
 #, python-format
 msgid "Model Details: %%(name)s"
-msgstr ""
+msgstr "মডেলের বিস্তারিত: %%(name)s"
 
 #: .\production\templates\technologist\models\detail.html:6
 #: .\production\templates\technologist\passports\detail.html:12
 #: .\production\templates\technologist_page.html:19
 msgid "Operations"
-msgstr ""
+msgstr "অপারেশনসমূহ"
 
 #: .\production\templates\technologist\models\detail.html:16
 msgid "No operations associated with this model."
-msgstr ""
+msgstr "এই মডেলের সাথে কোনো অপারেশন যুক্ত নেই।"
 
 #: .\production\templates\technologist\models\edit.html:4
 #, python-format
 msgid "Edit Model: %%(name)s"
-msgstr ""
+msgstr "মডেল সম্পাদনা করুন: %%(name)s"
 
 #: .\production\templates\technologist\operations\create.html:4
 msgid "Add New Operation"
-msgstr ""
+msgstr "নতুন অপারেশন যোগ করুন"
 
 #: .\production\templates\technologist\operations\delete.html:4
 #, python-format
 msgid "Are you sure you want to delete '%%(name)s'?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত '%%(name)s' মুছে ফেলতে চান?"
 
 #: .\production\templates\technologist\operations\detail.html:4
 #, python-format
 msgid "Operation Details: %%(name)s"
-msgstr ""
+msgstr "অপারেশনের বিস্তারিত: %%(name)s"
 
 #: .\production\templates\technologist\operations\detail.html:6
 #: .\production\templates\technologist\operations\list.html:10
 msgid "Equipment:"
-msgstr ""
+msgstr "সরঞ্জাম:"
 
 #: .\production\templates\technologist\operations\detail.html:8
 msgid "Preferred Completion Time:"
-msgstr ""
+msgstr "পছন্দনীয় সমাপ্তির সময়:"
 
 #: .\production\templates\technologist\operations\detail.html:10
 msgid "Average Completion Time:"
-msgstr ""
+msgstr "গড় সমাপ্তির সময়:"
 
 #: .\production\templates\technologist\operations\detail.html:11
 msgid "Calculate Average"
-msgstr ""
+msgstr "গড় হিসাব করুন"
 
 #: .\production\templates\technologist\operations\edit.html:4
 #, python-format
 msgid "Edit Operation: %%(name)s"
-msgstr ""
+msgstr "অপারেশন সম্পাদনা করুন: %%(name)s"
 
 #: .\production\templates\technologist\operations\list.html:4
 msgid "Create Operation"
-msgstr ""
+msgstr "অপারেশন তৈরি করুন"
 
 #: .\production\templates\technologist\operations\list.html:10
 msgid "Operation:"
-msgstr ""
+msgstr "অপারেশন:"
 
 #: .\production\templates\technologist\operations\list.html:15
 msgid "No operations found."
-msgstr ""
+msgstr "কোনো অপারেশন পাওয়া যায়নি।"
 
 #: .\production\templates\technologist\passports\assign_operations.html:5
 msgid "Assign Operations for Passport"
-msgstr ""
+msgstr "পাসপোর্টের জন্য অপারেশন নির্ধারণ করুন"
 
 #: .\production\templates\technologist\passports\assign_operations.html:17
 #, python-format
@@ -660,101 +660,101 @@ msgid ""
 "Enter employee ID and quantity in the format: '%%(format)s'. For multiple "
 "entries, separate them by a comma. For a single ID, the quantity is assumed "
 "to be the total."
-msgstr ""
+msgstr "'%%(format)s' ফরম্যাটে কর্মচারীর আইডি এবং পরিমাণ লিখুন। একাধিক এন্ট্রির জন্য, তাদের কমা দিয়ে আলাদা করুন। একক আইডির জন্য, পরিমাণটি মোট ধরা হয়।"
 
 #: .\production\templates\technologist\passports\assign_operations.html:53
 msgid "ID (Quan.)"
-msgstr ""
+msgstr "আইডি (পরিমাণ)"
 
 #: .\production\templates\technologist\passports\assign_operations.html:65
 #: .\production\templates\technologist\passports\detail.html:15
 msgid "Are you sure you want to mark this passport as completed?"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত এই পাসপোর্টটি সম্পন্ন হিসেবে চিহ্নিত করতে চান?"
 
 #: .\production\templates\technologist\passports\assign_operations.html:65
 #: .\production\templates\technologist\passports\detail.html:16
 msgid "Complete"
-msgstr ""
+msgstr "সম্পূর্ণ"
 
 #: .\production\templates\technologist\passports\create.html:4
 msgid "Create New Passport"
-msgstr ""
+msgstr "নতুন পাসপোর্ট তৈরি করুন"
 
 #: .\production\templates\technologist\passports\create_size_quantity.html:10
 msgid "Add"
-msgstr ""
+msgstr "যোগ করুন"
 
 #: .\production\templates\technologist\passports\create_size_quantity.html:24
 msgid "Finish and Save"
-msgstr ""
+msgstr "শেষ করুন এবং সংরক্ষণ করুন"
 
 #: .\production\templates\technologist\passports\delete.html:7
 msgid "Are you sure you want to delete the passport for"
-msgstr ""
+msgstr "আপনি কি নিশ্চিত যে আপনি পাসপোর্ট মুছে ফেলতে চান"
 
 #: .\production\templates\technologist\passports\detail.html:4
 msgid "Passport Details for"
-msgstr ""
+msgstr "পাসপোর্টের বিবরণ জন্য"
 
 #: .\production\templates\technologist\passports\detail.html:5
 #: .\production\templates\technologist\passports\list.html:8
 msgid "Model"
-msgstr ""
+msgstr "মডেল"
 
 #: .\production\templates\technologist\passports\detail.html:6
 msgid "Assortment"
-msgstr ""
+msgstr "বিবিধ"
 
 #: .\production\templates\technologist\passports\detail.html:7
 msgid "Roll"
-msgstr ""
+msgstr "রোল"
 
 #: .\production\templates\technologist\passports\detail.html:8
 msgid "Date"
-msgstr ""
+msgstr "তারিখ"
 
 #: .\production\templates\technologist\passports\detail.html:11
 msgid "Size and Quantity"
-msgstr ""
+msgstr "আকার এবং পরিমাণ"
 
 #: .\production\templates\technologist\passports\edit.html:4
 msgid "Edit Passport Details"
-msgstr ""
+msgstr "পাসপোর্টের বিবরণ সম্পাদনা করুন"
 
 #: .\production\templates\technologist_page.html:4
 msgid "Technologist Dashboard"
-msgstr ""
+msgstr "প্রযুক্তিবিদের ড্যাশবোর্ড"
 
 #: .\production\templates\technologist_page.html:5
 msgid "You're logged in as a Technologist."
-msgstr ""
+msgstr "আপনি একজন প্রযুক্তিবিদ হিসাবে লগইন করেছেন"
 
 #: .\production\templates\technologist_page.html:6
 msgid ""
 "This is the technologist page where you can access technical resources, "
 "manage projects, and collaborate with team members."
-msgstr ""
+msgstr "*"
 
 #: .\production\templates\technologist_page.html:8
 msgid "You are accessing Technologist page."
-msgstr ""
+msgstr "*"
 
 #: .\production\templates\technologist_page.html:18
 msgid "Passports"
-msgstr ""
+msgstr "পাসপোর্ট"
 
 #: .\production\templates\technologist_page.html:20
 msgid "Rolls"
-msgstr ""
+msgstr "রোল"
 
 #: .\production\templates\technologist_page.html:21
 msgid "Assortments"
-msgstr ""
+msgstr "সংগ্রহ"
 
 #: .\production\templates\technologist_page.html:22
 msgid "Models"
-msgstr ""
+msgstr "মডেল"
 
 #: .\production\templates\technologist_page.html:23
 msgid "Clients"
-msgstr ""
+msgstr "গ্রাহক"

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
   <p><a href="{% url 'model_create' %}">{% trans "Create New Model" %}</a></p>
   {% for model in models %}

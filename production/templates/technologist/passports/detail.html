@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
   <h2>{% trans "Passport Details for" %} {{ passport.order.client.name }}</h2>
   <p>{% trans "Model" %}: {{ passport.order.model.name }}</p>

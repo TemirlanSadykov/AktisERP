@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
   <h2>{% trans "Employee Details: %(full_name)s" %}{{ employee.user.get_full_name }}</h2>
   <p><strong>{% trans "Employee ID:" %}</strong> {{ employee.employee_id }}</p>
