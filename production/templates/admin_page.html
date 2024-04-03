@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>{% trans 'Admin Dashboard' %}</h1>
-  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Admin." %}</p>
-  <p><strong><a href="{% url 'technologist_page' %}">{% trans 'Go to Technologist Page' %}</a></strong></p>
-  <p><strong><a href="{% url 'employee_page' %}">{% trans 'Go to Employee Page' %}</a></strong></p>
-  <p>{% trans 'This is the admin page where you can manage users, view reports, and perform other administrative tasks.' %}</p>
-  <p><a href="{% url 'employee_list' %}">{% trans 'Employees' %}</a></p>
-  <p><a href="{% url 'salary_list' %}">{% trans 'Salaries' %}</a></p>
-  <p><a href="{% url 'attendance_list' %}">{% trans 'Attendances' %}</a></p>
-  <p><a href="{% url 'order_list' %}">{% trans 'Orders' %}</a></p>
+  <h1>Admin Dashboard</h1>
+  <p>Welcome, {{ request.user.username }}! You're logged in as an Admin.</p>
+  <p><strong><a href="{% url 'technologist_page' %}">Go to Technologist Page</a></strong></p>
+  <p><strong><a href="{% url 'employee_page' %}">Go to Employee Page</a></strong></p>
+  <!-- Admin-specific content goes here -->
+  <p>This is the admin page where you can manage users, view reports, and perform other administrative tasks.</p>
+  <p><a href="{% url 'employee_list' %}">Employees</a></p>
+  <p><a href="{% url 'salary_list' %}">Salaries</a></p>
+  <p><a href="{% url 'attendance_list' %}">Attendances</a></p>
+  <p><a href="{% url 'order_list' %}">Orders</a></p>
 {% endblock %}

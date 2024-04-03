@@ -1,14 +1,14 @@
 {% block content %}
-  <h2>{% trans "Login" %}</h2> 
-  <form method="post" action="{% url 'login' %}">  
-    {% csrf_token %}  
-    {{ form.as_p }} 
+  <h2>Login</h2>
+  <form method="post" action="{% url 'login' %}">  <!-- The form submits to the URL named 'login' -->
+    {% csrf_token %}  <!-- CSRF token for security -->
+    {{ form.as_p }}  <!-- Render form fields -->
 
-    <button type="submit">{% trans "Login" %}</button> 
+    <button type="submit">Login</button>
   </form>
 
-  {% if form.errors %}  
-    <p>{% trans "Your username and password didn't match. Please try again." %}</p> 
+  {% if form.errors %}  <!-- Display form errors if there are any -->
+    <p>Your username and password didn't match. Please try again.</p>
   {% endif %}
 
 {% endblock %}
