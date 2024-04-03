@@ -1,0 +1,1719 @@
+Watching for file changes with StatReloader
+Waiting for apps ready_event.
+Apps ready_event triggered. Sending autoreload_started signal.
+Watching dir F:\AktisERP\aktis\production\templates with glob **/*.
+Watching dir F:\AktisERP\aktis\locale with glob **/*.mo.
+Watching dir F:\AktisERP\aktis\production\locale with glob **/*.mo.
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\lzma.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\formatter.py first seen with mtime 1710497024.0467665
+File F:\AktisERP\venv\Lib\site-packages\django\utils\text.py first seen with mtime 1710497027.830665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zoneinfo\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\i18n.py first seen with mtime 1710497027.7906647
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\iterators.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\error.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\i18n.py first seen with mtime 1710497027.8426654
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\json.py first seen with mtime 1710497027.6676674
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_psycopg.cp310-win_amd64.pyd first seen with mtime 1710518347.6306443
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\difflib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\dateparse.py first seen with mtime 1710497027.813666
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\others.py first seen with mtime 1710497024.0557654
+File F:\AktisERP\venv\Lib\site-packages\django\urls\utils.py first seen with mtime 1710497027.8046691
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\messages.py first seen with mtime 1710497027.529666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\subprocess.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\__init__.py first seen with mtime 1710497027.6786659
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\backends.py first seen with mtime 1710497025.4051955
+File F:\AktisERP\aktis\aktis\__init__.py first seen with mtime 1710497056.9918866
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\traceback.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ctypes\wintypes.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_tasks.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pathlib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\__init__.py first seen with mtime 1710497027.7996657
+File F:\AktisERP\venv\Lib\site-packages\django\utils\timesince.py first seen with mtime 1710497027.8316655
+File F:\AktisERP\venv\Lib\site-packages\_virtualenv.py first seen with mtime 1710496963.192812
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\widgets.py first seen with mtime 1710497024.6481674
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\quoprimime.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\management\commands\__init__.py first seen with mtime 1710497027.5076654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\subprocess.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\utils.py first seen with mtime 1710497027.663667
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\introspection.py first seen with mtime 1710497027.6016772
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\__init__.py first seen with mtime 1710497027.637665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\subqueries.py first seen with mtime 1710497027.6826668
+File F:\AktisERP\venv\Lib\site-packages\django\urls\converters.py first seen with mtime 1710497027.802667
+File F:\AktisERP\aktis\production\models.py first seen with mtime 1711460509.464697
+File F:\AktisERP\venv\Lib\site-packages\django\forms\renderers.py first seen with mtime 1710497027.6916654
+File F:\AktisERP\venv\Lib\site-packages\django\template\smartif.py first seen with mtime 1710497027.7816648
+File F:\AktisERP\venv\Lib\site-packages\django\dispatch\__init__.py first seen with mtime 1710497027.683666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_modify.py first seen with mtime 1710497025.1941662
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\app_directories.py first seen with mtime 1710497027.786666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\cookies.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\output.py first seen with mtime 1710497024.0567648
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\utils.py first seen with mtime 1710497024.6471646
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\base.py first seen with mtime 1710497026.8559365
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\base_session.py first seen with mtime 1710497027.1596646
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\sslproto.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_queue.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\aktis\production\views\technologist_views.py first seen with mtime 1711545598.5951138
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ctypes\_endian.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\apps\__init__.py first seen with mtime 1710497024.3411639
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\__init__.py first seen with mtime 1710497027.624666
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\base.py first seen with mtime 1710497027.851665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\backends\base.py first seen with mtime 1710497027.164666
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\expressions.py first seen with mtime 1710497027.6576648
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\sql.py first seen with mtime 1710518347.639614
+File F:\AktisERP\aktis\manage.py first seen with mtime 1710497056.986884
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\__init__.py first seen with mtime 1710497024.6371913
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\codecs.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\exception.py first seen with mtime 1710497027.552666
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\commands\runserver.py first seen with mtime 1710497027.577665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\reverse_related.py first seen with mtime 1710497027.6726677
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\io.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\datastructures.py first seen with mtime 1710497027.6806667
+File F:\AktisERP\venv\Lib\site-packages\django\utils\lorem_ipsum.py first seen with mtime 1710497027.826666
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\l10n.py first seen with mtime 1710497027.791664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\locks.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\staggered.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\__init__.py first seen with mtime 1710497027.5126655
+File F:\AktisERP\venv\Lib\site-packages\django\template\defaulttags.py first seen with mtime 1710497027.7766654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_hashlib.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\client.py first seen with mtime 1710497027.6256664
+File F:\AktisERP\venv\Lib\site-packages\django\utils\html.py first seen with mtime 1710497027.821667
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\apps.py first seen with mtime 1710497024.638163
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\exceptions.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\itercompat.py first seen with mtime 1710497027.8246663
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\queue.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\comparison.py first seen with mtime 1710497027.6736655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_overlapped.pyd first seen with mtime 1675761954.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pickle.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\http.py first seen with mtime 1710497027.8226662
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\related.py first seen with mtime 1710497027.669664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\_abc.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\base.py first seen with mtime 1710497027.8006668
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\__init__.py first seen with mtime 1710497027.5976665
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\translation.py first seen with mtime 1710497027.5336664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\__init__.py first seen with mtime 1710497027.1586664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\quopri.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\dataclasses.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\log.py first seen with mtime 1710497027.825665
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\urls.py first seen with mtime 1710497027.534665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\aliases.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\utils.py first seen with mtime 1710497027.5976665
+File F:\AktisERP\venv\Lib\site-packages\django\utils\ipv6.py first seen with mtime 1710497027.8236656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\feedparser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\duration.py first seen with mtime 1710497027.8176653
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\filters.py first seen with mtime 1710497024.6411955
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\__init__.py first seen with mtime 1710497024.054765
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\fnmatch.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\encoder.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\selectors.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\events.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\module_loading.py first seen with mtime 1710497027.826666
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\features.py first seen with mtime 1710497027.6276672
+File F:\AktisERP\aktis\production\templatetags\custom_filters.py first seen with mtime 1710938305.4947257
+File F:\AktisERP\venv\Lib\site-packages\asgiref\local.py first seen with mtime 1710497024.2077177
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\apps.py first seen with mtime 1710497027.1596646
+File F:\AktisERP\aktis\production\forms.py first seen with mtime 1711462391.3081076
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\operator.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\queues.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\filesystem.py first seen with mtime 1710497027.7886736
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\operations.py first seen with mtime 1710497027.6296642
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\client.py first seen with mtime 1710497027.5996652
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\manager.py first seen with mtime 1710497027.659666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_policybase.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\filesystem.py first seen with mtime 1710497027.5476663
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\management\__init__.py first seen with mtime 1710497025.576197
+File F:\AktisERP\aktis\aktis\settings.py first seen with mtime 1711545861.8807237
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\signals.py first seen with mtime 1710497027.663667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\uuid.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\schema.py first seen with mtime 1710497027.6036677
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\reprlib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\utils.py first seen with mtime 1710497027.6926675
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\tokenize.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\commands\__init__.py first seen with mtime 1710497027.5676644
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\csrf.py first seen with mtime 1710497027.767666
+File F:\AktisERP\venv\Lib\site-packages\django\template\engine.py first seen with mtime 1710497027.7766654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\coroutines.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sites\__init__.py first seen with mtime 1710497027.3396654
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\state.py first seen with mtime 1710497027.6466658
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\generator.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\log.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\__init__.py first seen with mtime 1710497027.686667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\futures\_base.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\utils.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pkgutil.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\policy.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\cached.py first seen with mtime 1710497027.787665
+File F:\AktisERP\venv\Lib\site-packages\django\core\signals.py first seen with mtime 1710497027.514666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_decimal.pyd first seen with mtime 1675761956.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\runners.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\base.py first seen with mtime 1710497027.5986664
+File F:\AktisERP\aktis\production\views\__init__.py first seen with mtime 1710608317.057242
+File F:\AktisERP\venv\Lib\site-packages\django\template\loader.py first seen with mtime 1710497027.7796657
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\handlers.py first seen with mtime 1710497027.5026667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\message.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_compression.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\__init__.py first seen with mtime 1710497026.8559365
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\contextlib.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_collections_abc.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\string.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\keywords.py first seen with mtime 1710497024.0477686
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\text.py first seen with mtime 1710497027.676666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\threading.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\backends\__init__.py first seen with mtime 1710497027.1636648
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\message.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\utils.py first seen with mtime 1710497027.7816648
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_range.py first seen with mtime 1710518347.6326287
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\decorators.py first seen with mtime 1710497025.4111652
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\window.py first seen with mtime 1710497027.6776652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_encoded_words.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\aligned_indent.py first seen with mtime 1710497024.0557654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\stat.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\formsets.py first seen with mtime 1710497027.689666
+File F:\AktisERP\venv\Lib\site-packages\django\utils\choices.py first seen with mtime 1710497027.8106656
+File F:\AktisERP\venv\Lib\site-packages\django\views\debug.py first seen with mtime 1710497027.8406649
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\dis.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_futures.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\__init__.py first seen with mtime 1710497027.7716663
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\scanner.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_markupbase.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\backends\__init__.py first seen with mtime 1710497027.7826653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\protocols.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\wsgi.py first seen with mtime 1710497027.5536664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sites\shortcuts.py first seen with mtime 1710497027.346667
+File F:\AktisERP\venv\Lib\site-packages\django\forms\fields.py first seen with mtime 1710497027.6876657
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\__init__.py first seen with mtime 1710497027.786666
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\ddl_references.py first seen with mtime 1710497027.5956664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\logging\handlers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\csrf.py first seen with mtime 1710497027.537677
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\__init__.py first seen with mtime 1710497027.5466657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\tasks.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\__init__.py first seen with mtime 1710497027.7896645
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\extensions.py first seen with mtime 1710518347.6366122
+File F:\AktisERP\venv\Lib\site-packages\django\views\__init__.py first seen with mtime 1710497027.8396652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\constants.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\locks.py first seen with mtime 1710497027.5416653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\tempfile.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\csrf.py first seen with mtime 1710497027.8466668
+File F:\AktisERP\venv\Lib\site-packages\django\utils\hashable.py first seen with mtime 1710497027.8206658
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\move.py first seen with mtime 1710497027.5416653
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\model_checks.py first seen with mtime 1710497027.5316908
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\models.py first seen with mtime 1710497027.6506648
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sre_constants.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\actions.py first seen with mtime 1710497024.6371913
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ssl.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\sessions.py first seen with mtime 1710497027.538666
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\signals.py first seen with mtime 1710497027.5966818
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\constraints.py first seen with mtime 1710497027.654666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\request.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\copy.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\utils.py first seen with mtime 1710497027.6476655
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\enums.py first seen with mtime 1710497027.6566668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\re.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\proactor_events.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\bisect.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\http\multipartparser.py first seen with mtime 1710497027.7626662
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_ssl.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\options.py first seen with mtime 1710497027.6606674
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\header.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\simple_server.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\models.py first seen with mtime 1710497025.4151645
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\linecache.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\cp1251.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\util.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\files.py first seen with mtime 1710497027.529666
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_json.py first seen with mtime 1710518347.6076112
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\utils.py first seen with mtime 1710497027.5186653
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\cache.py first seen with mtime 1710497027.7906647
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\options.py first seen with mtime 1710497024.645164
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\http.py first seen with mtime 1710497027.7686656
+File F:\AktisERP\venv\Lib\site-packages\django\conf\__init__.py first seen with mtime 1710497024.344167
+File F:\AktisERP\aktis\aktis\urls.py first seen with mtime 1710523289.2929153
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\__init__.py first seen with mtime 1710497027.5186653
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\json.py first seen with mtime 1710497027.5876656
+File F:\AktisERP\venv\Lib\site-packages\django\http\request.py first seen with mtime 1710497027.7626662
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\grouping.py first seen with mtime 1710497024.053766
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\base.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_ctypes.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\models.py first seen with mtime 1710497025.5931633
+File F:\AktisERP\venv\Lib\site-packages\django\utils\crypto.py first seen with mtime 1710497027.8116646
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\views\main.py first seen with mtime 1710497025.202168
+File F:\AktisERP\venv\Lib\site-packages\django\core\exceptions.py first seen with mtime 1710497027.513665
+File F:\AktisERP\venv\Lib\site-packages\django\forms\boundfield.py first seen with mtime 1710497027.686667
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\__init__.py first seen with mtime 1710497027.664666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\random.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_header_value_parser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\base.py first seen with mtime 1710497027.7726648
+File F:\AktisERP\venv\Lib\site-packages\django\template\backends\base.py first seen with mtime 1710497027.7826653
+File F:\AktisERP\venv\Lib\site-packages\asgiref\sync.py first seen with mtime 1710497024.2104757
+File F:\AktisERP\venv\Lib\site-packages\django\utils\tree.py first seen with mtime 1710497027.8336656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\site.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_bz2.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\base.py first seen with mtime 1710497027.787665
+File F:\AktisERP\venv\Lib\site-packages\django\utils\__init__.py first seen with mtime 1710497027.8056655
+File F:\AktisERP\venv\Lib\site-packages\django\utils\asyncio.py first seen with mtime 1710497027.8076653
+File F:\AktisERP\venv\Lib\site-packages\django\__init__.py first seen with mtime 1710497024.3392024
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pprint.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\base.py first seen with mtime 1710497027.5476663
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\asgi.py first seen with mtime 1710497027.5516655
+File F:\AktisERP\venv\Lib\site-packages\django\db\transaction.py first seen with mtime 1710497027.5936656
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\static.py first seen with mtime 1710497027.792665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\generated.py first seen with mtime 1710497027.666667
+File F:\AktisERP\venv\Lib\site-packages\django\views\static.py first seen with mtime 1710497027.843666
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\uploadhandler.py first seen with mtime 1710497027.544665
+File F:\AktisERP\venv\Lib\site-packages\django\core\signing.py first seen with mtime 1710497027.5156658
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\color.py first seen with mtime 1710497027.563672
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_compat_pickle.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\query.py first seen with mtime 1710497027.661665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\graphlib.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\posixpath.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\__init__.py first seen with mtime 1710497216.895133
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\selector_events.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\dates.py first seen with mtime 1710497027.851665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\__init__.py first seen with mtime 1710497024.6361656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\wsgi.py first seen with mtime 1710497027.5176654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\weakref.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\regex_helper.py first seen with mtime 1710497027.828666
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\http.py first seen with mtime 1710497027.8496654
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\sql.py first seen with mtime 1710497024.0497715
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\database.py first seen with mtime 1710497027.5286653
+File F:\AktisERP\venv\Lib\site-packages\django\utils\cache.py first seen with mtime 1710497027.8086667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\numbers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\translation\__init__.py first seen with mtime 1710497027.8366654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zoneinfo\_common.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\asgiref\__init__.py first seen with mtime 1710497024.2057173
+File F:\AktisERP\venv\Lib\site-packages\django\utils\dateformat.py first seen with mtime 1710497027.813666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\futures\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_sitebuiltins.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\cache.py first seen with mtime 1710497027.8446653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\glob.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\shortcuts.py first seen with mtime 1710497024.3411639
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\typing.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\context.py first seen with mtime 1710497027.7736661
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\forms.py first seen with mtime 1710497025.4111652
+File F:\AktisERP\aktis\production\apps.py first seen with mtime 1710497216.890132
+File F:\AktisERP\venv\Lib\site-packages\django\core\paginator.py first seen with mtime 1710497027.514666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\log.py first seen with mtime 1710497025.1981673
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\checks.py first seen with mtime 1710497025.4071927
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\datetime.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\query_utils.py first seen with mtime 1710497027.662664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\multipart.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\__init__.py first seen with mtime 1710518347.6066463
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\tokens.py first seen with mtime 1710497025.417163
+File F:\AktisERP\venv\Lib\site-packages\django\http\__init__.py first seen with mtime 1710497027.7606652
+File F:\AktisERP\venv\Lib\site-packages\django\utils\encoding.py first seen with mtime 1710497027.8176653
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\tz.py first seen with mtime 1710497027.792665
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\exceptions.py first seen with mtime 1710497024.0457668
+File F:\AktisERP\venv\Lib\site-packages\django\utils\deconstruct.py first seen with mtime 1710497027.8156662
+File F:\AktisERP\venv\Lib\site-packages\django\utils\_os.py first seen with mtime 1710497027.8066652
+File F:\AktisERP\venv\Lib\site-packages\django\forms\widgets.py first seen with mtime 1710497027.6936665
+File F:\AktisERP\venv\Lib\site-packages\django\core\mail\utils.py first seen with mtime 1710497027.5556664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\server.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\base.py first seen with mtime 1710497027.5396667
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\base.py first seen with mtime 1710497027.5366642
+File F:\AktisERP\venv\Lib\site-packages\django\core\mail\message.py first seen with mtime 1710497027.554679
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\__init__.py first seen with mtime 1710497027.5616777
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\forms.py first seen with mtime 1710497025.5921912
+File F:\AktisERP\venv\Lib\site-packages\django\core\mail\__init__.py first seen with mtime 1710497027.5536664
+File F:\AktisERP\venv\Lib\site-packages\django\conf\locale\__init__.py first seen with mtime 1710497024.3512037
+File F:\AktisERP\venv\Lib\site-packages\django\utils\functional.py first seen with mtime 1710497027.8196657
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_list.py first seen with mtime 1710497025.1921668
+File F:\AktisERP\venv\Lib\site-packages\django\http\cookie.py first seen with mtime 1710497027.7616653
+File F:\AktisERP\venv\Lib\site-packages\django\apps\registry.py first seen with mtime 1710497024.3431907
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\collections\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\machinery.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\filter_stack.py first seen with mtime 1710497024.0527658
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ntpath.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\windows_utils.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ctypes\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\windows_events.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\management\commands\runserver.py first seen with mtime 1710497027.5096645
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\proxy.py first seen with mtime 1710497027.6686654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\calendar.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_parseaddr.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\features.py first seen with mtime 1710497027.6006668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\html\parser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\base_user.py first seen with mtime 1710497025.4061916
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\mixins.py first seen with mtime 1710497027.5496662
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\decorators.py first seen with mtime 1710497024.6391983
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\logging\config.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\_distutils_hack\__init__.py first seen with mtime 1710496964.4658139
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\math.py first seen with mtime 1710497027.6756666
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\right_margin.py first seen with mtime 1710497024.0577652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\socketserver.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\operations.py first seen with mtime 1710497027.602666
+File F:\AktisERP\venv\Lib\site-packages\django\template\library.py first seen with mtime 1710497027.7786689
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\middleware.py first seen with mtime 1710497025.413167
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\temp.py first seen with mtime 1710497027.542666
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\list.py first seen with mtime 1710497027.853666
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\where.py first seen with mtime 1710497027.683666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\futures\thread.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\images.py first seen with mtime 1710497027.5406654
+File F:\AktisERP\venv\Lib\site-packages\django\utils\dates.py first seen with mtime 1710497027.8146672
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\__future__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\__init__.py first seen with mtime 1710497027.519665
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\filebased.py first seen with mtime 1710497027.5236642
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\html\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\registry.py first seen with mtime 1710497027.5326645
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_zoneinfo.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\__init__.py first seen with mtime 1710497027.550666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\enum.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\handlers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\validators.py first seen with mtime 1710497025.419162
+File F:\AktisERP\aktis\production\admin.py first seen with mtime 1710570891.91342
+File F:\AktisERP\venv\Lib\site-packages\asgiref\current_thread_executor.py first seen with mtime 1710497024.2067182
+File F:\AktisERP\venv\Lib\site-packages\django\utils\connection.py first seen with mtime 1710497027.8106656
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\statement_splitter.py first seen with mtime 1710497024.053766
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\trsock.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\base.py first seen with mtime 1710497027.5626652
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\tokens.py first seen with mtime 1710497024.0507655
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\constants.py first seen with mtime 1710497026.8509357
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\caches.py first seen with mtime 1710497027.5276654
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\introspection.py first seen with mtime 1710497027.6286771
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\copyreg.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\exceptions.py first seen with mtime 1710497027.8036654
+File F:\AktisERP\venv\Lib\site-packages\django\template\loader_tags.py first seen with mtime 1710497027.7796657
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\lexer.py first seen with mtime 1710497024.0487676
+File F:\AktisERP\venv\Lib\site-packages\django\template\defaultfilters.py first seen with mtime 1710497027.7746665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\gettext.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\__init__.py first seen with mtime 1710497027.7646668
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_ipaddress.py first seen with mtime 1710518347.6066463
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\password_validation.py first seen with mtime 1710497025.4161625
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\decimal.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\async_checks.py first seen with mtime 1710497027.5276654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_uuid.pyd first seen with mtime 1675761954.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\abc.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\middleware.py first seen with mtime 1710497026.8529341
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\exceptions.py first seen with mtime 1710497027.639666
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\templates.py first seen with mtime 1710497027.5336664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\finders.py first seen with mtime 1710497027.5016809
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\models.py first seen with mtime 1710497024.6431653
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\api.py first seen with mtime 1710497026.8499415
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\hashers.py first seen with mtime 1710497025.4121652
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\views.py first seen with mtime 1710497025.419162
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\hmac.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\struct.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\mixins.py first seen with mtime 1710497027.6676674
+File F:\AktisERP\venv\Lib\site-packages\django\conf\global_settings.py first seen with mtime 1710497024.344167
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_urls.py first seen with mtime 1710497025.195171
+File F:\AktisERP\venv\Lib\site-packages\django\apps\config.py first seen with mtime 1710497024.3421648
+File F:\AktisERP\venv\Lib\site-packages\django\utils\inspect.py first seen with mtime 1710497027.8226662
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\common.py first seen with mtime 1710497027.845666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\exceptions.py first seen with mtime 1710497024.6401708
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\headers.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\argparse.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\__init__.py first seen with mtime 1710497027.6726677
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\errors.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\opcode.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\utf_8.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\lookups.py first seen with mtime 1710497027.659666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\token.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\migration.py first seen with mtime 1710497027.642666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zoneinfo\_tzpath.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\cache.py first seen with mtime 1710497027.7656655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\bz2.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\http\response.py first seen with mtime 1710497027.7636669
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\views.py first seen with mtime 1710497025.5941634
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\threads.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\utils.py first seen with mtime 1710497027.545665
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\edit.py first seen with mtime 1710497027.853666
+File F:\AktisERP\venv\Lib\site-packages\django\template\backends\django.py first seen with mtime 1710497027.7836635
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\keyword.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\query.py first seen with mtime 1710497027.6816666
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\base.py first seen with mtime 1710497027.519665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\datetime.py first seen with mtime 1710497027.6746655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\types.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\safestring.py first seen with mtime 1710497027.8296652
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\memory.py first seen with mtime 1710497027.5496662
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\debug.py first seen with mtime 1710497027.8476655
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\sites.py first seen with mtime 1710497024.645164
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\unicodedata.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\__init__.py first seen with mtime 1710497027.5396667
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\__init__.py first seen with mtime 1710497027.5366642
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\base.py first seen with mtime 1710497027.5516655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\views\admin_views.py first seen with mtime 1711459902.0608668
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\models.py first seen with mtime 1710497027.1616657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\nonmultipart.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\os.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\client.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\collections\abc.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\__init__.py first seen with mtime 1710497027.6486657
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\__init__.py first seen with mtime 1710497027.6516664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\inspect.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\formats.py first seen with mtime 1710497027.8196657
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\__init__.py first seen with mtime 1710497027.843666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\select.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\numberformat.py first seen with mtime 1710497027.8276772
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\base64mime.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\headerregistry.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\__init__.py first seen with mtime 1710497025.1911657
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\uploadedfile.py first seen with mtime 1710497027.544665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sites\requests.py first seen with mtime 1710497027.3456657
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\exceptions.py first seen with mtime 1710497027.1606815
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\views\__init__.py first seen with mtime 1710497025.1991665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\management\__init__.py first seen with mtime 1710497025.740195
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\__init__.py first seen with mtime 1710497025.4011652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sre_compile.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\views\autocomplete.py first seen with mtime 1710497025.2001653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\locale.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ipaddress.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\mixins.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\__init__.py first seen with mtime 1710497027.5866654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\platform.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\translation\trans_real.py first seen with mtime 1710497027.8386655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_lzma.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\conf.py first seen with mtime 1710497027.8016672
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\helpers.py first seen with mtime 1710497024.6431653
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\detail.py first seen with mtime 1710497027.8526642
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ast.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\apps.py first seen with mtime 1710497025.4041672
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\__init__.py first seen with mtime 1710497025.58919
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\__init__.py first seen with mtime 1710497027.5266652
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\fields.py first seen with mtime 1710497027.6496656
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\utils.py first seen with mtime 1710497026.8539336
+File F:\AktisERP\venv\Lib\site-packages\django\template\response.py first seen with mtime 1710497027.7806642
+File F:\AktisERP\venv\Lib\site-packages\django\utils\datastructures.py first seen with mtime 1710497027.8126657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\decoder.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\contextvars.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\checks.py first seen with mtime 1710497024.6391983
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\mimetypes.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\handler.py first seen with mtime 1710497027.5486662
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\charset.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\urls.py first seen with mtime 1711544282.092392
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\psycopg_any.py first seen with mtime 1710497027.6306658
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\schema.py first seen with mtime 1710497027.6306658
+File F:\AktisERP\venv\Lib\site-packages\django\utils\version.py first seen with mtime 1710497027.8346653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\hashlib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\views.py first seen with mtime 1710497027.5066655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\heapq.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\deprecation.py first seen with mtime 1710497027.8166645
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\constants.py first seen with mtime 1710497027.6796663
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\__init__.py first seen with mtime 1710497026.8489413
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\encoders.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\secrets.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\models.py first seen with mtime 1710497027.6906667
+File F:\AktisERP\venv\Lib\site-packages\django\template\autoreload.py first seen with mtime 1710497027.7716663
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\apps.py first seen with mtime 1710497025.5901897
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\validation.py first seen with mtime 1710497027.6046703
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\related_lookups.py first seen with mtime 1710497027.6716683
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\base.py first seen with mtime 1710497027.6496656
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\base.py first seen with mtime 1710497027.6536667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sre_parse.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\base.py first seen with mtime 1710497027.6256664
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\extras.py first seen with mtime 1710518347.637611
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\checks.py first seen with mtime 1710497025.591163
+File F:\AktisERP\aktis\production\views\common_views.py first seen with mtime 1711369426.661111
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\text.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\gzip.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\shutil.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\futures.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\apps.py first seen with mtime 1710497026.8509357
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\compatibility\django_4_0.py first seen with mtime 1710497027.5356655
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\__init__.py first seen with mtime 1710497027.5956664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_asyncio.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\base.py first seen with mtime 1710497025.1971674
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\fields.py first seen with mtime 1710497025.591163
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\creation.py first seen with mtime 1710497027.626665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\constants.py first seen with mtime 1710497027.654666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\format_helpers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\servers\basehttp.py first seen with mtime 1710497027.592666
+File F:\AktisERP\venv\Lib\site-packages\django\utils\termcolors.py first seen with mtime 1710497027.8296652
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\utils.py first seen with mtime 1710497024.051766
+File F:\AktisERP\venv\Lib\site-packages\django\core\servers\__init__.py first seen with mtime 1710497027.5916643
+File F:\AktisERP\venv\Lib\site-packages\django\urls\resolvers.py first seen with mtime 1710497027.8036654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\uu.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\base.py first seen with mtime 1710497027.5866654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\streams.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\views\employee_views.py first seen with mtime 1711369435.1509042
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\contentmanager.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\deletion.py first seen with mtime 1710497027.6556654
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\__init__.py first seen with mtime 1710497024.0437648
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\utils.py first seen with mtime 1710497027.505666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\__init__.py first seen with mtime 1710497024.051766
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_subprocess.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\cli.py first seen with mtime 1710497024.0457668
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\common.py first seen with mtime 1710497027.766666
+File F:\AktisERP\venv\Lib\site-packages\django\template\exceptions.py first seen with mtime 1710497027.7776656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_weakrefset.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\tokens.py first seen with mtime 1710497024.059978
+File F:\AktisERP\venv\Lib\site-packages\django\db\utils.py first seen with mtime 1710497027.594666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_events.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\__init__.py first seen with mtime 1710497027.4986658
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\indexes.py first seen with mtime 1710497027.6586773
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\signals.py first seen with mtime 1710497025.417163
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\parser.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\genericpath.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\reindent.py first seen with mtime 1710497024.0577652
+File F:\AktisERP\venv\Lib\site-packages\django\utils\decorators.py first seen with mtime 1710497027.8156662
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\errors.py first seen with mtime 1710518347.6356118
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\admin.py first seen with mtime 1710497025.4031668
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\aggregates.py first seen with mtime 1710497027.6526659
+File F:\AktisERP\venv\Lib\site-packages\django\db\__init__.py first seen with mtime 1710497027.592666
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\special.py first seen with mtime 1710497027.6516664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\warnings.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\base64.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\dispatch\dispatcher.py first seen with mtime 1710497027.684669
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_socket.pyd first seen with mtime 1675761956.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\signal.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\parse.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\python.py first seen with mtime 1710497027.5886686
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\files.py first seen with mtime 1710497027.6656654
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\__init__.py first seen with mtime 1710497027.8506646
+File F:\AktisERP\venv\Lib\site-packages\django\core\validators.py first seen with mtime 1710497027.5166655
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py first seen with mtime 1710497027.6706645
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\apps.py first seen with mtime 1710497027.499686
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\creation.py first seen with mtime 1710497027.5996652
+File F:\AktisERP\venv\Lib\site-packages\django\utils\autoreload.py first seen with mtime 1710497027.8086667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\getpass.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\functools.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\timezone.py first seen with mtime 1710497027.8336656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\socket.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\translation\reloader.py first seen with mtime 1710497027.8366654
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\mixins.py first seen with mtime 1710497027.6756666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\transports.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\nturl2path.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\checks.py first seen with mtime 1710497027.5006733
+File F:\AktisERP\aktis\production\decorators.py first seen with mtime 1711460946.7416987
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\logging\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\response.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\forms.py first seen with mtime 1710497027.688667
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\admin.py first seen with mtime 1710497025.5901897
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\util.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sysconfig.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\middleware.py first seen with mtime 1710497027.1616657
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\compatibility\__init__.py first seen with mtime 1710497027.5356655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\html\entities.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\security.py first seen with mtime 1710497027.7706664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\management\__init__.py first seen with mtime 1710497027.5076654
+File F:\AktisERP\aktis\production\templates\admin first seen with mtime 1711460099.6511135
+File F:\AktisERP\aktis\production\templates\admin_page.html first seen with mtime 1711461491.1161962
+File F:\AktisERP\aktis\production\templates\base.html first seen with mtime 1711031596.1335373
+File F:\AktisERP\aktis\production\templates\employee first seen with mtime 1710925438.4163046
+File F:\AktisERP\aktis\production\templates\employee_page.html first seen with mtime 1710928298.9581373
+File F:\AktisERP\aktis\production\templates\registration first seen with mtime 1710575538.4449215
+File F:\AktisERP\aktis\production\templates\technologist first seen with mtime 1711375041.239311
+File F:\AktisERP\aktis\production\templates\technologist_page.html first seen with mtime 1711374977.8770115
+File F:\AktisERP\aktis\production\templates\admin\attendances first seen with mtime 1711368863.925628
+File F:\AktisERP\aktis\production\templates\admin\employees first seen with mtime 1710588997.0820477
+File F:\AktisERP\aktis\production\templates\admin\orders first seen with mtime 1711460086.4564037
+File F:\AktisERP\aktis\production\templates\admin\passports first seen with mtime 1710929916.967013
+File F:\AktisERP\aktis\production\templates\admin\salaries first seen with mtime 1710945214.5431552
+File F:\AktisERP\aktis\production\templates\admin\attendances\list.html first seen with mtime 1711369740.850386
+File F:\AktisERP\aktis\production\templates\admin\employees\create.html first seen with mtime 1710592364.580536
+File F:\AktisERP\aktis\production\templates\admin\employees\delete.html first seen with mtime 1710592382.905267
+File F:\AktisERP\aktis\production\templates\admin\employees\detail.html first seen with mtime 1710592400.2380564
+File F:\AktisERP\aktis\production\templates\admin\employees\edit.html first seen with mtime 1710592407.5150435
+File F:\AktisERP\aktis\production\templates\admin\employees\list.html first seen with mtime 1710928626.3031213
+File F:\AktisERP\aktis\production\templates\admin\orders\create.html first seen with mtime 1711460195.008991
+File F:\AktisERP\aktis\production\templates\admin\orders\delete.html first seen with mtime 1711460202.1599226
+File F:\AktisERP\aktis\production\templates\admin\orders\detail.html first seen with mtime 1711460207.890924
+File F:\AktisERP\aktis\production\templates\admin\orders\edit.html first seen with mtime 1711460213.7918136
+File F:\AktisERP\aktis\production\templates\admin\orders\list.html first seen with mtime 1711460220.6631563
+File F:\AktisERP\aktis\production\templates\admin\passports\detail.html first seen with mtime 1710932277.116965
+File F:\AktisERP\aktis\production\templates\admin\passports\list.html first seen with mtime 1710939881.227458
+File F:\AktisERP\aktis\production\templates\admin\salaries\detail.html first seen with mtime 1711370964.760221
+File F:\AktisERP\aktis\production\templates\admin\salaries\list.html first seen with mtime 1711370795.852312
+File F:\AktisERP\aktis\production\templates\employee\works first seen with mtime 1710925445.6339521
+File F:\AktisERP\aktis\production\templates\employee\works\list.html first seen with mtime 1710926337.8161988
+File F:\AktisERP\aktis\production\templates\registration\login.html first seen with mtime 1710572610.6827912
+File F:\AktisERP\aktis\production\templates\technologist\assortments first seen with mtime 1711374244.8356626
+File F:\AktisERP\aktis\production\templates\technologist\clients first seen with mtime 1711374908.6655495
+File F:\AktisERP\aktis\production\templates\technologist\models first seen with mtime 1711374690.5628219
+File F:\AktisERP\aktis\production\templates\technologist\operations first seen with mtime 1711372209.19839
+File F:\AktisERP\aktis\production\templates\technologist\passports first seen with mtime 1710770489.0408125
+File F:\AktisERP\aktis\production\templates\technologist\rolls first seen with mtime 1711373535.9792643
+File F:\AktisERP\aktis\production\templates\technologist\assortments\create.html first seen with mtime 1711374272.6903834
+File F:\AktisERP\aktis\production\templates\technologist\assortments\delete.html first seen with mtime 1711374356.7528653
+File F:\AktisERP\aktis\production\templates\technologist\assortments\detail.html first seen with mtime 1711374371.0082593
+File F:\AktisERP\aktis\production\templates\technologist\assortments\edit.html first seen with mtime 1711374286.77132
+File F:\AktisERP\aktis\production\templates\technologist\assortments\list.html first seen with mtime 1711374265.0192988
+File F:\AktisERP\aktis\production\templates\technologist\clients\create.html first seen with mtime 1711374930.177305
+File F:\AktisERP\aktis\production\templates\technologist\clients\delete.html first seen with mtime 1711374949.9793243
+File F:\AktisERP\aktis\production\templates\technologist\clients\detail.html first seen with mtime 1711374937.5014987
+File F:\AktisERP\aktis\production\templates\technologist\clients\edit.html first seen with mtime 1711374943.6790247
+File F:\AktisERP\aktis\production\templates\technologist\clients\list.html first seen with mtime 1711374922.2154212
+File F:\AktisERP\aktis\production\templates\technologist\models\create.html first seen with mtime 1711374715.7833655
+File F:\AktisERP\aktis\production\templates\technologist\models\delete.html first seen with mtime 1711374746.9052134
+File F:\AktisERP\aktis\production\templates\technologist\models\detail.html first seen with mtime 1711374728.5664613
+File F:\AktisERP\aktis\production\templates\technologist\models\edit.html first seen with mtime 1711374738.5652142
+File F:\AktisERP\aktis\production\templates\technologist\models\list.html first seen with mtime 1711374703.1812468
+File F:\AktisERP\aktis\production\templates\technologist\operations\create.html first seen with mtime 1711372397.9726105
+File F:\AktisERP\aktis\production\templates\technologist\operations\delete.html first seen with mtime 1711372366.0972219
+File F:\AktisERP\aktis\production\templates\technologist\operations\detail.html first seen with mtime 1711372387.4455745
+File F:\AktisERP\aktis\production\templates\technologist\operations\edit.html first seen with mtime 1711372377.5305293
+File F:\AktisERP\aktis\production\templates\technologist\operations\list.html first seen with mtime 1711372795.1821268
+File F:\AktisERP\aktis\production\templates\technologist\passports\assign_operations.html first seen with mtime 1711543359.11256
+File F:\AktisERP\aktis\production\templates\technologist\passports\create.html first seen with mtime 1710666480.70506
+File F:\AktisERP\aktis\production\templates\technologist\passports\create_size_quantity.html first seen with mtime 1711545358.0170622
+File F:\AktisERP\aktis\production\templates\technologist\passports\delete.html first seen with mtime 1711543341.3511803
+File F:\AktisERP\aktis\production\templates\technologist\passports\detail.html first seen with mtime 1711543270.5731213
+File F:\AktisERP\aktis\production\templates\technologist\passports\edit.html first seen with mtime 1710666530.9671667
+File F:\AktisERP\aktis\production\templates\technologist\passports\list.html first seen with mtime 1711543283.0531242
+File F:\AktisERP\aktis\production\templates\technologist\rolls\create.html first seen with mtime 1711373579.3815682
+File F:\AktisERP\aktis\production\templates\technologist\rolls\delete.html first seen with mtime 1711373615.8503413
+File F:\AktisERP\aktis\production\templates\technologist\rolls\detail.html first seen with mtime 1711373600.0224204
+File F:\AktisERP\aktis\production\templates\technologist\rolls\edit.html first seen with mtime 1711373607.792935
+File F:\AktisERP\aktis\production\templates\technologist\rolls\list.html first seen with mtime 1711373593.1981673
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\loader.py first seen with mtime 1710497027.641666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\migrations\0001_initial.py first seen with mtime 1710497025.7421982
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\0001_initial.py first seen with mtime 1710497024.960162
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0004_alter_user_username_opts.py first seen with mtime 1710497025.580163
+File F:\AktisERP\aktis\production\migrations\0014_alter_employeeattendance_employee.py first seen with mtime 1711369023.259863
+File F:\AktisERP\aktis\production\migrations\0018_order_payment_order_term.py first seen with mtime 1711459638.481684
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0006_require_contenttypes_0002.py first seen with mtime 1710497025.582162
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\migrations\__init__.py first seen with mtime 1710497027.3356645
+File F:\AktisERP\aktis\production\migrations\0001_initial.py first seen with mtime 1710523436.9224207
+File F:\AktisERP\aktis\production\migrations\0017_remove_passport_assortment_remove_passport_client_and_more.py first seen with mtime 1711381290.317967
+File F:\AktisERP\aktis\production\migrations\0019_order_name.py first seen with mtime 1711460523.5723193
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0009_alter_user_last_name_max_length.py first seen with mtime 1710497025.5851648
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0011_update_proxy_permissions.py first seen with mtime 1710497025.5861628
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\0002_logentry_remove_auto_add.py first seen with mtime 1710497024.960162
+File F:\AktisERP\aktis\production\migrations\0016_remove_order_passports_passport_order.py first seen with mtime 1711380753.0532315
+File F:\AktisERP\aktis\production\migrations\0005_alter_operation_preferred_completion_time.py first seen with mtime 1710667943.6604416
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\recorder.py first seen with mtime 1710497027.6446664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\migrations\__init__.py first seen with mtime 1710497025.7431636
+File F:\AktisERP\aktis\production\migrations\0003_alter_userprofile_type.py first seen with mtime 1710571199.4298844
+File F:\AktisERP\aktis\production\migrations\0004_alter_operation_preferred_completion_time_and_more.py first seen with mtime 1710667933.789312
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\0003_logentry_add_action_flag_choices.py first seen with mtime 1710497024.9611619
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0010_alter_group_name_max_length.py first seen with mtime 1710497025.5851648
+File F:\AktisERP\aktis\production\migrations\0006_alter_passport_date.py first seen with mtime 1710676005.6123648
+File F:\AktisERP\aktis\production\migrations\0012_remove_work_quantity.py first seen with mtime 1710772962.1117089
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\__init__.py first seen with mtime 1710497024.9611619
+File F:\AktisERP\aktis\production\migrations\0007_remove_passport_operations.py first seen with mtime 1710677342.8295188
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0003_alter_user_email_max_length.py first seen with mtime 1710497025.579167
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0001_initial.py first seen with mtime 1710497025.578197
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0005_alter_user_last_login_null.py first seen with mtime 1710497025.5811632
+File F:\AktisERP\venv\Lib\site-packages\django\conf\urls\__init__.py first seen with mtime 1710497024.6341639
+File F:\AktisERP\aktis\production\migrations\0015_order.py first seen with mtime 1711380189.5969408
+File F:\AktisERP\aktis\production\migrations\__init__.py first seen with mtime 1710497216.897133
+File F:\AktisERP\aktis\production\migrations\0008_size_remove_work_size_model_sizes.py first seen with mtime 1710766143.8825576
+File F:\AktisERP\aktis\production\migrations\0011_work_size_quantity_alter_work_end_time_and_more.py first seen with mtime 1710772727.3367195
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0002_alter_permission_name_max_length.py first seen with mtime 1710497025.579167
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0007_alter_validators_add_error_messages.py first seen with mtime 1710497025.5831661
+File F:\AktisERP\aktis\production\migrations\0010_remove_passport_works_work_passport.py first seen with mtime 1710771693.4683182
+File F:\AktisERP\aktis\production\migrations\0009_sizequantity_remove_model_sizes_and_more.py first seen with mtime 1710769946.619069
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0012_alter_user_first_name_max_length.py first seen with mtime 1710497025.587177
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0008_alter_user_username_max_length.py first seen with mtime 1710497025.5841668
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\graph.py first seen with mtime 1710497027.640666
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\locmem.py first seen with mtime 1710497027.5246656
+File F:\AktisERP\venv\Lib\site-packages\django\views\defaults.py first seen with mtime 1710497027.8416655
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\migrations\0001_initial.py first seen with mtime 1710497027.3356645
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\migrations\0002_remove_content_type_name.py first seen with mtime 1710497025.7431636
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\__init__.py first seen with mtime 1710497025.587177
+File F:\AktisERP\aktis\production\migrations\0013_employeeattendance.py first seen with mtime 1711027820.7960045
+File F:\AktisERP\venv\Lib\site-packages\django\views\csrf.py first seen with mtime 1710497027.8406649
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\executor.py first seen with mtime 1710497027.640666
+File F:\AktisERP\aktis\production\migrations\0002_alter_work_user_userprofile_delete_user.py first seen with mtime 1710568003.2203941
+(0.344) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+(0.344) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\backends\db.py first seen with mtime 1710497027.166666
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\clickjacking.py first seen with mtime 1710497027.7656655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\idna.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\aktis\wsgi.py first seen with mtime 1710497056.9918866
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\compiler.py first seen with mtime 1710497027.6786659
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\stringprep.py first seen with mtime 1675761914.0
+Watching for file changes with StatReloader
+Waiting for apps ready_event.
+Apps ready_event triggered. Sending autoreload_started signal.
+Watching dir F:\AktisERP\aktis\production\templates with glob **/*.
+Watching dir F:\AktisERP\aktis\locale with glob **/*.mo.
+Watching dir F:\AktisERP\aktis\production\locale with glob **/*.mo.
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\list.py first seen with mtime 1710497027.853666
+File F:\AktisERP\venv\Lib\site-packages\django\forms\boundfield.py first seen with mtime 1710497027.686667
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\query.py first seen with mtime 1710497027.6816666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\uuid.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_events.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\html\entities.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\dateformat.py first seen with mtime 1710497027.813666
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\compatibility\django_4_0.py first seen with mtime 1710497027.5356655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\select.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\locks.py first seen with mtime 1710497027.5416653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\staggered.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\bisect.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\__init__.py first seen with mtime 1710518347.6066463
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\site.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zoneinfo\_common.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\constants.py first seen with mtime 1710497027.6796663
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\lookups.py first seen with mtime 1710497027.659666
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\psycopg_any.py first seen with mtime 1710497027.6306658
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\asgi.py first seen with mtime 1710497027.5516655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\re.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\text.py first seen with mtime 1710497027.830665
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\__init__.py first seen with mtime 1710497027.786666
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\operations.py first seen with mtime 1710497027.6296642
+File F:\AktisERP\venv\Lib\site-packages\django\utils\ipv6.py first seen with mtime 1710497027.8236656
+File F:\AktisERP\aktis\production\decorators.py first seen with mtime 1711460946.7416987
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\copy.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\shortcuts.py first seen with mtime 1710497024.3411639
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\types.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\validators.py first seen with mtime 1710497027.5166655
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\checks.py first seen with mtime 1710497027.5006733
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\cookies.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\signals.py first seen with mtime 1710497027.5966818
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\__init__.py first seen with mtime 1710497027.6516664
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\utils.py first seen with mtime 1710497027.5186653
+File F:\AktisERP\venv\Lib\site-packages\django\utils\numberformat.py first seen with mtime 1710497027.8276772
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\decimal.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\sessions.py first seen with mtime 1710497027.538666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\platform.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\utils.py first seen with mtime 1710497027.6926675
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\datastructures.py first seen with mtime 1710497027.6806667
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\files.py first seen with mtime 1710497027.6656654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_subprocess.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\scanner.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\cache.py first seen with mtime 1710497027.8086667
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\utils.py first seen with mtime 1710497024.051766
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\files.py first seen with mtime 1710497027.529666
+File F:\AktisERP\venv\Lib\site-packages\django\utils\dates.py first seen with mtime 1710497027.8146672
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\message.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\dates.py first seen with mtime 1710497027.851665
+File F:\AktisERP\venv\Lib\site-packages\django\template\library.py first seen with mtime 1710497027.7786689
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\ddl_references.py first seen with mtime 1710497027.5956664
+File F:\AktisERP\venv\Lib\site-packages\django\urls\exceptions.py first seen with mtime 1710497027.8036654
+File F:\AktisERP\venv\Lib\site-packages\django\core\signing.py first seen with mtime 1710497027.5156658
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\logging\config.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\admin.py first seen with mtime 1710497025.4031668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sre_parse.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\smartif.py first seen with mtime 1710497027.7816648
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\__init__.py first seen with mtime 1710497027.7646668
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\temp.py first seen with mtime 1710497027.542666
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\messages.py first seen with mtime 1710497027.529666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\functools.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\sql.py first seen with mtime 1710497024.0497715
+File F:\AktisERP\venv\Lib\site-packages\django\utils\_os.py first seen with mtime 1710497027.8066652
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\__init__.py first seen with mtime 1710497027.7896645
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\related_descriptors.py first seen with mtime 1710497027.6706645
+File F:\AktisERP\venv\Lib\site-packages\django\utils\crypto.py first seen with mtime 1710497027.8116646
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\exceptions.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\base.py first seen with mtime 1710497027.5516655
+File F:\AktisERP\venv\Lib\site-packages\asgiref\sync.py first seen with mtime 1710497024.2104757
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_uuid.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\__init__.py first seen with mtime 1710497025.1911657
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\app_directories.py first seen with mtime 1710497027.786666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\format_helpers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\base.py first seen with mtime 1710497027.8006668
+File F:\AktisERP\venv\Lib\site-packages\django\http\multipartparser.py first seen with mtime 1710497027.7626662
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\dataclasses.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\exceptions.py first seen with mtime 1710497024.0457668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\enum.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\resolvers.py first seen with mtime 1710497027.8036654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\hmac.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\__init__.py first seen with mtime 1710497027.686667
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\state.py first seen with mtime 1710497027.6466658
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\deletion.py first seen with mtime 1710497027.6556654
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\__init__.py first seen with mtime 1710497024.0437648
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\base.py first seen with mtime 1710497027.5866654
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\uploadedfile.py first seen with mtime 1710497027.544665
+File F:\AktisERP\venv\Lib\site-packages\django\conf\global_settings.py first seen with mtime 1710497024.344167
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\move.py first seen with mtime 1710497027.5416653
+File F:\AktisERP\venv\Lib\site-packages\django\core\mail\__init__.py first seen with mtime 1710497027.5536664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\views.py first seen with mtime 1710497025.419162
+File F:\AktisERP\venv\Lib\site-packages\django\template\defaultfilters.py first seen with mtime 1710497027.7746665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_modify.py first seen with mtime 1710497025.1941662
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\nturl2path.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_header_value_parser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\dispatch\__init__.py first seen with mtime 1710497027.683666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\encoders.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\formats.py first seen with mtime 1710497027.8196657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\client.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\exceptions.py first seen with mtime 1710497027.639666
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\mixins.py first seen with mtime 1710497027.6756666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\__init__.py first seen with mtime 1710497025.4011652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\os.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_collections_abc.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\safestring.py first seen with mtime 1710497027.8296652
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\templates.py first seen with mtime 1710497027.5336664
+File F:\AktisERP\venv\Lib\site-packages\django\core\__init__.py first seen with mtime 1710497027.5126655
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\views.py first seen with mtime 1710497027.5066655
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\window.py first seen with mtime 1710497027.6776652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\gzip.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\html\parser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\where.py first seen with mtime 1710497027.683666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\shutil.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\asgiref\local.py first seen with mtime 1710497024.2077177
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\constraints.py first seen with mtime 1710497027.654666
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\__init__.py first seen with mtime 1710497027.6786659
+File F:\AktisERP\aktis\aktis\__init__.py first seen with mtime 1710497056.9918866
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\base.py first seen with mtime 1710497027.851665
+File F:\AktisERP\aktis\production\templatetags\custom_filters.py first seen with mtime 1710938305.4947257
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_compat_pickle.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\bz2.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\futures.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\http\response.py first seen with mtime 1710497027.7636669
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\grouping.py first seen with mtime 1710497024.053766
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\keyword.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\token.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\decorators.py first seen with mtime 1710497027.8156662
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_zoneinfo.pyd first seen with mtime 1675761956.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\security.py first seen with mtime 1710497027.7706664
+File F:\AktisERP\venv\Lib\site-packages\django\forms\formsets.py first seen with mtime 1710497027.689666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\numbers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\tz.py first seen with mtime 1710497027.792665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\__init__.py first seen with mtime 1710497027.6726677
+File F:\AktisERP\venv\Lib\site-packages\django\core\mail\message.py first seen with mtime 1710497027.554679
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\detail.py first seen with mtime 1710497027.8526642
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\secrets.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\protocols.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\aliases.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\forms.py first seen with mtime 1710497027.688667
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\manager.py first seen with mtime 1710497027.659666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\management\__init__.py first seen with mtime 1710497025.576197
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\middleware.py first seen with mtime 1710497025.413167
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\datetime.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\constants.py first seen with mtime 1710497026.8509357
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\collections\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\parser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_json.py first seen with mtime 1710518347.6076112
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\utils.py first seen with mtime 1710497027.5976665
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\tokens.py first seen with mtime 1710497024.059978
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\mixins.py first seen with mtime 1710497027.6676674
+File F:\AktisERP\venv\Lib\site-packages\django\utils\translation\reloader.py first seen with mtime 1710497027.8366654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\tempfile.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\collections\abc.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\fields.py first seen with mtime 1710497027.6876657
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\filesystem.py first seen with mtime 1710497027.7886736
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ipaddress.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\functional.py first seen with mtime 1710497027.8196657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sysconfig.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\backends\base.py first seen with mtime 1710497027.164666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\message.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\models.py first seen with mtime 1710497027.6906667
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\introspection.py first seen with mtime 1710497027.6016772
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\i18n.py first seen with mtime 1710497027.7906647
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pickle.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\mixins.py first seen with mtime 1710497027.5496662
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\base.py first seen with mtime 1710497026.8559365
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sites\__init__.py first seen with mtime 1710497027.3396654
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\keywords.py first seen with mtime 1710497024.0477686
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\simple_server.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\introspection.py first seen with mtime 1710497027.6286771
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\nonmultipart.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\client.py first seen with mtime 1710497027.5996652
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\filebased.py first seen with mtime 1710497027.5236642
+File F:\AktisERP\venv\Lib\site-packages\django\template\loader_tags.py first seen with mtime 1710497027.7796657
+File F:\AktisERP\venv\Lib\site-packages\django\utils\version.py first seen with mtime 1710497027.8346653
+File F:\AktisERP\venv\Lib\site-packages\django\utils\duration.py first seen with mtime 1710497027.8176653
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\apps.py first seen with mtime 1710497024.638163
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\constants.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\apps.py first seen with mtime 1710497027.1596646
+File F:\AktisERP\venv\Lib\site-packages\django\http\__init__.py first seen with mtime 1710497027.7606652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pathlib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\client.py first seen with mtime 1710497027.6256664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\models.py first seen with mtime 1710497025.4151645
+File F:\AktisERP\venv\Lib\site-packages\django\template\utils.py first seen with mtime 1710497027.7816648
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\tokenize.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\common.py first seen with mtime 1710497027.845666
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\__init__.py first seen with mtime 1710497027.5956664
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\features.py first seen with mtime 1710497027.6006668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_sitebuiltins.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\model_checks.py first seen with mtime 1710497027.5316908
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\codecs.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\dispatch\dispatcher.py first seen with mtime 1710497027.684669
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_encoded_words.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\cache.py first seen with mtime 1710497027.8446653
+File F:\AktisERP\aktis\production\__init__.py first seen with mtime 1710497216.895133
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\features.py first seen with mtime 1710497027.6276672
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_hashlib.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\cli.py first seen with mtime 1710497024.0457668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\subprocess.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\aktis\urls.py first seen with mtime 1710523289.2929153
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\utils.py first seen with mtime 1710497026.8539336
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\static.py first seen with mtime 1710497027.792665
+File F:\AktisERP\venv\Lib\site-packages\django\utils\regex_helper.py first seen with mtime 1710497027.828666
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\base.py first seen with mtime 1710497027.5476663
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ast.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\http\request.py first seen with mtime 1710497027.7626662
+File F:\AktisERP\venv\Lib\site-packages\django\apps\registry.py first seen with mtime 1710497024.3431907
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\options.py first seen with mtime 1710497024.645164
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\linecache.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\utils.py first seen with mtime 1710497027.8046691
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\checks.py first seen with mtime 1710497025.4071927
+File F:\AktisERP\venv\Lib\site-packages\django\template\backends\base.py first seen with mtime 1710497027.7826653
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\edit.py first seen with mtime 1710497027.853666
+File F:\AktisERP\venv\Lib\site-packages\django\template\exceptions.py first seen with mtime 1710497027.7776656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\futures\thread.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\apps.py first seen with mtime 1710497027.499686
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\base.py first seen with mtime 1710497027.5986664
+File F:\AktisERP\venv\Lib\site-packages\django\utils\datastructures.py first seen with mtime 1710497027.8126657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\gettext.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_decimal.pyd first seen with mtime 1675761956.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\uu.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sites\requests.py first seen with mtime 1710497027.3456657
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\quoprimime.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\runners.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\base.py first seen with mtime 1710497027.6256664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\fnmatch.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\generated.py first seen with mtime 1710497027.666667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\selectors.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\memory.py first seen with mtime 1710497027.5496662
+File F:\AktisERP\venv\Lib\site-packages\django\utils\module_loading.py first seen with mtime 1710497027.826666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\base_session.py first seen with mtime 1710497027.1596646
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\creation.py first seen with mtime 1710497027.5996652
+File F:\AktisERP\venv\Lib\site-packages\django\forms\renderers.py first seen with mtime 1710497027.6916654
+File F:\AktisERP\venv\Lib\site-packages\django\utils\translation\trans_real.py first seen with mtime 1710497027.8386655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_parseaddr.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sre_constants.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\dateparse.py first seen with mtime 1710497027.813666
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\query_utils.py first seen with mtime 1710497027.662664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\mimetypes.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\hashable.py first seen with mtime 1710497027.8206658
+File F:\AktisERP\venv\Lib\site-packages\django\template\base.py first seen with mtime 1710497027.7726648
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\__init__.py first seen with mtime 1710497026.8489413
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\cache.py first seen with mtime 1710497027.7906647
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\creation.py first seen with mtime 1710497027.626665
+File F:\AktisERP\aktis\production\views\__init__.py first seen with mtime 1710608317.057242
+File F:\AktisERP\venv\Lib\site-packages\asgiref\current_thread_executor.py first seen with mtime 1710497024.2067182
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\python.py first seen with mtime 1710497027.5886686
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\mixins.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\__init__.py first seen with mtime 1710497027.550666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\string.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\windows_utils.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\forms.py first seen with mtime 1711462391.3081076
+File F:\AktisERP\venv\Lib\site-packages\django\urls\__init__.py first seen with mtime 1710497027.7996657
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\validation.py first seen with mtime 1710497027.6046703
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_compression.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zoneinfo\_tzpath.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\inspect.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\getpass.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\__init__.py first seen with mtime 1710497027.5866654
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\utils.py first seen with mtime 1710497027.6476655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\socketserver.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zoneinfo\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\genericpath.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\manage.py first seen with mtime 1710497056.986884
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\opcode.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\hashers.py first seen with mtime 1710497025.4121652
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\__init__.py first seen with mtime 1710497027.5186653
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\related_lookups.py first seen with mtime 1710497027.6716683
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\parse.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\management\__init__.py first seen with mtime 1710497027.5076654
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\migration.py first seen with mtime 1710497027.642666
+File F:\AktisERP\aktis\production\models.py first seen with mtime 1711460509.464697
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\registry.py first seen with mtime 1710497027.5326645
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\base.py first seen with mtime 1710497027.519665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\middleware.py first seen with mtime 1710497026.8529341
+File F:\AktisERP\aktis\production\urls.py first seen with mtime 1711544282.092392
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\tasks.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\views\technologist_views.py first seen with mtime 1711545598.5951138
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\log.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\__init__.py first seen with mtime 1710497027.8056655
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\sites.py first seen with mtime 1710497024.645164
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\dis.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\async_checks.py first seen with mtime 1710497027.5276654
+File F:\AktisERP\venv\Lib\site-packages\django\views\generic\__init__.py first seen with mtime 1710497027.8506646
+File F:\AktisERP\venv\Lib\site-packages\django\urls\conf.py first seen with mtime 1710497027.8016672
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\exceptions.py first seen with mtime 1710497024.6401708
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\exceptions.py first seen with mtime 1710497027.1606815
+File F:\AktisERP\venv\Lib\site-packages\django\utils\deprecation.py first seen with mtime 1710497027.8166645
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\filters.py first seen with mtime 1710497024.6411955
+File F:\AktisERP\venv\Lib\site-packages\django\utils\timesince.py first seen with mtime 1710497027.8316655
+File F:\AktisERP\venv\Lib\site-packages\_virtualenv.py first seen with mtime 1710496963.192812
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_queue.pyd first seen with mtime 1675761954.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_ssl.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\__init__.py first seen with mtime 1710497027.637665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\threads.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\log.py first seen with mtime 1710497027.825665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\stat.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\apps\__init__.py first seen with mtime 1710497024.3411639
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\signals.py first seen with mtime 1710497027.663667
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\__init__.py first seen with mtime 1710497025.58919
+File F:\AktisERP\venv\Lib\site-packages\django\utils\connection.py first seen with mtime 1710497027.8106656
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\tokens.py first seen with mtime 1710497025.417163
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\actions.py first seen with mtime 1710497024.6371913
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\coroutines.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\decoder.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pprint.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_overlapped.pyd first seen with mtime 1675761954.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\headerregistry.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\handlers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\urls\converters.py first seen with mtime 1710497027.802667
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\cached.py first seen with mtime 1710497027.787665
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\filesystem.py first seen with mtime 1710497027.5476663
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\traceback.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\extensions.py first seen with mtime 1710518347.6366122
+File F:\AktisERP\venv\Lib\site-packages\django\conf\locale\__init__.py first seen with mtime 1710497024.3512037
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\random.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ntpath.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\locale.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\database.py first seen with mtime 1710497027.5286653
+File F:\AktisERP\venv\Lib\site-packages\asgiref\__init__.py first seen with mtime 1710497024.2057173
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\decorators.py first seen with mtime 1710497024.6391983
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_bz2.pyd first seen with mtime 1675761956.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\header.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\base.py first seen with mtime 1710497027.6496656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\policy.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\socket.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\backends\__init__.py first seen with mtime 1710497027.1636648
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\subprocess.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\statement_splitter.py first seen with mtime 1710497024.053766
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\images.py first seen with mtime 1710497027.5406654
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\__init__.py first seen with mtime 1710497026.8559365
+File F:\AktisERP\venv\Lib\site-packages\django\utils\html.py first seen with mtime 1710497027.821667
+File F:\AktisERP\aktis\production\admin.py first seen with mtime 1710570891.91342
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\signal.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\http\server.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\widgets.py first seen with mtime 1710497024.6481674
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\__init__.py first seen with mtime 1710497024.6361656
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\aggregates.py first seen with mtime 1710497027.6526659
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\streams.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_asyncio.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\csrf.py first seen with mtime 1710497027.8466668
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\exception.py first seen with mtime 1710497027.552666
+File F:\AktisERP\venv\Lib\site-packages\django\template\response.py first seen with mtime 1710497027.7806642
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\utils.py first seen with mtime 1710497027.545665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\calendar.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\finders.py first seen with mtime 1710497027.5016809
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\__init__.py first seen with mtime 1710497024.054765
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\constants.py first seen with mtime 1710497027.654666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\forms.py first seen with mtime 1710497025.5921912
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\lexer.py first seen with mtime 1710497024.0487676
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_lzma.pyd first seen with mtime 1675761954.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\proxy.py first seen with mtime 1710497027.6686654
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\options.py first seen with mtime 1710497027.6606674
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\glob.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sites\shortcuts.py first seen with mtime 1710497027.346667
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\__init__.py first seen with mtime 1710497027.664666
+File F:\AktisERP\venv\Lib\site-packages\django\template\backends\django.py first seen with mtime 1710497027.7836635
+File F:\AktisERP\aktis\aktis\settings.py first seen with mtime 1711545861.8807237
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\caches.py first seen with mtime 1710497027.5276654
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\__init__.py first seen with mtime 1710497027.5266652
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\signals.py first seen with mtime 1710497025.417163
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\contextvars.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\timezone.py first seen with mtime 1710497027.8336656
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\__init__.py first seen with mtime 1710497024.051766
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\charset.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\servers\__init__.py first seen with mtime 1710497027.5916643
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\__init__.py first seen with mtime 1710497027.5466657
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\fields.py first seen with mtime 1710497025.591163
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\weakref.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\wsgi.py first seen with mtime 1710497027.5176654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\posixpath.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\reverse_related.py first seen with mtime 1710497027.6726677
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\models.py first seen with mtime 1710497025.5931633
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\engine\filter_stack.py first seen with mtime 1710497024.0527658
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\base.py first seen with mtime 1710497027.5626652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\response.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\copyreg.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\utils.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\feedparser.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\backends\__init__.py first seen with mtime 1710497027.7826653
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\debug.py first seen with mtime 1710497027.8476655
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\base.py first seen with mtime 1710497027.5366642
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\html\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\headers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\comparison.py first seen with mtime 1710497027.6736655
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\__init__.py first seen with mtime 1710497027.5976665
+File F:\AktisERP\venv\Lib\site-packages\django\template\defaulttags.py first seen with mtime 1710497027.7766654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_markupbase.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\apps.py first seen with mtime 1710497025.4041672
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\sslproto.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\translation.py first seen with mtime 1710497027.5336664
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\http.py first seen with mtime 1710497027.7686656
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\__init__.py first seen with mtime 1710497027.624666
+File F:\AktisERP\venv\Lib\site-packages\django\utils\choices.py first seen with mtime 1710497027.8106656
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\math.py first seen with mtime 1710497027.6756666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\windows_events.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_tasks.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ctypes\_endian.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\http\cookie.py first seen with mtime 1710497027.7616653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\hashlib.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\abc.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\debug.py first seen with mtime 1710497027.8406649
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\errors.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\contextlib.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\reprlib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\base.py first seen with mtime 1710497027.5396667
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\sql.py first seen with mtime 1710518347.639614
+File F:\AktisERP\venv\Lib\site-packages\django\template\loader.py first seen with mtime 1710497027.7796657
+File F:\AktisERP\aktis\production\views\admin_views.py first seen with mtime 1711459902.0608668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\iterators.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\__init__.py first seen with mtime 1710497027.7716663
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\utils.py first seen with mtime 1710497027.663667
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\checks.py first seen with mtime 1710497025.591163
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\operator.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\errors.py first seen with mtime 1710518347.6356118
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\transports.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\views\employee_views.py first seen with mtime 1711369435.1509042
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\heapq.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\pkgutil.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\common.py first seen with mtime 1710497027.766666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\events.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\autoreload.py first seen with mtime 1710497027.8086667
+File F:\AktisERP\venv\Lib\site-packages\django\apps\config.py first seen with mtime 1710497024.3421648
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\cache.py first seen with mtime 1710497027.7656655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\machinery.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\management\commands\runserver.py first seen with mtime 1710497027.5096645
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\management\__init__.py first seen with mtime 1710497025.740195
+File F:\AktisERP\venv\Lib\site-packages\django\templatetags\l10n.py first seen with mtime 1710497027.791664
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\util.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\http.py first seen with mtime 1710497027.8226662
+File F:\AktisERP\aktis\production\views\common_views.py first seen with mtime 1711369426.661111
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\base_user.py first seen with mtime 1710497025.4061916
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\operations.py first seen with mtime 1710497027.602666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\cp1251.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\utils.py first seen with mtime 1710497027.594666
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\__init__.py first seen with mtime 1710497027.843666
+File F:\AktisERP\venv\Lib\site-packages\django\__init__.py first seen with mtime 1710497024.3392024
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\expressions.py first seen with mtime 1710497027.6576648
+File F:\AktisERP\venv\Lib\site-packages\django\db\transaction.py first seen with mtime 1710497027.5936656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\proactor_events.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\uploadhandler.py first seen with mtime 1710497027.544665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\json\encoder.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\validators.py first seen with mtime 1710497025.419162
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\queues.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\admin.py first seen with mtime 1710497025.5901897
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\compatibility\__init__.py first seen with mtime 1710497027.5356655
+File F:\AktisERP\venv\Lib\site-packages\django\template\context.py first seen with mtime 1710497027.7736661
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\__init__.py first seen with mtime 1710497027.519665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\_policybase.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\utils.py first seen with mtime 1710497024.6471646
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\futures\_base.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\utf_8.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\queue.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\__init__.py first seen with mtime 1710497027.8396652
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\urls.py first seen with mtime 1710497027.534665
+File F:\AktisERP\venv\Lib\site-packages\django\template\loaders\base.py first seen with mtime 1710497027.787665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\related.py first seen with mtime 1710497027.669664
+File F:\AktisERP\venv\Lib\site-packages\django\utils\itercompat.py first seen with mtime 1710497027.8246663
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\views\__init__.py first seen with mtime 1710497025.1991665
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\subqueries.py first seen with mtime 1710497027.6826668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\text.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\paginator.py first seen with mtime 1710497027.514666
+File F:\AktisERP\venv\Lib\site-packages\django\core\mail\utils.py first seen with mtime 1710497027.5556664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\password_validation.py first seen with mtime 1710497025.4161625
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\text.py first seen with mtime 1710497027.676666
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\base.py first seen with mtime 1710497027.6536667
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\commands\__init__.py first seen with mtime 1710497027.5676644
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\others.py first seen with mtime 1710497024.0557654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\request.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\__init__.py first seen with mtime 1710497027.592666
+File F:\AktisERP\venv\Lib\site-packages\django\core\serializers\json.py first seen with mtime 1710497027.5876656
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\functions\datetime.py first seen with mtime 1710497027.6746655
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\aligned_indent.py first seen with mtime 1710497024.0557654
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\views\autocomplete.py first seen with mtime 1710497025.2001653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\urllib\error.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\tokens.py first seen with mtime 1710497024.0507655
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\csrf.py first seen with mtime 1710497027.537677
+File F:\AktisERP\venv\Lib\site-packages\django\utils\lorem_ipsum.py first seen with mtime 1710497027.826666
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\right_margin.py first seen with mtime 1710497024.0577652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_socket.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\conf\__init__.py first seen with mtime 1710497024.344167
+File F:\AktisERP\aktis\production\apps.py first seen with mtime 1710497216.890132
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\_weakrefset.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\views.py first seen with mtime 1710497025.5941634
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\struct.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\api.py first seen with mtime 1710497026.8499415
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\locks.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\argparse.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\__init__.py first seen with mtime 1710497024.6371913
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\__init__.py first seen with mtime 1710497027.1586664
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\utils.py first seen with mtime 1710497027.505666
+File F:\AktisERP\venv\Lib\site-packages\django\utils\translation\__init__.py first seen with mtime 1710497027.8366654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\multipart.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\color.py first seen with mtime 1710497027.563672
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\sre_compile.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\backends.py first seen with mtime 1710497025.4051955
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\__init__.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\io.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\tree.py first seen with mtime 1710497027.8336656
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\log.py first seen with mtime 1710497025.1981673
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\_ctypes.pyd first seen with mtime 1675761956.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\wsgiref\util.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\__init__.py first seen with mtime 1710497027.6486657
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\base.py first seen with mtime 1710497025.1971674
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\_abc.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\typing.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\__future__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\termcolors.py first seen with mtime 1710497027.8296652
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\extras.py first seen with mtime 1710518347.637611
+File F:\AktisERP\venv\Lib\site-packages\django\core\exceptions.py first seen with mtime 1710497027.513665
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\commands\runserver.py first seen with mtime 1710497027.577665
+File F:\AktisERP\venv\Lib\site-packages\_distutils_hack\__init__.py first seen with mtime 1710496964.4658139
+File F:\AktisERP\venv\Lib\site-packages\django\core\handlers\wsgi.py first seen with mtime 1710497027.5536664
+File F:\AktisERP\venv\Lib\site-packages\django\utils\asyncio.py first seen with mtime 1710497027.8076653
+File F:\AktisERP\venv\Lib\site-packages\django\utils\deconstruct.py first seen with mtime 1710497027.8156662
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\middleware.py first seen with mtime 1710497027.1616657
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_range.py first seen with mtime 1710518347.6326287
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\apps.py first seen with mtime 1710497026.8509357
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_ipaddress.py first seen with mtime 1710518347.6066463
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\__init__.py first seen with mtime 1710497027.4986658
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\special.py first seen with mtime 1710497027.6516664
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\query.py first seen with mtime 1710497027.661665
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\concurrent\futures\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\encoding.py first seen with mtime 1710497027.8176653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\base_futures.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\warnings.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\logging\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\forms\widgets.py first seen with mtime 1710497027.6936665
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\handlers.py first seen with mtime 1710497027.5026667
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ctypes\__init__.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\views\main.py first seen with mtime 1710497025.202168
+File F:\AktisERP\venv\Lib\site-packages\django\template\engine.py first seen with mtime 1710497027.7766654
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\graphlib.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ctypes\wintypes.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\logging\handlers.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\decorators.py first seen with mtime 1710497025.4111652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\trsock.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\difflib.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\views\i18n.py first seen with mtime 1710497027.8426654
+File F:\AktisERP\venv\Lib\site-packages\psycopg2\_psycopg.cp310-win_amd64.pyd first seen with mtime 1710518347.6306443
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\asyncio\selector_events.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\template\autoreload.py first seen with mtime 1710497027.7716663
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\mime\base.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\utils\inspect.py first seen with mtime 1710497027.8226662
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\contentmanager.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\management\__init__.py first seen with mtime 1710497027.5616777
+File F:\AktisERP\venv\Lib\site-packages\django\core\servers\basehttp.py first seen with mtime 1710497027.592666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_urls.py first seen with mtime 1710497025.195171
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\generator.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\checks\security\__init__.py first seen with mtime 1710497027.5366642
+File F:\AktisERP\venv\Lib\site-packages\django\core\signals.py first seen with mtime 1710497027.514666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\email\base64mime.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\output.py first seen with mtime 1710497024.0567648
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\models.py first seen with mtime 1710497024.6431653
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\templatetags\admin_list.py first seen with mtime 1710497025.1921668
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\lzma.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\models.py first seen with mtime 1710497027.1616657
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\forms.py first seen with mtime 1710497025.4111652
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\threading.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\quopri.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\fields.py first seen with mtime 1710497027.6496656
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\staticfiles\management\commands\__init__.py first seen with mtime 1710497027.5076654
+File F:\AktisERP\venv\Lib\site-packages\django\views\decorators\http.py first seen with mtime 1710497027.8496654
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\fields\json.py first seen with mtime 1710497027.6676674
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\indexes.py first seen with mtime 1710497027.6586773
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\operations\models.py first seen with mtime 1710497027.6506648
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\filters\reindent.py first seen with mtime 1710497024.0577652
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\base\schema.py first seen with mtime 1710497027.6036677
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\base64.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\__init__.py first seen with mtime 1710497027.5396667
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\csrf.py first seen with mtime 1710497027.767666
+File F:\AktisERP\venv\Lib\site-packages\sqlparse\formatter.py first seen with mtime 1710497024.0467665
+File F:\AktisERP\venv\Lib\site-packages\django\db\backends\postgresql\schema.py first seen with mtime 1710497027.6306658
+File F:\AktisERP\venv\Lib\site-packages\django\views\static.py first seen with mtime 1710497027.843666
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\ssl.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\core\files\storage\handler.py first seen with mtime 1710497027.5486662
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\apps.py first seen with mtime 1710497025.5901897
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\helpers.py first seen with mtime 1710497024.6431653
+File C:\Users\User\AppData\Local\Programs\Python\Python310\DLLs\unicodedata.pyd first seen with mtime 1675761956.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\checks.py first seen with mtime 1710497024.6391983
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\enums.py first seen with mtime 1710497027.6566668
+File F:\AktisERP\aktis\production\templates\admin first seen with mtime 1711460099.6511135
+File F:\AktisERP\aktis\production\templates\admin_page.html first seen with mtime 1711461491.1161962
+File F:\AktisERP\aktis\production\templates\base.html first seen with mtime 1711031596.1335373
+File F:\AktisERP\aktis\production\templates\employee first seen with mtime 1710925438.4163046
+File F:\AktisERP\aktis\production\templates\employee_page.html first seen with mtime 1710928298.9581373
+File F:\AktisERP\aktis\production\templates\registration first seen with mtime 1710575538.4449215
+File F:\AktisERP\aktis\production\templates\technologist first seen with mtime 1711375041.239311
+File F:\AktisERP\aktis\production\templates\technologist_page.html first seen with mtime 1711374977.8770115
+File F:\AktisERP\aktis\production\templates\admin\attendances first seen with mtime 1711368863.925628
+File F:\AktisERP\aktis\production\templates\admin\employees first seen with mtime 1710588997.0820477
+File F:\AktisERP\aktis\production\templates\admin\orders first seen with mtime 1711460086.4564037
+File F:\AktisERP\aktis\production\templates\admin\passports first seen with mtime 1710929916.967013
+File F:\AktisERP\aktis\production\templates\admin\salaries first seen with mtime 1710945214.5431552
+File F:\AktisERP\aktis\production\templates\admin\attendances\list.html first seen with mtime 1711369740.850386
+File F:\AktisERP\aktis\production\templates\admin\employees\create.html first seen with mtime 1710592364.580536
+File F:\AktisERP\aktis\production\templates\admin\employees\delete.html first seen with mtime 1710592382.905267
+File F:\AktisERP\aktis\production\templates\admin\employees\detail.html first seen with mtime 1710592400.2380564
+File F:\AktisERP\aktis\production\templates\admin\employees\edit.html first seen with mtime 1710592407.5150435
+File F:\AktisERP\aktis\production\templates\admin\employees\list.html first seen with mtime 1710928626.3031213
+File F:\AktisERP\aktis\production\templates\admin\orders\create.html first seen with mtime 1711460195.008991
+File F:\AktisERP\aktis\production\templates\admin\orders\delete.html first seen with mtime 1711460202.1599226
+File F:\AktisERP\aktis\production\templates\admin\orders\detail.html first seen with mtime 1711460207.890924
+File F:\AktisERP\aktis\production\templates\admin\orders\edit.html first seen with mtime 1711460213.7918136
+File F:\AktisERP\aktis\production\templates\admin\orders\list.html first seen with mtime 1711460220.6631563
+File F:\AktisERP\aktis\production\templates\admin\passports\detail.html first seen with mtime 1710932277.116965
+File F:\AktisERP\aktis\production\templates\admin\passports\list.html first seen with mtime 1710939881.227458
+File F:\AktisERP\aktis\production\templates\admin\salaries\detail.html first seen with mtime 1711370964.760221
+File F:\AktisERP\aktis\production\templates\admin\salaries\list.html first seen with mtime 1711370795.852312
+File F:\AktisERP\aktis\production\templates\employee\works first seen with mtime 1710925445.6339521
+File F:\AktisERP\aktis\production\templates\employee\works\list.html first seen with mtime 1710926337.8161988
+File F:\AktisERP\aktis\production\templates\registration\login.html first seen with mtime 1710572610.6827912
+File F:\AktisERP\aktis\production\templates\technologist\assortments first seen with mtime 1711374244.8356626
+File F:\AktisERP\aktis\production\templates\technologist\clients first seen with mtime 1711374908.6655495
+File F:\AktisERP\aktis\production\templates\technologist\models first seen with mtime 1711374690.5628219
+File F:\AktisERP\aktis\production\templates\technologist\operations first seen with mtime 1711372209.19839
+File F:\AktisERP\aktis\production\templates\technologist\passports first seen with mtime 1710770489.0408125
+File F:\AktisERP\aktis\production\templates\technologist\rolls first seen with mtime 1711373535.9792643
+File F:\AktisERP\aktis\production\templates\technologist\assortments\create.html first seen with mtime 1711374272.6903834
+File F:\AktisERP\aktis\production\templates\technologist\assortments\delete.html first seen with mtime 1711374356.7528653
+File F:\AktisERP\aktis\production\templates\technologist\assortments\detail.html first seen with mtime 1711374371.0082593
+File F:\AktisERP\aktis\production\templates\technologist\assortments\edit.html first seen with mtime 1711374286.77132
+File F:\AktisERP\aktis\production\templates\technologist\assortments\list.html first seen with mtime 1711374265.0192988
+File F:\AktisERP\aktis\production\templates\technologist\clients\create.html first seen with mtime 1711374930.177305
+File F:\AktisERP\aktis\production\templates\technologist\clients\delete.html first seen with mtime 1711374949.9793243
+File F:\AktisERP\aktis\production\templates\technologist\clients\detail.html first seen with mtime 1711374937.5014987
+File F:\AktisERP\aktis\production\templates\technologist\clients\edit.html first seen with mtime 1711374943.6790247
+File F:\AktisERP\aktis\production\templates\technologist\clients\list.html first seen with mtime 1711374922.2154212
+File F:\AktisERP\aktis\production\templates\technologist\models\create.html first seen with mtime 1711374715.7833655
+File F:\AktisERP\aktis\production\templates\technologist\models\delete.html first seen with mtime 1711374746.9052134
+File F:\AktisERP\aktis\production\templates\technologist\models\detail.html first seen with mtime 1711374728.5664613
+File F:\AktisERP\aktis\production\templates\technologist\models\edit.html first seen with mtime 1711374738.5652142
+File F:\AktisERP\aktis\production\templates\technologist\models\list.html first seen with mtime 1711374703.1812468
+File F:\AktisERP\aktis\production\templates\technologist\operations\create.html first seen with mtime 1711372397.9726105
+File F:\AktisERP\aktis\production\templates\technologist\operations\delete.html first seen with mtime 1711372366.0972219
+File F:\AktisERP\aktis\production\templates\technologist\operations\detail.html first seen with mtime 1711372387.4455745
+File F:\AktisERP\aktis\production\templates\technologist\operations\edit.html first seen with mtime 1711372377.5305293
+File F:\AktisERP\aktis\production\templates\technologist\operations\list.html first seen with mtime 1711372795.1821268
+File F:\AktisERP\aktis\production\templates\technologist\passports\assign_operations.html first seen with mtime 1711543359.11256
+File F:\AktisERP\aktis\production\templates\technologist\passports\create.html first seen with mtime 1710666480.70506
+File F:\AktisERP\aktis\production\templates\technologist\passports\create_size_quantity.html first seen with mtime 1711545358.0170622
+File F:\AktisERP\aktis\production\templates\technologist\passports\delete.html first seen with mtime 1711543341.3511803
+File F:\AktisERP\aktis\production\templates\technologist\passports\detail.html first seen with mtime 1711543270.5731213
+File F:\AktisERP\aktis\production\templates\technologist\passports\edit.html first seen with mtime 1710666530.9671667
+File F:\AktisERP\aktis\production\templates\technologist\passports\list.html first seen with mtime 1711543283.0531242
+File F:\AktisERP\aktis\production\templates\technologist\rolls\create.html first seen with mtime 1711373579.3815682
+File F:\AktisERP\aktis\production\templates\technologist\rolls\delete.html first seen with mtime 1711373615.8503413
+File F:\AktisERP\aktis\production\templates\technologist\rolls\detail.html first seen with mtime 1711373600.0224204
+File F:\AktisERP\aktis\production\templates\technologist\rolls\edit.html first seen with mtime 1711373607.792935
+File F:\AktisERP\aktis\production\templates\technologist\rolls\list.html first seen with mtime 1711373593.1981673
+File F:\AktisERP\aktis\production\migrations\0016_remove_order_passports_passport_order.py first seen with mtime 1711380753.0532315
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\0002_logentry_remove_auto_add.py first seen with mtime 1710497024.960162
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0007_alter_validators_add_error_messages.py first seen with mtime 1710497025.5831661
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\0003_logentry_add_action_flag_choices.py first seen with mtime 1710497024.9611619
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\migrations\0002_remove_content_type_name.py first seen with mtime 1710497025.7431636
+File F:\AktisERP\aktis\production\migrations\0013_employeeattendance.py first seen with mtime 1711027820.7960045
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\migrations\0001_initial.py first seen with mtime 1710497025.7421982
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0010_alter_group_name_max_length.py first seen with mtime 1710497025.5851648
+File F:\AktisERP\aktis\production\migrations\0002_alter_work_user_userprofile_delete_user.py first seen with mtime 1710568003.2203941
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0009_alter_user_last_name_max_length.py first seen with mtime 1710497025.5851648
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0008_alter_user_username_max_length.py first seen with mtime 1710497025.5841668
+File F:\AktisERP\aktis\production\migrations\0014_alter_employeeattendance_employee.py first seen with mtime 1711369023.259863
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\graph.py first seen with mtime 1710497027.640666
+File F:\AktisERP\aktis\production\migrations\0006_alter_passport_date.py first seen with mtime 1710676005.6123648
+File F:\AktisERP\aktis\production\migrations\0011_work_size_quantity_alter_work_end_time_and_more.py first seen with mtime 1710772727.3367195
+File F:\AktisERP\aktis\production\migrations\__init__.py first seen with mtime 1710497216.897133
+File F:\AktisERP\aktis\production\migrations\0010_remove_passport_works_work_passport.py first seen with mtime 1710771693.4683182
+File F:\AktisERP\venv\Lib\site-packages\django\core\cache\backends\locmem.py first seen with mtime 1710497027.5246656
+File F:\AktisERP\aktis\production\migrations\0008_size_remove_work_size_model_sizes.py first seen with mtime 1710766143.8825576
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\recorder.py first seen with mtime 1710497027.6446664
+File F:\AktisERP\aktis\production\migrations\0012_remove_work_quantity.py first seen with mtime 1710772962.1117089
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0005_alter_user_last_login_null.py first seen with mtime 1710497025.5811632
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0004_alter_user_username_opts.py first seen with mtime 1710497025.580163
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0011_update_proxy_permissions.py first seen with mtime 1710497025.5861628
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\loader.py first seen with mtime 1710497027.641666
+File F:\AktisERP\aktis\production\migrations\0005_alter_operation_preferred_completion_time.py first seen with mtime 1710667943.6604416
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0006_require_contenttypes_0002.py first seen with mtime 1710497025.582162
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\__init__.py first seen with mtime 1710497025.587177
+File F:\AktisERP\aktis\production\migrations\0019_order_name.py first seen with mtime 1711460523.5723193
+File F:\AktisERP\venv\Lib\site-packages\django\views\csrf.py first seen with mtime 1710497027.8406649
+File F:\AktisERP\aktis\production\migrations\0018_order_payment_order_term.py first seen with mtime 1711459638.481684
+File F:\AktisERP\venv\Lib\site-packages\django\conf\urls\__init__.py first seen with mtime 1710497024.6341639
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0012_alter_user_first_name_max_length.py first seen with mtime 1710497025.587177
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0003_alter_user_email_max_length.py first seen with mtime 1710497025.579167
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\contenttypes\migrations\__init__.py first seen with mtime 1710497025.7431636
+File F:\AktisERP\aktis\production\migrations\0015_order.py first seen with mtime 1711380189.5969408
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0001_initial.py first seen with mtime 1710497025.578197
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\migrations\__init__.py first seen with mtime 1710497027.3356645
+File F:\AktisERP\aktis\production\migrations\0004_alter_operation_preferred_completion_time_and_more.py first seen with mtime 1710667933.789312
+File F:\AktisERP\venv\Lib\site-packages\django\views\defaults.py first seen with mtime 1710497027.8416655
+File F:\AktisERP\aktis\production\migrations\0007_remove_passport_operations.py first seen with mtime 1710677342.8295188
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\__init__.py first seen with mtime 1710497024.9611619
+File F:\AktisERP\aktis\production\migrations\0009_sizequantity_remove_model_sizes_and_more.py first seen with mtime 1710769946.619069
+File F:\AktisERP\aktis\production\migrations\0017_remove_passport_assortment_remove_passport_client_and_more.py first seen with mtime 1711381290.317967
+File F:\AktisERP\aktis\production\migrations\0001_initial.py first seen with mtime 1710523436.9224207
+File F:\AktisERP\aktis\production\migrations\0003_alter_userprofile_type.py first seen with mtime 1710571199.4298844
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\migrations\0001_initial.py first seen with mtime 1710497027.3356645
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\migrations\0002_alter_permission_name_max_length.py first seen with mtime 1710497025.579167
+File F:\AktisERP\venv\Lib\site-packages\django\db\migrations\executor.py first seen with mtime 1710497027.640666
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\admin\migrations\0001_initial.py first seen with mtime 1710497024.960162
+(0.343) 
+            SELECT
+                c.relname,
+                CASE
+                    WHEN c.relispartition THEN 'p'
+                    WHEN c.relkind IN ('m', 'v') THEN 'v'
+                    ELSE 't'
+                END,
+                obj_description(c.oid, 'pg_class')
+            FROM pg_catalog.pg_class c
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        ; args=None; alias=default
+(0.328) SELECT "django_migrations"."id", "django_migrations"."app", "django_migrations"."name", "django_migrations"."applied" FROM "django_migrations"; args=(); alias=default
+File F:\AktisERP\venv\Lib\site-packages\django\db\models\sql\compiler.py first seen with mtime 1710497027.6786659
+File F:\AktisERP\venv\Lib\site-packages\django\middleware\clickjacking.py first seen with mtime 1710497027.7656655
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\stringprep.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\backends\db.py first seen with mtime 1710497027.166666
+File F:\AktisERP\aktis\aktis\wsgi.py first seen with mtime 1710497056.9918866
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\encodings\idna.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\session.py first seen with mtime 1710497026.8579369
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\cookie.py first seen with mtime 1710497026.856936
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\sessions\serializers.py first seen with mtime 1710497027.1626656
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\storage\fallback.py first seen with mtime 1710497026.8579369
+(0.344) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."expire_date" > '2024-03-27T13:25:07.678298+00:00'::timestamptz AND "django_session"."session_key" = 'fdu9pdn5f1mss4ws7viw6opbtbn1i6o3') LIMIT 21; args=(datetime.datetime(2024, 3, 27, 13, 25, 7, 678298, tzinfo=datetime.timezone.utc), 'fdu9pdn5f1mss4ws7viw6opbtbn1i6o3'); alias=default
+(0.328) SELECT "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined" FROM "auth_user" WHERE "auth_user"."id" = 3 LIMIT 21; args=(3,); alias=default
+(0.329) SELECT "production_userprofile"."id", "production_userprofile"."user_id", "production_userprofile"."employee_id", "production_userprofile"."type", "production_userprofile"."status", "production_userprofile"."station" FROM "production_userprofile" WHERE "production_userprofile"."user_id" = 3 LIMIT 21; args=(3,); alias=default
+(0.343) SELECT "production_passport"."id", "production_passport"."date", "production_passport"."order_id" FROM "production_passport" WHERE "production_passport"."id" = 14 LIMIT 21; args=(14,); alias=default
+(0.344) SELECT "production_sizequantity"."id", "production_sizequantity"."size", "production_sizequantity"."quantity" FROM "production_sizequantity" INNER JOIN "production_passport_size_quantities" ON ("production_sizequantity"."id" = "production_passport_size_quantities"."sizequantity_id") WHERE "production_passport_size_quantities"."passport_id" = 14; args=(14,); alias=default
+"GET /production/technologist/passports/14/create_size_quantity/ HTTP/1.1" 200 3971
+File F:\AktisERP\venv\Lib\site-packages\django\conf\locale\en\formats.py first seen with mtime 1710497024.4011912
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\auth\context_processors.py first seen with mtime 1710497025.4101627
+File F:\AktisERP\venv\Lib\site-packages\django\conf\locale\en\__init__.py first seen with mtime 1710497024.4001641
+File F:\AktisERP\venv\Lib\site-packages\django\template\context_processors.py first seen with mtime 1710497027.7736661
+File F:\AktisERP\venv\Lib\site-packages\django\contrib\messages\context_processors.py first seen with mtime 1710497026.8519344
+Exception while resolving variable 'name' in template 'unknown'.
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    callback, callback_args, callback_kwargs = self.resolve_request(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 313, in resolve_request
+    resolver_match = resolver.resolve(request.path_info)
+  File "F:\AktisERP\venv\lib\site-packages\django\urls\resolvers.py", line 725, in resolve
+    raise Resolver404({"tried": tried, "path": new_path})
+django.urls.exceptions.Resolver404: {'tried': [[<URLResolver <URLPattern list> (admin:admin) 'admin/'>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>]], 'path': 'favicon.ico'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 875, in _resolve_lookup
+    current = current[bit]
+TypeError: 'URLResolver' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 885, in _resolve_lookup
+    current = getattr(current, bit)
+AttributeError: 'URLResolver' object has no attribute 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 891, in _resolve_lookup
+    current = current[int(bit)]
+ValueError: invalid literal for int() with base 10: 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 898, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [name] in <URLResolver <URLPattern list> (admin:admin) 'admin/'>
+Exception while resolving variable 'name' in template 'unknown'.
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    callback, callback_args, callback_kwargs = self.resolve_request(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 313, in resolve_request
+    resolver_match = resolver.resolve(request.path_info)
+  File "F:\AktisERP\venv\lib\site-packages\django\urls\resolvers.py", line 725, in resolve
+    raise Resolver404({"tried": tried, "path": new_path})
+django.urls.exceptions.Resolver404: {'tried': [[<URLResolver <URLPattern list> (admin:admin) 'admin/'>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>]], 'path': 'favicon.ico'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 875, in _resolve_lookup
+    current = current[bit]
+TypeError: 'URLResolver' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 885, in _resolve_lookup
+    current = getattr(current, bit)
+AttributeError: 'URLResolver' object has no attribute 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 891, in _resolve_lookup
+    current = current[int(bit)]
+ValueError: invalid literal for int() with base 10: 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 898, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [name] in <URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2220
+Exception while resolving variable 'name' in template 'unknown'.
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    callback, callback_args, callback_kwargs = self.resolve_request(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 313, in resolve_request
+    resolver_match = resolver.resolve(request.path_info)
+  File "F:\AktisERP\venv\lib\site-packages\django\urls\resolvers.py", line 725, in resolve
+    raise Resolver404({"tried": tried, "path": new_path})
+django.urls.exceptions.Resolver404: {'tried': [[<URLResolver <URLPattern list> (admin:admin) 'admin/'>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern '' [name='user_redirect']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'login/' [name='login']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'logout/' [name='logout']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'employee/clock-in-out/' [name='clock_in_out']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'employee/' [name='employee_page']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/' [name='technologist_page']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/' [name='admin_page']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/employees/' [name='employee_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/employees/create/' [name='employee_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/employees/<int:pk>/' [name='employee_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/employees/<int:pk>/edit/' [name='employee_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/employees/<int:pk>/delete/' [name='employee_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/passports/' [name='passport_list_admin']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/passports/<int:pk>/' [name='passport_detail_admin']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/salaries/' [name='salary_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/salaries/<int:employee_id>/' [name='salary_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/attendances/' [name='attendance_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/orders/' [name='order_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/orders/create/' [name='order_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/orders/<int:pk>/' [name='order_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/orders/<int:pk>/edit/' [name='order_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'admin/orders/<int:pk>/delete/' [name='order_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/' [name='passport_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/create/' [name='passport_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/<int:pk>/' [name='passport_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/<int:pk>/edit/' [name='passport_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/<int:pk>/delete/' [name='passport_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/<int:passport_id>/create_size_quantity/' [name='create_size_quantity']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/edit-size-quantity/<int:sq_id>/' [name='edit_size_quantity']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/edit-size-quantity/<int:sq_id>/delete/' [name='delete_size_quantity']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/passports/<int:passport_id>/assign_operations/' [name='assign_operations']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/operations/' [name='operation_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/operations/create/' [name='operation_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/operations/<int:pk>/' [name='operation_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/operations/<int:pk>/edit/' [name='operation_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/operations/<int:pk>/delete/' [name='operation_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/rolls/' [name='roll_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/rolls/create/' [name='roll_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/rolls/<int:pk>/' [name='roll_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/rolls/<int:pk>/edit/' [name='roll_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/rolls/<int:pk>/delete/' [name='roll_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/assortments/' [name='assortment_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/assortments/create/' [name='assortment_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/assortments/<int:pk>/' [name='assortment_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/assortments/<int:pk>/edit/' [name='assortment_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/assortments/<int:pk>/delete/' [name='assortment_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/models/' [name='model_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/models/create/' [name='model_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/models/<int:pk>/' [name='model_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/models/<int:pk>/edit/' [name='model_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/models/<int:pk>/delete/' [name='model_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/clients/' [name='client_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/clients/create/' [name='client_create']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/clients/<int:pk>/' [name='client_detail']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/clients/<int:pk>/edit/' [name='client_edit']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'technologist/clients/<int:pk>/delete/' [name='client_delete']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'employee/works/' [name='works_list']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'employee/works/<int:work_id>/start/' [name='work_start']>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>, <URLPattern 'employee/works/<int:work_id>/finish/' [name='work_finish']>]], 'path': 'production/technologist/passports/edit-size-quantity/28'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 875, in _resolve_lookup
+    current = current[bit]
+TypeError: 'URLResolver' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 885, in _resolve_lookup
+    current = getattr(current, bit)
+AttributeError: 'URLResolver' object has no attribute 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 891, in _resolve_lookup
+    current = current[int(bit)]
+ValueError: invalid literal for int() with base 10: 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 898, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [name] in <URLResolver <URLPattern list> (admin:admin) 'admin/'>
+(0.328) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."expire_date" > '2024-03-27T13:25:22.196118+00:00'::timestamptz AND "django_session"."session_key" = 'fdu9pdn5f1mss4ws7viw6opbtbn1i6o3') LIMIT 21; args=(datetime.datetime(2024, 3, 27, 13, 25, 22, 196118, tzinfo=datetime.timezone.utc), 'fdu9pdn5f1mss4ws7viw6opbtbn1i6o3'); alias=default
+(0.328) SELECT "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined" FROM "auth_user" WHERE "auth_user"."id" = 3 LIMIT 21; args=(3,); alias=default
+Internal Server Error: /production/technologist/passports/edit-size-quantity/28
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "F:\AktisERP\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "F:\AktisERP\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/production/technologist/passports/edit-size-quantity/28/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+"POST /production/technologist/passports/edit-size-quantity/28 HTTP/1.1" 500 71618
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\zipfile.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\resources.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\_common.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\tzdata\zoneinfo\Etc\__init__.py first seen with mtime 1710497023.6838143
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\_adapters.py first seen with mtime 1675761914.0
+File F:\AktisERP\venv\Lib\site-packages\tzdata\zoneinfo\__init__.py first seen with mtime 1710497023.3688157
+File F:\AktisERP\venv\Lib\site-packages\tzdata\__init__.py first seen with mtime 1710497023.3388147
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\abc.py first seen with mtime 1675761914.0
+File C:\Users\User\AppData\Local\Programs\Python\Python310\Lib\importlib\readers.py first seen with mtime 1675761914.0
+File F:\AktisERP\aktis\production\templates\technologist\passports\create_size_quantity.html previous mtime: 1711545358.0170622, current mtime: 1711545959.3869562
+F:\AktisERP\aktis\production\templates\technologist\passports\create_size_quantity.html notified as changed. Signal results: [(<function template_changed at 0x000001BDE163EEF0>, True), (<function translation_file_changed at 0x000001BDE20AE3B0>, None)].
+(0.328) SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."expire_date" > '2024-03-27T13:26:01.689372+00:00'::timestamptz AND "django_session"."session_key" = 'fdu9pdn5f1mss4ws7viw6opbtbn1i6o3') LIMIT 21; args=(datetime.datetime(2024, 3, 27, 13, 26, 1, 689372, tzinfo=datetime.timezone.utc), 'fdu9pdn5f1mss4ws7viw6opbtbn1i6o3'); alias=default
+(0.343) SELECT "auth_user"."id", "auth_user"."password", "auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."date_joined" FROM "auth_user" WHERE "auth_user"."id" = 3 LIMIT 21; args=(3,); alias=default
+(0.344) SELECT "production_userprofile"."id", "production_userprofile"."user_id", "production_userprofile"."employee_id", "production_userprofile"."type", "production_userprofile"."status", "production_userprofile"."station" FROM "production_userprofile" WHERE "production_userprofile"."user_id" = 3 LIMIT 21; args=(3,); alias=default
+(0.328) SELECT "production_passport"."id", "production_passport"."date", "production_passport"."order_id" FROM "production_passport" WHERE "production_passport"."id" = 14 LIMIT 21; args=(14,); alias=default
+(0.328) SELECT "production_sizequantity"."id", "production_sizequantity"."size", "production_sizequantity"."quantity" FROM "production_sizequantity" INNER JOIN "production_passport_size_quantities" ON ("production_sizequantity"."id" = "production_passport_size_quantities"."sizequantity_id") WHERE "production_passport_size_quantities"."passport_id" = 14; args=(14,); alias=default
+"GET /production/technologist/passports/14/create_size_quantity/ HTTP/1.1" 200 3972
+Exception while resolving variable 'name' in template 'unknown'.
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    callback, callback_args, callback_kwargs = self.resolve_request(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 313, in resolve_request
+    resolver_match = resolver.resolve(request.path_info)
+  File "F:\AktisERP\venv\lib\site-packages\django\urls\resolvers.py", line 725, in resolve
+    raise Resolver404({"tried": tried, "path": new_path})
+django.urls.exceptions.Resolver404: {'tried': [[<URLResolver <URLPattern list> (admin:admin) 'admin/'>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>]], 'path': 'favicon.ico'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 875, in _resolve_lookup
+    current = current[bit]
+TypeError: 'URLResolver' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 885, in _resolve_lookup
+    current = getattr(current, bit)
+AttributeError: 'URLResolver' object has no attribute 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 891, in _resolve_lookup
+    current = current[int(bit)]
+ValueError: invalid literal for int() with base 10: 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 898, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [name] in <URLResolver <URLPattern list> (admin:admin) 'admin/'>
+Exception while resolving variable 'name' in template 'unknown'.
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 181, in _get_response
+    callback, callback_args, callback_kwargs = self.resolve_request(request)
+  File "F:\AktisERP\venv\lib\site-packages\django\core\handlers\base.py", line 313, in resolve_request
+    resolver_match = resolver.resolve(request.path_info)
+  File "F:\AktisERP\venv\lib\site-packages\django\urls\resolvers.py", line 725, in resolve
+    raise Resolver404({"tried": tried, "path": new_path})
+django.urls.exceptions.Resolver404: {'tried': [[<URLResolver <URLPattern list> (admin:admin) 'admin/'>], [<URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>]], 'path': 'favicon.ico'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 875, in _resolve_lookup
+    current = current[bit]
+TypeError: 'URLResolver' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 885, in _resolve_lookup
+    current = getattr(current, bit)
+AttributeError: 'URLResolver' object has no attribute 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 891, in _resolve_lookup
+    current = current[int(bit)]
+ValueError: invalid literal for int() with base 10: 'name'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\AktisERP\venv\lib\site-packages\django\template\base.py", line 898, in _resolve_lookup
+    raise VariableDoesNotExist(
+django.template.base.VariableDoesNotExist: Failed lookup for key [name] in <URLResolver <module 'production.urls' from 'F:\\AktisERP\\aktis\\production\\urls.py'> (None:None) 'production/'>
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2220
+Bad Request: /production/technologist/passports/edit-size-quantity/28/
+"POST /production/technologist/passports/edit-size-quantity/28/ HTTP/1.1" 400 14

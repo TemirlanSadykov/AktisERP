@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'model_create' %}">Create New Model</a></p>
+  {% for model in models %}
+    <p>
+      <a href="{% url 'model_detail' model.pk %}">{{ model.name }}</a>
+    </p>
+  {% endfor %}
+{% endblock %}

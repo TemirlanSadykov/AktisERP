@@ -1,0 +1,27 @@
+from django.http import HttpResponseForbidden
+from functools import wraps
+from .models import UserProfile
+
+def employee_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not hasattr(request.user, 'userprofile') or (request.user.userprofile.type != UserProfile.EMPLOYEE and request.user.userprofile.type != UserProfile.ADMIN):
+            return HttpResponseForbidden()
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def technologist_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not hasattr(request.user, 'userprofile') or (request.user.userprofile.type != UserProfile.TECHNOLOGIST and request.user.userprofile.type != UserProfile.ADMIN):
+            return HttpResponseForbidden()
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def admin_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not hasattr(request.user, 'userprofile') or request.user.userprofile.type != UserProfile.ADMIN:
+            return HttpResponseForbidden()
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view

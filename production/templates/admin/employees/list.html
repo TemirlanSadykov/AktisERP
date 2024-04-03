@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'employee_create' %}">Create Employee</a></p>
+  <style>
+    .status-indicator {
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+    .status-true {
+      background-color: green;
+    }
+    .status-false {
+      background-color: red;
+    }
+  </style>
+
+  {% for employee in employees %}
+    <p>
+      <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
+      <a href="{% url 'employee_detail' employee.pk %}">{{ employee.user.get_full_name }} - {{ employee.get_station_display }}</a>
+    </p>
+  {% endfor %}
+{% endblock %}

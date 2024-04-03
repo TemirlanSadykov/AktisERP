@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'assortment_create' %}">Create New Assortment</a></p>
+  {% for assortment in assortments %}
+    <p>
+      <a href="{% url 'assortment_detail' assortment.pk %}">{{ assortment.name }}</a>
+    </p>
+  {% endfor %}
+{% endblock %}

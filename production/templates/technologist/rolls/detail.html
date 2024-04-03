@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Roll Details: {{ roll.name }}</h2>
+  <p>Color: {{ roll.color }}</p>
+  <p>Fabrics: {{ roll.fabrics }}</p>
+  <a href="{% url 'roll_edit' roll.pk %}">Edit Roll</a> |
+  <a href="{% url 'roll_delete' roll.pk %}">Delete Roll</a> |
+  <a href="{% url 'roll_list' %}">Back to Roll List</a>
+{% endblock %}

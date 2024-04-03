@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Create New Model</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Model</button>
+  </form>
+  <a href="{% url 'model_list' %}">Back to Model List</a>
+{% endblock %}
+
+{% block extra_js %}
+  {{ form.media }}
+{% endblock %}

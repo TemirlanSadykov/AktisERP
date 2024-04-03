@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'operation_create' %}">Create Operation</a></p>
+
+  {% if operations %}
+    {% for operation in operations %}
+      <p>
+        <a href="{% url 'operation_detail' operation.pk %}">
+          Operation: {{ operation.name }} - Equipment: {{ operation.equipment }}
+        </a>
+      </p>
+    {% endfor %}
+  {% else %}
+    <p>No operations found.</p>
+  {% endif %}
+{% endblock %}

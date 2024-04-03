@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Edit Order: {{ order.order_number }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update Order</button>
+  </form>
+  <a href="{% url 'order_detail' order.pk %}">Cancel</a> |
+  <a href="{% url 'order_list' %}">Back to Order List</a>
+{% endblock %}

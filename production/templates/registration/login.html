@@ -1,0 +1,14 @@
+{% block content %}
+  <h2>{% trans "Login" %}</h2> 
+  <form method="post" action="{% url 'login' %}">  
+    {% csrf_token %}  
+    {{ form.as_p }} 
+
+    <button type="submit">{% trans "Login" %}</button> 
+  </form>
+
+  {% if form.errors %}  
+    <p>{% trans "Your username and password didn't match. Please try again." %}</p> 
+  {% endif %}
+
+{% endblock %}

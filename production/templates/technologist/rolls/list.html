@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'roll_create' %}">Create Roll</a></p>
+  {% for roll in rolls %}
+    <p>
+      <a href="{% url 'roll_detail' roll.pk %}">{{ roll.name }} - {{ roll.color }} - {{ roll.fabrics }}</a>
+    </p>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Edit Assortment: {{ assortment.name }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update Assortment</button>
+  </form>
+  <a href="{% url 'assortment_detail' assortment.pk %}">Cancel</a> |
+  <a href="{% url 'assortment_list' %}">Back to Assortment List</a>
+{% endblock %}

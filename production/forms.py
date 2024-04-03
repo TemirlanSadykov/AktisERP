@@ -1,0 +1,147 @@
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from .models import *
+from django_select2 import forms as s2forms
+
+class UserWithProfileForm(UserCreationForm):
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
+    employee_id = forms.CharField(max_length=100, required=True)
+    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
+    status = forms.BooleanField(required=False, initial=False)
+    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        if commit:
+            user.save()
+            UserProfile.objects.create(
+                user=user,
+                employee_id=self.cleaned_data['employee_id'],
+                type=self.cleaned_data['type'],
+                status=self.cleaned_data['status'],
+                station=self.cleaned_data['station'],
+            )
+        return user
+
+class UserEditForm(forms.ModelForm):
+    employee_id = forms.CharField(max_length=100, required=True)
+    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
+    status = forms.BooleanField(required=False)
+    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
+    new_password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False, help_text="Leave blank if you do not want to change the password.")
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station']
+
+    def __init__(self, *args, **kwargs):
+        super(UserEditForm, self).__init__(*args, **kwargs)
+        if self.instance and hasattr(self.instance, 'userprofile'):
+            self.fields['employee_id'].initial = self.instance.userprofile.employee_id
+            self.fields['type'].initial = self.instance.userprofile.type
+            self.fields['status'].initial = self.instance.userprofile.status
+            self.fields['station'].initial = self.instance.userprofile.station
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        
+        # Set new password if provided
+        new_password = self.cleaned_data.get('new_password')
+        if new_password:
+            user.password = make_password(new_password)
+        
+        if commit:
+            user.save()
+            user.userprofile.employee_id = self.cleaned_data['employee_id']
+            user.userprofile.type = self.cleaned_data['type']
+            user.userprofile.status = self.cleaned_data['status']
+            user.userprofile.station = self.cleaned_data['station']
+            user.userprofile.save()
+        return user
+    
+class PassportForm(forms.ModelForm):
+    class Meta:
+        model = Passport
+        exclude = ['operations', 'date', 'size_quantities']
+
+class OperationAssignmentForm(forms.ModelForm):
+    employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")
+    size = forms.CharField(max_length=50)
+    quantity = forms.IntegerField(min_value=1)
+
+    class Meta:
+        model = Work
+        fields = ['employee_id', 'quantity']
+
+class SizeQuantityForm(forms.ModelForm):
+    class Meta:
+        model = SizeQuantity
+        fields = ['size', 'quantity']
+
+class DateForm(forms.Form):
+    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+
+class DateRangeForm(forms.Form):
+    start_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+    end_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+
+
+
+
+
+class OperationForm(forms.ModelForm):
+    class Meta:
+        model = Operation
+        fields = ['name', 'payment', 'equipment', 'type', 'preferred_completion_time']
+
+class RollForm(forms.ModelForm):
+    class Meta:
+        model = Roll
+        fields = ['name', 'color', 'fabrics']
+
+class AssortmentForm(forms.ModelForm):
+    class Meta:
+        model = Assortment
+        fields = ['name']
+
+class ModelForm(forms.ModelForm):
+    operations = forms.ModelMultipleChoiceField(
+        queryset=Operation.objects.all(),
+        widget=forms.CheckboxSelectMultiple, 
+        required=False 
+    )
+    class Meta:
+        model = Model
+        fields = ['name', 'operations']
+
+class ClientForm(forms.ModelForm):
+    class Meta:
+        model = Client
+        fields = ['name', 'contact_info']
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['name', 'order_number', 'client', 'model', 'assortment', 'roll', 'status', 'quantity', 'completed_quantity', 'payment', 'term']
+        widgets = {
+            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
+            'status': forms.Select(choices=Order.TYPE_CHOICES), 
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(OrderForm, self).__init__(*args, **kwargs)
+        self.fields['client'].queryset = Client.objects.all()
+        self.fields['model'].queryset = Model.objects.all()
+        self.fields['assortment'].queryset = Assortment.objects.all()
+        self.fields['roll'].queryset = Roll.objects.all()

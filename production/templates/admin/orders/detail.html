@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block content %}
+  <h2>Order Details: {{ order.order_number }}</h2>
+
+  <!-- Progress Bar -->
+  <div class="progress" style="margin-bottom: 20px; max-width: 500px">
+    <div class="progress-bar" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
+        {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
+    </div>
+  </div>
+
+  <!-- Order Details -->
+  <p><strong>Name:</strong> {{ order.name }}</p>
+  <p><strong>Client:</strong> {{ order.client.name }}</p>
+  <p><strong>Model:</strong> {{ order.model.name }}</p>
+  <p><strong>Assortment:</strong> {{ order.assortment.name }}</p>
+  <p><strong>Roll:</strong> {{ order.roll.name }}</p>
+  <p><strong>Status:</strong> {{ order.get_status_display }}</p>
+  <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+  <p><strong>Completed Quantity:</strong> {{ order.completed_quantity }}</p>
+  <p><strong>Payment:</strong> {{ order.payment }}</p>
+  <p><strong>Term:</strong> {{ order.term|date:"Y-m-d" }}</p>
+
+  <!-- Actions -->
+  <a href="{% url 'order_edit' order.pk %}">Edit Order</a> |
+  <a href="{% url 'order_delete' order.pk %}">Delete Order</a> |
+  <a href="{% url 'order_list' %}">Back to Order List</a>
+
+
+<h3>Associated Passports</h3>
+{% if passports %}
+  {% for passport in passports %}
+    <p style="color: {{ passport.is_completed|yesno:'green,red' }};">
+      <a href="{% url 'passport_detail_admin' passport.pk %}" style="color: inherit;">
+        Passport ID: {{ passport.pk }}, Created on: {{ passport.date|date:"Y-m-d" }}, Completed: {{ passport.is_completed|yesno:'Yes,No' }}
+      </a>
+    </p>
+  {% endfor %}
+{% else %}
+  <p>No associated passports.</p>
+{% endif %}
+
+{% endblock %}

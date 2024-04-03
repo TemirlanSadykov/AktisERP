@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'passport_create' %}">Create Passport</a></p>
+  {% for passport in passports %}
+    <p style="color: {{ passport.is_completed|yesno:'green,red' }};">
+      <a href="{% url 'passport_detail_admin' passport.pk %}" style="color: inherit;">
+        Passport for {{ passport.order.client.name }} - Model: {{ passport.order.model.name }}
+      </a>
+    </p>
+  {% endfor %}
+{% endblock %}

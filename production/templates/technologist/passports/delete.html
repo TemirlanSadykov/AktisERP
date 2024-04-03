@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <form method="post">
+    {% csrf_token %}
+    <p>Are you sure you want to delete the passport for "{{ passport.order.client.name }}"?</p>
+    <button type="submit">Confirm</button>
+    <a href="{% url 'passport_list' %}">Cancel</a>
+  </form>
+{% endblock %}

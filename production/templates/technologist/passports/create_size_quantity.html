@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add Size and Quantity for Passport: {{ passport.id }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  Size: {{ form.size }}
+  Quantity: {{ form.quantity }}
+  <button type="submit">Add</button>
+</form>
+
+<ul id="sizeQuantityList">
+  {% for sq in size_quantities %}
+    <li id="sq-{{ sq.id }}">
+      Size: <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span>,
+      Quantity: <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span>
+      <button class="edit-btn" data-sq-id="{{ sq.id }}">Edit</button>
+      <button class="delete-btn" data-sq-id="{{ sq.id }}">Delete</button>
+    </li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'assign_operations' passport.id %}">Finish and Save</a>
+
+{% verbatim %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".edit-btn").forEach(function(button) {
+    button.addEventListener("click", function() {
+      let sqId = this.getAttribute("data-sq-id");
+      let parentLi = document.querySelector(`#sq-${sqId}`);
+      let sizeSpan = parentLi.querySelector(".size");
+      let quantitySpan = parentLi.querySelector(".quantity");
+
+      if (!sizeSpan.isContentEditable) {
+        sizeSpan.contentEditable = "true";
+        quantitySpan.contentEditable = "true";
+        sizeSpan.focus();
+        this.textContent = "Save";
+      } else {
+        sizeSpan.contentEditable = "false";
+        quantitySpan.contentEditable = "false";
+        this.textContent = "Edit";
+        // Save the updated values
+        let updatedSize = sizeSpan.textContent;
+        let updatedQuantity = quantitySpan.textContent;
+        updateSizeQuantity(sqId, updatedSize, updatedQuantity);
+      }
+    });
+  });
+
+  document.querySelectorAll(".delete-btn").forEach(function(button) {
+    button.addEventListener("click", function() {
+      let sqId = this.getAttribute("data-sq-id");
+      if (confirm("Are you sure you want to delete this item?")) {
+        deleteSizeQuantity(sqId);
+      }
+    });
+  });
+});
+
+function updateSizeQuantity(sqId, size, quantity) {
+  fetch(`/production/technologist/passports/edit-size-quantity/${sqId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ size: size, quantity: quantity })
+  }).then(response => location.reload());
+}
+
+function deleteSizeQuantity(sqId) {
+  fetch(`/production/technologist/passports/delete-size-quantity/${sqId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+    }
+  }).then(response => location.reload());
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endverbatim %}
+{% endblock %}

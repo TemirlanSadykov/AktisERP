@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Create New Roll</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Roll</button>
+  </form>
+  <a href="{% url 'roll_list' %}">Back to Roll List</a>
+{% endblock %}

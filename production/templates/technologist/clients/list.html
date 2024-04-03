@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p><a href="{% url 'client_create' %}">Create New Client</a></p>
+  {% for client in clients %}
+    <p>
+      <a href="{% url 'client_detail' client.pk %}">{{ client.name }}</a>
+    </p>
+  {% endfor %}
+{% endblock %}
