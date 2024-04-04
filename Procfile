@@ -1,0 +1,1 @@
+web: gunicorn aktis.wsgi --log-file -
