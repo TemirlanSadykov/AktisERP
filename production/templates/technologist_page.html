@@ -1,31 +1,28 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <h1>Technologist Dashboard</h1>
-  <p>Welcome, {{ request.user.username }}! You're logged in as a Technologist.</p>
-  <!-- Technologist-specific content goes here -->
-  <p>This is the technologist page where you can access technical resources, manage projects, and collaborate with team members.</p>
-  <!-- Clock In/Out Button -->
+  <h1>{% trans 'Technologist Dashboard' %}</h1>
+  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a Technologist." %}</p>
+  <p>{% trans 'This is the technologist page where you can access technical resources, manage projects, and collaborate with team members.' %}</p>
   {% if request.user.userprofile.type == 0 %}
-    <p>You are accessing Technologist page.</p>
+    <p>{% trans 'You are accessing Technologist page.' %}</p>
   {% else %}
     <form action="{% url 'clock_in_out' %}" method="post">
       {% csrf_token %}
       <button type="submit" class="btn">
-        {% if request.user.userprofile.status %}Clock Out{% else %}Clock In{% endif %}
+        {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
       </button>
     </form>
   {% endif %}
   {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-    <p><a href="{% url 'passport_list' %}">Passports</a></p>
-    <p><a href="{% url 'operation_list' %}">Operations</a></p>
-    <p><a href="{% url 'roll_list' %}">Rolls</a></p>
-    <p><a href="{% url 'assortment_list' %}">Assortments</a></p>
-    <p><a href="{% url 'model_list' %}">Models</a></p>
-    <p><a href="{% url 'client_list' %}">Clients</a></p>
+    <p><a href="{% url 'passport_list' %}">{% trans 'Passports' %}</a></p>
+    <p><a href="{% url 'operation_list' %}">{% trans 'Operations' %}</a></p>
+    <p><a href="{% url 'roll_list' %}">{% trans 'Rolls' %}</a></p>
+    <p><a href="{% url 'assortment_list' %}">{% trans 'Assortments' %}</a></p>
+    <p><a href="{% url 'model_list' %}">{% trans 'Models' %}</a></p>
   {% else %}
     <div>
-      <p><em>You need to be clocked in to access your tasks and updates.</em></p>
+      <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
     </div>
   {% endif %}
 {% endblock %}

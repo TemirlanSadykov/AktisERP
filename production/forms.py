@@ -73,7 +73,7 @@ class UserEditForm(forms.ModelForm):
 class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport
-        exclude = ['operations', 'date', 'size_quantities']
+        exclude = ['operations', 'date', 'size_quantities', 'is_completed']
 
 class OperationAssignmentForm(forms.ModelForm):
     employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")

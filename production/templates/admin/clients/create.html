@@ -1,15 +1,11 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-  <h2>{% trans "Create New Model" %}</h2>
+  <h2>{% trans "Create New Client" %}</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">{% trans "Create" %}</button>
   </form>
-  <a href="{% url 'model_list' %}">{% trans "Back" %}</a>
-{% endblock %}
-
-{% block extra_js %}
-  {{ form.media }}
+  <a href="{% url 'client_list' %}">{% trans "Back" %}</a>
 {% endblock %}

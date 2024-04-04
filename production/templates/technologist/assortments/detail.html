@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <h2>Assortment Details: {{ assortment.name }}</h2>
-  <a href="{% url 'assortment_edit' assortment.pk %}">Edit Assortment</a> |
-  <a href="{% url 'assortment_delete' assortment.pk %}">Delete Assortment</a> |
-  <a href="{% url 'assortment_list' %}">Back to Assortment List</a>
+  <h2>{% trans "Assortment Details: %(name)s" %}{{ assortment.name }}</h2>
+  <a href="{% url 'assortment_edit' assortment.pk %}">{% trans "Edit" %}</a> |
+  <a href="{% url 'assortment_delete' assortment.pk %}">{% trans "Delete" %}</a> |
+  <a href="{% url 'assortment_list' %}">{% trans "Back" %}</a>
 {% endblock %}

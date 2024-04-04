@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-
+{% load i18n %}
 {% block content %}
-  <h2>Operation Details: {{ operation.name }}</h2>
-  <p>Payment: {{ operation.payment }}</p>
-  <p>Equipment: {{ operation.equipment }}</p>
-  <p>Type: {{ operation.type }}</p>
-  <p>Preferred Completion Time: {{ operation.preferred_completion_time }} seconds</p>
+  <h2>{% trans "Operation Details: %(name)s" %}{{ operation.name }}</h2>
+  <p>{% trans "Payment:" %} {{ operation.payment }}</p>
+  <p>{% trans "Equipment:" %} {{ operation.equipment }}</p>
+  <p>{% trans "Type:" %} {{ operation.type }}</p>
+  <p>{% trans "Preferred Completion Time:" %} {{ operation.preferred_completion_time }} seconds</p>
   <p>
-    Average Completion Time: {{ operation.average_completion_time }} seconds
-    <a href="{% url 'calculate_average' operation.pk %}" class="btn btn-info btn-sm">Calculate Average</a>
+    {% trans "Average Completion Time:" %} {{ operation.average_completion_time }} seconds
+    <a href="{% url 'calculate_average' operation.pk %}" class="btn btn-info btn-sm">{% trans "Calculate Average" %}</a>
   </p>
-  <a href="{% url 'operation_edit' operation.pk %}">Edit</a> |
-  <a href="{% url 'operation_delete' operation.pk %}">Delete</a> |
-  <a href="{% url 'operation_list' %}">Back to Operation List</a>
+  <a href="{% url 'operation_edit' operation.pk %}">{% trans "Edit" %}</a> |
+  <a href="{% url 'operation_delete' operation.pk %}">{% trans "Delete" %}</a> |
+  <a href="{% url 'operation_list' %}">{% trans "Back" %}</a>
 {% endblock %}

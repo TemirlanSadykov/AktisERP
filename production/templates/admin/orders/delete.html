@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <h2>Confirm Delete</h2>
-  <p>Are you sure you want to delete the order "{{ order.order_number }}"?</p>
+  <h2>{% trans "Confirm Delete" %}</h2>
+  <p>{% trans "Are you sure you want to delete the order '%(order_number)s'?" %}{{ order.order_number }}</p>
 
   <form method="post">
     {% csrf_token %}
-    <button type="submit">Confirm Delete</button>
+    <button type="submit">{% trans "Confirm Delete" %}</button>
   </form>
   
-  <a href="{% url 'order_detail' order.pk %}">Cancel</a> |
-  <a href="{% url 'order_list' %}">Back to Order List</a>
+  <a href="{% url 'order_detail' order.pk %}">{% trans "Cancel" %}</a> |
+  <a href="{% url 'order_list' %}">{% trans "Back" %}</a>
 {% endblock %}

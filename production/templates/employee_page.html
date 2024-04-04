@@ -1,28 +1,26 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <h1>Employee Dashboard</h1>
-  <!-- Clock In/Out Button -->
-  <p>Welcome, {{ request.user.username }}! You're logged in as an Employee.</p>
-  <!-- Employee-specific content goes here -->
-  <p>This is the employee page where you can see your tasks, update your progress, and view announcements.</p>
+  <h1>{% trans 'Employee Dashboard' %}</h1>
+  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Employee." %}</p>
+  <p>{% trans 'This is the employee page where you can see your tasks, update your progress, and view announcements.' %}</p>
   {% if request.user.userprofile.type == 0 %}
-    <p>You are accessing Employee page.</p>
+    <p>{% trans 'You are accessing Employee page.' %}</p>
   {% else %}
     <form action="{% url 'clock_in_out' %}" method="post">
       {% csrf_token %}
       <button type="submit" class="btn">
-        {% if request.user.userprofile.status %}Clock Out{% else %}Clock In{% endif %}
+        {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
       </button>
     </form>
   {% endif %}
   
   {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-    <p><a href="{% url 'done_works_list' %}">Done Work</a></p>
-    <p><a href="{% url 'pending_works_list' %}">Pending Work</a></p>
+    <p><a href="{% url 'done_works_list' %}">{% trans 'Done Work' %}</a></p>
+    <p><a href="{% url 'pending_works_list' %}">{% trans 'Pending Work' %}</a></p>
   {% else %}
     <div>
-      <p><em>You need to be clocked in to access your tasks and updates.</em></p>
+      <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
     </div>
   {% endif %}
 {% endblock %}

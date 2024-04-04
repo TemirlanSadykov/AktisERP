@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
-
+{% load i18n %}
 {% block content %}
-  <h2>Are you sure you want to delete "{{ operation.name }}"?</h2>
+  <h2>{% trans "Are you sure you want to delete '%(name)s'?" %}{{ operation.name }}</h2>
   <form method="post">
     {% csrf_token %}
-    <button type="submit">Yes, delete</button>
+    <button type="submit">{% trans "Confirm Delete" %}</button>
   </form>
-  <a href="{% url 'operation_detail' operation.pk %}">No, go back</a>
+  <a href="{% url 'operation_detail' operation.pk %}">{% trans "Cancel" %}</a>
+  <a href="{% url 'operation_list' %}">{% trans "Back" %}</a>
 {% endblock %}

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <h2>Create New Order</h2>
+  <h2>{% trans "Create New Order" %}</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Create Order</button>
+    <button type="submit">{% trans "Create" %}</button>
   </form>
-  <a href="{% url 'order_list' %}">Back to Order List</a>
+  <a href="{% url 'order_list' %}">{% trans "Back" %}</a>
 {% endblock %}

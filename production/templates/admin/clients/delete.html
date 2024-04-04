@@ -2,13 +2,13 @@
 {% load i18n %}
 {% block content %}
   <h2>{% trans "Confirm Delete" %}</h2>
-  <p>{% trans "Are you sure you want to delete the model '%(name)s'?" %}{{ model.name }}</p>
+  <p>{% trans "Are you sure you want to delete the client '%(name)s'?" %}{{ client.name }}</p>
 
   <form method="post">
     {% csrf_token %}
     <button type="submit">{% trans "Confirm Delete" %}</button>
   </form>
   
-  <a href="{% url 'model_detail' model.pk %}">{% trans "Cancel" %}</a> |
-  <a href="{% url 'model_list' %}">{% trans "Back" %}</a>
+  <a href="{% url 'client_detail' client.pk %}">{% trans "Cancel" %}</a> |
+  <a href="{% url 'client_list' %}">{% trans "Back" %}</a>
 {% endblock %}

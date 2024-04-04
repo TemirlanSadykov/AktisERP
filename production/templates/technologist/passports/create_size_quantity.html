@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <h2>Add Size and Quantity for Passport: {{ passport.id }}</h2>
 
-<form method="post">
+<form id="sizeQuantityForm" method="post">
   {% csrf_token %}
   Size: {{ form.size }}
   Quantity: {{ form.quantity }}
-  <button type="submit">Add</button>
+  <button type="submit">{% trans "Add" %}</button>
 </form>
 
 <ul id="sizeQuantityList">
@@ -15,85 +16,157 @@
     <li id="sq-{{ sq.id }}">
       Size: <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span>,
       Quantity: <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span>
-      <button class="edit-btn" data-sq-id="{{ sq.id }}">Edit</button>
-      <button class="delete-btn" data-sq-id="{{ sq.id }}">Delete</button>
+      <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
+      <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
     </li>
   {% endfor %}
 </ul>
 
-<a href="{% url 'assign_operations' passport.id %}">Finish and Save</a>
+<a href="{% url 'assign_operations' passport.id %}">{% trans "Finish and Save" %}</a>
+
+<script>
+  var passportId = "{{ passport.id }}";
+  var deleteText = "{% trans 'Delete' %}";
+  var editText = "{% trans 'Edit' %}";
+  var saveText = "{% trans 'Save' %}";
+  var confirmDeleteText = "{% trans 'Are you sure you want to delete this item?' %}";
+</script>
 
 {% verbatim %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".edit-btn").forEach(function(button) {
-    button.addEventListener("click", function() {
-      let sqId = this.getAttribute("data-sq-id");
-      let parentLi = document.querySelector(`#sq-${sqId}`);
-      let sizeSpan = parentLi.querySelector(".size");
-      let quantitySpan = parentLi.querySelector(".quantity");
-
-      if (!sizeSpan.isContentEditable) {
-        sizeSpan.contentEditable = "true";
-        quantitySpan.contentEditable = "true";
-        sizeSpan.focus();
-        this.textContent = "Save";
+  const form = document.getElementById('sizeQuantityForm');
+  
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const actionUrl = `/production/technologist/passports/${passportId}/create_size_quantity/`;  
+    
+    fetch(actionUrl, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        updateSizeQuantityList(data.sizeQuantities);
+        form.reset();  // Clear the form inputs after successful submission
       } else {
-        sizeSpan.contentEditable = "false";
-        quantitySpan.contentEditable = "false";
-        this.textContent = "Edit";
-        // Save the updated values
-        let updatedSize = sizeSpan.textContent;
-        let updatedQuantity = quantitySpan.textContent;
-        updateSizeQuantity(sqId, updatedSize, updatedQuantity);
+        console.error('Submission failed', data.errors);
+        alert(data.errors);
       }
-    });
+    })
+    .catch(error => console.error('There has been a problem with your fetch operation:', error));
   });
 
-  document.querySelectorAll(".delete-btn").forEach(function(button) {
-    button.addEventListener("click", function() {
-      let sqId = this.getAttribute("data-sq-id");
-      if (confirm("Are you sure you want to delete this item?")) {
-        deleteSizeQuantity(sqId);
-      }
-    });
-  });
-});
-
-function updateSizeQuantity(sqId, size, quantity) {
-  fetch(`/production/technologist/passports/edit-size-quantity/${sqId}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCookie('csrftoken'),
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ size: size, quantity: quantity })
-  }).then(response => location.reload());
-}
-
-function deleteSizeQuantity(sqId) {
-  fetch(`/production/technologist/passports/delete-size-quantity/${sqId}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCookie('csrftoken'),
+  document.getElementById('sizeQuantityList').addEventListener('click', function(e) {
+    if (e.target.classList.contains('edit-btn')) {
+      handleEdit(e.target);
+    } else if (e.target.classList.contains('delete-btn')) {
+      handleDelete(e.target);
     }
-  }).then(response => location.reload());
-}
+  });
 
-function getCookie(name) {
+  function handleEdit(button) {
+    let sqId = button.getAttribute("data-sq-id");
+    let parentLi = document.querySelector(`#sq-${sqId}`);
+    let sizeSpan = parentLi.querySelector(".size");
+    let quantitySpan = parentLi.querySelector(".quantity");
+
+    if (!sizeSpan.isContentEditable) {
+      sizeSpan.contentEditable = "true";
+      quantitySpan.contentEditable = "true";
+      sizeSpan.focus();
+      button.textContent = saveText;
+    } else {
+      sizeSpan.contentEditable = "false";
+      quantitySpan.contentEditable = "false";
+      button.textContent = editText;
+      let updatedSize = sizeSpan.textContent;
+      let updatedQuantity = quantitySpan.textContent;
+      updateSizeQuantity(sqId, updatedSize, updatedQuantity);
+    }
+  }
+
+  function handleDelete(button) {
+    let sqId = button.getAttribute("data-sq-id");
+    if (confirm(confirmDeleteText)) {
+      deleteSizeQuantity(sqId);
+    }
+  }
+
+  function updateSizeQuantity(sqId, size, quantity) {
+    fetch(`/production/technologist/passports/edit-size-quantity/${sqId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ size: size, quantity: quantity })
+    })
+    .then(response => {
+      if (response.ok) {
+        let sizeSpan = document.querySelector(`.size[data-sq-id="${sqId}"]`);
+        let quantitySpan = document.querySelector(`.quantity[data-sq-id="${sqId}"]`);
+        sizeSpan.textContent = size;
+        quantitySpan.textContent = quantity;
+      } else {
+        console.error('Failed to update size and quantity');
+        alert('Failed to update size and quantity');
+      }
+    });
+  }
+  
+  function deleteSizeQuantity(sqId) {
+    fetch(`/production/technologist/passports/delete-size-quantity/${sqId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Remove the size and quantity element without reloading
+        let parentLi = document.querySelector(`#sq-${sqId}`);
+        if (parentLi) {
+          parentLi.remove();
+        }
+      } else {
+        console.error('Failed to delete size and quantity');
+        alert('Failed to delete size and quantity');
+      }
+    });
+  }
+
+  function updateSizeQuantityList(sizeQuantities) {
+    const list = document.getElementById('sizeQuantityList');
+    list.innerHTML = '';
+    sizeQuantities.forEach(sq => {
+      const li = document.createElement('li');
+      li.innerHTML = `Size: <span class="size" data-sq-id="${sq.id}">${sq.size}</span>, Quantity: <span class="quantity" data-sq-id="${sq.id}">${sq.quantity}</span> <button class="edit-btn" data-sq-id="${sq.id}">${editText}</button> <button class="delete-btn" data-sq-id="${sq.id}">${deleteText}</button>`;
+      list.appendChild(li);
+    });
+  }
+
+  function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
+      }
     }
     return cookieValue;
-}
+  }
+});
 </script>
 {% endverbatim %}
 {% endblock %}

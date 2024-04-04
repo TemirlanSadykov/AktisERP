@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <p><a href="{% url 'operation_create' %}">Create Operation</a></p>
+  <p><a href="{% url 'operation_create' %}">{% trans "Create Operation" %}</a></p>
 
   {% if operations %}
     {% for operation in operations %}
       <p>
         <a href="{% url 'operation_detail' operation.pk %}">
-          Operation: {{ operation.name }} - Equipment: {{ operation.equipment }}
+          {% trans "Operation:" %} {{ operation.name }} - {% trans "Equipment:" %} {{ operation.equipment }}
         </a>
       </p>
     {% endfor %}
   {% else %}
-    <p>No operations found.</p>
+    <p>{% trans "No operations found." %}</p>
   {% endif %}
 {% endblock %}

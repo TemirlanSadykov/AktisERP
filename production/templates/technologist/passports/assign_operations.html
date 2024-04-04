@@ -1,29 +1,28 @@
 {% extends "base.html" %}
-{% load custom_filters %}
-
+{% load custom_filters %} 
+{% load i18n %}
 {% block content %}
-  <h2>Assign Operations for Passport</h2>
+  <h2>{% trans "Assign Operations for Passport" %}</h2>
   <p>
-    <strong>Model:</strong> {{ passport.order.model.name }},
-    <strong>Client:</strong> {{ passport.order.client.name }},
-    <strong>Assortment:</strong> {{ passport.order.assortment.name }},
-    <strong>Roll:</strong> {{ passport.order.roll.name }},
-    <strong>Color:</strong> {{ passport.order.roll.color }},
-    <strong>Fabrics:</strong> {{ passport.order.roll.fabrics }},
-    <strong>Date:</strong> {{ passport.date|date:"Y-m-d" }}
+    <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
+    <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
+    <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
+    <strong>{% trans "Roll:" %}</strong> {{ passport.order.roll.name }},
+    <strong>{% trans "Color:" %}</strong> {{ passport.order.roll.color }},
+    <strong>{% trans "Fabrics:" %}</strong> {{ passport.order.roll.fabrics }},
+    <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
   </p>
+
   <form method="post" id="operationAssignmentForm">
-    <p>Enter employee ID and quantity in the format: "ID (Quantity)". For multiple entries, separate them by a comma. For a single ID, the quantity is assumed to be the total.</p>
     {% csrf_token %}
     <table>
       <thead>
         <tr>
-          <th>Operation \ Size</th>
+          <th>{% trans "Operation \ Size" %}</th>
           {% for sq in size_quantities %}
             <th>
-              {{ sq.size }}
-              <br>
-              (Qty: {{ sq.quantity }})
+              {{ sq.size }}<br>
+              ({% trans "Qty:" %} {{ sq.quantity }})
             </th>
           {% endfor %}
         </tr>
@@ -35,27 +34,21 @@
             {% for sq in size_quantities %}
               <td>
                 {% get_work work_by_op_and_size operation.id sq.id as works %}
-                  {% if works %}
-                    {% for work in works %}
-                      {% if work.end_time %}
-                        {% if work.is_success %}
-                          <span class="{{ work.id }} editable" style="color: green;" data-work="{{ work.id }}">
-                        {% else %}
-                          <span class="{{ work.id }} editable" style="color: red;" data-work="{{ work.id }}">
-                        {% endif %}
-                        {{ work.employee.employee_id }} ({{ work.quantity }})
-                        {% if work.end_time %}
-                          <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
-                        {% endif %}
+                {% if works %}
+                  {% for work in works %}
+                    {% if work.end_time %}
+                      {% if work.is_success %}
+                        <span class="{{ work.id }} editable" style="color: green;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
                       {% else %}
-                        <span class="{{ work.id }} editable" data-work="{{ work.id }}">
-                          {{ work.employee.employee_id }} ({{ work.quantity }})
-                        </span>
+                        <span class="{{ work.id }} editable" style="color: red;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
                       {% endif %}
-                    </span>
-                    {% endfor %}
-                  {% else %}
-                  <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="ID (Quan.)" style="width: 80px;">
+                      <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
+                    {% else %}
+                      <span class="{{ work.id }} editable" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans "ID (Quan.)" %}" style="width: 80px;">
                 {% endif %}
               </td>
             {% endfor %}
@@ -64,119 +57,167 @@
       </tbody>
     </table>
   </form>
+
   <form method="post" action="{% url 'complete_passport' passport.id %}">
     {% csrf_token %}
-    <button type="submit" onclick="return confirm('Are you sure you want to mark this passport as completed?');">Complete</button>
+    <button type="submit" onclick="return confirm('{% trans "Are you sure you want to mark this passport as completed?" %}');">{% trans "Complete" %}</button>
   </form>
-
   <script>
-    document.querySelectorAll('.employee-input').forEach(input => {
-      input.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          document.getElementById('operationAssignmentForm').submit();
+    var passportId = "{{ passport.id }}";
+    
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
-      });
-    });
-  </script>
-  <script>
-    document.querySelector('#operationAssignmentForm').addEventListener('dblclick', function(event) {
-      // Check if the clicked element is one of the editable spans
-      if (event.target.classList.contains('editable')) {
-        const span = event.target;
-        const originalText = span.innerText;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = originalText;
-        input.className = 'edit-input';
-        input.style.width = '80px';
-        input.setAttribute('data-work', span.getAttribute('data-work'));
-        span.parentNode.replaceChild(input, span);
-        input.focus();
+      }
+      return cookieValue;
+    }
     
-        const revertToSpan = () => {
-          const newSpan = document.createElement('span');
-          newSpan.innerText = input.value || originalText; // Revert to original text if input is empty
-          newSpan.className = span.className;
-          newSpan.setAttribute('data-work', span.getAttribute('data-work'));
-          input.parentNode.replaceChild(newSpan, input);
-        };
-    
-        // Reverting to span on blur
-        input.addEventListener('blur', revertToSpan);
-    
-        // Reverting to span on Enter and updating work
-        input.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault(); // Prevent form submission
-            const workId = input.getAttribute('data-work');
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll('.employee-input').forEach(input => {
+        input.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            const operationId = input.name.split('_')[1];
+            const sizeQuantityId = input.name.split('_')[2];
             const value = input.value;
-            updateWork(workId, value, input);
-            revertToSpan(); // Revert back to span after updating
+            assignOperation(operationId, sizeQuantityId, value, input);
           }
         });
-      }
+      });
+    
+      document.querySelector('#operationAssignmentForm').addEventListener('dblclick', function(event) {
+        if (event.target.classList.contains('editable')) {
+          const span = event.target;
+          const originalText = span.textContent;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = originalText;
+          input.className = 'edit-input';
+          input.style.width = '80px';
+          input.setAttribute('data-work', span.getAttribute('data-work'));
+          span.parentNode.replaceChild(input, span);
+          input.focus();
+    
+          const revertToSpan = (value) => {
+            const newSpan = document.createElement('span');
+            newSpan.textContent = value || originalText;
+            newSpan.className = 'editable';
+            newSpan.setAttribute('data-work', span.getAttribute('data-work'));
+            input.parentNode.replaceChild(newSpan, input);
+          };
+    
+          input.addEventListener('blur', () => revertToSpan(input.value));
+    
+          input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const workId = input.getAttribute('data-work');
+              updateWork(workId, input.value, revertToSpan);
+            }
+          });
+        }
+      });
+    
+      document.querySelectorAll('.success-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const workId = this.getAttribute('data-work');
+          const isChecked = this.checked;
+          updateWorkSuccess(workId, isChecked);
+        });
+      });
     });
     
-    function updateWork(workId, newValue, inputElement) {
+    function assignOperation(operationId, sizeQuantityId, value, inputElement) {
+      fetch(`/production/technologist/passports/${passportId}/assign_operations/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          operation_id: operationId,
+          size_quantity_id: sizeQuantityId,
+          value: value
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          inputElement.value = ''; // Clear the input field
+          const newSpan = document.createElement('span');
+          newSpan.className = 'editable'; // Assign any necessary classes
+          newSpan.textContent = value; // Set the text content to "ID (Quantity)"
+          inputElement.parentNode.replaceChild(newSpan, inputElement);
+        } else {
+          console.error('Failed to assign operation', data.message);
+          alert(data.message);
+        }
+      });
+    }
+    
+    function updateWork(workId, newValue, callback) {
       const xhr = new XMLHttpRequest();
       const url = `/production/technologist/passports/update_work/`;
       xhr.open('POST', url, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-      
-      const csrftoken = getCookie('csrftoken');
-      xhr.setRequestHeader('X-CSRFToken', csrftoken);
-      
+      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+    
       const [newEmployeeId, quantity] = newValue.split('(');
-      const data = { work_id: workId, new_employee_id: newEmployeeId.trim(), quantity: parseInt(quantity.trim(' )')) };
+      const data = {
+        work_id: workId,
+        new_employee_id: newEmployeeId.trim(),
+        quantity: parseInt(quantity.trim(' )'))
+      };
+    
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          if (response.status === 'success') {
+            callback(newValue); // Update the span text with the new value
+          } else {
+            console.error('Failed to update work', response.message);
+            alert(response.message);
+            callback(); // Revert to original text if the update fails
+          }
+        } else {
+          console.error('Request failed with status:', xhr.status);
+          alert(xhr.status);
+          callback(); // Revert to original text if the request fails
+        }
+      };
+    
       xhr.send(JSON.stringify(data));
     }
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('.success-checkbox').forEach(checkbox => {
-          checkbox.addEventListener('change', function() {
-              const workId = this.getAttribute('data-work');
-              const isChecked = this.checked;
-  
-              const xhr = new XMLHttpRequest();
-              const url = `/production/technologist/passports/update_work_success/`; // Ensure you have this URL defined in your Django URLconf
-              xhr.open('POST', url, true);
-              xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-  
-              // Include the CSRF token from the cookie in the request header
-              const csrftoken = getCookie('csrftoken');
-              xhr.setRequestHeader('X-CSRFToken', csrftoken);
-  
-              xhr.onload = function() {
-                  if (xhr.status === 200) {
-                      const response = JSON.parse(xhr.responseText);
-                      if (response.status === 'success') {
-                          // Optionally, handle UI update for success
-                          alert('Work status updated successfully!');
-                      }
-                  } else {
-                      // Handle error
-                      alert('An error occurred while updating the work status.');
-                  }
-              };
-  
-              xhr.send(`work_id=${workId}&is_success=${isChecked}`);
-          });
-      });
-  });
-    // Function to get a cookie by name
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+    
+    function updateWorkSuccess(workId, isSuccess) {
+      const xhr = new XMLHttpRequest();
+      const url = `/production/technologist/passports/update_work_success/`;
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+    
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const span = document.querySelector(`span[data-work="${workId}"]`);
+          if (span) {
+            span.style.color = isSuccess ? 'green' : 'red';
+          }
+        } else {
+          console.error('Failed to update work success status');
+          alert('Failed to update work success status');
         }
-        return cookieValue;
+      };
+    
+      xhr.send(`work_id=${workId}&is_success=${isSuccess}`);
     }
     </script>
 {% endblock %}

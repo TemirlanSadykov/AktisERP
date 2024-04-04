@@ -21,8 +21,8 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
-from ..models import EmployeeAttendance, Order, AssignedWork
-from ..forms import DateForm, DateRangeForm, OrderForm
+from ..models import EmployeeAttendance, Order, AssignedWork, Client
+from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm
 
 @login_required
 @admin_required
@@ -233,3 +233,36 @@ class OrderDeleteView(DeleteView):
     model = Order
     template_name = 'admin/orders/delete.html'
     success_url = reverse_lazy('order_list')
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientListView(ListView):
+    model = Client
+    template_name = 'admin/clients/list.html'
+    context_object_name = 'clients'
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientCreateView(CreateView):
+    model = Client
+    form_class = ClientForm
+    template_name = 'admin/clients/create.html'
+    success_url = reverse_lazy('client_list')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientDetailView(DetailView):
+    model = Client
+    template_name = 'admin/clients/detail.html'
+    context_object_name = 'client'
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientUpdateView(UpdateView):
+    model = Client
+    form_class = ClientForm
+    template_name = 'admin/clients/edit.html'
+    success_url = reverse_lazy('client_list')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientDeleteView(DeleteView):
+    model = Client
+    template_name = 'admin/clients/delete.html'
+    success_url = reverse_lazy('client_list')

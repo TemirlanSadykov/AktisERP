@@ -79,15 +79,19 @@ class SizeQuantityCreateView(View):
             'size_quantities': size_quantities,
             'passport': passport
         })
-
     def post(self, request, passport_id):
-        form = SizeQuantityForm(request.POST)
-        if form.is_valid():
-            size_quantity = form.save()
-            passport = get_object_or_404(Passport, pk=passport_id)
-            passport.size_quantities.add(size_quantity)
-            return redirect('create_size_quantity', passport_id=passport_id)
-        return render(request, 'technologist/passports/create_size_quantity.html', {'form': form})
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = SizeQuantityForm(request.POST)
+            if form.is_valid():
+                new_size_quantity = form.save(commit=False)
+                new_size_quantity.save()
+                passport = get_object_or_404(Passport, pk=passport_id)
+                passport.size_quantities.add(new_size_quantity)
+                size_quantities = passport.size_quantities.values('id', 'size', 'quantity')
+                return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
     
 @login_required
 @technologist_required
@@ -119,46 +123,58 @@ def assign_operations(request, passport_id):
     operations = passport.order.model.operations.all()
     size_quantities = passport.size_quantities.all()
 
-    if request.method == 'POST':
-        with transaction.atomic():
-            errors = False
-            for key, input_value in request.POST.items():
-                if key.startswith('employee_') and input_value:
-                    _, operation_id, size_quantity_id = key.split('_')
-                    entries = [entry.strip() for entry in input_value.split(',')]
-                    total_quantity = passport.size_quantities.get(id=size_quantity_id).quantity
-                    
-                    # Reset quantities for existing assigned work to avoid duplication
-                    Work.objects.filter(operation_id=operation_id, size_quantity_id=size_quantity_id, passport=passport).delete()
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Decode the JSON data from the request
+        data = json.loads(request.body)
+        operation_id = data.get('operation_id')
+        size_quantity_id = data.get('size_quantity_id')
+        value = data.get('value')
+        try:
+            with transaction.atomic():
+                errors = False
 
-                    for entry in entries:
-                        if '(' in entry and ')' in entry:
-                            employee_id_input, quantity = entry.split('(')
-                            employee_id_input = employee_id_input.strip()
-                            quantity = int(quantity.strip(' )'))
-                        else:
-                            employee_id_input = entry
-                            quantity = total_quantity
+                entries = [entry.strip() for entry in value.split(',')]
+                total_quantity = passport.size_quantities.get(id=size_quantity_id).quantity
+                assigned_quantity_sum = 0  # Initialize the sum of assigned quantities
 
-                        if employee_id_input:
-                            employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE).first()
-                            if not employee_profile:
-                                messages.error(request, f'Invalid employee ID: {employee_id_input}')
-                                errors = True
-                                continue
-                            
-                            work, created = Work.objects.get_or_create(
-                                operation_id=operation_id,
-                                size_quantity_id=size_quantity_id,
-                                passport=passport
-                            )
-                            AssignedWork.objects.create(
-                                work=work,
-                                employee=employee_profile,
-                                quantity=quantity
-                            )
-            if not errors:
-                return HttpResponseRedirect(request.path_info)
+                # Reset quantities for existing assigned work to avoid duplication
+                Work.objects.filter(operation_id=operation_id, size_quantity_id=size_quantity_id, passport=passport).delete()
+
+                for entry in entries:
+                    if '(' in entry and ')' in entry:
+                        employee_id_input, quantity = entry.split('(')
+                        employee_id_input = employee_id_input.strip()
+                        quantity = int(quantity.strip(' )'))
+                    else:
+                        employee_id_input = entry
+                        quantity = total_quantity
+
+                    if employee_id_input:
+                        employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE).first()
+                        if not employee_profile:
+                            errors = True
+                            continue
+
+                        work, created = Work.objects.get_or_create(
+                            operation_id=operation_id,
+                            size_quantity_id=size_quantity_id,
+                            passport=passport
+                        )
+                        AssignedWork.objects.create(
+                            work=work,
+                            employee=employee_profile,
+                            quantity=quantity
+                        )
+                        assigned_quantity_sum += quantity  # Add the quantity to the sum
+
+                if assigned_quantity_sum != total_quantity:
+                    raise ValueError("The sum of assigned quantities does not match the total quantity.")
+
+                if not errors:
+                    return JsonResponse({'status': 'success'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     work_by_op_and_size = {}
     for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__size_quantity'):
@@ -168,8 +184,8 @@ def assign_operations(request, passport_id):
         else:
             work_by_op_and_size[key].append(assigned_work)
     return render(request, 'technologist/passports/assign_operations.html', {
-        'passport': passport, 
-        'operations': operations, 
+        'passport': passport,
+        'operations': operations,
         'size_quantities': size_quantities,
         'work_by_op_and_size': work_by_op_and_size
     })
@@ -398,37 +414,3 @@ class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
     success_url = reverse_lazy('model_list')
-
-
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientListView(ListView):
-    model = Client
-    template_name = 'technologist/clients/list.html'
-    context_object_name = 'clients'
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientCreateView(CreateView):
-    model = Client
-    form_class = ClientForm
-    template_name = 'technologist/clients/create.html'
-    success_url = reverse_lazy('client_list')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientDetailView(DetailView):
-    model = Client
-    template_name = 'technologist/clients/detail.html'
-    context_object_name = 'client'
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientUpdateView(UpdateView):
-    model = Client
-    form_class = ClientForm
-    template_name = 'technologist/clients/edit.html'
-    success_url = reverse_lazy('client_list')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientDeleteView(DeleteView):
-    model = Client
-    template_name = 'technologist/clients/delete.html'
-    success_url = reverse_lazy('client_list')
