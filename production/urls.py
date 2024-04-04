@@ -34,6 +34,12 @@ urlpatterns = [
     path('admin/orders/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
     path('admin/orders/<int:pk>/delete/', OrderDeleteView.as_view(), name='order_delete'),
 
+    path('admin/clients/', ClientListView.as_view(), name='client_list'),
+    path('admin/clients/create/', ClientCreateView.as_view(), name='client_create'),
+    path('admin/clients/<int:pk>/', ClientDetailView.as_view(), name='client_detail'),
+    path('admin/clients/<int:pk>/edit/', ClientUpdateView.as_view(), name='client_edit'),
+    path('admin/clients/<int:pk>/delete/', ClientDeleteView.as_view(), name='client_delete'),
+
     path('technologist/passports/', PassportListView.as_view(), name='passport_list'),
     path('technologist/passports/create/', PassportCreateView.as_view(), name='passport_create'),
     path('technologist/passports/<int:pk>/', PassportDetailView.as_view(), name='passport_detail'),
@@ -71,12 +77,6 @@ urlpatterns = [
     path('technologist/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
     path('technologist/models/<int:pk>/edit/', ModelUpdateView.as_view(), name='model_edit'),
     path('technologist/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
-
-    path('technologist/clients/', ClientListView.as_view(), name='client_list'),
-    path('technologist/clients/create/', ClientCreateView.as_view(), name='client_create'),
-    path('technologist/clients/<int:pk>/', ClientDetailView.as_view(), name='client_detail'),
-    path('technologist/clients/<int:pk>/edit/', ClientUpdateView.as_view(), name='client_edit'),
-    path('technologist/clients/<int:pk>/delete/', ClientDeleteView.as_view(), name='client_delete'),
 
     path('works/done/', done_works_list, name='done_works_list'),
     path('works/pending/', pending_works_list, name='pending_works_list'),

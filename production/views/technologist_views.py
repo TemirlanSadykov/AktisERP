@@ -398,37 +398,3 @@ class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
     success_url = reverse_lazy('model_list')
-
-
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientListView(ListView):
-    model = Client
-    template_name = 'technologist/clients/list.html'
-    context_object_name = 'clients'
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientCreateView(CreateView):
-    model = Client
-    form_class = ClientForm
-    template_name = 'technologist/clients/create.html'
-    success_url = reverse_lazy('client_list')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientDetailView(DetailView):
-    model = Client
-    template_name = 'technologist/clients/detail.html'
-    context_object_name = 'client'
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientUpdateView(UpdateView):
-    model = Client
-    form_class = ClientForm
-    template_name = 'technologist/clients/edit.html'
-    success_url = reverse_lazy('client_list')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ClientDeleteView(DeleteView):
-    model = Client
-    template_name = 'technologist/clients/delete.html'
-    success_url = reverse_lazy('client_list')
