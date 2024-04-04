@@ -148,4 +148,4 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://aktiserp-production.up.railway.app/']
+CSRF_TRUSTED_ORIGINS = ['https://aktiserp-production.up.railway.app']
