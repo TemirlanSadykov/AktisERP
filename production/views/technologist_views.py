@@ -79,15 +79,20 @@ class SizeQuantityCreateView(View):
             'size_quantities': size_quantities,
             'passport': passport
         })
-
     def post(self, request, passport_id):
-        form = SizeQuantityForm(request.POST)
-        if form.is_valid():
-            size_quantity = form.save()
-            passport = get_object_or_404(Passport, pk=passport_id)
-            passport.size_quantities.add(size_quantity)
-            return redirect('create_size_quantity', passport_id=passport_id)
-        return render(request, 'technologist/passports/create_size_quantity.html', {'form': form})
+        print(request.headers)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = SizeQuantityForm(request.POST)
+            if form.is_valid():
+                new_size_quantity = form.save(commit=False)
+                new_size_quantity.save()
+                passport = get_object_or_404(Passport, pk=passport_id)
+                passport.size_quantities.add(new_size_quantity)
+                size_quantities = passport.size_quantities.values('id', 'size', 'quantity')
+                return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
     
 @login_required
 @technologist_required
