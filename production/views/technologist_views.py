@@ -135,6 +135,7 @@ def assign_operations(request, passport_id):
 
                 entries = [entry.strip() for entry in value.split(',')]
                 total_quantity = passport.size_quantities.get(id=size_quantity_id).quantity
+                assigned_quantity_sum = 0  # Initialize the sum of assigned quantities
 
                 # Reset quantities for existing assigned work to avoid duplication
                 Work.objects.filter(operation_id=operation_id, size_quantity_id=size_quantity_id, passport=passport).delete()
@@ -164,6 +165,11 @@ def assign_operations(request, passport_id):
                             employee=employee_profile,
                             quantity=quantity
                         )
+                        assigned_quantity_sum += quantity  # Add the quantity to the sum
+
+                if assigned_quantity_sum != total_quantity:
+                    raise ValueError("The sum of assigned quantities does not match the total quantity.")
+
                 if not errors:
                     return JsonResponse({'status': 'success'})
 

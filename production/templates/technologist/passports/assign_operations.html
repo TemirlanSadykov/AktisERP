@@ -159,6 +159,7 @@
           inputElement.parentNode.replaceChild(newSpan, inputElement);
         } else {
           console.error('Failed to assign operation', data.message);
+          alert(data.message);
         }
       });
     }
@@ -184,10 +185,12 @@
             callback(newValue); // Update the span text with the new value
           } else {
             console.error('Failed to update work', response.message);
+            alert(response.message);
             callback(); // Revert to original text if the update fails
           }
         } else {
           console.error('Request failed with status:', xhr.status);
+          alert(xhr.status);
           callback(); // Revert to original text if the request fails
         }
       };
@@ -210,6 +213,7 @@
           }
         } else {
           console.error('Failed to update work success status');
+          alert('Failed to update work success status');
         }
       };
     
