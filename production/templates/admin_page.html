@@ -1,14 +1,32 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
+<div class="dashboard-container">
   <h1>{% trans 'Admin Dashboard' %}</h1>
   <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Admin." %}</p>
-  <p><strong><a href="{% url 'technologist_page' %}">{% trans 'Go to Technologist Page' %}</a></strong></p>
-  <p><strong><a href="{% url 'employee_page' %}">{% trans 'Go to Employee Page' %}</a></strong></p>
-  <p>{% trans 'This is the admin page where you can manage users, view reports, and perform other administrative tasks.' %}</p>
-  <p><a href="{% url 'employee_list' %}">{% trans 'Employees' %}</a></p>
-  <p><a href="{% url 'salary_list' %}">{% trans 'Salaries' %}</a></p>
-  <p><a href="{% url 'attendance_list' %}">{% trans 'Attendances' %}</a></p>
-  <p><a href="{% url 'order_list' %}">{% trans 'Orders' %}</a></p>
-  <p><a href="{% url 'client_list' %}">{% trans 'Clients' %}</a></p>
+  
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{% trans 'Navigation' %}</h5>
+          <a href="{% url 'technologist_page' %}" class="btn btn-primary">{% trans 'Go to Technologist Page' %}</a>
+          <a href="{% url 'employee_page' %}" class="btn btn-primary">{% trans 'Go to Employee Page' %}</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{% trans 'Resources' %}</h5>
+          <a href="{% url 'employee_list' %}" class="btn btn-secondary">{% trans 'Employees' %}</a>
+          <a href="{% url 'salary_list' %}" class="btn btn-secondary">{% trans 'Salaries' %}</a>
+          <a href="{% url 'attendance_list' %}" class="btn btn-secondary">{% trans 'Attendances' %}</a>
+          <a href="{% url 'order_list' %}" class="btn btn-secondary">{% trans 'Orders' %}</a>
+          <a href="{% url 'client_list' %}" class="btn btn-secondary">{% trans 'Clients' %}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
