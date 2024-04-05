@@ -1,0 +1,36 @@
+/* Header and navigation styling */
+header {
+    background-color: #f8f9fa; /* Light grey background, matching Bootstrap's default navbar */
+    padding: 10px 0; /* Adds some vertical padding */
+}
+
+nav {
+    display: flex;
+    justify-content: space-between; /* Positions the nav items on opposite ends */
+    align-items: center; /* Vertically centers nav items */
+    padding: 0 15px; /* Adds some horizontal padding */
+}
+
+nav a {
+    color: #007bff; /* Bootstrap's default link color */
+    text-decoration: none; /* Removes underline from links */
+    font-weight: 500; /* Makes the text slightly bolder */
+}
+
+nav a:hover {
+    text-decoration: underline; /* Adds underline on hover for better accessibility */
+}
+
+/* Logout button styling to look more like a link */
+nav form button {
+    border: none; /* Removes the button border */
+    background: none; /* Removes the button background */
+    color: #007bff; /* Uses Bootstrap's default link color */
+    cursor: pointer; /* Changes cursor to pointer on hover */
+    padding: 0; /* Removes padding to make it look more like a link */
+    font-size: 1rem; /* Ensures the font size matches other nav content */
+}
+
+nav form button:hover {
+    text-decoration: underline; /* Adds underline on hover for consistency with link hover */
+}
