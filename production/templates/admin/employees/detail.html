@@ -4,7 +4,6 @@
   <h2>{% trans "Employee Details: %(full_name)s" %}{{ employee.user.get_full_name }}</h2>
   <p><strong>{% trans "Employee ID:" %}</strong> {{ employee.employee_id }}</p>
   <p><strong>{% trans "Type:" %}</strong> {{ employee.get_type_display }}</p>
-  <p><strong>{% trans "Status:" %}</strong> {{ employee.status|yesno:"{% trans "Active" %},{% trans "Inactive" %}" }}</p>
   <p><strong>{% trans "Station:" %}</strong> {{ employee.get_station_display }}</p>
 
   <a href="{% url 'employee_edit' employee.pk %}">{% trans "Edit" %}</a> | 
