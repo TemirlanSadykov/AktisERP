@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-04 00:34+0900\n"
+"POT-Creation-Date: 2024-04-06 01:21+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,9 +16,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
-"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
+
 #: .\production\templates\admin\attendances\list.html:4
 msgid "Attendance List"
 msgstr "Список Посещаемости"
@@ -35,48 +36,107 @@ msgstr "Записи о Посещаемости:"
 msgid "No attendance records found."
 msgstr "Записи о посещаемости не найдены."
 
-#: .\production\templates\admin\employees\create.html:4
-msgid "Create New User"
-msgstr "Создать Нового Пользователя"
+#: .\production\templates\admin\clients\create.html:4
+#: .\production\templates\admin\clients\list.html:4
+msgid "Create New Client"
+msgstr "Создать Нового Клиента"
 
+#: .\production\templates\admin\clients\create.html:8
 #: .\production\templates\admin\employees\create.html:8
 #: .\production\templates\admin\orders\create.html:8
 #: .\production\templates\technologist\assortments\create.html:8
-#: .\production\templates\technologist\clients\create.html:8
 #: .\production\templates\technologist\models\create.html:8
 #: .\production\templates\technologist\operations\create.html:8
 #: .\production\templates\technologist\passports\create.html:8
 msgid "Create"
 msgstr "Создать"
 
-#: .\production\templates\admin\employees\delete.html:6
-#, python-format
-msgid "Are you sure you want to delete %%(full_name)s?"
-msgstr "Вы уверены, что хотите удалить %%(full_name)s?"
+#: .\production\templates\admin\clients\create.html:10
+#: .\production\templates\admin\clients\detail.html:9
+#: .\production\templates\admin\clients\edit.html:11
+#: .\production\templates\admin\orders\create.html:10
+#: .\production\templates\admin\orders\detail.html:30
+#: .\production\templates\admin\orders\edit.html:11
+#: .\production\templates\technologist\assortments\create.html:10
+#: .\production\templates\technologist\assortments\detail.html:8
+#: .\production\templates\technologist\assortments\edit.html:11
+#: .\production\templates\technologist\models\create.html:10
+#: .\production\templates\technologist\models\detail.html:21
+#: .\production\templates\technologist\models\edit.html:11
+#: .\production\templates\technologist\operations\create.html:10
+#: .\production\templates\technologist\operations\detail.html:16
+#: .\production\templates\technologist\rolls\detail.html:10
+#: .\production\templates\technologist\rolls\edit.html:11
+msgid "Back"
+msgstr "Назад"
 
-#: .\production\templates\admin\employees\delete.html:7
-msgid "Confirm"
-msgstr "Подтвердить"
+#: .\production\templates\admin\clients\detail.html:4
+msgid "Client Details:"
+msgstr "Детали клиента:"
 
-#: .\production\templates\admin\employees\delete.html:8
-#: .\production\templates\admin\orders\delete.html:12
+#: .\production\templates\admin\clients\detail.html:5
+msgid "Contact Info:"
+msgstr "Контактная Информация:"
+
+#: .\production\templates\admin\clients\detail.html:7
+#: .\production\templates\admin\employees\detail.html:9
+#: .\production\templates\admin\orders\detail.html:28
+#: .\production\templates\technologist\assortments\detail.html:6
+#: .\production\templates\technologist\models\detail.html:19
+#: .\production\templates\technologist\operations\detail.html:14
+#: .\production\templates\technologist\passports\create_size_quantity.html:19
+#: .\production\templates\technologist\passports\create_size_quantity.html:30
+#: .\production\templates\technologist\passports\detail.html:10
+#: .\production\templates\technologist\rolls\detail.html:8
+msgid "Edit"
+msgstr "Редактировать"
+
+#: .\production\templates\admin\clients\detail.html:8
+#: .\production\templates\admin\employees\detail.html:10
+#: .\production\templates\admin\orders\detail.html:29
+#: .\production\templates\technologist\assortments\detail.html:7
+#: .\production\templates\technologist\models\detail.html:20
+#: .\production\templates\technologist\operations\detail.html:15
+#: .\production\templates\technologist\passports\create_size_quantity.html:20
+#: .\production\templates\technologist\passports\create_size_quantity.html:29
+#: .\production\templates\technologist\passports\detail.html:11
+#: .\production\templates\technologist\rolls\detail.html:9
+msgid "Delete"
+msgstr "Удалить"
+
+#: .\production\templates\admin\clients\detail.html:17
+msgid "Are you sure you want to delete this client?"
+msgstr "Вы уверены, что хотите удалить этого клиента?"
+
+#: .\production\templates\admin\clients\edit.html:4
+#, fuzzy
+#| msgid "Client:"
+msgid "Edit Client:"
+msgstr "Клиент:"
+
+#: .\production\templates\admin\clients\edit.html:8
+#: .\production\templates\admin\employees\edit.html:8
+#: .\production\templates\admin\orders\edit.html:8
+#: .\production\templates\technologist\assortments\edit.html:8
+#: .\production\templates\technologist\models\edit.html:8
+#: .\production\templates\technologist\operations\edit.html:8
+#: .\production\templates\technologist\passports\edit.html:8
+#: .\production\templates\technologist\rolls\edit.html:8
+msgid "Update"
+msgstr "Обновить"
+
+#: .\production\templates\admin\clients\edit.html:10
 #: .\production\templates\admin\orders\edit.html:10
-#: .\production\templates\technologist\assortments\delete.html:12
 #: .\production\templates\technologist\assortments\edit.html:10
-#: .\production\templates\technologist\clients\delete.html:12
-#: .\production\templates\technologist\clients\edit.html:10
-#: .\production\templates\technologist\models\delete.html:12
 #: .\production\templates\technologist\models\edit.html:10
-#: .\production\templates\technologist\operations\delete.html:9
 #: .\production\templates\technologist\operations\edit.html:10
-#: .\production\templates\technologist\passports\delete.html:10
+#: .\production\templates\technologist\rolls\edit.html:10
 msgid "Cancel"
 msgstr "Отмена"
 
-#: .\production\templates\admin\employees\detail.html:4
-#, python-format
-msgid "Employee Details: %%(full_name)s"
-msgstr "Детали Сотрудника: %%(full_name)s"
+#: .\production\templates\admin\employees\create.html:4
+msgid "Create New User"
+msgstr "Создать Нового Пользователя"
 
 #: .\production\templates\admin\employees\detail.html:5
 msgid "Employee ID:"
@@ -88,50 +148,16 @@ msgid "Type:"
 msgstr "Тип:"
 
 #: .\production\templates\admin\employees\detail.html:7
-#: .\production\templates\admin\orders\detail.html:18
-msgid "Status:"
-msgstr "Статус:"
-
-#: .\production\templates\admin\employees\detail.html:8
 msgid "Station:"
 msgstr "Станция:"
 
-#: .\production\templates\admin\employees\detail.html:10
-#: .\production\templates\admin\orders\detail.html:24
-#: .\production\templates\technologist\assortments\detail.html:5
-#: .\production\templates\technologist\clients\detail.html:6
-#: .\production\templates\technologist\models\detail.html:19
-#: .\production\templates\technologist\operations\detail.html:13
-#: .\production\templates\technologist\passports\create_size_quantity.html:18
-#: .\production\templates\technologist\passports\detail.html:9
-msgid "Edit"
-msgstr "Редактировать"
-
-#: .\production\templates\admin\employees\detail.html:11
-#: .\production\templates\admin\orders\detail.html:25
-#: .\production\templates\technologist\assortments\detail.html:6
-#: .\production\templates\technologist\clients\detail.html:7
-#: .\production\templates\technologist\models\detail.html:20
-#: .\production\templates\technologist\operations\detail.html:14
-#: .\production\templates\technologist\passports\create_size_quantity.html:19
-#: .\production\templates\technologist\passports\detail.html:10
-msgid "Delete"
-msgstr "Удалить"
-
+#: .\production\templates\admin\employees\detail.html:17
+msgid "Are you sure you want to delete this employee?"
+msgstr "Вы уверены, что хотите удалить этого сотрудника?"
 
 #: .\production\templates\admin\employees\edit.html:4
 msgid "Edit Employee Details"
 msgstr "Редактировать Данные Сотрудника"
-
-#: .\production\templates\admin\employees\edit.html:8
-#: .\production\templates\admin\orders\edit.html:8
-#: .\production\templates\technologist\assortments\edit.html:8
-#: .\production\templates\technologist\clients\edit.html:8
-#: .\production\templates\technologist\models\edit.html:8
-#: .\production\templates\technologist\operations\edit.html:8
-#: .\production\templates\technologist\passports\edit.html:8
-msgid "Update"
-msgstr "Обновить"
 
 #: .\production\templates\admin\employees\list.html:4
 msgid "Create Employee"
@@ -142,50 +168,13 @@ msgstr "Создать Сотрудника"
 msgid "Create New Order"
 msgstr "Создать Новый Заказ"
 
-#: .\production\templates\admin\orders\create.html:10
-#: .\production\templates\admin\orders\delete.html:13
-#: .\production\templates\admin\orders\detail.html:26
-#: .\production\templates\admin\orders\edit.html:11
-#: .\production\templates\technologist\assortments\create.html:10
-#: .\production\templates\technologist\assortments\delete.html:13
-#: .\production\templates\technologist\assortments\detail.html:7
-#: .\production\templates\technologist\assortments\edit.html:11
-#: .\production\templates\technologist\clients\create.html:10
-#: .\production\templates\technologist\clients\delete.html:13
-#: .\production\templates\technologist\clients\detail.html:8
-#: .\production\templates\technologist\clients\edit.html:11
-#: .\production\templates\technologist\models\create.html:10
-#: .\production\templates\technologist\models\delete.html:13
-#: .\production\templates\technologist\models\detail.html:21
-#: .\production\templates\technologist\models\edit.html:11
-#: .\production\templates\technologist\operations\create.html:10
-#: .\production\templates\technologist\operations\delete.html:10
-#: .\production\templates\technologist\operations\detail.html:15
-msgid "Back"
-msgstr "Назад"
-
-#: .\production\templates\admin\orders\delete.html:4
-#: .\production\templates\admin\orders\delete.html:9
-#: .\production\templates\technologist\assortments\delete.html:4
-#: .\production\templates\technologist\assortments\delete.html:9
-#: .\production\templates\technologist\clients\delete.html:4
-#: .\production\templates\technologist\clients\delete.html:9
-#: .\production\templates\technologist\models\delete.html:4
-#: .\production\templates\technologist\models\delete.html:9
-#: .\production\templates\technologist\operations\delete.html:7
-#: .\production\templates\technologist\passports\delete.html:9
-msgid "Confirm Delete"
-msgstr "Подтвердить Удаление"
-
-#: .\production\templates\admin\orders\delete.html:5
-#, python-format
-msgid "Are you sure you want to delete the order '%%(order_number)s'?"
-msgstr "Вы уверены, что хотите удалить заказ '%%(order_number)s'?"
-
 #: .\production\templates\admin\orders\detail.html:5
-#, python-format
-msgid "Order Details: %%(order_number)s"
-msgstr "Детали Заказа: %%(order_number)s"
+msgid "Order Details:"
+msgstr "Детали заказа:"
+
+#: .\production\templates\admin\employees\detail.html:4
+msgid "Employee Details:"
+msgstr "Детали Сотрудника:"
 
 #: .\production\templates\admin\orders\detail.html:13
 msgid "Name:"
@@ -199,6 +188,7 @@ msgstr "Клиент:"
 
 #: .\production\templates\admin\orders\detail.html:15
 #: .\production\templates\admin\passports\detail.html:7
+#: .\production\templates\admin\passports\list.html:8
 #: .\production\templates\technologist\passports\assign_operations.html:7
 msgid "Model:"
 msgstr "Модель:"
@@ -214,6 +204,10 @@ msgstr "Ассортимент:"
 #: .\production\templates\technologist\passports\assign_operations.html:10
 msgid "Roll:"
 msgstr "Рулон:"
+
+#: .\production\templates\admin\orders\detail.html:18
+msgid "Status:"
+msgstr "Статус:"
 
 #: .\production\templates\admin\orders\detail.html:19
 msgid "Quantity:"
@@ -232,30 +226,33 @@ msgstr "Оплата:"
 msgid "Term:"
 msgstr "Срок:"
 
-#: .\production\templates\admin\orders\detail.html:29
+#: .\production\templates\admin\orders\detail.html:33
 msgid "Associated Passports"
 msgstr "Связанные Паспорта"
 
-#: .\production\templates\admin\orders\detail.html:34
+#: .\production\templates\admin\orders\detail.html:38
 msgid "Passport ID:"
 msgstr "ID Паспорта:"
 
-#: .\production\templates\admin\orders\detail.html:34
+#: .\production\templates\admin\orders\detail.html:38
 msgid "Created on:"
 msgstr "Создано:"
 
-#: .\production\templates\admin\orders\detail.html:34
+#: .\production\templates\admin\orders\detail.html:38
 msgid "Completed:"
 msgstr "Завершено:"
 
-#: .\production\templates\admin\orders\detail.html:39
+#: .\production\templates\admin\orders\detail.html:43
 msgid "No associated passports."
 msgstr "Нет связанных паспортов."
 
+#: .\production\templates\admin\orders\detail.html:47
+msgid "Are you sure you want to delete this order?"
+msgstr "Вы уверены, что хотите удалить этот заказ?"
+
 #: .\production\templates\admin\orders\edit.html:4
-#, python-format
-msgid "Edit Order: %%(order_number)s"
-msgstr "Редактировать Заказ: %%(order_number)s"
+msgid "Edit Order:"
+msgstr "Редактировать Заказ"
 
 #: .\production\templates\admin\passports\detail.html:5
 msgid "Operations Assigned for Passport"
@@ -263,11 +260,13 @@ msgstr "Операции, Назначенные для Паспорта"
 
 #: .\production\templates\admin\passports\detail.html:11
 #: .\production\templates\technologist\passports\assign_operations.html:11
+#: .\production\templates\technologist\rolls\detail.html:5
 msgid "Color:"
 msgstr "Цвет:"
 
 #: .\production\templates\admin\passports\detail.html:12
 #: .\production\templates\technologist\passports\assign_operations.html:12
+#: .\production\templates\technologist\rolls\detail.html:6
 msgid "Fabrics:"
 msgstr "Ткани:"
 
@@ -277,12 +276,12 @@ msgid "Date:"
 msgstr "Дата:"
 
 #: .\production\templates\admin\passports\detail.html:19
-#: .\production\templates\technologist\passports\assign_operations.html:22
+#: .\production\templates\technologist\passports\assign_operations.html:21
 msgid "Operation \\ Size"
 msgstr "Операция \\ Размер"
 
 #: .\production\templates\admin\passports\detail.html:24
-#: .\production\templates\technologist\passports\assign_operations.html:26
+#: .\production\templates\technologist\passports\assign_operations.html:25
 msgid "Qty:"
 msgstr "Кол-во:"
 
@@ -379,7 +378,9 @@ msgstr "Перейти на Страницу Сотрудника"
 msgid ""
 "This is the admin page where you can manage users, view reports, and perform "
 "other administrative tasks."
-msgstr "Это страница администратора, где вы можете управлять пользователями, просматривать отчеты и выполнять другие административные задачи."
+msgstr ""
+"Это страница администратора, где вы можете управлять пользователями, "
+"просматривать отчеты и выполнять другие административные задачи."
 
 #: .\production\templates\admin_page.html:9
 msgid "Employees"
@@ -392,6 +393,10 @@ msgstr "Посещаемость"
 #: .\production\templates\admin_page.html:12
 msgid "Orders"
 msgstr "Заказы"
+
+#: .\production\templates\admin_page.html:13
+msgid "Clients"
+msgstr "Клиенты"
 
 #: .\production\templates\base.html:12
 msgid "Home"
@@ -492,7 +497,9 @@ msgstr "Вы вошли как Сотрудник."
 msgid ""
 "This is the employee page where you can see your tasks, update your "
 "progress, and view announcements."
-msgstr "Это страница сотрудника, где вы можете видеть свои задачи, обновлять свой прогресс и просматривать объявления."
+msgstr ""
+"Это страница сотрудника, где вы можете видеть свои задачи, обновлять свой "
+"прогресс и просматривать объявления."
 
 #: .\production\templates\employee_page.html:8
 msgid "You are accessing Employee page."
@@ -517,80 +524,50 @@ msgid "Pending Work"
 msgstr "Ожидающая Работа"
 
 #: .\production\templates\employee_page.html:23
-#: .\production\templates\technologist_page.html:26
+#: .\production\templates\technologist_page.html:25
 msgid "You need to be clocked in to access your tasks and updates."
-msgstr "Вам необходимо начать рабочий день, чтобы получить доступ к своим задачам и обновлениям."
+msgstr ""
+"Вам необходимо начать рабочий день, чтобы получить доступ к своим задачам и "
+"обновлениям."
 
-#: .\production\templates\registration\login.html:2
-#: .\production\templates\registration\login.html:7
+#: .\production\templates\registration\login.html:3
+#: .\production\templates\registration\login.html:8
 msgid "Login"
 msgstr "Вход"
 
-#: .\production\templates\registration\login.html:11
+#: .\production\templates\registration\login.html:12
 msgid "Your username and password didn't match. Please try again."
-msgstr "Ваше имя пользователя и пароль не совпадают. Пожалуйста, попробуйте снова."
+msgstr ""
+"Ваше имя пользователя и пароль не совпадают. Пожалуйста, попробуйте снова."
 
 #: .\production\templates\technologist\assortments\create.html:4
 #: .\production\templates\technologist\assortments\list.html:4
 msgid "Create New Assortment"
 msgstr "Создать Новый Ассортимент"
 
-#: .\production\templates\technologist\assortments\delete.html:5
-#, python-format
-msgid "Are you sure you want to delete the assortment '%%(name)s'?"
-msgstr "Вы уверены, что хотите удалить ассортимент '%%(name)s'?"
-
 #: .\production\templates\technologist\assortments\detail.html:4
-#, python-format
-msgid "Assortment Details: %%(name)s"
-msgstr "Детали Ассортимента: %%(name)s"
+msgid "Assortment Details:"
+msgstr "Детали ассортимента:"
+
+#: .\production\templates\technologist\assortments\detail.html:16
+msgid "Are you sure you want to delete this assortment?"
+msgstr "Вы уверены, что хотите удалить этот ассортимент?"
 
 #: .\production\templates\technologist\assortments\edit.html:4
-#, python-format
-msgid "Edit Assortment: %%(name)s"
-msgstr "Редактировать Ассортимент: %%(name)s"
-
-#: .\production\templates\technologist\clients\create.html:4
-#: .\production\templates\technologist\clients\list.html:4
-msgid "Create New Client"
-msgstr "Создать Нового Клиента"
-
-#: .\production\templates\technologist\clients\delete.html:5
-#, python-format
-msgid "Are you sure you want to delete the client '%%(name)s'?"
-msgstr "Вы уверены, что хотите удалить клиента '%%(name)s'?"
-
-#: .\production\templates\technologist\clients\detail.html:4
-#, python-format
-msgid "Client Details: %%(name)s"
-msgstr "Детали Клиента: %%(name)s"
-
-#: .\production\templates\technologist\clients\detail.html:5
-msgid "Contact Info:"
-msgstr "Контактная Информация:"
-
-#: .\production\templates\technologist\clients\edit.html:4
-#, python-format
-msgid "Edit Client: %%(name)s"
-msgstr "Редактировать Клиента: %%(name)s"
+msgid "Edit Assortment:"
+msgstr "Редактировать Ассортимент:"
 
 #: .\production\templates\technologist\models\create.html:4
 #: .\production\templates\technologist\models\list.html:4
 msgid "Create New Model"
 msgstr "Создать Новую Модель"
 
-#: .\production\templates\technologist\models\delete.html:5
-#, python-format
-msgid "Are you sure you want to delete the model '%%(name)s'?"
-msgstr "Вы уверены, что хотите удалить модель '%%(name)s'?"
-
 #: .\production\templates\technologist\models\detail.html:4
-#, python-format
-msgid "Model Details: %%(name)s"
-msgstr "Детали Модели: %%(name)s"
+msgid "Model Details:"
+msgstr "Детали модели:"
 
 #: .\production\templates\technologist\models\detail.html:6
-#: .\production\templates\technologist\passports\detail.html:12
+#: .\production\templates\technologist\passports\detail.html:13
 #: .\production\templates\technologist_page.html:19
 msgid "Operations"
 msgstr "Операции"
@@ -599,24 +576,21 @@ msgstr "Операции"
 msgid "No operations associated with this model."
 msgstr "С этой моделью не связано операций."
 
+#: .\production\templates\technologist\models\detail.html:29
+msgid "Are you sure you want to delete this model?"
+msgstr "Вы уверены, что хотите удалить эту модель?"
+
 #: .\production\templates\technologist\models\edit.html:4
-#, python-format
-msgid "Edit Model: %%(name)s"
-msgstr "Редактировать Модель: %%(name)s"
+msgid "Edit Model:"
+msgstr "Редактировать Модель:"
 
 #: .\production\templates\technologist\operations\create.html:4
 msgid "Add New Operation"
 msgstr "Добавить Новую Операцию"
 
-#: .\production\templates\technologist\operations\delete.html:4
-#, python-format
-msgid "Are you sure you want to delete '%%(name)s'?"
-msgstr "Вы уверены, что хотите удалить '%%(name)s'?"
-
 #: .\production\templates\technologist\operations\detail.html:4
-#, python-format
-msgid "Operation Details: %%(name)s"
-msgstr "Детали Операции: %%(name)s"
+msgid "Operation Details:"
+msgstr "Детали операции:"
 
 #: .\production\templates\technologist\operations\detail.html:6
 #: .\production\templates\technologist\operations\list.html:10
@@ -635,10 +609,13 @@ msgstr "Среднее Время Завершения:"
 msgid "Calculate Average"
 msgstr "Рассчитать Среднее"
 
+#: .\production\templates\technologist\operations\detail.html:24
+msgid "Are you sure you want to delete this operation?"
+msgstr "Вы уверены, что хотите удалить эту операцию?"
+
 #: .\production\templates\technologist\operations\edit.html:4
-#, python-format
-msgid "Edit Operation: %%(name)s"
-msgstr "Редактировать Операцию: %%(name)s"
+msgid "Edit Operation:"
+msgstr "Операция:"
 
 #: .\production\templates\technologist\operations\list.html:4
 msgid "Create Operation"
@@ -656,26 +633,17 @@ msgstr "Операции не найдены."
 msgid "Assign Operations for Passport"
 msgstr "Назначить Операции для Паспорта"
 
-#: .\production\templates\technologist\passports\assign_operations.html:17
-#, python-format
-msgid ""
-"Enter employee ID and quantity in the format: '%%(format)s'. For multiple "
-"entries, separate them by a comma. For a single ID, the quantity is assumed "
-"to be the total."
-msgstr ""
-"Введите ID сотрудника и количество в формате: '%%(format)s'. Для нескольких записей разделяйте их запятой. Для одного ID количество считается общим."
-
-#: .\production\templates\technologist\passports\assign_operations.html:53
+#: .\production\templates\technologist\passports\assign_operations.html:51
 msgid "ID (Quan.)"
 msgstr "ID (Кол.)"
 
-#: .\production\templates\technologist\passports\assign_operations.html:65
-#: .\production\templates\technologist\passports\detail.html:15
+#: .\production\templates\technologist\passports\assign_operations.html:63
+#: .\production\templates\technologist\passports\detail.html:17
 msgid "Are you sure you want to mark this passport as completed?"
 msgstr "Вы уверены, что хотите отметить этот паспорт как завершённый?"
 
-#: .\production\templates\technologist\passports\assign_operations.html:65
-#: .\production\templates\technologist\passports\detail.html:16
+#: .\production\templates\technologist\passports\assign_operations.html:63
+#: .\production\templates\technologist\passports\detail.html:18
 msgid "Complete"
 msgstr "Завершить"
 
@@ -683,17 +651,21 @@ msgstr "Завершить"
 msgid "Create New Passport"
 msgstr "Создать Новый Паспорт"
 
-#: .\production\templates\technologist\passports\create_size_quantity.html:10
+#: .\production\templates\technologist\passports\create_size_quantity.html:11
 msgid "Add"
 msgstr "Добавить"
 
-#: .\production\templates\technologist\passports\create_size_quantity.html:24
+#: .\production\templates\technologist\passports\create_size_quantity.html:25
 msgid "Finish and Save"
 msgstr "Завершить и Сохранить"
 
-#: .\production\templates\technologist\passports\delete.html:7
-msgid "Are you sure you want to delete the passport for"
-msgstr "Вы уверены, что хотите удалить паспорт для"
+#: .\production\templates\technologist\passports\create_size_quantity.html:31
+msgid "Save"
+msgstr "Сохранить"
+
+#: .\production\templates\technologist\passports\create_size_quantity.html:32
+msgid "Are you sure you want to delete this item?"
+msgstr "Вы уверены, что хотите удалить этот элемент?"
 
 #: .\production\templates\technologist\passports\detail.html:4
 msgid "Passport Details for"
@@ -716,13 +688,29 @@ msgstr "Рулон"
 msgid "Date"
 msgstr "Дата"
 
-#: .\production\templates\technologist\passports\detail.html:11
+#: .\production\templates\technologist\passports\detail.html:12
 msgid "Size and Quantity"
 msgstr "Размер и Количество"
+
+#: .\production\templates\technologist\passports\detail.html:28
+msgid "Are you sure you want to delete this passport?"
+msgstr "Вы уверены, что хотите удалить этот паспорт?"
 
 #: .\production\templates\technologist\passports\edit.html:4
 msgid "Edit Passport Details"
 msgstr "Редактировать Детали Паспорта"
+
+#: .\production\templates\technologist\rolls\detail.html:4
+msgid "Roll Details:"
+msgstr "Детали Рулона"
+
+#: .\production\templates\technologist\rolls\detail.html:18
+msgid "Are you sure you want to delete this roll?"
+msgstr "Вы уверены, что хотите удалить этот рулон?"
+
+#: .\production\templates\technologist\rolls\edit.html:4
+msgid "Edit Roll:"
+msgstr "Редактировать Рулон:"
 
 #: .\production\templates\technologist_page.html:4
 msgid "Technologist Dashboard"
@@ -757,7 +745,3 @@ msgstr "Ассортименты"
 #: .\production\templates\technologist_page.html:22
 msgid "Models"
 msgstr "Модели"
-
-#: .\production\templates\technologist_page.html:23
-msgid "Clients"
-msgstr "Клиенты"

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-  <h2>{% trans "Assortment Details: %(name)s" %}{{ assortment.name }}</h2>
+  <h2>{% trans "Assortment Details:" %} {{ assortment.name }}</h2>
 
   <a href="{% url 'assortment_edit' assortment.pk %}">{% trans "Edit" %}</a> |
   <a href="javascript:;" onclick="confirmDelete()">{% trans "Delete" %}</a> |
