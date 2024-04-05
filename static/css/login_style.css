@@ -1,0 +1,29 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.form-heading {
+    margin-bottom: 20px;
+}
+
+.login-form .btn-primary {
+    width: 100%; /* Full-width button */
+    margin-top: 20px;
+}
+
+.error-message {
+    color: #dc3545; /* Bootstrap's danger color */
+    margin-top: 15px;
+}
