@@ -21,8 +21,12 @@
   <p><strong>{% trans "Payment:" %}</strong> {{ order.payment }}</p>
   <p><strong>{% trans "Term:" %}</strong> {{ order.term|date:"Y-m-d" }}</p>
 
+  <form id="deleteForm" action="{% url 'order_delete' order.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+
   <a href="{% url 'order_edit' order.pk %}">{% trans "Edit" %}</a> |
-  <a href="{% url 'order_delete' order.pk %}">{% trans "Delete" %}</a> |
+  <a href="javascript:;" onclick="confirmDelete()">{% trans "Delete" %}</a> |
   <a href="{% url 'order_list' %}">{% trans "Back" %}</a>
 
 
@@ -38,5 +42,11 @@
   {% else %}
     <p>{% trans "No associated passports." %}</p>
   {% endif %}
-
+  <script>
+    function confirmDelete() {
+      if (confirm("{% trans 'Are you sure you want to delete this order?' %}")) {
+        document.getElementById('deleteForm').submit();
+      }
+    }
+  </script>
 {% endblock %}

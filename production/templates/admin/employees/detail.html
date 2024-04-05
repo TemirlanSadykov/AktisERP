@@ -6,6 +6,17 @@
   <p><strong>{% trans "Type:" %}</strong> {{ employee.get_type_display }}</p>
   <p><strong>{% trans "Station:" %}</strong> {{ employee.get_station_display }}</p>
 
-  <a href="{% url 'employee_edit' employee.pk %}">{% trans "Edit" %}</a> | 
-  <a href="{% url 'employee_delete' employee.pk %}">{% trans "Delete" %}</a>
+  <a href="{% url 'employee_edit' employee.pk %}">{% trans "Edit" %}</a> |
+  <a href="javascript:;" onclick="confirmDelete()">{% trans "Delete" %}</a>
+  <form id="deleteForm" action="{% url 'employee_delete' employee.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+
+  <script>
+    function confirmDelete() {
+      if (confirm("{% trans 'Are you sure you want to delete this employee?' %}")) {
+        document.getElementById('deleteForm').submit();
+      }
+    }
+  </script>
 {% endblock %}

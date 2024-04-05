@@ -2,8 +2,21 @@
 {% load i18n %}
 {% block content %}
   <h2>{% trans "Client Details: %(name)s" %}{{ client.name }}</h2>
-  <p>{% trans "Contact Info:" %} {{ client.contact_info }}</p>
+  <p><strong>{% trans "Contact Info:" %}</strong> {{ client.contact_info }}</p>
+
   <a href="{% url 'client_edit' client.pk %}">{% trans "Edit" %}</a> |
-  <a href="{% url 'client_delete' client.pk %}">{% trans "Delete" %}</a> |
+  <a href="javascript:;" onclick="confirmDelete()">{% trans "Delete" %}</a> |
   <a href="{% url 'client_list' %}">{% trans "Back" %}</a>
+
+  <form id="deleteForm" action="{% url 'client_delete' client.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+
+  <script>
+    function confirmDelete() {
+      if (confirm("{% trans 'Are you sure you want to delete this client?' %}")) {
+        document.getElementById('deleteForm').submit();
+      }
+    }
+  </script>
 {% endblock %}
