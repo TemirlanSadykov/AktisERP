@@ -466,7 +466,7 @@ nav form button:hover {
     background-color: #c82333; /* Blue */
 }
 
-.employee-header {
+.filter-header {
     display: flex;
     flex-direction: column; /* Stack elements vertically */
     align-items: start; /* Align items to the start of the flex container */
@@ -483,7 +483,9 @@ nav form button:hover {
 
 .date-filter-form label,
 .date-filter-form input,
-.date-filter-form button {
+.date-filter-form button,
+.date-filter-form p,
+.date-filter-form div {
     margin: 0; /* Remove default margins */
     padding: 5px; /* Add some padding for better appearance */
 }
@@ -492,4 +494,24 @@ nav form button:hover {
     padding: 5px 10px; /* Adjust padding as needed */
     cursor: pointer; /* Change cursor to pointer on hover */
     /* Add more styles here to match your button design */
+}
+
+.size-quantity-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
+.assign-operations-container {
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

@@ -1,26 +1,35 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-<h2>{% trans "Salaries" %}</h2>
-<form method="get">
-  {{ form.as_p }}
-  <button type="submit">{% trans "Filter" %}</button>
-</form>
 
-<table>
-  <tr>
-    <th>{% trans "Employee" %}</th>
-    <th>{% trans "Salary" %} {% trans "Som" %}</th>
-  </tr>
-  {% for user, salary in salaries.items %}
-  <tr>
-    <td>
-      <a href="{% url 'salary_detail' employee_id=user.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
-        {{ user.user.get_full_name }}
-      </a>
-    </td>
-    <td>{{ salary|floatformat:2 }}</td>
-  </tr>
-  {% endfor %}
-</table>
+{% block content %}
+<div class="content-container">
+  <div class="filter-header">
+    <h2 class="list-heading">{% trans "Salaries" %}</h2>
+    <form method="get" class="date-filter-form">
+      {{ form.as_p }}
+      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
+    </form>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "Employee" %}</th>
+        <th>{% trans "Salary" %} ({% trans "Som" %})</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user, salary in salaries.items %}
+      <tr>
+        <td>
+          <a href="{% url 'salary_detail' employee_id=user.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
+            {{ user.user.get_full_name }}
+          </a>
+        </td>
+        <td>{{ salary|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
