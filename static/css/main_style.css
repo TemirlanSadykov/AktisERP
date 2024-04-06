@@ -116,3 +116,77 @@ nav form button:hover {
     margin-bottom: 10px; /* Adds space between buttons */
     width: 100%; /* Full-width buttons */
 }
+
+/* CREATE templates */
+/* CREATE templates */
+/* CREATE templates */
+/* CREATE templates */
+/* CREATE templates */
+
+.content-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-heading {
+    margin-bottom: 30px;
+    color: #343a40;
+    text-align: center;
+}
+
+.crud-form .form-group {
+    margin-bottom: 25px;
+}
+
+.crud-form p {
+    margin-bottom: 10px;
+}
+
+.crud-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.create-btn {
+    background: #007bff; /* Bootstrap blue */
+    border: 1px solid #007bff;
+    color: #fff; /* White text */
+}
+
+.create-btn:hover {
+    background: #0069d9; /* Slightly darker blue on hover */
+    border-color: #0062cc;
+    color: #fff; /* Text color remains white */
+}
+
+.back-btn {
+    background: #6c757d; /* Bootstrap grey */
+    border: 1px solid #6c757d;
+    color: #fff; /* White text */
+}
+
+.back-btn:hover {
+    background: #5a6268; /* Slightly darker grey on hover */
+    border-color: #545b62;
+    color: #fff; /* Text color remains white */
+}
