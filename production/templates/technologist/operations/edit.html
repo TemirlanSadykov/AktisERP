@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
 {% load i18n %}
+
 {% block content %}
-  <h2>{% trans "Edit Operation:" %} {{ operation.name }}</h2>
-  <form method="post">
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Edit Operation:" %} {{ operation.name }}</h2>
+  <form method="post" class="crud-form">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">{% trans "Update" %}</button>
+    <div class="form-actions">
+      <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
+      <a href="{% url 'operation_detail' operation.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+    </div>
   </form>
-  <a href="{% url 'operation_detail' operation.pk %}">{% trans "Cancel" %}</a>
+</div>
 {% endblock %}

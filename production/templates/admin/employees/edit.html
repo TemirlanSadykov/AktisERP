@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
-  <h2>{% trans "Edit Employee Details" %} {{ user_profile.name }}</h2>
-  <form method="post">
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Edit Employee Details" %} {{ user_profile.name }}</h2>
+  <form method="post" class="crud-form">
     {% csrf_token %}
     {{ user_form.as_p }}
-    <button type="submit">{% trans "Update" %}</button>
+    <div class="form-actions">
+      <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
+      <a href="{% url 'employee_detail' user_profile.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+    </div>
   </form>
+</div>
 {% endblock %}

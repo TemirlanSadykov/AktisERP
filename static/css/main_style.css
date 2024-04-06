@@ -219,6 +219,7 @@ nav form button:hover {
 .edit-btn:hover {
     background: #0069d9;
     border-color: #0062cc;
+    color: #fff;
 }
 
 .delete-btn {
@@ -230,6 +231,7 @@ nav form button:hover {
 .delete-btn:hover {
     background: #c82333;
     border-color: #bd2130;
+    color: #fff;
 }
 
 .back-btn {
@@ -241,6 +243,7 @@ nav form button:hover {
 .back-btn:hover {
     background: #5a6268;
     border-color: #545b62;
+    color: #fff;
 }
 
 .calculate-btn {
