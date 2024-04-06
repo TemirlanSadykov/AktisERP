@@ -190,3 +190,146 @@ nav form button:hover {
     border-color: #545b62;
     color: #fff; /* Text color remains white */
 }
+
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+
+.details p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.form-actions {
+    margin-top: 30px;
+}
+
+.edit-btn, .delete-btn {
+    margin-right: 10px;
+}
+
+.edit-btn {
+    background: #007bff;
+    border: 1px solid #007bff;
+    color: #fff;
+}
+
+.edit-btn:hover {
+    background: #0069d9;
+    border-color: #0062cc;
+}
+
+.delete-btn {
+    background: #dc3545;
+    border: 1px solid #dc3545;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
+.back-btn {
+    background: #6c757d;
+    border: 1px solid #6c757d;
+    color: #fff;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+    border-color: #545b62;
+}
+
+.calculate-btn {
+    background: #17a2b8; /* Bootstrap info color for a distinguished look */
+    border: 1px solid #17a2b8; /* Same color border for a cohesive design */
+    color: #fff; /* White text for readability */
+    padding: 5px 10px; /* Comfortable padding */
+    margin-left: 10px; /* Space from the preceding text */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    text-decoration: none; /* Removes underline from links styled as buttons */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effects */
+}
+
+.calculate-btn:hover, .calculate-btn:focus {
+    background: #138496; /* Slightly darker shade on hover/focus for feedback */
+    border-color: #117a8b; /* Matching darker border */
+    color: #fff; /* Ensuring text remains white */
+    text-decoration: none; /* Continues to remove underline on hover/focus */
+}
+
+/* Style for 'Size and Quantity' button */
+.btn.sq-btn {
+    background: #f0ad4e; /* Bootstrap's 'warning' color for attention */
+    border: 1px solid #f0ad4e; /* Same color border for cohesion */
+    color: #fff; /* White text for clarity */
+    padding: 5px 15px; /* Comfortable padding */
+    margin-right: 10px; /* Space between this button and the next */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    text-decoration: none; /* Removes underline from link styled as button */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.btn.sq-btn:hover, .btn.sq-btn:focus {
+    background: #ec971f; /* Slightly darker shade for interactive feedback */
+    border-color: #d58512; /* Matching darker border */
+    color: #fff; /* Ensure text remains white */
+    text-decoration: none; /* Maintain no underline on hover/focus */
+}
+
+/* Style for 'Operations' button */
+.btn.operations-btn {
+    background: #5bc0de; /* Bootstrap's 'info' color for a cool, informational feel */
+    border: 1px solid #5bc0de; /* Same color border for uniform appearance */
+    color: #fff; /* White text for readability */
+    padding: 5px 15px; /* Consistent padding with other buttons */
+    border-radius: 5px; /* Rounded corners to match the design */
+    text-decoration: none; /* Ensures link styled as button has no underline */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for interactive feedback */
+}
+
+.btn.operations-btn:hover, .btn.operations-btn:focus {
+    background: #31b0d5; /* Slightly darker shade on hover/focus for feedback */
+    border-color: #269abc; /* Coordinated darker border */
+    color: #fff; /* Text color remains white for contrast */
+    text-decoration: none; /* Continues to have no underline on hover/focus */
+}
+
+/* Style for 'Complete' button */
+.complete-btn {
+    background: #28a745; /* Green color indicating completion or success */
+    border: 1px solid #28a745; /* Same color border for a cohesive look */
+    color: #fff; /* White text for readability */
+    padding: 5px 15px; /* Consistent padding with other buttons */
+    margin-top: 10px; /* Space from the preceding elements */
+    border-radius: 5px; /* Rounded corners for a modern aesthetic */
+    text-decoration: none; /* Removes underline from link styled as button */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.complete-btn:hover, .complete-btn:focus {
+    background: #218838; /* Slightly darker shade for interactive feedback */
+    border-color: #1e7e34; /* Coordinated darker border */
+    color: #fff; /* Ensure text remains white */
+    text-decoration: none; /* Maintain no underline on hover/focus */
+}
+
+.reopen-btn {
+    background: #ffc107; /* Yellow color for caution or attention */
+    border: 1px solid #ffc107;
+    color: #212529; /* Dark text for contrast */
+    padding: 5px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.reopen-btn:hover, .reopen-btn:focus {
+    background: #e0a800; /* Slightly darker shade for interactive feedback */
+    border-color: #d39e00;
+    color: #212529;
+    text-decoration: none;
+}

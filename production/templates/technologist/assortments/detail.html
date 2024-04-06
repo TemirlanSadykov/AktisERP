@@ -1,21 +1,26 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-  <h2>{% trans "Assortment Details:" %} {{ assortment.name }}</h2>
 
-  <a href="{% url 'assortment_edit' assortment.pk %}">{% trans "Edit" %}</a> |
-  <a href="javascript:;" onclick="confirmDelete()">{% trans "Delete" %}</a> |
-  <a href="{% url 'assortment_list' %}">{% trans "Back" %}</a>
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Assortment Details:" %} {{ assortment.name }}</h2>
+
+  <div class="form-actions">
+    <a href="{% url 'assortment_edit' assortment.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'assortment_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
 
   <form id="deleteForm" action="{% url 'assortment_delete' assortment.pk %}" method="post" style="display:none;">
     {% csrf_token %}
   </form>
+</div>
 
-  <script>
-    function confirmDelete() {
-      if (confirm("{% trans 'Are you sure you want to delete this assortment?' %}")) {
-        document.getElementById('deleteForm').submit();
-      }
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this assortment?' %}")) {
+      document.getElementById('deleteForm').submit();
     }
-  </script>
+  }
+</script>
 {% endblock %}

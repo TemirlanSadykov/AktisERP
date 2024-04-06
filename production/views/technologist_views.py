@@ -31,15 +31,23 @@ class PassportListView(ListView):
     template_name = 'technologist/passports/list.html'
     context_object_name = 'passports'
 
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class PassportCreateView(CreateView):
     model = Passport
     form_class = PassportForm
     template_name = 'technologist/passports/create.html'
-    success_url = reverse_lazy('passport_list')
+
     def get_success_url(self):
         passport_id = self.object.pk
         return reverse('create_size_quantity', kwargs={'passport_id': passport_id})
+
+    def form_valid(self, form):
+        response = super().form_valid(form) 
+        order = self.object.order
+        order.status = Order.IN_PROGRESS 
+        order.save()
+        return response
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class PassportDetailView(DetailView):
@@ -240,19 +248,26 @@ def update_work_success(request):
 @require_POST 
 def complete_passport(request, passport_id):
     passport = get_object_or_404(Passport, id=passport_id)
-    passport.is_completed = True
-    passport.save()
-
     total_completed = passport.size_quantities.aggregate(Sum('quantity'))['quantity__sum'] or 0
     order = passport.order
-    order.completed_quantity += total_completed
+
+    if not passport.is_completed:
+        passport.is_completed = True
+        order.completed_quantity += total_completed
+    else:
+        passport.is_completed = False
+        order.completed_quantity -= total_completed
+
+    passport.save()
     order.save()
 
     if order.completed_quantity >= order.quantity:
         order.status = Order.COMPLETED
-        order.save()
+    elif order.completed_quantity < order.quantity and order.status == Order.COMPLETED:
+        order.status = Order.IN_PROGRESS
+    order.save()
 
-    return redirect('passport_list')
+    return redirect('passport_detail', pk=passport.id)
     
 
 
