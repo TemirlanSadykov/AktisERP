@@ -430,3 +430,66 @@ nav form button:hover {
     border-color: #0062cc;
     color: #fff;
 }
+
+/* EMPLOYEE functinality */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+  
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+  
+.table th {
+    background-color: #f2f2f2;
+}
+  
+.start-form button, .finish-form button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+  
+.finish-form button {
+    background-color: #c82333; /* Blue */
+}
+
+.employee-header {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: start; /* Align items to the start of the flex container */
+    gap: 10px; /* Space between the header and the form */
+    margin-bottom: 20px;
+}
+
+.date-filter-form {
+    display: flex;
+    flex-wrap: wrap; /* Allow the items to wrap as needed */
+    gap: 10px; /* Space between form items */
+    align-items: center; /* Align items in the middle of the container */
+}
+
+.date-filter-form label,
+.date-filter-form input,
+.date-filter-form button {
+    margin: 0; /* Remove default margins */
+    padding: 5px; /* Add some padding for better appearance */
+}
+
+.btn.filter-btn {
+    padding: 5px 10px; /* Adjust padding as needed */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    /* Add more styles here to match your button design */
+}

@@ -27,6 +27,12 @@
     margin-top: 20px; /* Space above the button */
 }
 
+.login-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
 /* Styles error messages in Bootstrap's danger color for consistency */
 .error-message {
     color: #dc3545; /* Bootstrap's danger color for errors */
