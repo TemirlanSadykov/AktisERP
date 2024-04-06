@@ -34,6 +34,7 @@ class EmployeeListView(ListView):
     model = UserProfile
     template_name = 'admin/employees/list.html'
     context_object_name = 'employees'
+    paginate_by = 10
     def get_queryset(self):
         return UserProfile.objects.filter(type__in=[UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST])
 
@@ -202,6 +203,7 @@ class OrderListView(ListView):
     model = Order
     template_name = 'admin/orders/list.html'
     context_object_name = 'orders'
+    paginate_by = 10
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderCreateView(CreateView):
@@ -240,6 +242,7 @@ class ClientListView(ListView):
     model = Client
     template_name = 'admin/clients/list.html'
     context_object_name = 'clients'
+    paginate_by = 10
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientCreateView(CreateView):

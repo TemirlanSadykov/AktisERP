@@ -30,7 +30,7 @@ class PassportListView(ListView):
     model = Passport
     template_name = 'technologist/passports/list.html'
     context_object_name = 'passports'
-
+    paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class PassportCreateView(CreateView):
@@ -277,6 +277,7 @@ class OperationListView(ListView):
     model = Operation
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
+    paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationCreateView(CreateView):
@@ -335,6 +336,7 @@ class RollListView(ListView):
     model = Roll
     template_name = 'technologist/rolls/list.html'
     context_object_name = 'rolls'
+    paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollCreateView(CreateView):
@@ -369,6 +371,7 @@ class AssortmentListView(ListView):
     model = Assortment
     template_name = 'technologist/assortments/list.html'
     context_object_name = 'assortments'
+    paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentCreateView(CreateView):
@@ -403,6 +406,7 @@ class ModelListView(ListView):
     model = Model
     template_name = 'technologist/models/list.html'
     context_object_name = 'models'
+    paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelCreateView(CreateView):

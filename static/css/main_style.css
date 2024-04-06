@@ -320,6 +320,7 @@ nav form button:hover {
     text-decoration: none; /* Maintain no underline on hover/focus */
 }
 
+/* Style for 'Reopen' button */
 .reopen-btn {
     background: #ffc107; /* Yellow color for caution or attention */
     border: 1px solid #ffc107;
@@ -335,4 +336,97 @@ nav form button:hover {
     border-color: #d39e00;
     color: #212529;
     text-decoration: none;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.create-link {
+    margin: 0; /* Removes the default margin from the <p> tag to align the button properly */
+}
+
+/* PAGINATION css */
+/* PAGINATION css */
+/* PAGINATION css */
+/* PAGINATION css */
+/* PAGINATION css */
+
+.pagination {
+    text-align: center; /* Center the pagination controls */
+    margin: 20px 0; /* Add some space above and below the pagination */
+}
+
+.pagination-list {
+    display: inline-block; /* Align the pagination items in a row */
+    padding-left: 0; /* Remove default list padding */
+}
+
+.pagination-list li {
+    display: inline; /* Display list items in a line */
+    margin-right: 5px; /* Add some space between pagination items */
+}
+
+.pagination-list li a {
+    text-decoration: none; /* Remove underline from links */
+    padding: 5px 10px; /* Add some padding for clickable area */
+    color: #007bff; /* Bootstrap primary color for links */
+    border: 1px solid #007bff; /* Border to make it look like buttons */
+    border-radius: 5px; /* Slightly rounded corners for a modern look */
+    background-color: #fff; /* White background */
+}
+
+.pagination-list li a:hover,
+.pagination-list li a:focus {
+    background-color: #007bff; /* Background color on hover/focus */
+    color: #fff; /* White text on hover/focus */
+}
+
+.pagination-list li.active a {
+    font-weight: bold; /* Make the active page number bolder */
+    background-color: #007bff; /* Bootstrap primary color for active link */
+    color: #fff; /* White text for active link */
+}
+
+.pagination-list li.active a:hover,
+.pagination-list li.active a:focus {
+    background-color: #0056b3; /* Slightly darker shade for active link hover/focus */
+}
+
+.form-inline {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    margin-bottom: 20px;
+}
+
+.attendance-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attendance-form p {
+    margin-bottom: 0; 
+}
+
+.attendance-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.filter-btn {
+    background: #007bff;
+    border: 1px solid #007bff;
+    color: #fff;
+}
+
+.filter-btn:hover {
+    background: #0069d9;
+    border-color: #0062cc;
+    color: #fff;
 }

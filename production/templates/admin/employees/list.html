@@ -1,27 +1,59 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-  <p><a href="{% url 'employee_create' %}">{% trans "Create Employee" %}</a></p>
-  <style>
-    .status-indicator {
-      height: 10px;
-      width: 10px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 5px;
-    }
-    .status-true {
-      background-color: green;
-    }
-    .status-false {
-      background-color: red;
-    }
-  </style>
 
-  {% for employee in employees %}
-    <p>
-      <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
-      <a href="{% url 'employee_detail' employee.pk %}">{{ employee.user.get_full_name }} - {{ employee.get_station_display }}</a>
-    </p>
-  {% endfor %}
+{% block content %}
+<div class="content-container">
+  <div class="header">
+    <h2 class="list-heading">{% trans "Employees" %}</h2>
+    <p class="create-link"><a href="{% url 'employee_create' %}" class="btn create-btn">{% trans "Create Employee" %}</a></p>
+  </div>
+  <ul class="list-group">
+    {% for employee in employees %}
+      <li class="list-group-item">
+        <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
+        <a href="{% url 'employee_detail' employee.pk %}">{{ employee.user.get_full_name }} - {{ employee.get_station_display }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="pagination">
+    {% if is_paginated %}
+      <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+          <li><a href="?page=1">&laquo; first</a></li>
+          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+        {% endif %}
+  
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+  
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .status-indicator {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+  }
+  .status-true {
+    background-color: green;
+  }
+  .status-false {
+    background-color: red;
+  }
+</style>
 {% endblock %}

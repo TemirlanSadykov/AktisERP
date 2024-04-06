@@ -1,10 +1,42 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
-  <p><a href="{% url 'order_create' %}">{% trans "Create New Order" %}</a></p>
-  {% for order in orders %}
-    <p>
-      <a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a>
-      </p>
-  {% endfor %}
+<div class="content-container">
+  <div class="header">
+    <h2 class="list-heading">{% trans "Orders" %}</h2>
+    <p class="create-link"><a href="{% url 'order_create' %}" class="btn create-btn">{% trans "Create New Order" %}</a></p>
+  </div>
+  <ul class="list-group">
+    {% for order in orders %}
+      <li class="list-group-item">
+        <a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="pagination">
+    {% if is_paginated %}
+      <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+          <li><a href="?page=1">&laquo; first</a></li>
+          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+        {% endif %}
+  
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+  
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
