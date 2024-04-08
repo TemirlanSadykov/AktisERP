@@ -103,7 +103,7 @@ class DateRangeForm(forms.Form):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'type', 'preferred_completion_time']
+        fields = ['name', 'payment', 'equipment', 'type', 'preferred_completion_time', 'photo']
 
 class RollForm(forms.ModelForm):
     class Meta:

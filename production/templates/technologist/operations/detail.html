@@ -4,7 +4,11 @@
 {% block content %}
 <div class="content-container">
   <h2 class="form-heading">{% trans "Operation Details:" %} {{ operation.name }}</h2>
-
+  {% if operation.photo %}
+    <div class="operation-photo">
+      <img src="{{ operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+    </div>
+  {% endif %}
   <div class="details">
     <p><strong>{% trans "Payment:" %}</strong> {{ operation.payment }}</p>
     <p><strong>{% trans "Equipment:" %}</strong> {{ operation.equipment }}</p>

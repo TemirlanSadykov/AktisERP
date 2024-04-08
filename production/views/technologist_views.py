@@ -298,6 +298,15 @@ class OperationUpdateView(UpdateView):
     form_class = OperationForm
     template_name = 'technologist/operations/edit.html'
     success_url = reverse_lazy('operation_list')
+    def form_valid(self, form):
+        # Example print statement
+        print("Form data:", form.cleaned_data)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Print errors if the form is invalid
+        print("Form errors:", form.errors)
+        return super().form_invalid(form)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationDeleteView(DeleteView):

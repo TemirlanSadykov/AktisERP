@@ -63,6 +63,7 @@ class Operation(models.Model):
     type = models.CharField(max_length=100)
     preferred_completion_time = models.IntegerField()
     average_completion_time = models.IntegerField(null=True)
+    photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True)
     def __str__(self):
         return self.name
     

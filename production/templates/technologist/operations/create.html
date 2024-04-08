@@ -3,7 +3,7 @@
 {% block content %}
 <div class="content-container">
   <h2 class="form-heading">{% trans "Create New Operation" %}</h2>
-  <form method="post" class="crud-form">
+  <form method="post" class="crud-form" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="form-group">
       {{ form.as_p }}

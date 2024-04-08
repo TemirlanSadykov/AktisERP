@@ -4,7 +4,7 @@
 {% block content %}
 <div class="content-container">
   <h2 class="form-heading">{% trans "Edit Operation:" %} {{ operation.name }}</h2>
-  <form method="post" class="crud-form">
+  <form method="post" class="crud-form" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     <div class="form-actions">
