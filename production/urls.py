@@ -53,8 +53,8 @@ urlpatterns = [
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/<int:passport_id>/complete/', complete_passport, name='complete_passport'),
     path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
-
     path('technologist/passports/api/reassigned_works/<int:assigned_work_id>/', get_reassigned_works, name='get_reassigned_works'),
+    path('technologist/passports/reassign-work/complete/', complete_reassigned_work, name='complete_reassigned_work'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),

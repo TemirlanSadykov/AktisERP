@@ -167,7 +167,7 @@
       document.querySelectorAll('.reassign-icon').forEach(icon => {
         icon.addEventListener('click', function() {
             const assignedWorkId = this.getAttribute('data-work');
-            document.getElementById('reassignWorkId').value = assignedWorkId; 
+            document.getElementById('reassignWorkId').value = assignedWorkId;
             fetch(`/production/technologist/passports/api/reassigned_works/${assignedWorkId}/`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -179,30 +179,48 @@
                 reassignedWorksList.innerHTML = ''; // Clear previous content
     
                 if (data.reassigned_works && data.reassigned_works.length > 0) {
-                    // Display reassigned works as bullet points
                     const list = document.createElement('ul');
                     data.reassigned_works.forEach(work => {
                         const item = document.createElement('li');
-                        item.textContent = `Employee ID: ${work.new_employee__employee_id}, Quantity: ${work.reassigned_quantity}, Reason: ${work.reason}`;
-                        
-                        // If work is marked as successful, color the text green
+                        item.innerHTML = `Employee ID: ${work.new_employee__employee_id}, Quantity: ${work.reassigned_quantity}, Reason: ${work.reason}`;
                         if (work.is_completed) {
-                            item.style.color = 'green';
+                          item.style.color = 'green';
                         } else {
-                            item.style.color = 'red';
+                          item.style.color = 'red';
+                        }
+                        if (!work.is_success) {
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.addEventListener('change', () => {
+                                if (checkbox.checked) {
+                                    const formData = new FormData();
+                                    formData.append('reassigned_work_id', work.id);
+                                    fetch('/production/technologist/passports/reassign-work/complete/', {
+                                        method: 'POST',
+                                        body: formData,
+                                        headers: {'X-CSRFToken': getCookie('csrftoken')},
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        alert(data.message);
+                                        checkbox.disabled = true; // Disable checkbox after successful update
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                                }
+                            });
+                            item.appendChild(checkbox);
                         }
     
                         list.appendChild(item);
                     });
                     reassignedWorksList.appendChild(list);
                 } else {
-                    // If no reassigned works, maybe display a message or leave it empty
                     reassignedWorksList.textContent = 'No reassigned works yet.';
                 }
     
                 showPopup(); // Show the popup which now includes reassigned works info
             });
-          });
+        });
       });
     
       document.getElementById('reassignForm').addEventListener('submit', function(event) {
