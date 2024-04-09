@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="employee-reassigned-work-container">
+  <div class="employee-header">
+    <h1 class="employee-list-heading">{% trans "My Reassigned Works" %}</h1>
+  </div>
+
+  {% if reassigned_works %}
+    <div class="employee-cards-container">
+        {% for reassigned_work in reassigned_works %}
+        <div class="employee-card">
+            <div class="employee-operation-name">{{ reassigned_work.original_assigned_work.work.operation.name }}</div>
+            <div class="employee-operation-photo">
+            {% if reassigned_work.original_assigned_work.work.operation.photo %}
+                <img src="{{ reassigned_work.original_assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+            {% else %}
+                {% trans "No photo" %}
+            {% endif %}
+            </div>
+            <div class="employee-details">
+                <div class="employee-size">
+                    {% trans "Size:" %}
+                    {% if reassigned_work.original_assigned_work.work.size_quantity %}
+                    {{ reassigned_work.original_assigned_work.work.size_quantity.size }}
+                    {% else %}
+                    --
+                    {% endif %}
+                </div>
+                <div class="employee-quantity">
+                    {% trans "Reassigned Quantity:" %} {{ reassigned_work.reassigned_quantity }}
+                </div>
+                <div class="employee-reason">
+                    {% trans "Reason:" %} {{ reassigned_work.reason|default:"--" }}
+                </div>
+                <div class="employee-actions">
+                    <form action="{% url 'reassigned_works_list' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="reassigned_work_id" value="{{ reassigned_work.id }}">
+                        <button type="submit">{% trans "Complete" %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>{% trans "No reassigned works found." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

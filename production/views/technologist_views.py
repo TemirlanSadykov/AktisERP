@@ -262,43 +262,62 @@ def complete_passport(request, passport_id):
 
 @login_required
 @technologist_required
+def get_reassigned_works(request, assigned_work_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        reassigned_works = ReassignedWork.objects.filter(original_assigned_work_id=assigned_work_id)
+        data = list(reassigned_works.values('new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_success'))
+        return JsonResponse({'reassigned_works': data})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
 @require_POST
 def reassign_work(request):
-    print(json.loads(request.body))
     data = json.loads(request.body)
     work_id = data.get('work_id')
     new_employee_id = data.get('new_employee_id')
     quantity = data.get('quantity')
     reason = data.get('reason')
-
+    print(data)
+    # Validation
     if not all([work_id, new_employee_id, quantity, reason]):
         return JsonResponse({'message': 'Missing required data'}, status=400)
 
     try:
         with transaction.atomic():
-            assigned_work = AssignedWork.objects.get(id=work_id)
+            assigned_work = get_object_or_404(AssignedWork, id=work_id)
+            new_employee_profile = get_object_or_404(UserProfile, employee_id=new_employee_id)
+
+            # Attempt to retrieve an existing reassigned work
+            reassigned_work, created = ReassignedWork.objects.get_or_create(
+                original_assigned_work=assigned_work,
+                new_employee=new_employee_profile,
+                defaults={'reassigned_quantity': quantity, 'reason': reason}
+            )
+
+            if not created:
+                # If the reassigned work is being updated, adjust the assigned_work.quantity
+                # by adding the old reassigned quantity before setting the new one
+                assigned_work.quantity += reassigned_work.reassigned_quantity
+                reassigned_work.reassigned_quantity = quantity
+                reassigned_work.reason = reason
+                reassigned_work.is_success = False
+            
             if quantity <= 0 or quantity > assigned_work.quantity:
                 return JsonResponse({'message': 'Invalid quantity'}, status=400)
 
-            new_employee_profile = UserProfile.objects.get(employee_id=new_employee_id)
-
-            reassigned_work = ReassignedWork(
-                original_assigned_work=assigned_work,
-                new_employee=new_employee_profile,
-                reassigned_quantity=quantity,
-                reason=reason
-            )
-
+            # Adjust the assigned work quantity by subtracting the new reassigned quantity
             assigned_work.quantity -= quantity
             reassigned_work.save()
             assigned_work.save()
 
-        return JsonResponse({"message": "Work reassigned successfully"}, status=200)
+            return JsonResponse({"message": "Work reassigned successfully"}, status=200)
     
     except AssignedWork.DoesNotExist:
         return JsonResponse({'message': 'Assigned work not found'}, status=404)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({'message': 'Employee profile not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'message': 'An error occurred'}, status=500)
+        return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
 
 
 

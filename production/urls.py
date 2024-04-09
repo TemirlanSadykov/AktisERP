@@ -54,6 +54,8 @@ urlpatterns = [
     path('technologist/passports/<int:passport_id>/complete/', complete_passport, name='complete_passport'),
     path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
 
+    path('technologist/passports/api/reassigned_works/<int:assigned_work_id>/', get_reassigned_works, name='get_reassigned_works'),
+
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),
     path('technologist/operations/<int:pk>/', OperationDetailView.as_view(), name='operation_detail'),
@@ -79,8 +81,9 @@ urlpatterns = [
     path('technologist/models/<int:pk>/edit/', ModelUpdateView.as_view(), name='model_edit'),
     path('technologist/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
 
-    path('works/done/', done_works_list, name='done_works_list'),
-    path('works/pending/', pending_works_list, name='pending_works_list'),
+    path('employee/works/done/', done_works_list, name='done_works_list'),
+    path('employee/works/pending/', pending_works_list, name='pending_works_list'),
+    path('employee/works/reassigned/', reassigned_works_list, name='reassigned_works_list'),
     path('employee/works/<int:assigned_work_id>/start/', start_work, name='start_work'),
     path('employee/works/<int:assigned_work_id>/finish/', finish_work, name='finish_work'),
 

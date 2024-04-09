@@ -70,6 +70,9 @@
 
   <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
     <div id="reassignPopup" class="reassign-popup" style="display: none;">
+      <div id="reassignedWorksList" class="reassigned-works-list">
+        <!-- Reassigned works will be displayed here as bullet points -->
+      </div>
       <form id="reassignForm" class="reassign-form">
         <label for="newEmployeeId">New Employee ID:</label>
         <input type="text" id="newEmployeeId" name="newEmployeeId">
@@ -163,11 +166,43 @@
       
       document.querySelectorAll('.reassign-icon').forEach(icon => {
         icon.addEventListener('click', function() {
-          const workId = this.getAttribute('data-work');
-          document.getElementById('reassignWorkId').value = workId; 
-          showPopup();
-          document.getElementById('reassignPopup').style.display = 'block'; 
-        });
+            const assignedWorkId = this.getAttribute('data-work');
+            document.getElementById('reassignWorkId').value = assignedWorkId; 
+            fetch(`/production/technologist/passports/api/reassigned_works/${assignedWorkId}/`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const reassignedWorksList = document.getElementById('reassignedWorksList');
+                reassignedWorksList.innerHTML = ''; // Clear previous content
+    
+                if (data.reassigned_works && data.reassigned_works.length > 0) {
+                    // Display reassigned works as bullet points
+                    const list = document.createElement('ul');
+                    data.reassigned_works.forEach(work => {
+                        const item = document.createElement('li');
+                        item.textContent = `Employee ID: ${work.new_employee__employee_id}, Quantity: ${work.reassigned_quantity}, Reason: ${work.reason}`;
+                        
+                        // If work is marked as successful, color the text green
+                        if (work.is_success) {
+                            item.style.color = 'green';
+                        } else {
+                            item.style.color = 'red';
+                        }
+    
+                        list.appendChild(item);
+                    });
+                    reassignedWorksList.appendChild(list);
+                } else {
+                    // If no reassigned works, maybe display a message or leave it empty
+                    reassignedWorksList.textContent = 'No reassigned works yet.';
+                }
+    
+                showPopup(); // Show the popup which now includes reassigned works info
+            });
+          });
       });
     
       document.getElementById('reassignForm').addEventListener('submit', function(event) {
@@ -192,18 +227,13 @@
         };
       
         xhr.onload = function() {
+          const response = JSON.parse(xhr.responseText);
           if (xhr.status === 200) {
-            const response = JSON.parse(xhr.responseText);
-            if (response.status === 'success') {
-              console.log(response.message);
-              closePopup(); // Assuming closePopup() is a function to close a modal or popup
-            } else {
-              console.error('Failed to reassign work', response.message);
-              alert(response.message); // Notify the user if the update fails
-            }
+            alert(response.message);
+            closePopup();
           } else {
             console.error('Request failed with status:', xhr.status);
-            alert(xhr.status); // Notify the user if the request fails
+            alert(response.message); 
           }
         };
       
@@ -297,10 +327,12 @@
       xhr.send(`work_id=${workId}&is_success=${isSuccess}`);
     }
     function showPopup() {
+      document.getElementById('reassignPopup').style.display = 'block';
       document.getElementById('reassignPopupOverlay').style.display = 'flex';
     }
     
     function closePopup() {
+      document.getElementById('reassignPopup').style.display = 'none';
       document.getElementById('reassignPopupOverlay').style.display = 'none';
     }
     </script>

@@ -136,5 +136,6 @@ class ReassignedWork(models.Model):
     new_employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='reassigned_works')
     reassigned_quantity = models.IntegerField()
     reason = models.TextField(blank=True, null=True)
+    is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
     def __str__(self):
         return f"Reassigned {self.reassigned_quantity} of {self.original_assigned_work} to {self.new_employee}"
