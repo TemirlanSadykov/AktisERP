@@ -8,9 +8,12 @@
     <p class="create-link"><a href="{% url 'order_create' %}" class="btn create-btn">{% trans "Create New Order" %}</a></p>
   </div>
   <ul class="list-group">
-    {% for order in orders %}
-      <li class="list-group-item">
-        <a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a>
+    {% for order_info in orders_with_days_left %}
+      <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="{% url 'order_detail' order_info.order.pk %}" style="flex-grow: 1;">
+          {{ order_info.order.order_number }}
+        </a>
+        <span style="flex-shrink: 0;">{% trans "Days left:" %} {{ order_info.days_left }}</span>
       </li>
     {% endfor %}
   </ul>

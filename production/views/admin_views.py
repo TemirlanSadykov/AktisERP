@@ -234,6 +234,26 @@ class OrderListView(ListView):
     context_object_name = 'orders'
     paginate_by = 10
 
+    def get_queryset(self):
+        return super().get_queryset().order_by('term')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        orders_with_days_left = []
+
+        for order in context['orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({
+                'order': order,
+                'days_left': days_left
+            })
+
+        orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
+
+        context['orders_with_days_left'] = orders_with_days_left_sorted
+        return context
+
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderCreateView(CreateView):
     model = Order
@@ -246,10 +266,19 @@ class OrderDetailView(DetailView):
     model = Order
     template_name = 'admin/orders/detail.html'
     context_object_name = 'order'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
         context['passports'] = order.passports.all()
+
+        today = timezone.localdate() 
+        if order.term >= today:
+            days_left = (order.term - today).days
+        else:
+            days_left = 0  
+        context['days_left'] = days_left
+
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
