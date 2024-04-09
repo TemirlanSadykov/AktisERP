@@ -52,6 +52,7 @@ urlpatterns = [
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/<int:passport_id>/complete/', complete_passport, name='complete_passport'),
+    path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),

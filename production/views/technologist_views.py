@@ -226,18 +226,9 @@ def update_work_success(request):
     is_success = request.POST.get('is_success') == 'true'
 
     try:
-        assigned_work = AssignedWork.objects.select_related('work__passport__order').get(pk=work_id)
-        order = assigned_work.work.passport.order
-
-        if is_success and not assigned_work.is_success:
-            assigned_work.is_success = True
-        elif not is_success and assigned_work.is_success:
-            assigned_work.is_success = False
-            assigned_work.start_time = None 
-            assigned_work.end_time = None
-
+        assigned_work = AssignedWork.objects.get(pk=work_id)
+        assigned_work.is_success = is_success
         assigned_work.save()
-        order.save() 
 
         return JsonResponse({'status': 'success'})
     except AssignedWork.DoesNotExist:
@@ -268,7 +259,46 @@ def complete_passport(request, passport_id):
     order.save()
 
     return redirect('passport_detail', pk=passport.id)
+
+@login_required
+@technologist_required
+@require_POST
+def reassign_work(request):
+    print(json.loads(request.body))
+    data = json.loads(request.body)
+    work_id = data.get('work_id')
+    new_employee_id = data.get('new_employee_id')
+    quantity = data.get('quantity')
+    reason = data.get('reason')
+
+    if not all([work_id, new_employee_id, quantity, reason]):
+        return JsonResponse({'message': 'Missing required data'}, status=400)
+
+    try:
+        with transaction.atomic():
+            assigned_work = AssignedWork.objects.get(id=work_id)
+            if quantity <= 0 or quantity > assigned_work.quantity:
+                return JsonResponse({'message': 'Invalid quantity'}, status=400)
+
+            new_employee_profile = UserProfile.objects.get(employee_id=new_employee_id)
+
+            reassigned_work = ReassignedWork(
+                original_assigned_work=assigned_work,
+                new_employee=new_employee_profile,
+                reassigned_quantity=quantity,
+                reason=reason
+            )
+
+            assigned_work.quantity -= quantity
+            reassigned_work.save()
+            assigned_work.save()
+
+        return JsonResponse({"message": "Work reassigned successfully"}, status=200)
     
+    except AssignedWork.DoesNotExist:
+        return JsonResponse({'message': 'Assigned work not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'message': 'An error occurred'}, status=500)
 
 
 

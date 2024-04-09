@@ -617,4 +617,61 @@ nav form button:hover {
       margin: 0 10px; /* Add some horizontal margin on smaller screens */
     }
 }
-  
+
+/* Overlay covering the entire screen */
+.reassign-popup-overlay {
+  position: fixed; /* Positioning relative to the viewport */
+  top: 0;
+  left: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+/* Style for the popup box */
+.reassign-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 300px; /* Adjust based on content size */
+  display: none; /* Hidden by default */
+}
+
+/* Style for form elements and labels */
+.reassign-form label {
+  display: block; /* Make labels take up a full row */
+  margin-bottom: 5px; /* Spacing below the label */
+}
+
+.reassign-form input[type="text"],
+.reassign-form input[type="number"] {
+  width: 100%; /* Full width of the popup */
+  padding: 8px; /* Padding inside the input */
+  margin-bottom: 15px; /* Space between form elements */
+  border-radius: 4px; /* Rounded corners */
+  border: 1px solid #ccc; /* Light grey border */
+}
+
+/* Style for buttons */
+.reassign-form button {
+  padding: 10px 15px; /* Padding inside the buttons */
+  border: none;
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Change mouse cursor on hover */
+  margin-right: 10px; /* Space between buttons */
+}
+
+.reassign-form button[type="submit"] {
+  background-color: #4CAF50; /* Green background */
+  color: white; /* White text */
+}
+
+.reassign-form button[type="button"] {
+  background-color: #f44336; /* Red background */
+  color: white; /* White text */
+}

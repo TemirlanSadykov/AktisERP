@@ -46,6 +46,7 @@
                     {% endif %}
                     {% if work.end_time %}
                       <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
+                      <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}"></i>
                     {% endif %}
                   {% endfor %}
                 {% else %}
@@ -65,6 +66,26 @@
       <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
     </form>
     <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
+    <div id="reassignPopup" class="reassign-popup" style="display: none;">
+      <form id="reassignForm" class="reassign-form">
+        <label for="newEmployeeId">New Employee ID:</label>
+        <input type="text" id="newEmployeeId" name="newEmployeeId">
+    
+        <label for="reassignQuantity">Quantity:</label>
+        <input type="number" id="reassignQuantity" name="reassignQuantity">
+
+        <label for="reassignReason">Reason:</label>
+        <input type="text" id="reassignReason" name="reassignReason">
+    
+        <input type="hidden" id="reassignWorkId" name="reassignWorkId">
+    
+        <button type="submit">Submit</button>
+        <button type="button" onclick="closePopup()">Cancel</button>
+      </form>
+    </div>  
   </div>
 
 </div>
@@ -139,6 +160,56 @@
           updateWorkSuccess(workId, isChecked);
         });
       });
+      
+      document.querySelectorAll('.reassign-icon').forEach(icon => {
+        icon.addEventListener('click', function() {
+          const workId = this.getAttribute('data-work');
+          document.getElementById('reassignWorkId').value = workId; 
+          showPopup();
+          document.getElementById('reassignPopup').style.display = 'block'; 
+        });
+      });
+    
+      document.getElementById('reassignForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+      
+        const workId = document.getElementById('reassignWorkId').value;
+        const newEmployeeId = document.getElementById('newEmployeeId').value;
+        const quantity = document.getElementById('reassignQuantity').value;
+        const reason = document.getElementById('reassignReason').value;
+      
+        const xhr = new XMLHttpRequest();
+        const url = `/production/technologist/passports/reassign-work/`;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+      
+        const data = {
+          work_id: workId,
+          new_employee_id: newEmployeeId,
+          quantity: parseInt(quantity),
+          reason: reason
+        };
+      
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.status === 'success') {
+              console.log(response.message);
+              closePopup(); // Assuming closePopup() is a function to close a modal or popup
+            } else {
+              console.error('Failed to reassign work', response.message);
+              alert(response.message); // Notify the user if the update fails
+            }
+          } else {
+            console.error('Request failed with status:', xhr.status);
+            alert(xhr.status); // Notify the user if the request fails
+          }
+        };
+      
+        xhr.send(JSON.stringify(data));
+      });
+      
     });
     
     function assignOperation(operationId, sizeQuantityId, value, inputElement) {
@@ -224,6 +295,13 @@
       };
     
       xhr.send(`work_id=${workId}&is_success=${isSuccess}`);
+    }
+    function showPopup() {
+      document.getElementById('reassignPopupOverlay').style.display = 'flex';
+    }
+    
+    function closePopup() {
+      document.getElementById('reassignPopupOverlay').style.display = 'none';
     }
     </script>
 {% endblock %}
