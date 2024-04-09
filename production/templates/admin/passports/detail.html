@@ -2,18 +2,21 @@
 {% load custom_filters %}
 {% load i18n %}
 {% block content %}
-  <h2>{% trans "Operations Assigned for Passport" %}</h2>
-  <p>
-    <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
-    <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
-    <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
-    <strong>{% trans "Roll:" %}</strong> {{ passport.order.roll.name }},
-    <strong>{% trans "Color:" %}</strong> {{ passport.order.roll.color }},
-    <strong>{% trans "Fabrics:" %}</strong> {{ passport.order.roll.fabrics }},
-    <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
-  </p>
+<div class="assign-operations-container">
+  <h2 class="list-heading">{% trans "Operations Assigned for Passport" %}</h2>
+  <div class="passport-details">
+    <p>
+      <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
+      <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
+      <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
+      <strong>{% trans "Roll:" %}</strong> {{ passport.order.roll.name }},
+      <strong>{% trans "Color:" %}</strong> {{ passport.order.roll.color }},
+      <strong>{% trans "Fabrics:" %}</strong> {{ passport.order.roll.fabrics }},
+      <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
+    </p>
+  </div>
 
-  <table>
+  <table class="table">
     <thead>
       <tr>
         <th>{% trans "Operation \ Size" %}</th>
@@ -35,14 +38,23 @@
               {% get_work work_by_op_and_size operation.id sq.id as works %}
               {% if works %}
                 {% for work in works %}
-                  {{ work.employee.employee_id }} ({{ work.quantity }}){% if not forloop.last %}, {% endif %}
+                  <span style="color: {{ work.is_success|yesno:'green,red' }};">
+                    {{ work.employee.employee_id }} ({{ work.quantity }})
+                  </span>
+                  {% if not forloop.last %}, {% endif %}
                 {% endfor %}
               {% else %}
-                --  {% endif %}
+                --  
+              {% endif %}
             </td>
           {% endfor %}
         </tr>
       {% endfor %}
     </tbody>
   </table>
+
+  <div class="form-actions">
+    <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+</div>
 {% endblock %}
