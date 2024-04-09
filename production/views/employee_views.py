@@ -43,13 +43,13 @@ def reassigned_works_list(request):
         reassigned_work = get_object_or_404(ReassignedWork, id=reassigned_work_id, new_employee=user_profile)
         
         with transaction.atomic():
-            reassigned_work.is_success = True
+            reassigned_work.is_completed = True
             reassigned_work.save()
             return redirect('reassigned_works_list')
 
     reassigned_works = ReassignedWork.objects.filter(
         new_employee=user_profile, 
-        is_success=False
+        is_completed=False
     ).select_related('original_assigned_work__work', 'original_assigned_work__work__operation')
 
     return render(request, 'employee/works/reassigned_list.html', {'reassigned_works': reassigned_works})

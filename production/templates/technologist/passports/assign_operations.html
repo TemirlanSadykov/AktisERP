@@ -186,7 +186,7 @@
                         item.textContent = `Employee ID: ${work.new_employee__employee_id}, Quantity: ${work.reassigned_quantity}, Reason: ${work.reason}`;
                         
                         // If work is marked as successful, color the text green
-                        if (work.is_success) {
+                        if (work.is_completed) {
                             item.style.color = 'green';
                         } else {
                             item.style.color = 'red';

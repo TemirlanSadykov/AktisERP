@@ -265,7 +265,7 @@ def complete_passport(request, passport_id):
 def get_reassigned_works(request, assigned_work_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         reassigned_works = ReassignedWork.objects.filter(original_assigned_work_id=assigned_work_id)
-        data = list(reassigned_works.values('new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_success'))
+        data = list(reassigned_works.values('new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_completed'))
         return JsonResponse({'reassigned_works': data})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 

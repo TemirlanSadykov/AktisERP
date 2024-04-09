@@ -21,7 +21,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
-from ..models import EmployeeAttendance, Order, AssignedWork, Client
+from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork
 from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm
 
 @login_required
@@ -105,23 +105,38 @@ def passport_detail_admin(request, pk):
 @admin_required
 def salary_list(request):
     form = DateRangeForm(request.GET or None)
+    salaries = {}
+
+    # Initialize assigned_works and reassigned_works outside the if block
     assigned_works = AssignedWork.objects.none()
+    reassigned_works = ReassignedWork.objects.none()
 
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
+        
         assigned_works = AssignedWork.objects.filter(
             end_time__range=(start_date, end_date),
             end_time__isnull=False,
             is_success=True  # Only include successful works
         ).select_related('work__operation', 'employee')
 
-    salaries = {}
+        reassigned_works = ReassignedWork.objects.filter(
+            original_assigned_work__end_time__range=(start_date, end_date),
+            is_success=True  # Only include successful works
+        ).select_related('original_assigned_work__work__operation', 'new_employee')
+
+    # Process assigned works
     for assigned_work in assigned_works:
         employee = assigned_work.employee
-        if employee not in salaries:
-            salaries[employee] = 0
-        salaries[employee] += assigned_work.work.operation.payment * assigned_work.quantity
+        salaries[employee] = salaries.get(employee, 0) + \
+                             assigned_work.work.operation.payment * assigned_work.quantity
+
+    # Process reassigned works
+    for reassigned_work in reassigned_works:
+        employee = reassigned_work.new_employee
+        salaries[employee] = salaries.get(employee, 0) + \
+                             reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
 
     context = {'form': form, 'salaries': salaries}
     return render(request, 'admin/salaries/list.html', context)
@@ -136,33 +151,34 @@ def salary_detail(request, employee_id):
     }
     form = DateRangeForm(request.GET or None, initial=initial_data)
     assigned_work_details = []
+    total_salary = 0
 
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
         assigned_works = AssignedWork.objects.filter(
             employee=employee,
-            end_time__isnull=False,
             end_time__range=(start_date, end_date),
             is_success=True  # Only include successful works
         ).select_related('work__operation', 'work__size_quantity')
 
-        total_salary = 0
-        for assigned_work in assigned_works:
-            if assigned_work.start_time and assigned_work.end_time:
-                time_spent = (assigned_work.end_time - assigned_work.start_time).total_seconds()
-            else:
-                time_spent = 0
-            work_salary = assigned_work.work.operation.payment * assigned_work.quantity
-            total_salary += work_salary
+        reassigned_works = ReassignedWork.objects.filter(
+            new_employee=employee,
+            original_assigned_work__end_time__range=(start_date, end_date),
+            is_success=True  # Only include successful works
+        ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__size_quantity')
 
-            assigned_work_details.append({
-                'operation': assigned_work.work.operation,
-                'size': assigned_work.work.size_quantity.size,
-                'quantity': assigned_work.quantity,
-                'time_spent_seconds': time_spent,
-                'work_salary': work_salary
-            })
+        # Process assigned works
+        for assigned_work in assigned_works:
+            work_salary, work_details = calculate_salary_and_details(assigned_work)
+            total_salary += work_salary
+            assigned_work_details.append(work_details)
+
+        # Process reassigned works
+        for reassigned_work in reassigned_works:
+            work_salary, work_details = calculate_salary_and_details(reassigned_work.original_assigned_work, reassigned_quantity=reassigned_work.reassigned_quantity)
+            total_salary += work_salary
+            assigned_work_details.append(work_details)
 
     context = {
         'form': form,
@@ -171,6 +187,19 @@ def salary_detail(request, employee_id):
         'total_salary': total_salary,
     }
     return render(request, 'admin/salaries/detail.html', context)
+
+def calculate_salary_and_details(work, reassigned_quantity=None):
+    """Helper function to calculate salary and details for a work or reassigned work."""
+    quantity = reassigned_quantity if reassigned_quantity is not None else work.quantity
+    work_salary = work.work.operation.payment * quantity
+    time_spent = (work.end_time - work.start_time).total_seconds() if work.start_time and work.end_time else 0
+    return work_salary, {
+        'operation': work.work.operation,
+        'size': work.work.size_quantity.size,
+        'quantity': quantity,
+        'time_spent_seconds': time_spent,
+        'work_salary': work_salary
+    }
 
 
 
