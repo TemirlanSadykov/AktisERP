@@ -40,9 +40,9 @@
                 {% if works %}
                   {% for work in works %}
                     {% if work.end_time %}
-                      <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }};" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
+                      <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }};" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
                     {% else %}
-                      <span class="{{ work.id }} editable" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
+                      <span class="{{ work.id }} editable" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
                     {% endif %}
                     {% if work.end_time %}
                       <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
