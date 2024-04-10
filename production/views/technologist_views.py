@@ -206,7 +206,7 @@ def assign_operations(request, passport_id):
                         quantity = total_quantity
 
                     if employee_id_input:
-                        employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE).first()
+                        employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE, branch=request.user.userprofile.branch).first()
                         if not employee_profile:
                             errors = True
                             continue
@@ -255,7 +255,7 @@ def update_work(request):
         new_employee_id = data.get('new_employee_id')
         quantity = data.get('quantity')
 
-        new_employee_profile, created = UserProfile.objects.get_or_create(employee_id=new_employee_id)
+        new_employee_profile, created = UserProfile.objects.get_or_create(employee_id=new_employee_id, branch=request.user.userprofile.branch)
 
         assigned_work, created = AssignedWork.objects.get_or_create(id=work_id)
 
@@ -333,7 +333,7 @@ def reassign_work(request):
     try:
         with transaction.atomic():
             assigned_work = get_object_or_404(AssignedWork, id=work_id)
-            new_employee_profile = get_object_or_404(UserProfile, employee_id=new_employee_id)
+            new_employee_profile = get_object_or_404(UserProfile, employee_id=new_employee_id, branch=request.user.userprofile.branch)
 
             # Attempt to retrieve an existing reassigned work
             reassigned_work, created = ReassignedWork.objects.get_or_create(
