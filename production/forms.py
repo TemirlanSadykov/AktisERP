@@ -7,6 +7,11 @@ from django.contrib.auth.hashers import make_password
 from .models import *
 from django_select2 import forms as s2forms
 
+class BranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['name']
+
 class UserWithProfileForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Edit Branch:" %} {{ branch.name }}</h2>
+  <form method="post" class="crud-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
+      <a href="{% url 'branch_detail' branch.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

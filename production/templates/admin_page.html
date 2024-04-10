@@ -18,6 +18,7 @@
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title">{% trans 'Resources' %}</h5>
+          <a href="{% url 'branch_list' %}" class="btn btn-secondary">{% trans 'Branches' %}</a>
           <a href="{% url 'employee_list' %}" class="btn btn-secondary">{% trans 'Employees' %}</a>
           <a href="{% url 'salary_list' %}" class="btn btn-secondary">{% trans 'Salaries' %}</a>
           <a href="{% url 'attendance_list' %}" class="btn btn-secondary">{% trans 'Attendances' %}</a>

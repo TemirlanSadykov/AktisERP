@@ -21,13 +21,46 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
-from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork
-from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm
+from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch
+from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm
 
 @login_required
 @admin_required
 def admin_page(request):
     return render(request, 'admin_page.html')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchListView(ListView):
+    model = Branch
+    template_name = 'admin/branches/list.html'  # update path as needed
+    context_object_name = 'branches'
+    paginate_by = 10
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchCreateView(CreateView):
+    model = Branch
+    form_class = BranchForm
+    template_name = 'admin/branches/create.html'  # update path as needed
+    success_url = reverse_lazy('branch_list')  # make sure 'branch_list' is defined in your urls.py
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchDetailView(DetailView):
+    model = Branch
+    template_name = 'admin/branches/detail.html'  # update path as needed
+    context_object_name = 'branch'
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchUpdateView(UpdateView):
+    model = Branch
+    form_class = BranchForm
+    template_name = 'admin/branches/edit.html'  # update path as needed
+    success_url = reverse_lazy('branch_list')  # make sure 'branch_list' is defined in your urls.py
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchDeleteView(DeleteView):
+    model = Branch
+    template_name = 'admin/branches/delete.html'  # update path as needed
+    success_url = reverse_lazy('branch_list')  # make sure 'branch_list' is defined in your urls.py
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeListView(ListView):

@@ -13,6 +13,12 @@ urlpatterns = [
     path('technologist/', technologist_page, name='technologist_page'),
     path('admin/', admin_page, name='admin_page'),
 
+    path('admin/branches/', BranchListView.as_view(), name='branch_list'),
+    path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
+    path('admin/branches/<int:pk>/', BranchDetailView.as_view(), name='branch_detail'),
+    path('admin/branches/<int:pk>/edit/', BranchUpdateView.as_view(), name='branch_edit'),
+    path('admin/branches/<int:pk>/delete/', BranchDeleteView.as_view(), name='branch_delete'),
+
     # Admin management of employees
     path('admin/employees/', EmployeeListView.as_view(), name='employee_list'),
     path('admin/employees/create/', EmployeeCreateView.as_view(), name='employee_create'),
