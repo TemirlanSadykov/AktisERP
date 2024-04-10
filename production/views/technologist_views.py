@@ -19,6 +19,7 @@ from django.db import transaction
 from django.db.models import Avg, F, ExpressionWrapper, fields
 from django.views.decorators.http import require_POST
 from django.db.models import Sum
+from ..mixins import *
 
 @login_required
 @technologist_required
@@ -404,14 +405,14 @@ def calculate_average_completion_time(request, operation_id):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollListView(ListView):
+class RollListView(RestrictBranchMixin, ListView):
     model = Roll
     template_name = 'technologist/rolls/list.html'
     context_object_name = 'rolls'
     paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollCreateView(CreateView):
+class RollCreateView(AssignBranchMixin, CreateView):
     model = Roll
     form_class = RollForm
     template_name = 'technologist/rolls/create.html'
@@ -424,14 +425,14 @@ class RollDetailView(DetailView):
     context_object_name = 'roll'
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollUpdateView(UpdateView):
+class RollUpdateView(RestrictBranchMixin, UpdateView):
     model = Roll
     form_class = RollForm
     template_name = 'technologist/rolls/edit.html'
     success_url = reverse_lazy('roll_list')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollDeleteView(DeleteView):
+class RollDeleteView(RestrictBranchMixin, DeleteView):
     model = Roll
     template_name = 'technologist/rolls/delete.html'
     success_url = reverse_lazy('roll_list')
@@ -439,14 +440,14 @@ class RollDeleteView(DeleteView):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentListView(ListView):
+class AssortmentListView(RestrictBranchMixin, ListView):
     model = Assortment
     template_name = 'technologist/assortments/list.html'
     context_object_name = 'assortments'
     paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentCreateView(CreateView):
+class AssortmentCreateView(AssignBranchMixin, CreateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
@@ -459,14 +460,14 @@ class AssortmentDetailView(DetailView):
     context_object_name = 'assortment'
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentUpdateView(UpdateView):
+class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
     success_url = reverse_lazy('assortment_list')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentDeleteView(DeleteView):
+class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
     model = Assortment
     template_name = 'technologist/assortments/delete.html'
     success_url = reverse_lazy('assortment_list')
