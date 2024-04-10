@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin/branches/<int:pk>/', BranchDetailView.as_view(), name='branch_detail'),
     path('admin/branches/<int:pk>/edit/', BranchUpdateView.as_view(), name='branch_edit'),
     path('admin/branches/<int:pk>/delete/', BranchDeleteView.as_view(), name='branch_delete'),
+    path('admin/branches/switch/', branch_switch, name='branch_switch'),
 
     # Admin management of employees
     path('admin/employees/', EmployeeListView.as_view(), name='employee_list'),

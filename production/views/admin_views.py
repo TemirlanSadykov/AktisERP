@@ -23,16 +23,21 @@ from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
 from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch
 from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm
+from ..mixins import *
 
 @login_required
 @admin_required
 def admin_page(request):
-    return render(request, 'admin_page.html')
+    branches = Branch.objects.all()
+    context = {
+        'branches': branches,
+    }
+    return render(request, 'admin_page.html', context)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
     model = Branch
-    template_name = 'admin/branches/list.html'  # update path as needed
+    template_name = 'admin/branches/list.html'
     context_object_name = 'branches'
     paginate_by = 10
 
@@ -40,27 +45,46 @@ class BranchListView(ListView):
 class BranchCreateView(CreateView):
     model = Branch
     form_class = BranchForm
-    template_name = 'admin/branches/create.html'  # update path as needed
-    success_url = reverse_lazy('branch_list')  # make sure 'branch_list' is defined in your urls.py
+    template_name = 'admin/branches/create.html'
+    success_url = reverse_lazy('branch_list')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchDetailView(DetailView):
     model = Branch
-    template_name = 'admin/branches/detail.html'  # update path as needed
+    template_name = 'admin/branches/detail.html'
     context_object_name = 'branch'
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchUpdateView(UpdateView):
     model = Branch
     form_class = BranchForm
-    template_name = 'admin/branches/edit.html'  # update path as needed
-    success_url = reverse_lazy('branch_list')  # make sure 'branch_list' is defined in your urls.py
+    template_name = 'admin/branches/edit.html'
+    success_url = reverse_lazy('branch_list')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchDeleteView(DeleteView):
     model = Branch
-    template_name = 'admin/branches/delete.html'  # update path as needed
-    success_url = reverse_lazy('branch_list')  # make sure 'branch_list' is defined in your urls.py
+    template_name = 'admin/branches/delete.html'
+    success_url = reverse_lazy('branch_list')
+
+@login_required
+@admin_required
+def branch_switch(request):
+    branch_id = request.POST.get('branch')
+    
+    try:
+        new_branch = Branch.objects.get(id=branch_id)
+        
+        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile.branch = new_branch
+        user_profile.save()
+        
+        messages.success(request, 'Branch switched successfully.')
+        return redirect('admin_page')
+
+    except Branch.DoesNotExist:
+        messages.error(request, 'Selected branch does not exist.')
+        return redirect('admin_page')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeListView(ListView):
@@ -69,10 +93,10 @@ class EmployeeListView(ListView):
     context_object_name = 'employees'
     paginate_by = 10
     def get_queryset(self):
-        return UserProfile.objects.filter(type__in=[UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST])
+        return UserProfile.objects.filter(type__in=[UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST], branch=self.request.user.userprofile.branch)
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeCreateView(CreateView):
+class EmployeeCreateView(AssignBranchMixin, CreateView):
     template_name = 'admin/employees/create.html'
     form_class = UserWithProfileForm
     success_url = reverse_lazy('employee_list')
@@ -86,7 +110,7 @@ class EmployeeDetailView(DetailView):
 @login_required
 @admin_required
 def employee_edit(request, pk):
-    user_profile = get_object_or_404(UserProfile, pk=pk)
+    user_profile = get_object_or_404(UserProfile, pk=pk, branch=request.user.userprofile.branch)
     user = user_profile.user
 
     if request.method == 'POST':
@@ -101,8 +125,7 @@ def employee_edit(request, pk):
     context = {'user_form': user_form, 'user_profile': user_profile}
     return render(request, 'admin/employees/edit.html', context)
 
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeDeleteView(DeleteView):
+class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     model = UserProfile
     template_name = 'admin/employees/delete.html'
     success_url = reverse_lazy('employee_list')

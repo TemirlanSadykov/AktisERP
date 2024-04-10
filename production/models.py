@@ -9,10 +9,20 @@ class Branch(models.Model):
     name = models.CharField(max_length=100) 
     def __str__(self):
         return self.name
+    
+class BranchAwareManager(models.Manager):
+    def for_user(self, user):
+        return self.get_queryset().filter(branch=user.profile.branch)
 
 class UserProfile(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', default=1)
+    objects = BranchAwareManager()
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    employee_id = models.CharField(max_length=100, unique=True)
+    employee_id = models.CharField(max_length=100)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['employee_id', 'branch'], name='unique_employee_id_per_branch')
+        ]
     ADMIN = 0
     TECHNOLOGIST = 1
     EMPLOYEE = 2
@@ -38,6 +48,8 @@ class UserProfile(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
     
 class EmployeeAttendance(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='employee_attendances', default=1)
+    objects = BranchAwareManager()
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_clock_in = models.BooleanField(default=False)
@@ -52,11 +64,15 @@ class Client(models.Model):
         return self.name
 
 class Assortment(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', default=1)
+    objects = BranchAwareManager()
     name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
 
 class Roll(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', default=1)
+    objects = BranchAwareManager()   
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=50)
     fabrics = models.CharField(max_length=100)
@@ -87,6 +103,8 @@ class SizeQuantity(models.Model):
         return f"Size: {self.size}, Quantity: {self.quantity}"
 
 class Order(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders', default=1)
+    objects = BranchAwareManager()
     name = models.CharField(max_length=100)
     order_number = models.CharField(max_length=100)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='orders')

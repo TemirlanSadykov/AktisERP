@@ -1,16 +1,29 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
 <div class="dashboard-container">
   <h1>{% trans 'Admin Dashboard' %}</h1>
   <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Admin." %}</p>
-  
+
   <div class="row">
     <div class="col-md-6 mb-4">
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title">{% trans 'Navigation' %}</h5>
-          <a href="{% url 'technologist_page' %}" class="btn btn-primary">{% trans 'Go to Technologist Page' %}</a>
+          <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
+            {% csrf_token %}
+            <div class="form-group">
+              <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
+                {% for branch in branches %}
+                  <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
+                    {{ branch.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </form>
+          <a href="{% url 'technologist_page' %}" class="btn btn-primary mb-3">{% trans 'Go to Technologist Page' %}</a>
         </div>
       </div>
     </div>
