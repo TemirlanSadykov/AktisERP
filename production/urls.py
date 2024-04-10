@@ -31,7 +31,7 @@ urlpatterns = [
     path('admin/passports/<int:pk>/', passport_detail_admin, name='passport_detail_admin'),
 
     path('admin/salaries/', salary_list, name='salary_list'),
-    path('admin/salaries/<int:employee_id>/', salary_detail, name='salary_detail'),
+    path('admin/salaries/<int:pk>/', salary_detail, name='salary_detail'),
 
     path('admin/attendances/', attendance_list, name='attendance_list'),
 

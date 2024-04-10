@@ -38,3 +38,7 @@
     color: #dc3545; /* Bootstrap's danger color for errors */
     margin-top: 15px; /* Top margin for spacing */
 }
+
+input {
+    width: 100%;
+}

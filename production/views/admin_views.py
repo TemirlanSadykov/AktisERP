@@ -183,7 +183,7 @@ def salary_list(request):
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__end_time__range=(start_date, end_date),
             is_success=True,  # Only include successful works
-            new_employee__branch=request.user.userprofile.branch  # Filter by the current user's branch
+            original_assigned_work__work__passport__order__branch=request.user.userprofile.branch  # Filter by the current user's branch
         ).select_related('original_assigned_work__work__operation', 'new_employee')
 
     # Process assigned works
@@ -203,8 +203,8 @@ def salary_list(request):
 
 @login_required
 @admin_required
-def salary_detail(request, employee_id):
-    employee = get_object_or_404(UserProfile, pk=employee_id, branch=request.user.userprofile.branch)  # Ensure the employee belongs to the current user's branch
+def salary_detail(request, pk):
+    employee = get_object_or_404(UserProfile, pk=pk)  # Ensure the employee belongs to the current user's branch
     initial_data = {
         'start_date': request.GET.get('start_date'),
         'end_date': request.GET.get('end_date'),
@@ -222,14 +222,14 @@ def salary_detail(request, employee_id):
             employee=employee,
             end_time__range=(start_date, end_date),
             is_success=True,  # Only include successful works
-            work__passport__order__branch=employee.branch  # Filter by the employee's branch
+            work__passport__order__branch=request.user.userprofile.branch  # Filter by the employee's branch
         ).select_related('work__operation', 'work__size_quantity')
 
         reassigned_works = ReassignedWork.objects.filter(
             new_employee=employee,
             original_assigned_work__end_time__range=(start_date, end_date),
             is_success=True,  # Only include successful works
-            new_employee__branch=employee.branch  # Filter by the employee's branch
+            original_assigned_work__work__passport__order__branch=request.user.userprofile.branch   # Filter by the employee's branch
         ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__size_quantity')
 
         # Process assigned works

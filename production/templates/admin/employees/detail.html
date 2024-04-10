@@ -13,6 +13,7 @@
   <div class="form-actions">
     <a href="{% url 'employee_edit' employee.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'employee_list' %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
   <form id="deleteForm" action="{% url 'employee_delete' employee.pk %}" method="post" style="display:none;">
