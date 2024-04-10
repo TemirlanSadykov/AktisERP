@@ -41,6 +41,9 @@ class BranchListView(ListView):
     context_object_name = 'branches'
     paginate_by = 10
 
+    def get_queryset(self):
+        return Branch.objects.all().order_by('name')
+
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchCreateView(CreateView):
     model = Branch
@@ -93,7 +96,10 @@ class EmployeeListView(ListView):
     context_object_name = 'employees'
     paginate_by = 10
     def get_queryset(self):
-        return UserProfile.objects.filter(type__in=[UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST], branch=self.request.user.userprofile.branch)
+        return UserProfile.objects.filter(
+            type__in=[UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST],
+            branch=self.request.user.userprofile.branch
+        ).order_by('employee_id')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeCreateView(AssignBranchMixin, CreateView):
@@ -367,6 +373,8 @@ class ClientListView(ListView):
     template_name = 'admin/clients/list.html'
     context_object_name = 'clients'
     paginate_by = 10
+    def get_queryset(self):
+        return Client.objects.all().order_by('name')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientCreateView(CreateView):

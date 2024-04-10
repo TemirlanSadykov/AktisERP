@@ -389,6 +389,8 @@ class OperationListView(ListView):
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
     paginate_by = 10
+    def get_queryset(self):
+        return Operation.objects.all().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationCreateView(CreateView):
@@ -457,6 +459,8 @@ class RollListView(RestrictBranchMixin, ListView):
     template_name = 'technologist/rolls/list.html'
     context_object_name = 'rolls'
     paginate_by = 10
+    def get_queryset(self):
+        return Roll.objects.all().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollCreateView(AssignBranchMixin, CreateView):
@@ -492,6 +496,8 @@ class AssortmentListView(RestrictBranchMixin, ListView):
     template_name = 'technologist/assortments/list.html'
     context_object_name = 'assortments'
     paginate_by = 10
+    def get_queryset(self):
+        return Assortment.objects.all().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentCreateView(AssignBranchMixin, CreateView):
@@ -527,6 +533,8 @@ class ModelListView(ListView):
     template_name = 'technologist/models/list.html'
     context_object_name = 'models'
     paginate_by = 10
+    def get_queryset(self):
+        return Model.objects.all().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelCreateView(CreateView):
