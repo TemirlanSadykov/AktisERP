@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Order Details:" %} {{ order.order_number }}</h2>
+
+  <div class="progress" style="margin-bottom: 20px;">
+    <div class="progress-bar" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"0" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
+      {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
+    </div>
+  </div>
+
+  <div class="details">
+    <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
+    <p><strong>{% trans "Client:" %}</strong> {{ order.client.name }}</p>
+    <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+    <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
+    <p><strong>{% trans "Roll:" %}</strong> {{ order.roll.name }}</p>
+    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
+    <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+    <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+    <p><strong>{% trans "Term:" %}</strong> {{ order.term|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+  </div>
+
+  <form id="deleteForm" action="{% url 'order_delete' order.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Passports" %}</h3>
+  <div class="passports-list">
+    {% if passports %}
+      {% for passport in passports %}
+        <p class="passport-item" style="color: {{ passport.is_completed|yesno:'green,red' }};">
+          <a href="{% url 'passport_detail' passport.pk %}" class="passport-link">
+            {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
+          </a>
+        </p>
+      {% endfor %}
+    {% else %}
+      <p>{% trans "No associated passports." %}</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this order?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
+{% endblock %}
