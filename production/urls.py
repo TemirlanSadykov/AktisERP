@@ -48,7 +48,6 @@ urlpatterns = [
     path('admin/clients/<int:pk>/delete/', ClientDeleteView.as_view(), name='client_delete'),
 
     path('technologist/passports/', PassportListView.as_view(), name='passport_list'),
-    path('technologist/passports/create/', PassportCreateView.as_view(), name='passport_create'),
     path('technologist/passports/<int:pk>/', PassportDetailView.as_view(), name='passport_detail'),
     path('technologist/passports/<int:pk>/edit/', PassportUpdateView.as_view(), name='passport_edit'),
     path('technologist/passports/<int:pk>/delete/', PassportDeleteView.as_view(), name='passport_delete'),
@@ -64,6 +63,8 @@ urlpatterns = [
     path('technologist/passports/reassign-work/complete/', complete_reassigned_work, name='complete_reassigned_work'),
     path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
     path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),
+    path('technologist/orders/<int:pk>/edit/', OrderUpdateTechnologistView.as_view(), name='order_edit_technologist'),
+    path('technologist/orders/<int:pk>/create_passport/', PassportCreateView.as_view(), name='passport_create'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),

@@ -108,9 +108,9 @@ class Order(models.Model):
     name = models.CharField(max_length=100)
     order_number = models.CharField(max_length=100)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='orders')
-    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders')
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders')
-    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='orders')
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', null=True)
+    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', null=True)
+    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='orders', null=True)
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2

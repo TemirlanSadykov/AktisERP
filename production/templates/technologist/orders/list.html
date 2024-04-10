@@ -5,7 +5,6 @@
 <div class="content-container">
   <div class="header">
     <h2 class="list-heading">{% trans "Orders" %}</h2>
-    <p class="create-link"><a href="{% url 'order_create' %}" class="btn create-btn">{% trans "Create New Order" %}</a></p>
   </div>
   <ul class="list-group">
     {% for order_info in orders_with_days_left %}

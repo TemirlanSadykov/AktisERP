@@ -153,3 +153,19 @@ class OrderForm(forms.ModelForm):
         self.fields['model'].queryset = Model.objects.all()
         self.fields['assortment'].queryset = Assortment.objects.all()
         self.fields['roll'].queryset = Roll.objects.all()
+
+        # Make certain fields optional in the form
+        self.fields['model'].required = False
+        self.fields['assortment'].required = False
+        self.fields['roll'].required = False
+
+class OrderFormTechnologist(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['model', 'assortment', 'roll']
+
+    def __init__(self, *args, **kwargs):
+        super(OrderFormTechnologist, self).__init__(*args, **kwargs)
+        self.fields['model'].queryset = Model.objects.all()
+        self.fields['assortment'].queryset = Assortment.objects.all()
+        self.fields['roll'].queryset = Roll.objects.all()

@@ -25,6 +25,11 @@
     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
   </div>
 
+  <div class="form-actions">
+    <a href="{% url 'order_edit_technologist' order.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="{% url 'order_list_technologist' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
   <form id="deleteForm" action="{% url 'order_delete' order.pk %}" method="post" style="display:none;">
     {% csrf_token %}
   </form>
@@ -42,6 +47,12 @@
     {% else %}
       <p>{% trans "No associated passports." %}</p>
     {% endif %}
+    <div class="create-passport-form">
+      <form method="post" action="{% url 'passport_create' order.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Create New Passport" %}</button>
+      </form>
+    </div>
   </div>
 </div>
 

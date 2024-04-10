@@ -72,6 +72,13 @@ class OrderDetailTechnologistView(DetailView):
         context['days_left'] = days_left
 
         return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OrderUpdateTechnologistView(RestrictBranchMixin, UpdateView):
+    model = Order
+    form_class = OrderFormTechnologist
+    template_name = 'technologist/orders/edit.html'
+    success_url = reverse_lazy('order_list_technologist')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class PassportListView(ListView):
@@ -81,21 +88,14 @@ class PassportListView(ListView):
     paginate_by = 10
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class PassportCreateView(CreateView):
-    model = Passport
-    form_class = PassportForm
-    template_name = 'technologist/passports/create.html'
-
-    def get_success_url(self):
-        passport_id = self.object.pk
-        return reverse('create_size_quantity', kwargs={'passport_id': passport_id})
-
-    def form_valid(self, form):
-        response = super().form_valid(form) 
-        order = self.object.order
-        order.status = Order.IN_PROGRESS 
-        order.save()
-        return response
+class PassportCreateView(View):
+    def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        form = PassportForm(data={'order': order.pk}) 
+        if form.is_valid():
+            passport = form.save()
+            return redirect('create_size_quantity', passport_id=passport.pk)
+        return redirect('order_detail', pk=pk)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class PassportDetailView(DetailView):
