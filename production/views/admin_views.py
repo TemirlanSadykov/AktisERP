@@ -125,6 +125,7 @@ def employee_edit(request, pk):
     context = {'user_form': user_form, 'user_profile': user_profile}
     return render(request, 'admin/employees/edit.html', context)
 
+@method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     model = UserProfile
     template_name = 'admin/employees/delete.html'
@@ -171,15 +172,18 @@ def salary_list(request):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
         
+        # Apply branch filter to assigned_works and reassigned_works queries
         assigned_works = AssignedWork.objects.filter(
             end_time__range=(start_date, end_date),
             end_time__isnull=False,
-            is_success=True  # Only include successful works
+            is_success=True,  # Only include successful works
+            work__passport__order__branch=request.user.userprofile.branch  # Filter by the current user's branch
         ).select_related('work__operation', 'employee')
 
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True  # Only include successful works
+            is_success=True,  # Only include successful works
+            new_employee__branch=request.user.userprofile.branch  # Filter by the current user's branch
         ).select_related('original_assigned_work__work__operation', 'new_employee')
 
     # Process assigned works
@@ -200,7 +204,7 @@ def salary_list(request):
 @login_required
 @admin_required
 def salary_detail(request, employee_id):
-    employee = get_object_or_404(UserProfile, pk=employee_id)
+    employee = get_object_or_404(UserProfile, pk=employee_id, branch=request.user.userprofile.branch)  # Ensure the employee belongs to the current user's branch
     initial_data = {
         'start_date': request.GET.get('start_date'),
         'end_date': request.GET.get('end_date'),
@@ -212,16 +216,20 @@ def salary_detail(request, employee_id):
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
+        
+        # Apply branch filter to assigned_works and reassigned_works queries
         assigned_works = AssignedWork.objects.filter(
             employee=employee,
             end_time__range=(start_date, end_date),
-            is_success=True  # Only include successful works
+            is_success=True,  # Only include successful works
+            work__passport__order__branch=employee.branch  # Filter by the employee's branch
         ).select_related('work__operation', 'work__size_quantity')
 
         reassigned_works = ReassignedWork.objects.filter(
             new_employee=employee,
             original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True  # Only include successful works
+            is_success=True,  # Only include successful works
+            new_employee__branch=employee.branch  # Filter by the employee's branch
         ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__size_quantity')
 
         # Process assigned works
@@ -270,9 +278,11 @@ def attendance_list(request):
         if form.is_valid():
             selected_date = form.cleaned_data['date']
             next_day = selected_date + timedelta(days=1)
+            
             attendances = EmployeeAttendance.objects.filter(
                 timestamp__range=(selected_date, next_day),
-                is_clock_in=True
+                is_clock_in=True,
+                branch=request.user.userprofile.branch 
             ).distinct('employee')
 
     context = {
@@ -284,7 +294,7 @@ def attendance_list(request):
 
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderListView(ListView):
+class OrderListView(RestrictBranchMixin, ListView):
     model = Order
     template_name = 'admin/orders/list.html'
     context_object_name = 'orders'
@@ -311,7 +321,7 @@ class OrderListView(ListView):
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderCreateView(CreateView):
+class OrderCreateView(AssignBranchMixin, CreateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/create.html'
@@ -338,14 +348,14 @@ class OrderDetailView(DetailView):
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderUpdateView(UpdateView):
+class OrderUpdateView(RestrictBranchMixin, UpdateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/edit.html'
     success_url = reverse_lazy('order_list')
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderDeleteView(DeleteView):
+class OrderDeleteView(RestrictBranchMixin, DeleteView):
     model = Order
     template_name = 'admin/orders/delete.html'
     success_url = reverse_lazy('order_list')

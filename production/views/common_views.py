@@ -26,6 +26,10 @@ def clock_in_out(request):
     user_profile.status = not user_profile.status
     user_profile.save()
 
-    EmployeeAttendance.objects.create(employee=request.user.userprofile, is_clock_in=user_profile.status)
+    EmployeeAttendance.objects.create(
+        employee=user_profile, 
+        is_clock_in=user_profile.status,
+        branch=user_profile.branch 
+    )
 
     return redirect('user_redirect')

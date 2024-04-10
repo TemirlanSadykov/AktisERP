@@ -44,11 +44,12 @@ class UserEditForm(forms.ModelForm):
     type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
     status = forms.BooleanField(required=False)
     station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
+    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True, label='Branch')
     new_password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False, help_text="Leave blank if you do not want to change the password.")
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station']
+        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station', 'branch']
 
     def __init__(self, *args, **kwargs):
         super(UserEditForm, self).__init__(*args, **kwargs)
@@ -57,6 +58,7 @@ class UserEditForm(forms.ModelForm):
             self.fields['type'].initial = self.instance.userprofile.type
             self.fields['status'].initial = self.instance.userprofile.status
             self.fields['station'].initial = self.instance.userprofile.station
+            self.fields['branch'].initial = self.instance.userprofile.branch
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -64,7 +66,7 @@ class UserEditForm(forms.ModelForm):
         # Set new password if provided
         new_password = self.cleaned_data.get('new_password')
         if new_password:
-            user.password = make_password(new_password)
+            user.set_password(new_password)
         
         if commit:
             user.save()
@@ -72,6 +74,7 @@ class UserEditForm(forms.ModelForm):
             user.userprofile.type = self.cleaned_data['type']
             user.userprofile.status = self.cleaned_data['status']
             user.userprofile.station = self.cleaned_data['station']
+            user.userprofile.branch = self.cleaned_data['branch']
             user.userprofile.save()
         return user
     
