@@ -12,7 +12,7 @@
     {% for operation in operations %}
       <li class="list-group-item">
         <a href="{% url 'operation_detail' operation.pk %}">
-          {% trans "Operation:" %} {{ operation.name }} - {% trans "Equipment:" %} {{ operation.equipment }}
+          {{ operation.type }} - {{ operation.equipment }} - {{ operation.name }}
         </a>
       </li>
     {% endfor %}
