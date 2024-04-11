@@ -15,7 +15,7 @@ class BranchAwareManager(models.Manager):
         return self.get_queryset().filter(branch=user.profile.branch)
 
 class UserProfile(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', default=1)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', null=True, blank=True)
     objects = BranchAwareManager()
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     employee_id = models.CharField(max_length=100)
@@ -48,7 +48,7 @@ class UserProfile(models.Model):
         return f"{self.user.first_name} {self.user.last_name}"
     
 class EmployeeAttendance(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='employee_attendances', default=1)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='employee_attendances', null=True, blank=True)
     objects = BranchAwareManager()
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -64,14 +64,14 @@ class Client(models.Model):
         return self.name
 
 class Assortment(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', default=1)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True)
     objects = BranchAwareManager()
     name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
 
 class Roll(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', default=1)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True)
     objects = BranchAwareManager()   
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=50)
@@ -103,7 +103,7 @@ class SizeQuantity(models.Model):
         return f"Size: {self.size}, Quantity: {self.quantity}"
 
 class Order(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders', default=1)
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
     objects = BranchAwareManager()
     name = models.CharField(max_length=100)
     order_number = models.CharField(max_length=100)
