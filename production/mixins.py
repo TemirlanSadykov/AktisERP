@@ -5,6 +5,13 @@ User = get_user_model()
 class AssignBranchMixin:
     def form_valid(self, form):
         response = super().form_valid(form)
+        self.object.branch = self.request.user.userprofile.branch
+        self.object.save()
+        return response
+    
+class AssignBranchForEmployeeMixin:
+    def form_valid(self, form):
+        response = super().form_valid(form)
         if hasattr(self.object, 'userprofile'):
             self.object.userprofile.branch = self.request.user.userprofile.branch
             self.object.userprofile.save()

@@ -102,7 +102,7 @@ class EmployeeListView(ListView):
         ).order_by('employee_id')
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeCreateView(AssignBranchMixin, CreateView):
+class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
     template_name = 'admin/employees/create.html'
     form_class = UserWithProfileForm
     success_url = reverse_lazy('employee_list')
