@@ -439,14 +439,18 @@ def calculate_average_completion_time(request, operation_id):
     assigned_works = AssignedWork.objects.filter(work__operation=operation, end_time__isnull=False, start_time__isnull=False)
 
     if assigned_works.exists():
-        avg_completion_time = assigned_works.annotate(
-            completion_time_per_unit=ExpressionWrapper(
-                (F('end_time') - F('start_time')) / F('quantity'),
-                output_field=fields.DurationField()
-            )
-        ).aggregate(average_time=Avg('completion_time_per_unit'))
+        for assigned_work in assigned_works:
+            reassigned_work = ReassignedWork.objects.filter(original_assigned_work=assigned_work).first()
 
-        average_seconds = avg_completion_time['average_time'].total_seconds()
+            if reassigned_work:
+                adjusted_quantity = assigned_work.quantity + reassigned_work.reassigned_quantity
+            else:
+                adjusted_quantity = assigned_work.quantity
+            assigned_work.completion_time_per_unit = (assigned_work.end_time - assigned_work.start_time) / adjusted_quantity
+
+        total_completion_time = sum([aw.completion_time_per_unit.total_seconds() for aw in assigned_works])
+        average_seconds = total_completion_time / len(assigned_works)
+
         operation.average_completion_time = average_seconds
         operation.save()
 
