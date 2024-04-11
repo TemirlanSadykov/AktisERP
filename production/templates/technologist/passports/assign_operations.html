@@ -39,15 +39,15 @@
                 {% get_work work_by_op_and_size operation.id sq.id as works %}
                 {% if works %}
                   {% for work in works %}
-                    {% if work.end_time %}
-                      <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }};" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
-                    {% else %}
-                      <span class="{{ work.id }} editable" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
-                    {% endif %}
-                    {% if work.end_time %}
-                      <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" {% if work.is_success %} checked {% endif %}>
-                      <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}"></i>
-                    {% endif %}
+                    <div style="display: block;">
+                      <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">
+                        {{ work.employee.employee_id }} ({{ work.quantity }})
+                      </span>
+                      {% if work.end_time %}
+                        <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
+                        <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
+                      {% endif %}
+                    </div>
                   {% endfor %}
                 {% else %}
                   <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;">
@@ -183,34 +183,27 @@
                     data.reassigned_works.forEach(work => {
                         const item = document.createElement('li');
                         item.innerHTML = `Employee ID: ${work.new_employee__employee_id}, Quantity: ${work.reassigned_quantity}, Reason: ${work.reason}`;
-                        if (work.is_completed) {
-                          item.style.color = 'green';
-                        } else {
-                          item.style.color = 'red';
-                        }
-                        if (!work.is_success) {
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            checkbox.addEventListener('change', () => {
-                                if (checkbox.checked) {
-                                    const formData = new FormData();
-                                    formData.append('reassigned_work_id', work.id);
-                                    fetch('/production/technologist/passports/reassign-work/complete/', {
-                                        method: 'POST',
-                                        body: formData,
-                                        headers: {'X-CSRFToken': getCookie('csrftoken')},
-                                    })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        alert(data.message);
-                                        checkbox.disabled = true; // Disable checkbox after successful update
-                                    })
-                                    .catch(error => console.error('Error:', error));
-                                }
-                            });
-                            item.appendChild(checkbox);
-                        }
+                        if (work.is_completed) item.style.color = 'red';
+                        if (work.is_success) item.style.color = 'green';           
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.addEventListener('change', () => {
+                          const formData = new FormData();
+                          formData.append('reassigned_work_id', work.id);
+                          fetch('/production/technologist/passports/reassign-work/complete/', {
+                              method: 'POST',
+                              body: formData,
+                              headers: {'X-CSRFToken': getCookie('csrftoken')},
+                          })
+                          .then(res => res.json())
+                          .then(data => {
+                              alert(data.message);
+                              closePopup();
+                          })
+                          .catch(error => console.error('Error:', error));
+                        });
     
+                        item.appendChild(checkbox);
                         list.appendChild(item);
                     });
                     reassignedWorksList.appendChild(list);
@@ -218,7 +211,7 @@
                     reassignedWorksList.textContent = 'No reassigned works yet.';
                 }
     
-                showPopup(); // Show the popup which now includes reassigned works info
+                showPopup();
             });
         });
       });

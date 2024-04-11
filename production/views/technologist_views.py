@@ -313,7 +313,7 @@ def complete_passport(request, passport_id):
 def get_reassigned_works(request, assigned_work_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         reassigned_works = ReassignedWork.objects.filter(original_assigned_work_id=assigned_work_id)
-        data = list(reassigned_works.values('id', 'new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_completed'))
+        data = list(reassigned_works.values('id', 'new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_completed', 'is_success'))
         return JsonResponse({'reassigned_works': data})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -373,9 +373,14 @@ def complete_reassigned_work(request):
     reassigned_work_id = request.POST.get('reassigned_work_id')
     try:
         reassigned_work = ReassignedWork.objects.get(id=reassigned_work_id)
-        reassigned_work.is_success = True
+        if reassigned_work.is_success:
+            reassigned_work.is_success = False
+            reassigned_work.is_completed = False
+        else:
+            reassigned_work.is_success = True
+
         reassigned_work.save()
-        return JsonResponse({'message': 'Reassigned work marked as completed successfully'}, status=200)
+        return JsonResponse({'message': 'Reassigned work status updated successfully'}, status=200)
     except ReassignedWork.DoesNotExist:
         return JsonResponse({'message': 'Reassigned work not found'}, status=404)
     except Exception as e:
