@@ -2,8 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 import datetime
-from django.utils.functional import SimpleLazyObject
-from django.contrib.auth import get_user
 
 class Branch(models.Model):
     name = models.CharField(max_length=100) 
@@ -26,10 +24,14 @@ class UserProfile(models.Model):
     ADMIN = 0
     TECHNOLOGIST = 1
     EMPLOYEE = 2
+    CUTTER = 3
+    QC = 4
     TYPE_CHOICES = [
-        (ADMIN, 'Admin'),
-        (TECHNOLOGIST, 'Technologist'),
-        (EMPLOYEE, 'Employee'),
+        (ADMIN, 'Администратор'),
+        (TECHNOLOGIST, 'Технолог'),
+        (EMPLOYEE, 'Сотрудник'),
+        (CUTTER, 'Закройщик'),
+        (QC, 'ОТК')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE)
     status = models.BooleanField(default=False)
@@ -76,6 +78,7 @@ class Roll(models.Model):
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=50)
     fabrics = models.CharField(max_length=100)
+    meters = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics}"
 
@@ -108,9 +111,10 @@ class Order(models.Model):
     name = models.CharField(max_length=100)
     order_number = models.CharField(max_length=100)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='orders')
-    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', null=True)
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', null=True)
-    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='orders', null=True)
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders')
+    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders')
+    color = models.CharField(max_length=50, null=True)
+    fabrics = models.CharField(max_length=100, null=True)
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
@@ -126,25 +130,43 @@ class Order(models.Model):
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
     term = models.DateField(default=default_term)
-
+    size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders')
     def __str__(self):
         return f"Order {self.order_number} for {self.client.name}"
     
 class Passport(models.Model):
     date = models.DateField(auto_now_add=True)
-    size_quantities = models.ManyToManyField(SizeQuantity, related_name='passports')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='passports')
+    size_quantities = models.ManyToManyField(SizeQuantity, through='PassportSize', related_name='passports')
+    rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports')
     is_completed = models.BooleanField(default=False, verbose_name="Passport Completed")
     def __str__(self):
         return self.order.order_number
+    
+class PassportSize(models.Model):
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes')
+    quantity = models.IntegerField()
+    def __str__(self):
+        return f"{self.size_quantity.size} - {self.quantity} pcs"
+
+class PassportRoll(models.Model):
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls')
+    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls')
+    meters = models.DecimalField(max_digits=10, decimal_places=2)
+    def __str__(self):
+        return f"{self.meters} meters of {self.roll.name} for {self.passport.order.order_number}"
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works')
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='works') 
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='works')
+    passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True)
     def __str__(self):
-        return f"{self.operation.name} - {self.size_quantity.size}"
+        return f"{self.operation.name} - {self.passport_size.size_quantity.size}"
     
 class AssignedWork(models.Model):
     work = models.ForeignKey(Work, on_delete=models.CASCADE, related_name='assigned_works')
