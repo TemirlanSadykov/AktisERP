@@ -9,6 +9,9 @@
       {{ form.as_p }}
       <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
     </form>
+    <a href="{% url 'export_salaries' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
+      {% trans "Download Excel" %}
+    </a>
   </div>
 
   <table class="table">

@@ -24,6 +24,9 @@ from ..decorators import admin_required
 from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch
 from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm
 from ..mixins import *
+from datetime import datetime
+import pandas as pd
+from django.http import HttpResponse
 
 @login_required
 @admin_required
@@ -270,6 +273,79 @@ def calculate_salary_and_details(work, reassigned_quantity=None):
         'time_spent_seconds': time_spent,
         'work_salary': work_salary
     }
+
+@login_required
+@admin_required
+def export_salaries_to_excel(request):
+    form = DateRangeForm(request.GET or None)
+    
+    if form.is_valid():
+        start_date = form.cleaned_data['start_date']
+        end_date = form.cleaned_data['end_date'] + timedelta(days=1)
+        
+        # Assuming operations and reassignments are filtered based on valid form data:
+        assigned_works = AssignedWork.objects.filter(
+            end_time__range=(start_date, end_date),
+            is_success=True
+        ).select_related('work__operation', 'work__passport', 'work__passport__order', 'employee')
+        
+        reassigned_works = ReassignedWork.objects.filter(
+            original_assigned_work__end_time__range=(start_date, end_date),
+            is_success=True
+        ).select_related('original_assigned_work', 'new_employee')
+        
+        data = []
+
+        for work in assigned_works:
+            passport = work.work.passport
+            order = passport.order
+            client = order.client
+            model = order.model
+            assortment = order.assortment
+            roll = order.roll
+            data.append([
+                datetime.now().date(), client.name, model.name if model else '', 
+                assortment.name if assortment else '', passport.id, roll.color if roll else '', 
+                roll.fabrics if roll else '', passport.date, work.work.operation.id, 
+                work.work.operation.name, work.work.operation.payment, work.employee.employee_id, 
+                work.employee.user.get_full_name(), work.quantity, 
+                work.work.operation.payment * work.quantity
+            ])
+
+        for work in reassigned_works:
+            original = work.original_assigned_work
+            passport = original.work.passport
+            order = passport.order
+            client = order.client
+            model = order.model
+            assortment = order.assortment
+            roll = order.roll
+            data.append([
+                datetime.now().date(), client.name, model.name if model else '', 
+                assortment.name if assortment else '', passport.id, roll.color if roll else '', 
+                roll.fabrics if roll else '', passport.date, original.work.operation.id, 
+                original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id, 
+                work.new_employee.user.get_full_name(), work.reassigned_quantity, 
+                original.work.operation.payment * work.reassigned_quantity
+            ])
+        
+        df = pd.DataFrame(data, columns=[
+            "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
+            "Roll's color", "Roll's fabrics", "Passport date", "Operation id", "Operation name", 
+            "Operation payment", "Employee's employee_id", "Employee's full name", "Work's quantity", "Salary"
+        ])
+        
+        # Convert DataFrame to Excel file in memory
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="salaries.xlsx"'
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+        
+        return response
+
+    # Handle form errors or initial page access:
+    context = {'form': form}
+    return render(request, 'your_template.html', context)
 
 
 
