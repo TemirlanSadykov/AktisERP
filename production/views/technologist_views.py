@@ -77,25 +77,21 @@ class OrderDetailTechnologistView(DetailView):
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
     operations = passport.order.model.operations.all()
-    size_quantities = passport.size_quantities.all()
+    size_quantities = PassportSize.objects.filter(passport=passport)
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Decode the JSON data from the request
         data = json.loads(request.body)
         operation_id = data.get('operation_id')
-        size_quantity_id = data.get('size_quantity_id')
+        passport_size_id = data.get('passport_size_id')
         value = data.get('value')
+
         try:
             with transaction.atomic():
-                errors = False
+                passport_size = PassportSize.objects.get(id=passport_size_id)
+                total_quantity = passport_size.quantity
+                assigned_quantity_sum = 0
 
-                entries = [entry.strip() for entry in value.split(',')]
-                total_quantity = passport.size_quantities.get(id=size_quantity_id).quantity
-                assigned_quantity_sum = 0  # Initialize the sum of assigned quantities
-
-                # Reset quantities for existing assigned work to avoid duplication
-                Work.objects.filter(operation_id=operation_id, size_quantity_id=size_quantity_id, passport=passport).delete()
-
+                entries = value.split(',')
                 for entry in entries:
                     if '(' in entry and ')' in entry:
                         employee_id_input, quantity = entry.split('(')
@@ -105,40 +101,39 @@ def assign_operations(request, passport_id):
                         employee_id_input = entry
                         quantity = total_quantity
 
-                    if employee_id_input:
-                        employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE, branch=request.user.userprofile.branch).first()
-                        if not employee_profile:
-                            errors = True
-                            continue
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE, branch=request.user.userprofile.branch).first()
+                    if not employee_profile:
+                        continue
 
-                        work, created = Work.objects.get_or_create(
-                            operation_id=operation_id,
-                            size_quantity_id=size_quantity_id,
-                            passport=passport
-                        )
-                        AssignedWork.objects.create(
-                            work=work,
-                            employee=employee_profile,
-                            quantity=quantity
-                        )
-                        assigned_quantity_sum += quantity  # Add the quantity to the sum
-
+                    work, created = Work.objects.get_or_create(
+                        operation_id=operation_id,
+                        passport_size=passport_size,
+                        passport=passport
+                    )
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=employee_profile,
+                        quantity=quantity
+                    )
+                    assigned_quantity_sum += quantity
+                    
                 if assigned_quantity_sum != total_quantity:
-                    raise ValueError("The sum of assigned quantities does not match the total quantity.")
+                    raise ValueError("Assigned quantities do not match the required total.")
 
-                if not errors:
-                    return JsonResponse({'status': 'success'})
+                return JsonResponse({'status': 'success'})
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__size_quantity'):
-        key = (assigned_work.work.operation_id, assigned_work.work.size_quantity_id)
+    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+        # Key as a tuple of operation_id and passport_size_id
+        key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
         if key not in work_by_op_and_size:
             work_by_op_and_size[key] = [assigned_work]
         else:
             work_by_op_and_size[key].append(assigned_work)
+
     return render(request, 'technologist/passports/assign_operations.html', {
         'passport': passport,
         'operations': operations,
