@@ -397,14 +397,17 @@ class OrderListView(RestrictBranchMixin, ListView):
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderCreateView(AssignBranchMixin, CreateView):
+class OrderCreateView(CreateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/create.html'
 
     def form_valid(self, form):
-        self.object = form.save()
-        redirect_url = reverse('create_size_quantity_admin', kwargs={'order_id': self.object.id})
+        self.object = form.save(commit=False)
+        self.object.branch = self.request.user.userprofile.branch
+        self.object.save()
+        form.save_m2m()
+        redirect_url = reverse('create_size_quantity', kwargs={'order_id': self.object.id})
         return HttpResponseRedirect(redirect_url)
 
 @method_decorator([login_required, admin_required], name='dispatch')
