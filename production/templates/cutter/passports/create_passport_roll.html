@@ -2,15 +2,14 @@
 {% load i18n %}
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Create New Order" %}</h2>
+  <h2 class="form-heading">{% trans "Create Passport Roll" %}</h2>
   <form method="post" class="crud-form">
     {% csrf_token %}
     <div class="form-group">
       {{ form.as_p }}
     </div>
     <div class="form-actions">
-      <button type="submit" class="btn create-btn">{% trans "Assign Size and Quantity" %}</button>
-      <a href="{% url 'order_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
     </div>
   </form>
 </div>

@@ -1,4 +1,3 @@
-# technologist_views.py
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from ..decorators import technologist_required
@@ -63,7 +62,7 @@ class OrderDetailTechnologistView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
         context['passports'] = order.passports.all()
-
+        context['size_quantities'] = order.size_quantities.all()
         today = timezone.localdate() 
         if order.term >= today:
             days_left = (order.term - today).days
@@ -72,105 +71,6 @@ class OrderDetailTechnologistView(DetailView):
         context['days_left'] = days_left
 
         return context
-    
-@method_decorator([login_required, technologist_required], name='dispatch')
-class OrderUpdateTechnologistView(RestrictBranchMixin, UpdateView):
-    model = Order
-    form_class = OrderFormTechnologist
-    template_name = 'technologist/orders/edit.html'
-    success_url = reverse_lazy('order_list_technologist')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportListView(ListView):
-    model = Passport
-    template_name = 'technologist/passports/list.html'
-    context_object_name = 'passports'
-    paginate_by = 10
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportCreateView(View):
-    def post(self, request, pk):
-        order = get_object_or_404(Order, pk=pk)
-        form = PassportForm(data={'order': order.pk}) 
-        if form.is_valid():
-            passport = form.save()
-            return redirect('create_size_quantity', passport_id=passport.pk)
-        return redirect('order_detail', pk=pk)
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportDetailView(DetailView):
-    model = Passport
-    template_name = 'technologist/passports/detail.html'
-    context_object_name = 'passport'
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportUpdateView(UpdateView):
-    model = Passport
-    form_class = PassportForm
-    template_name = 'technologist/passports/edit.html'
-    success_url = reverse_lazy('passport_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Passport updated successfully.')
-        return super().form_valid(form)
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportDeleteView(DeleteView):
-    model = Passport
-    template_name = 'technologist/passports/delete.html'
-    success_url = reverse_lazy('passport_list')
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Passport deleted successfully.')
-        return super().delete(request, *args, **kwargs)
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class SizeQuantityCreateView(View):
-    def get(self, request, passport_id):
-        passport = get_object_or_404(Passport, pk=passport_id)
-        form = SizeQuantityForm()
-        size_quantities = passport.size_quantities.all()
-        return render(request, 'technologist/passports/create_size_quantity.html', {
-            'form': form,
-            'size_quantities': size_quantities,
-            'passport': passport
-        })
-    def post(self, request, passport_id):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            form = SizeQuantityForm(request.POST)
-            if form.is_valid():
-                new_size_quantity = form.save(commit=False)
-                new_size_quantity.save()
-                passport = get_object_or_404(Passport, pk=passport_id)
-                passport.size_quantities.add(new_size_quantity)
-                size_quantities = passport.size_quantities.values('id', 'size', 'quantity')
-                return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
-            else:
-                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-        return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
-    
-@login_required
-@technologist_required
-def edit_size_quantity(request, sq_id):
-    size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
-
-    if request.method == 'POST':
-        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
-        form = SizeQuantityForm(data, instance=size_quantity)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({'status': 'success'}, status=200)
-    
-    return JsonResponse({'status': 'error'}, status=400)
-
-@login_required
-@technologist_required
-def delete_size_quantity(request, sq_id):
-    if request.method == 'POST':
-        size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
-        size_quantity.delete()
-        return JsonResponse({'status': 'success'}, status=200)
-    return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
 @technologist_required

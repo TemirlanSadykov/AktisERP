@@ -16,6 +16,10 @@ def user_redirect(request):
         return redirect('technologist_page')
     elif user_profile.type == UserProfile.EMPLOYEE:
         return redirect('employee_page')
+    elif user_profile.type == UserProfile.CUTTER:
+        return redirect('cutter_page')
+    elif user_profile.type == UserProfile.QC:
+        return redirect('qc_page')
     else:
         return redirect('index')
 

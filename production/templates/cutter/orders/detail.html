@@ -6,20 +6,12 @@
 <div class="content-container">
   <h2 class="form-heading">{% trans "Order Details:" %} {{ order.order_number }}</h2>
 
-  <div class="progress" style="margin-bottom: 20px;">
-    <div class="progress-bar" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"0" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
-      {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
-    </div>
-  </div>
-
   <div class="details">
     <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
-    <p><strong>{% trans "Client:" %}</strong> {{ order.client.name }}</p>
     <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
     <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
     <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
     <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
-    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
     <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
     <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
     <p><strong>{% trans "Term:" %}</strong> {{ order.term|date:"Y-m-d" }}</p>
@@ -27,7 +19,7 @@
   </div>
 
   <div class="form-actions">
-    <a href="{% url 'order_list_technologist' %}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'order_list_cutter' %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
   <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
@@ -35,19 +27,29 @@
     <thead>
       <tr>
         <th>{% trans "Size" %}</th>
-        <th>{% trans "Quantity" %}</th>
+        {% for passport in passports %}
+        <th>{% trans "Passport" %} #{{ passport.id }}</th>
+        {% endfor %}
+        <th>{% trans "Sum" %}</th>
+        <th>{% trans "Required" %}</th>
+        <th>{% trans "Missing" %}</th>
       </tr>
     </thead>
     <tbody>
-      {% for size_quantity in size_quantities %}
-        <tr>
-          <td>{{ size_quantity.size }}</td>
-          <td>{{ size_quantity.quantity }}</td>
-        </tr>
+      {% for size, data in required_missing.items %}
+      <tr>
+          <td>{{ size }}</td>
+          {% for passport in passports %}
+          <td>{{ size_data|get_item:size|get_item:passport.id|default_if_none:"0" }}</td>
+          {% endfor %}
+          <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+          <td>{{ data.required }}</td>
+          <td>{{ data.missing }}</td>
+      </tr>
       {% empty %}
-        <tr>
-          <td colspan="2">{% trans "No size quantities available." %}</td>
-        </tr>
+      <tr>
+          <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
@@ -65,6 +67,12 @@
     {% else %}
       <p>{% trans "No associated passports." %}</p>
     {% endif %}
+    <div class="create-passport-form">
+      <form method="post" action="{% url 'passport_create' order.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Create New Passport" %}</button>
+      </form>
+    </div>
   </div>
 </div>
 

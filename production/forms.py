@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from .models import *
 from django_select2 import forms as s2forms
+from django.forms import inlineformset_factory
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -81,7 +82,7 @@ class UserEditForm(forms.ModelForm):
 class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport
-        exclude = ['operations', 'date', 'size_quantities', 'is_completed']
+        exclude = ['size_quantities', 'rolls', 'is_completed']
 
 class OperationAssignmentForm(forms.ModelForm):
     employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")
@@ -106,7 +107,30 @@ class DateRangeForm(forms.Form):
 
 
 
+class PassportRollForm(forms.ModelForm):
+    class Meta:
+        model = PassportRoll
+        fields = ['roll', 'meters']
+        widgets = {
+            'roll': forms.Select(),
+            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'})
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['roll'].queryset = Roll.objects.all()
 
+class PassportSizeForm(forms.ModelForm):
+    class Meta:
+        model = PassportSize
+        fields = ['size_quantity', 'quantity']
+        widgets = {
+            'size_quantity': forms.Select(),
+            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0'})
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Assuming you want to filter size_quantities based on some criteria
+        self.fields['size_quantity'].queryset = SizeQuantity.objects.all()
 
 class OperationForm(forms.ModelForm):
     class Meta:
@@ -116,7 +140,7 @@ class OperationForm(forms.ModelForm):
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
-        fields = ['name', 'color', 'fabrics']
+        fields = ['name', 'color', 'fabrics', 'meters']
 
 class AssortmentForm(forms.ModelForm):
     class Meta:
@@ -141,7 +165,7 @@ class ClientForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['name', 'order_number', 'client', 'model', 'assortment', 'status', 'quantity', 'completed_quantity', 'payment', 'term']
+        fields = ['name', 'order_number', 'client', 'model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment', 'term']
         widgets = {
             'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES), 

@@ -8,10 +8,11 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('employee/clock-in-out/', clock_in_out, name='clock_in_out'),
     
-    # Employee, Technologist, and Admin specific paths
     path('employee/', employee_page, name='employee_page'),
     path('technologist/', technologist_page, name='technologist_page'),
     path('admin/', admin_page, name='admin_page'),
+    path('cutter/', cutter_page, name='cutter_page'),
+    path('qc/', qc_page, name='qc_page'),
 
     path('admin/branches/', BranchListView.as_view(), name='branch_list'),
     path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
@@ -27,7 +28,6 @@ urlpatterns = [
     path('admin/employees/<int:pk>/edit/', employee_edit, name='employee_edit'),
     path('admin/employees/<int:pk>/delete/', EmployeeDeleteView.as_view(), name='employee_delete'),
 
-    path('admin/passports/', PassportListViewAdmin.as_view(), name='passport_list_admin'),
     path('admin/passports/<int:pk>/', passport_detail_admin, name='passport_detail_admin'),
 
     path('admin/salaries/', salary_list, name='salary_list'),
@@ -41,6 +41,9 @@ urlpatterns = [
     path('admin/orders/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
     path('admin/orders/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
     path('admin/orders/<int:pk>/delete/', OrderDeleteView.as_view(), name='order_delete'),
+    path('admin/orders/<int:order_id>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
+    path('admin/orders/edit-size-quantity/<int:sq_id>/', edit_size_quantity, name='edit_size_quantity'),
+    path('admin/orders/delete-size-quantity/<int:sq_id>/', delete_size_quantity, name='delete_size_quantity'),
 
     path('admin/clients/', ClientListView.as_view(), name='client_list'),
     path('admin/clients/create/', ClientCreateView.as_view(), name='client_create'),
@@ -48,13 +51,8 @@ urlpatterns = [
     path('admin/clients/<int:pk>/edit/', ClientUpdateView.as_view(), name='client_edit'),
     path('admin/clients/<int:pk>/delete/', ClientDeleteView.as_view(), name='client_delete'),
 
-    path('technologist/passports/', PassportListView.as_view(), name='passport_list'),
-    path('technologist/passports/<int:pk>/', PassportDetailView.as_view(), name='passport_detail'),
-    path('technologist/passports/<int:pk>/edit/', PassportUpdateView.as_view(), name='passport_edit'),
-    path('technologist/passports/<int:pk>/delete/', PassportDeleteView.as_view(), name='passport_delete'),
-    path('technologist/passports/<int:passport_id>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
-    path('technologist/passports/edit-size-quantity/<int:sq_id>/', edit_size_quantity, name='edit_size_quantity'),
-    path('technologist/passports/delete-size-quantity/<int:sq_id>/', delete_size_quantity, name='delete_size_quantity'),
+    path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
+    path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
@@ -62,10 +60,6 @@ urlpatterns = [
     path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
     path('technologist/passports/api/reassigned_works/<int:assigned_work_id>/', get_reassigned_works, name='get_reassigned_works'),
     path('technologist/passports/reassign-work/complete/', complete_reassigned_work, name='complete_reassigned_work'),
-    path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
-    path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),
-    path('technologist/orders/<int:pk>/edit/', OrderUpdateTechnologistView.as_view(), name='order_edit_technologist'),
-    path('technologist/orders/<int:pk>/create_passport/', PassportCreateView.as_view(), name='passport_create'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),
@@ -98,4 +92,14 @@ urlpatterns = [
     path('employee/works/<int:assigned_work_id>/start/', start_work, name='start_work'),
     path('employee/works/<int:assigned_work_id>/finish/', finish_work, name='finish_work'),
 
+    path('cutter/orders/', OrderListCutterView.as_view(), name='order_list_cutter'),
+    path('cutter/orders/<int:pk>/', OrderDetailCutterView.as_view(), name='order_detail_cutter'),
+    path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
+    path('cutter/orders/<int:pk>/passport/create', PassportCreateView.as_view(), name='passport_create'),
+    path('cutter/orders/passport/<int:passport_id>/edit/', PassportUpdateView.as_view(), name='passport_edit'),
+    path('cutter/orders/passport/<int:passport_id>/delete/', PassportDeleteView.as_view(), name='passport_delete'),
+    path('cutter/orders/passport/<int:passport_id>/create_passport_roll/', PassportRollCreateView.as_view(), name='create_passport_roll'),
+    path('cutter/orders/passport/<int:passport_id>/create_passport_size/', PassportSizeCreateView.as_view(), name='create_passport_size'),
+    # path('cutter/orders/passport/edit-size-quantity/<int:sq_id>/', edit_size_quantity_passport, name='edit_size_quantity_passport'),
+    # path('cutter/orders/passport/delete-size-quantity/<int:sq_id>/', delete_size_quantity_passport, name='delete_size_quantity_passport'),
 ]

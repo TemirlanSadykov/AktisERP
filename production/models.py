@@ -156,9 +156,6 @@ class PassportRoll(models.Model):
     meters = models.DecimalField(max_digits=10, decimal_places=2)
     def __str__(self):
         return f"{self.meters} meters of {self.roll.name} for {self.passport.order.order_number}"
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
 class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork')

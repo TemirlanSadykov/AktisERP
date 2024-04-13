@@ -1,4 +1,3 @@
-# admin_views.py
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
@@ -22,11 +21,16 @@ from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
 from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch
-from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm
+from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm, SizeQuantityForm
 from ..mixins import *
 from datetime import datetime
 import pandas as pd
 from django.http import HttpResponse
+from django.views import View
+from django.http import JsonResponse
+import json
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 
 @login_required
 @admin_required
@@ -100,7 +104,7 @@ class EmployeeListView(ListView):
     paginate_by = 10
     def get_queryset(self):
         return UserProfile.objects.filter(
-            type__in=[UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST],
+            type__in=[UserProfile.ADMIN, UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST, UserProfile.CUTTER, UserProfile.QC],
             branch=self.request.user.userprofile.branch
         ).order_by('employee_id')
 
@@ -139,13 +143,6 @@ class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     model = UserProfile
     template_name = 'admin/employees/delete.html'
     success_url = reverse_lazy('employee_list')
-
-
-@method_decorator([login_required, admin_required], name='dispatch')
-class PassportListViewAdmin(ListView):
-    model = Passport
-    template_name = 'admin/passports/list.html'
-    context_object_name = 'passports'
 
 @login_required
 @admin_required
@@ -407,26 +404,31 @@ class OrderCreateView(AssignBranchMixin, CreateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/create.html'
-    success_url = reverse_lazy('order_list')
+
+    def form_valid(self, form):
+        self.object = form.save()
+        redirect_url = reverse('create_size_quantity_admin', kwargs={'order_id': self.object.id})
+        return HttpResponseRedirect(redirect_url)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderDetailView(DetailView):
     model = Order
+    form_class = OrderForm
     template_name = 'admin/orders/detail.html'
     context_object_name = 'order'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(OrderDetailView, self).get_context_data(**kwargs)
         order = context['order']
         context['passports'] = order.passports.all()
-
-        today = timezone.localdate() 
+        context['size_quantities'] = order.size_quantities.all()
+        context['size_quantity_form'] = SizeQuantityForm()
+        today = timezone.localdate()
         if order.term >= today:
             days_left = (order.term - today).days
         else:
-            days_left = 0  
+            days_left = 0
         context['days_left'] = days_left
-
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
@@ -441,6 +443,54 @@ class OrderDeleteView(RestrictBranchMixin, DeleteView):
     model = Order
     template_name = 'admin/orders/delete.html'
     success_url = reverse_lazy('order_list')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class SizeQuantityCreateView(View):
+    def get(self, request, order_id):
+        order = get_object_or_404(Order, pk=order_id)
+        form = SizeQuantityForm()
+        size_quantities = order.size_quantities.all()
+        return render(request, 'admin/orders/create_size_quantity.html', {
+            'form': form,
+            'size_quantities': size_quantities,
+            'order': order
+        })
+    def post(self, request, order_id):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = SizeQuantityForm(request.POST)
+            if form.is_valid():
+                new_size_quantity = form.save(commit=False)
+                new_size_quantity.save()
+                order = get_object_or_404(Order, pk=order_id)
+                order.size_quantities.add(new_size_quantity)
+                size_quantities = order.size_quantities.values('id', 'size', 'quantity')
+                return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
+    
+@login_required
+@admin_required
+def edit_size_quantity(request, sq_id):
+    size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
+
+    if request.method == 'POST':
+        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+        form = SizeQuantityForm(data, instance=size_quantity)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': 'success'}, status=200)
+    
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+@admin_required
+def delete_size_quantity(request, sq_id):
+    if request.method == 'POST':
+        size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
+        size_quantity.delete()
+        return JsonResponse({'status': 'success'}, status=200)
+    return JsonResponse({'status': 'error'}, status=400)
 
 
 @method_decorator([login_required, admin_required], name='dispatch')
