@@ -154,7 +154,8 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://aktiserp-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://waggish-jewel-production.up.railway.app']
+# CSRF_TRUSTED_ORIGINS = ['https://aktiserp-production.up.railway.app']
 
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
