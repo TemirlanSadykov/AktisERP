@@ -33,7 +33,7 @@
       {% for assigned_work in assigned_works %}
       <tr>
         <td>{{ assigned_work.work.operation.name }}</td>
-        <td>{{ assigned_work.work.size_quantity.size }}</td>
+        <td>{{ assigned_work.work.passport_size.size_quantity.size }}</td>
         <td>{{ assigned_work.quantity }}</td>
         <td>{{ assigned_work.end_time|date:"Y-m-d H:i:s" }}</td>
         <td>{% if assigned_work.is_success %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td>

@@ -29,7 +29,10 @@
                         {% for work in works %}
                         <div style="display: block;">
                             <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
-                            <!-- Additional controls can be here based on work's properties -->
+                            {% if work.end_time %}
+                              <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
+                              <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     {% else %}
@@ -42,6 +45,13 @@
       </tbody>
     </table>
   </form>
+  <div class="form-actions">
+    <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
+      {% csrf_token %}
+      <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
+    </form>
+    <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
 </div>
 
 <script>

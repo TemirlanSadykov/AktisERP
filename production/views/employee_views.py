@@ -18,7 +18,7 @@ def done_works_list(request):
     user_profile = request.user.userprofile
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
-    assigned_works = AssignedWork.objects.filter(employee=user_profile, end_time__isnull=False).select_related('work', 'work__operation', 'work__size_quantity')
+    assigned_works = AssignedWork.objects.filter(employee=user_profile, end_time__isnull=False).select_related('work', 'work__operation', 'work__passport_size')
     if start_date:
         assigned_works = assigned_works.filter(end_time__date__gte=datetime.strptime(start_date, '%Y-%m-%d').date())
     if end_date:
@@ -29,7 +29,7 @@ def done_works_list(request):
 @employee_required
 def pending_works_list(request):
     user_profile = request.user.userprofile
-    assigned_works = AssignedWork.objects.filter(employee=user_profile, end_time__isnull=True).select_related('work', 'work__operation', 'work__size_quantity')
+    assigned_works = AssignedWork.objects.filter(employee=user_profile, end_time__isnull=True).select_related('work', 'work__operation', 'work__passport_size')
     return render(request, 'employee/works/pending_list.html', {'assigned_works': assigned_works})
 
 @login_required

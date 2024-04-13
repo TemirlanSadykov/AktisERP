@@ -22,8 +22,8 @@
         <div class="employee-details">
           <div class="employee-size">
             {% trans "Size:" %}
-            {% if assigned_work.work.size_quantity %}
-              {{ assigned_work.work.size_quantity.size }}
+            {% if assigned_work.work.passport_size.size_quantity %}
+              {{ assigned_work.work.passport_size.size_quantity.size }}
             {% else %}
               --
             {% endif %}

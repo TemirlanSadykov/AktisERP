@@ -210,7 +210,7 @@ def salary_list(request):
 @login_required
 @admin_required
 def salary_detail(request, pk):
-    employee = get_object_or_404(UserProfile, pk=pk)  # Ensure the employee belongs to the current user's branch
+    employee = get_object_or_404(UserProfile, pk=pk, branch=request.user.userprofile.branch)  # Ensures the employee is from the current user's branch
     initial_data = {
         'start_date': request.GET.get('start_date'),
         'end_date': request.GET.get('end_date'),
@@ -223,28 +223,25 @@ def salary_detail(request, pk):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
         
-        # Apply branch filter to assigned_works and reassigned_works queries
         assigned_works = AssignedWork.objects.filter(
             employee=employee,
             end_time__range=(start_date, end_date),
-            is_success=True,  # Only include successful works
-            work__passport__order__branch=request.user.userprofile.branch  # Filter by the employee's branch
-        ).select_related('work__operation', 'work__size_quantity')
+            is_success=True,
+            work__passport__order__branch=request.user.userprofile.branch
+        ).select_related('work__operation', 'work__passport_size__size_quantity')
 
         reassigned_works = ReassignedWork.objects.filter(
             new_employee=employee,
             original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True,  # Only include successful works
-            original_assigned_work__work__passport__order__branch=request.user.userprofile.branch   # Filter by the employee's branch
-        ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__size_quantity')
+            is_success=True,
+            original_assigned_work__work__passport__order__branch=request.user.userprofile.branch
+        ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
 
-        # Process assigned works
         for assigned_work in assigned_works:
             work_salary, work_details = calculate_salary_and_details(assigned_work)
             total_salary += work_salary
             assigned_work_details.append(work_details)
 
-        # Process reassigned works
         for reassigned_work in reassigned_works:
             work_salary, work_details = calculate_salary_and_details(reassigned_work.original_assigned_work, reassigned_quantity=reassigned_work.reassigned_quantity)
             total_salary += work_salary
@@ -265,7 +262,7 @@ def calculate_salary_and_details(work, reassigned_quantity=None):
     time_spent = (work.end_time - work.start_time).total_seconds() if work.start_time and work.end_time else 0
     return work_salary, {
         'operation': work.work.operation,
-        'size': work.work.size_quantity.size,
+        'size': work.work.passport_size.size_quantity.size,  # Correctly accessing the size through PassportSize
         'quantity': quantity,
         'time_spent_seconds': time_spent,
         'work_salary': work_salary
