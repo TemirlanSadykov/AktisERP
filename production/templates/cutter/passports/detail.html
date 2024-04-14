@@ -48,9 +48,8 @@
   </table>
 
   <div class="form-actions secondary">
-    <a href="{% url 'passport_edit' passport.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'order_detail_technologist' passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'order_detail_cutter' passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
   <form id="deleteForm" action="{% url 'passport_delete' passport.pk %}" method="post" style="display:none;">

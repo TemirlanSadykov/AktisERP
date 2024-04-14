@@ -7,6 +7,7 @@ from django.contrib.auth.hashers import make_password
 from .models import *
 from django_select2 import forms as s2forms
 from django.forms import inlineformset_factory
+from django.forms import ModelChoiceField
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -119,18 +120,27 @@ class PassportRollForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['roll'].queryset = Roll.objects.all()
 
+class SizeQuantityChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.size
+
 class PassportSizeForm(forms.ModelForm):
+    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label=None)
+
     class Meta:
         model = PassportSize
         fields = ['size_quantity', 'quantity']
         widgets = {
-            'size_quantity': forms.Select(),
             'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0'})
         }
+
     def __init__(self, *args, **kwargs):
+        passport_id = kwargs.pop('passport_id', None)
         super().__init__(*args, **kwargs)
-        # Assuming you want to filter size_quantities based on some criteria
-        self.fields['size_quantity'].queryset = SizeQuantity.objects.all()
+        
+        if passport_id:
+            passport = Passport.objects.get(pk=passport_id)
+            self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
 
 class OperationForm(forms.ModelForm):
     class Meta:

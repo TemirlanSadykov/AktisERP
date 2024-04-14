@@ -3,15 +3,34 @@
 
 {% block content %}
 <div class="content-container">
-    <h2 class="form-heading">{% trans "Assign Size Quantities for Passport" %} #{{ passport.order_number }}</h2>
-    <form method="post" class="crud-form">
-        {% csrf_token %}
-        <div class="form-group">
-            {{ form.as_p }}
-        </div>
-        <div class="form-actions">
-            <button type="submit" class="btn create-btn">{% trans "Save Quantities" %}</button>
-        </div>
-    </form>
+    <div class="filter-header">
+        <h2 class="list-heading">{% trans "Add Size and Quantity for Order:" %} {{ passport.order.id }}</h2>
+        <form id="sizeQuantityForm" method="post" class="date-filter-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>{% trans "Size:" %}</label>
+                {{ form.size_quantity }}
+            </div>
+            <div class="form-group">
+                <label>{% trans "Quantity:" %}</label>
+                {{ form.quantity }}
+            </div>
+            <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
+        </form>
+    </div>
+    <!-- Modified display of existing passport sizes -->
+    <ul id="sizeQuantityList" class="size-quantity-list">
+        {% for ps in passport_sizes %}
+        <li id="sq-{{ ps.id }}" class="size-quantity-item">
+            <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.size_quantity.id }}">{{ ps.size_quantity.size }}</span></span>
+            <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ ps.size_quantity.id }}">{{ ps.quantity }}</span></span>
+            <button class="edit-btn" data-sq-id="{{ ps.size_quantity.id }}">{% trans "Edit" %}</button>
+            <button class="delete-btn" data-sq-id="{{ ps.size_quantity.id }}">{% trans "Delete" %}</button>
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="form-actions">
+        <a href="{% url 'passport_detail' passport.id %}" class="btn create-btn">{% trans "Finish" %}</a>
+      </div>
 </div>
 {% endblock %}

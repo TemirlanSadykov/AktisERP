@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.db import transaction
 from collections import defaultdict
 from django.db.models import Sum
+from django.http import HttpResponseRedirect
 
 @login_required
 @cutter_required
@@ -128,6 +129,20 @@ class PassportSizeCreateView(CreateView):
     form_class = PassportSizeForm
     template_name = 'cutter/passports/create_passport_size_quantity.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport_id = self.kwargs.get('passport_id')
+        passport = get_object_or_404(Passport, pk=passport_id)
+        context['passport'] = passport
+        context['passport_sizes'] = PassportSize.objects.filter(passport=passport)
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        passport_id = self.kwargs.get('passport_id')
+        kwargs['passport_id'] = passport_id
+        return kwargs
+
     def form_valid(self, form):
         passport_id = self.kwargs['passport_id']
         passport = get_object_or_404(Passport, pk=passport_id)
@@ -202,23 +217,24 @@ class PassportDetailView(DetailView):
         context['passport_rolls'] = passport.passport_rolls.all()
         return context
 
-@method_decorator([login_required, cutter_required], name='dispatch')
-class PassportUpdateView(UpdateView):
-    model = Passport
-    form_class = PassportForm
-    template_name = 'technologist/passports/edit.html'
-    success_url = reverse_lazy('passport_list')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Passport updated successfully.')
-        return super().form_valid(form)
-
-@method_decorator([login_required, cutter_required], name='dispatch')
+@method_decorator([login_required], name='dispatch')
 class PassportDeleteView(DeleteView):
     model = Passport
-    template_name = 'technologist/passports/delete.html'
-    success_url = reverse_lazy('passport_list')
 
+    def get_success_url(self):
+        order_id = self.object.order.id
+        return reverse('order_detail_cutter', args=[order_id])
+
+    @transaction.atomic
     def delete(self, request, *args, **kwargs):
+        passport = self.get_object()
+        passport_rolls = PassportRoll.objects.filter(passport=passport)
+
+        for passport_roll in passport_rolls:
+            roll = passport_roll.roll
+            roll.meters += passport_roll.meters  # Add back the meters used
+            roll.save()
+
+        response = super().delete(request, *args, **kwargs)
         messages.success(request, 'Passport deleted successfully.')
-        return super().delete(request, *args, **kwargs)
+        return response
