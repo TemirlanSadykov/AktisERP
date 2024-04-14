@@ -277,7 +277,6 @@ def export_salaries_to_excel(request):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
         
-        # Assuming operations and reassignments are filtered based on valid form data:
         assigned_works = AssignedWork.objects.filter(
             end_time__range=(start_date, end_date),
             is_success=True
@@ -293,14 +292,10 @@ def export_salaries_to_excel(request):
         for work in assigned_works:
             passport = work.work.passport
             order = passport.order
-            client = order.client
-            model = order.model
-            assortment = order.assortment
-            roll = order.roll
             data.append([
-                datetime.now().date(), client.name, model.name if model else '', 
-                assortment.name if assortment else '', passport.id, roll.color if roll else '', 
-                roll.fabrics if roll else '', passport.date, work.work.operation.id, 
+                datetime.now().date(), order.client.name, order.model.name if order.model else '', 
+                order.assortment.name if order.assortment else '', passport.id, order.color, 
+                order.fabrics, passport.date, work.work.operation.id, 
                 work.work.operation.name, work.work.operation.payment, work.employee.employee_id, 
                 work.employee.user.get_full_name(), work.quantity, 
                 work.work.operation.payment * work.quantity
@@ -310,14 +305,10 @@ def export_salaries_to_excel(request):
             original = work.original_assigned_work
             passport = original.work.passport
             order = passport.order
-            client = order.client
-            model = order.model
-            assortment = order.assortment
-            roll = order.roll
             data.append([
-                datetime.now().date(), client.name, model.name if model else '', 
-                assortment.name if assortment else '', passport.id, roll.color if roll else '', 
-                roll.fabrics if roll else '', passport.date, original.work.operation.id, 
+                datetime.now().date(), order.client.name, order.model.name if order.model else '', 
+                order.assortment.name if order.assortment else '', passport.id, order.color, 
+                order.fabrics, passport.date, original.work.operation.id, 
                 original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id, 
                 work.new_employee.user.get_full_name(), work.reassigned_quantity, 
                 original.work.operation.payment * work.reassigned_quantity
@@ -325,11 +316,10 @@ def export_salaries_to_excel(request):
         
         df = pd.DataFrame(data, columns=[
             "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
-            "Roll's color", "Roll's fabrics", "Passport date", "Operation id", "Operation name", 
+            "Order's color", "Order's fabrics", "Passport date", "Operation id", "Operation name", 
             "Operation payment", "Employee's employee_id", "Employee's full name", "Work's quantity", "Salary"
         ])
         
-        # Convert DataFrame to Excel file in memory
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="salaries.xlsx"'
         with pd.ExcelWriter(response, engine='openpyxl') as writer:
@@ -339,7 +329,7 @@ def export_salaries_to_excel(request):
 
     # Handle form errors or initial page access:
     context = {'form': form}
-    return render(request, 'your_template.html', context)
+    return render(request, 'blank.html', context)
 
 
 

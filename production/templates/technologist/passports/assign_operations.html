@@ -53,7 +53,28 @@
     <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>
+<div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
+  <div id="reassignPopup" class="reassign-popup" style="display: none;">
+    <div id="reassignedWorksList" class="reassigned-works-list">
+      <!-- Reassigned works will be displayed here as bullet points -->
+    </div>
+    <form id="reassignForm" class="reassign-form">
+      <label for="newEmployeeId">New Employee ID:</label>
+      <input type="text" id="newEmployeeId" name="newEmployeeId">
+  
+      <label for="reassignQuantity">Quantity:</label>
+      <input type="number" id="reassignQuantity" name="reassignQuantity">
 
+      <label for="reassignReason">Reason:</label>
+      <input type="text" id="reassignReason" name="reassignReason">
+  
+      <input type="hidden" id="reassignWorkId" name="reassignWorkId">
+  
+      <button type="submit">Submit</button>
+      <button type="button" onclick="closePopup()">Cancel</button>
+    </form>
+  </div>  
+</div>
 <script>
   var passportId = "{{ passport.id }}";
   
