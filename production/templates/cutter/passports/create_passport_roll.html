@@ -1,16 +1,35 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Create Passport Roll" %}</h2>
-  <form method="post" class="crud-form">
-    {% csrf_token %}
-    <div class="form-group">
-      {{ form.as_p }}
-    </div>
+  <div class="filter-header">
+    <h2 class="list-heading">{% trans "Add Roll and Meters for Order:" %} {{ passport.order.id }}</h2>
+    <form id="rollMetersForm" method="post" class="date-filter-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>{% trans "Roll:" %}</label>
+            {{ form.roll }}
+        </div>
+        <div class="form-group">
+            <label>{% trans "Meters:" %}</label>
+            {{ form.meters }}
+        </div>
+        <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
+    </form>
+  </div>
+    <ul id="rollMetersList" class="roll-meters-list">
+        {% for pr in passport_rolls %}
+        <li id="rm-{{ pr.id }}" class="roll-meters-item">
+            <span class="detail"><strong>{% trans "Roll:" %}</strong> {{ pr.roll.name }}</span>
+            <span class="detail"><strong>{% trans "Meters:" %}</strong> {{ pr.meters }}</span>
+            <button class="edit-btn" data-rm-id="{{ pr.id }}">{% trans "Edit" %}</button>
+            <button class="delete-btn" data-rm-id="{{ pr.id }}">{% trans "Delete" %}</button>
+        </li>
+        {% endfor %}
+    </ul>
     <div class="form-actions">
-      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
-    </div>
-  </form>
+        <a href="{% url 'create_passport_size' passport.id %}" class="btn create-btn">{% trans "Finish" %}</a>
+      </div>
 </div>
 {% endblock %}

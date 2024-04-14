@@ -102,18 +102,25 @@ class PassportRollCreateView(CreateView):
     form_class = PassportRollForm
     template_name = 'cutter/passports/create_passport_roll.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport_id = self.kwargs.get('passport_id')
+        passport = get_object_or_404(Passport, pk=passport_id)
+        context['passport'] = passport
+        context['passport_rolls'] = PassportRoll.objects.filter(passport=passport)
+        return context
+
     def form_valid(self, form):
         passport_id = self.kwargs['passport_id']
         passport = get_object_or_404(Passport, pk=passport_id)
-        roll = form.cleaned_data['roll']
-        meters = form.cleaned_data['meters']
+        passport_roll = form.save(commit=False)
+        passport_roll.passport = passport
+        roll = passport_roll.roll
+        meters_requested = passport_roll.meters
 
-        if roll.meters is not None and roll.meters >= meters:
-            roll.meters -= meters
+        if roll.meters is not None and roll.meters >= meters_requested:
+            roll.meters -= meters_requested
             roll.save()
-
-            passport_roll = form.save(commit=False)
-            passport_roll.passport = passport
             passport_roll.save()
             return redirect(self.get_success_url())
         else:
@@ -121,7 +128,7 @@ class PassportRollCreateView(CreateView):
             return self.form_invalid(form)
 
     def get_success_url(self):
-        return reverse('create_passport_size', kwargs={'passport_id': self.kwargs['passport_id']})
+        return reverse('create_passport_roll', kwargs={'passport_id': self.kwargs['passport_id']})
 
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportSizeCreateView(CreateView):
