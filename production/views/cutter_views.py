@@ -262,25 +262,21 @@ class PassportDetailView(DetailView):
         context['passport_rolls'] = passport.passport_rolls.all()
         return context
 
-@method_decorator([login_required, cutter_required], name='dispatch')
-class PassportDeleteView(DeleteView):
-    model = Passport
-
-    def get_success_url(self):
-        order_id = self.object.order.id
-        return reverse('order_detail_cutter', args=[order_id])
-
-    @transaction.atomic
-    def delete(self, request, *args, **kwargs):
-        passport = self.get_object()
+@login_required
+@cutter_required
+@require_POST
+def passport_delete(request, pk):
+    passport = get_object_or_404(Passport, pk=pk)
+    with transaction.atomic():
         passport_rolls = PassportRoll.objects.filter(passport=passport)
-
         for passport_roll in passport_rolls:
             roll = passport_roll.roll
             if roll.used_meters is not None:
                 roll.used_meters -= passport_roll.meters
                 roll.save()
-
-        response = super().delete(request, *args, **kwargs)
+        
+        passport.delete()
         messages.success(request, 'Passport deleted successfully.')
-        return response
+    
+    order_id = passport.order.id
+    return redirect(reverse('order_detail_cutter', args=[order_id]))
