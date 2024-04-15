@@ -74,13 +74,17 @@ class Assortment(models.Model):
 
 class Roll(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True)
-    objects = BranchAwareManager()   
+    objects = BranchAwareManager()
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=50)
     fabrics = models.CharField(max_length=100)
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
     def __str__(self):
-        return f"{self.name} - {self.color} - {self.fabrics}"
+        return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
+    @property
+    def available_meters(self):
+        return self.meters - self.used_meters
 
 class Operation(models.Model):
     name = models.CharField(max_length=100)

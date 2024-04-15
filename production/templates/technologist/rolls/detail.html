@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load  custom_filters %}
 {% block content %}
 <div class="content-container">
   <h2 class="form-heading">{% trans "Roll Details:" %} {{ roll.name }}</h2>
@@ -8,6 +8,8 @@
   <div class="details">
     <p><strong>{% trans "Color:" %}</strong> {{ roll.color }}</p>
     <p><strong>{% trans "Fabrics:" %}</strong> {{ roll.fabrics }}</p>
+    <p><strong>{% trans "Meters Available:" %}</strong> {{ roll|available_meters }}</p>
+    <p><strong>{% trans "Meters Used:" %}</strong> {{ roll.used_meters }}</p>
   </div>
 
   <div class="form-actions">

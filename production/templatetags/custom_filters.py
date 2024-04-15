@@ -55,3 +55,7 @@ def subtract(required, produced):
         return max(0, required - produced)
     except TypeError:
         return required
+    
+@register.filter(name='available_meters')
+def available_meters(roll):
+    return roll.meters - roll.used_meters

@@ -123,8 +123,8 @@ class PassportRollCreateView(CreateView):
         roll = passport_roll.roll
         meters_requested = passport_roll.meters
 
-        if roll.meters is not None and roll.meters >= meters_requested:
-            roll.meters -= meters_requested
+        if roll.available_meters is not None and roll.available_meters >= meters_requested:
+            roll.used_meters += meters_requested 
             roll.save()
             passport_roll.save()
             return redirect(self.get_success_url())
@@ -145,18 +145,17 @@ def edit_passport_roll(request, pr_id):
         
         passport_roll = PassportRoll.objects.get(id=pr_id)
         original_roll = passport_roll.roll
-
-        # Calculate the difference and update original Roll
         old_meters = passport_roll.meters
-        difference = old_meters - new_meters
-        original_roll.meters += difference
-        original_roll.save()
 
-        # Update PassportRoll meters
-        passport_roll.meters = new_meters
-        passport_roll.save()
-
-        return JsonResponse({'status': 'success', 'message': 'Meters updated successfully'})
+        difference = new_meters - old_meters
+        if original_roll.available_meters + difference >= 0:
+            original_roll.used_meters += difference
+            original_roll.save()
+            passport_roll.meters = new_meters
+            passport_roll.save()
+            return JsonResponse({'status': 'success', 'message': 'Meters updated successfully'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Not enough fabric available'}, status=400)
 
     except PassportRoll.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'PassportRoll not found'}, status=404)
@@ -172,11 +171,10 @@ def delete_passport_roll(request, pr_id):
         passport_roll = PassportRoll.objects.get(id=pr_id)
         original_roll = passport_roll.roll
 
-        # Return the meters to the original roll
-        original_roll.meters += passport_roll.meters
-        original_roll.save()
+        if original_roll.used_meters is not None:
+            original_roll.used_meters -= passport_roll.meters
+            original_roll.save()
 
-        # Delete the PassportRoll entry
         passport_roll.delete()
 
         return JsonResponse({'status': 'success', 'message': 'PassportRoll deleted successfully'})
@@ -264,7 +262,7 @@ class PassportDetailView(DetailView):
         context['passport_rolls'] = passport.passport_rolls.all()
         return context
 
-@method_decorator([login_required], name='dispatch')
+@method_decorator([login_required, cutter_required], name='dispatch')
 class PassportDeleteView(DeleteView):
     model = Passport
 
@@ -279,8 +277,9 @@ class PassportDeleteView(DeleteView):
 
         for passport_roll in passport_rolls:
             roll = passport_roll.roll
-            roll.meters += passport_roll.meters  # Add back the meters used
-            roll.save()
+            if roll.used_meters is not None:
+                roll.used_meters -= passport_roll.meters
+                roll.save()
 
         response = super().delete(request, *args, **kwargs)
         messages.success(request, 'Passport deleted successfully.')
