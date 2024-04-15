@@ -11,7 +11,10 @@
     <p><strong>{% trans "Date" %}:</strong> {{ passport.date|date:"Y-m-d" }}</p>
   </div>
 
-  <h3>{% trans "Rolls Used" %}</h3>
+  <div class="date-filter-form" style="margin-bottom: 10px;">
+    <h4>{% trans "Rolls Used" %}</h4>
+    <a href="{% url 'create_passport_roll' passport.id %}" class="btn edit-btn">{% trans "Edit" %}</a>
+  </div>
   <table class="table">
     <tr>
       <th>{% trans "Roll Name" %}</th>
@@ -29,7 +32,10 @@
     {% endfor %}
   </table>
   
-  <h3>{% trans "Sizes Used" %}</h3>
+  <div class="date-filter-form" style="margin-bottom: 10px;">
+    <h4>{% trans "Sizes Used" %}</h4>
+    <a href="{% url 'create_passport_size' passport.id %}" class="btn edit-btn">{% trans "Edit" %}</a>
+  </div>
   <table class="table">
     <tr>
       <th>{% trans "Size" %}</th>

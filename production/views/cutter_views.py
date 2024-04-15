@@ -15,6 +15,11 @@ from django.db import transaction
 from collections import defaultdict
 from django.db.models import Sum
 from django.http import HttpResponseRedirect
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
+import json
+from decimal import Decimal
 
 @login_required
 @cutter_required
@@ -130,6 +135,58 @@ class PassportRollCreateView(CreateView):
     def get_success_url(self):
         return reverse('create_passport_roll', kwargs={'passport_id': self.kwargs['passport_id']})
 
+@login_required
+@cutter_required
+@require_POST
+def edit_passport_roll(request, pr_id):
+    try:
+        data = json.loads(request.body)
+        new_meters = Decimal(data.get('meters'))
+        
+        passport_roll = PassportRoll.objects.get(id=pr_id)
+        original_roll = passport_roll.roll
+
+        # Calculate the difference and update original Roll
+        old_meters = passport_roll.meters
+        difference = old_meters - new_meters
+        original_roll.meters += difference
+        original_roll.save()
+
+        # Update PassportRoll meters
+        passport_roll.meters = new_meters
+        passport_roll.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Meters updated successfully'})
+
+    except PassportRoll.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'PassportRoll not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+@login_required
+@cutter_required
+@require_POST
+def delete_passport_roll(request, pr_id):
+    try:
+        passport_roll = PassportRoll.objects.get(id=pr_id)
+        original_roll = passport_roll.roll
+
+        # Return the meters to the original roll
+        original_roll.meters += passport_roll.meters
+        original_roll.save()
+
+        # Delete the PassportRoll entry
+        passport_roll.delete()
+
+        return JsonResponse({'status': 'success', 'message': 'PassportRoll deleted successfully'})
+
+    except PassportRoll.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'PassportRoll not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportSizeCreateView(CreateView):
     model = PassportSize
@@ -160,56 +217,39 @@ class PassportSizeCreateView(CreateView):
 
     def get_success_url(self):
         return reverse('create_passport_size', kwargs={'passport_id': self.kwargs['passport_id']})
-
-
-
-# @method_decorator([login_required, technologist_required], name='dispatch')
-# class SizeQuantityCreateView(View):
-#     def get(self, request, passport_id):
-#         passport = get_object_or_404(Passport, pk=passport_id)
-#         form = SizeQuantityForm()
-#         size_quantities = passport.size_quantities.all()
-#         return render(request, 'technologist/passports/create_size_quantity.html', {
-#             'form': form,
-#             'size_quantities': size_quantities,
-#             'passport': passport
-#         })
-#     def post(self, request, passport_id):
-#         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-#             form = SizeQuantityForm(request.POST)
-#             if form.is_valid():
-#                 new_size_quantity = form.save(commit=False)
-#                 new_size_quantity.save()
-#                 passport = get_object_or_404(Passport, pk=passport_id)
-#                 passport.size_quantities.add(new_size_quantity)
-#                 size_quantities = passport.size_quantities.values('id', 'size', 'quantity')
-#                 return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
-#             else:
-#                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-#         return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
     
-# @login_required
-# @technologist_required
-# def edit_size_quantity(request, sq_id):
-#     size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
+@login_required
+@cutter_required
+@require_POST
+def edit_passport_size_quantity(request, sq_id):
+    try:
+        # Convert JSON data to Python dictionary
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity'))
+        
+        # Find the PassportSize instance
+        passport_size = PassportSize.objects.get(id=sq_id)
+        # Update the quantity
+        passport_size.quantity = quantity
+        passport_size.save()
 
-#     if request.method == 'POST':
-#         data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
-#         form = SizeQuantityForm(data, instance=size_quantity)
-#         if form.is_valid():
-#             form.save()
-#             return JsonResponse({'status': 'success'}, status=200)
+        # Return success response
+        return JsonResponse({'status': 'success', 'message': 'Quantity updated successfully'})
     
-#     return JsonResponse({'status': 'error'}, status=400)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'PassportSize not found'}, status=404)
+    
+    except Exception as e:
+        # Handle unexpected errors
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-# @login_required
-# @technologist_required
-# def delete_size_quantity(request, sq_id):
-#     if request.method == 'POST':
-#         size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
-#         size_quantity.delete()
-#         return JsonResponse({'status': 'success'}, status=200)
-#     return JsonResponse({'status': 'error'}, status=400)
+@login_required
+@cutter_required
+@require_POST
+def delete_passport_size_quantity(request, sq_id):
+    passport_size = get_object_or_404(PassportSize, id=sq_id)
+    passport_size.delete()
+    return JsonResponse({'status': 'success'}, status=200)
 
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportDetailView(DetailView):

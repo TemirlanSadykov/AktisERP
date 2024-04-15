@@ -125,7 +125,7 @@ class SizeQuantityChoiceField(ModelChoiceField):
         return obj.size
 
 class PassportSizeForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label=None)
+    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------") 
 
     class Meta:
         model = PassportSize
