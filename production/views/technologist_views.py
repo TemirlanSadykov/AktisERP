@@ -182,7 +182,8 @@ def update_work_success(request):
 @require_POST 
 def complete_passport(request, passport_id):
     passport = get_object_or_404(Passport, id=passport_id)
-    total_completed = passport.size_quantities.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total_completed = PassportSize.objects.filter(passport=passport).aggregate(total=Sum('quantity'))['total'] or 0
+    print(total_completed)
     order = passport.order
 
     if not passport.is_completed:
@@ -201,7 +202,7 @@ def complete_passport(request, passport_id):
         order.status = Order.IN_PROGRESS
     order.save()
 
-    return redirect('passport_detail', pk=passport.id)
+    return redirect('order_detail_technologist', pk=passport.order.pk)
 
 @login_required
 @technologist_required
