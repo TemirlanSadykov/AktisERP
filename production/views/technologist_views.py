@@ -125,6 +125,7 @@ def assign_operations(request, passport_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+    passport_rolls = PassportRoll.objects.filter(passport=passport)
     work_by_op_and_size = {}
     for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
         # Key as a tuple of operation_id and passport_size_id
@@ -136,6 +137,7 @@ def assign_operations(request, passport_id):
 
     return render(request, 'technologist/passports/assign_operations.html', {
         'passport': passport,
+        'passport_rolls': passport_rolls,
         'operations': operations,
         'size_quantities': size_quantities,
         'work_by_op_and_size': work_by_op_and_size

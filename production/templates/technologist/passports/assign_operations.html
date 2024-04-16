@@ -3,7 +3,19 @@
 {% load custom_filters %}
 {% block content %}
 <div class="assign-operations-container">
-  <h2 class="list-heading">{% trans "Assign Operations for Passport" %}</h2>
+  <h2 class="list-heading">{% trans "Assign Operations for Passport" %} №{{ passport.id }}</h2>
+  <div class="passport-details">
+    <p>
+      <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
+      <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
+      <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
+      <strong>{% trans "Roll:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.name }}{% endfor %},
+      <strong>{% trans "Usage:" %}</strong> {% for pr in passport_rolls %} {{ pr.meters }}м{% endfor %},
+      <strong>{% trans "Color:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.color }}{% endfor %},
+      <strong>{% trans "Fabrics:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.fabrics }}{% endfor %},
+      <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
+    </p>
+  </div>
   <form id="operationAssignmentForm" class="operation-form">
     {% csrf_token %}
     <table class="table">
@@ -48,7 +60,11 @@
   <div class="form-actions">
     <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
       {% csrf_token %}
-      <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
+      {% if passport.is_completed %}
+        <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">{% trans "Reopen" %}</button>
+      {% else %}
+        <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
+      {% endif %}
     </form>
     <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
