@@ -416,7 +416,7 @@ class OrderDetailView(DetailView):
         context = super(OrderDetailView, self).get_context_data(**kwargs)
         order = context['order']
         context['passports'] = order.passports.all()
-        context['size_quantities'] = order.size_quantities.all()
+        context['size_quantities'] = order.size_quantities.all().order_by('size')
         context['size_quantity_form'] = SizeQuantityForm()
         today = timezone.localdate()
         if order.term >= today:

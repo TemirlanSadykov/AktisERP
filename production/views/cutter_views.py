@@ -74,7 +74,7 @@ class OrderDetailCutterView(DetailView):
                 total_per_size[size] += passport_size.quantity
 
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all()}
+                            for sq in order.size_quantities.all().order_by('size')}
 
         # Adjusting for sizes in passports not in order sizes
         for size in total_per_size:
@@ -196,7 +196,7 @@ class PassportSizeCreateView(CreateView):
         passport_id = self.kwargs.get('passport_id')
         passport = get_object_or_404(Passport, pk=passport_id)
         context['passport'] = passport
-        context['passport_sizes'] = PassportSize.objects.filter(passport=passport)
+        context['passport_sizes'] = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
         return context
 
     def get_form_kwargs(self):
@@ -258,7 +258,7 @@ class PassportDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         passport = context['passport']
-        context['passport_sizes'] = passport.passport_sizes.all()
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
         context['passport_rolls'] = passport.passport_rolls.all()
         return context
 
