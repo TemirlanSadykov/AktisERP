@@ -20,7 +20,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
-from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch
+from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch, PassportSize, PassportRoll
 from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm, SizeQuantityForm
 from ..mixins import *
 from datetime import datetime
@@ -149,17 +149,22 @@ class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
 def passport_detail_admin(request, pk):
     passport = get_object_or_404(Passport, pk=pk)
     operations = passport.order.model.operations.all() 
-    size_quantities = passport.size_quantities.all()
+    size_quantities = PassportSize.objects.filter(passport=passport)
+    passport_rolls = PassportRoll.objects.filter(passport=passport)
+
     work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__size_quantity'):
-        key = (assigned_work.work.operation_id, assigned_work.work.size_quantity_id)
+    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+        # Key as a tuple of operation_id and passport_size_id
+        key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
         if key not in work_by_op_and_size:
             work_by_op_and_size[key] = [assigned_work]
         else:
             work_by_op_and_size[key].append(assigned_work)
+
     return render(request, 'admin/passports/detail.html', {
-        'passport': passport, 
-        'operations': operations, 
+        'passport': passport,
+        'passport_rolls': passport_rolls,
+        'operations': operations,
         'size_quantities': size_quantities,
         'work_by_op_and_size': work_by_op_and_size
     })
