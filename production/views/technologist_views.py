@@ -364,7 +364,7 @@ class RollListView(RestrictBranchMixin, ListView):
     context_object_name = 'rolls'
     paginate_by = 10
     def get_queryset(self):
-        return Roll.objects.all().order_by('name')
+        return super().get_queryset().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollCreateView(AssignBranchMixin, CreateView):
@@ -401,7 +401,7 @@ class AssortmentListView(RestrictBranchMixin, ListView):
     context_object_name = 'assortments'
     paginate_by = 10
     def get_queryset(self):
-        return Assortment.objects.all().order_by('name')
+        return super().get_queryset().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentCreateView(AssignBranchMixin, CreateView):
