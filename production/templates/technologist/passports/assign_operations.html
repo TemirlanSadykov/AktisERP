@@ -136,11 +136,17 @@
         input.focus();
   
         const revertToSpan = (value) => {
+          const parent = input.parentNode;
           const newSpan = document.createElement('span');
-          newSpan.textContent = value || originalText;
+          newSpan.textContent = value || '';
           newSpan.className = 'editable';
           newSpan.setAttribute('data-work', span.getAttribute('data-work'));
-          input.parentNode.replaceChild(newSpan, input);
+      
+          if (parent) { 
+              parent.replaceChild(newSpan, input);
+          } else {
+              console.error('Failed to find parent element for replacement');
+          }
         };
   
         input.addEventListener('blur', () => revertToSpan(input.value));
@@ -288,12 +294,11 @@
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
   
-    const [newEmployeeId, quantity] = newValue.split('(');
     const data = {
       work_id: workId,
-      new_employee_id: newEmployeeId.trim(),
-      quantity: parseInt(quantity.trim(' )'))
+      value: newValue
     };
+
     xhr.onload = function() {
       if (xhr.status === 200) {
         const response = JSON.parse(xhr.responseText);

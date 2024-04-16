@@ -148,19 +148,47 @@ def assign_operations(request, passport_id):
 def update_work(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        work_id = data.get('work_id')
-        new_employee_id = data.get('new_employee_id')
-        quantity = data.get('quantity')
+        assigned_work_id = data.get('work_id')
+        value = data.get('value')
 
-        new_employee_profile, created = UserProfile.objects.get_or_create(employee_id=new_employee_id, branch=request.user.userprofile.branch)
+        try:
+            current_assignment = AssignedWork.objects.get(id=assigned_work_id)
+            work = Work.objects.get(id=current_assignment.work.id)
+            if not value.strip():
+                current_assignment.delete()
+                remaining_assignments = AssignedWork.objects.filter(work=work).exists()
+                if not remaining_assignments:
+                    work.delete()
+                return JsonResponse({'status': 'success'})
 
-        assigned_work, created = AssignedWork.objects.get_or_create(id=work_id)
+            new_assignments_data = value.split(',')
+            new_assignments = {}
 
-        assigned_work.employee = new_employee_profile
-        assigned_work.quantity = quantity
-        assigned_work.save()
+            for item in new_assignments_data:
+                employee_id, quantity = item.split('(')
+                employee_id = employee_id.strip()
+                quantity = int(quantity.strip(' )'))
+                new_assignments[employee_id] = quantity
 
-        return JsonResponse({'status': 'success'})
+            for employee_id, quantity in new_assignments.items():
+                employee_profile = UserProfile.objects.filter(
+                    employee_id=employee_id, type=UserProfile.EMPLOYEE,
+                    branch=request.user.userprofile.branch).first()
+
+                if not employee_profile:
+                    continue
+
+                assigned_work, created = AssignedWork.objects.update_or_create(
+                    work=work, employee=employee_profile,
+                    defaults={'quantity': quantity}
+                )
+
+            return JsonResponse({'status': 'success'})
+
+        except Work.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Work not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'error'}, status=400)
 
