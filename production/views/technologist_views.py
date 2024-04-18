@@ -26,14 +26,14 @@ def technologist_page(request):
     return render(request, 'technologist_page.html')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class OrderListTechnologistView(RestrictBranchMixin, ListView):
+class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
     model = Order
     template_name = 'technologist/orders/list.html'
     context_object_name = 'orders'
     paginate_by = 10
 
     def get_queryset(self):
-        return super().get_queryset().order_by('term')
+        return super().get_queryset().order_by('client_order__term')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -41,7 +41,7 @@ class OrderListTechnologistView(RestrictBranchMixin, ListView):
         orders_with_days_left = []
 
         for order in context['orders']:
-            days_left = (order.term - today).days
+            days_left = (order.client_order.term - today).days
             orders_with_days_left.append({
                 'order': order,
                 'days_left': days_left
@@ -64,8 +64,8 @@ class OrderDetailTechnologistView(DetailView):
         context['passports'] = order.passports.all()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
-        if order.term >= today:
-            days_left = (order.term - today).days
+        if order.client_order.term >= today:
+            days_left = (order.client_order.term - today).days
         else:
             days_left = 0  
         context['days_left'] = days_left
@@ -213,7 +213,6 @@ def update_work_success(request):
 def complete_passport(request, passport_id):
     passport = get_object_or_404(Passport, id=passport_id)
     total_completed = PassportSize.objects.filter(passport=passport).aggregate(total=Sum('quantity'))['total'] or 0
-    print(total_completed)
     order = passport.order
 
     if not passport.is_completed:

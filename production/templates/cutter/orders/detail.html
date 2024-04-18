@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="order-detail-cutter-container">
-  <h2 class="form-heading">{% trans "Order Details:" %} {{ order.order_number }}</h2>
+  <h2 class="form-heading">{% trans "Order Details:" %} {{ order.client_order.order_number }} - {{ order.name }}</h2>
 
   <div class="details">
     <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
@@ -14,7 +14,7 @@
     <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
     <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
     <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
-    <p><strong>{% trans "Term:" %}</strong> {{ order.term|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
   </div>
 

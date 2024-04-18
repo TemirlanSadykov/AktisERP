@@ -27,14 +27,14 @@ def cutter_page(request):
     return render(request, 'cutter_page.html')
 
 @method_decorator([login_required, cutter_required], name='dispatch')
-class OrderListCutterView(RestrictBranchMixin, ListView):
+class OrderListCutterView(RestrictOrderBranchMixin, ListView):
     model = Order
     template_name = 'cutter/orders/list.html'
     context_object_name = 'orders'
     paginate_by = 10
 
     def get_queryset(self):
-        return super().get_queryset().order_by('term')
+        return super().get_queryset().order_by('client_order__term')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -42,7 +42,7 @@ class OrderListCutterView(RestrictBranchMixin, ListView):
         orders_with_days_left = []
 
         for order in context['orders']:
-            days_left = (order.term - today).days
+            days_left = (order.client_order.term - today).days
             orders_with_days_left.append({
                 'order': order,
                 'days_left': days_left
@@ -86,7 +86,7 @@ class OrderDetailCutterView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
-            'days_left': (order.term - timezone.now().date()).days if order.term >= timezone.now().date() else 0
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
         })
 
         return context

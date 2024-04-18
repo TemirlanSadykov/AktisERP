@@ -21,3 +21,8 @@ class RestrictBranchMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(branch=self.request.user.userprofile.branch)
+    
+class RestrictOrderBranchMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(client_order__branch=self.request.user.userprofile.branch)

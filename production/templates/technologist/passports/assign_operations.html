@@ -66,7 +66,7 @@
         <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
       {% endif %}
     </form>
-    <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'order_detail_technologist' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>
 <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">

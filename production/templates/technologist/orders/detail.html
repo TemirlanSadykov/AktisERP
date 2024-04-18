@@ -14,7 +14,7 @@
 
   <div class="details">
     <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
-    <p><strong>{% trans "Client:" %}</strong> {{ order.client.name }}</p>
+    <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
     <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
     <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
     <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
@@ -22,7 +22,7 @@
     <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
     <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
     <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
-    <p><strong>{% trans "Term:" %}</strong> {{ order.term|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
   </div>
 
