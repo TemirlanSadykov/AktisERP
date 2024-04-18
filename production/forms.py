@@ -216,3 +216,16 @@ class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment
         fields = ['name']
+
+class DefectForm(forms.ModelForm):
+    class Meta:
+        model = Defects
+        fields = ['size_quantity', 'quantity', 'defect_type', 'severity']
+    
+    def __init__(self, *args, **kwargs):
+        order_pk = kwargs.pop('order_pk', None)
+        super().__init__(*args, **kwargs)
+        
+        if order_pk:
+            order = Order.objects.get(pk=order_pk)
+            self.fields['size_quantity'].queryset = order.size_quantities.all()

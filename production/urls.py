@@ -120,6 +120,12 @@ urlpatterns = [
     path('cutter/orders/passport/<int:sq_id>/delete_size_quantity/', delete_passport_size_quantity, name='delete_passport_size_quantity'),
     path('cutter/orders/passport/<int:pr_id>/edit_passport_roll/', edit_passport_roll, name='edit_passport_roll'),
     path('cutter/orders/passport/<int:pr_id>/delete_passport_roll/', delete_passport_roll, name='delete_passport_roll'),
-    # path('cutter/orders/passport/edit-size-quantity/<int:sq_id>/', edit_size_quantity_passport, name='edit_size_quantity_passport'),
-    # path('cutter/orders/passport/delete-size-quantity/<int:sq_id>/', delete_size_quantity_passport, name='delete_size_quantity_passport'),
+
+    path('qc/orders/', OrderListQcView.as_view(), name='order_list_qc'),
+    path('qc/orders/<int:pk>/', OrderDetailQcView.as_view(), name='order_detail_qc'),
+    path('qc/orders/<int:order_pk>/defects/create/', DefectCreateView.as_view(), name='defect_create'),
+    path('qc/orders/<int:order_pk>/defects/<int:pk>/', DefectDetailView.as_view(), name='defect_detail'),
+    path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
+    path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
+
 ]

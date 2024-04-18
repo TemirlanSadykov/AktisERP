@@ -2,8 +2,8 @@
 {% load i18n %}
 {% block content %}
 <div class="dashboard-container">
-  <h1>{% trans 'Technologist Dashboard' %}</h1>
-  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a Technologist." %}</p>
+  <h1>{% trans 'QC Dashboard' %}</h1>
+  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a QC." %}</p>
 
   <div class="row">
     {% if request.user.userprofile.type != 0 %}
@@ -27,11 +27,7 @@
         <div class="card-body">
           <h5 class="card-title">{% trans 'Resources' %}</h5>
           {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-            <a href="{% url 'order_list_technologist' %}" class="btn btn-info">{% trans 'Orders' %}</a>
-            <a href="{% url 'operation_list' %}" class="btn btn-info">{% trans 'Operations' %}</a>
-            <a href="{% url 'roll_list' %}" class="btn btn-info">{% trans 'Rolls' %}</a>
-            <a href="{% url 'assortment_list' %}" class="btn btn-info">{% trans 'Assortments' %}</a>
-            <a href="{% url 'model_list' %}" class="btn btn-info">{% trans 'Models' %}</a>
+            <a href="{% url 'order_list_qc' %}" class="btn btn-info">{% trans 'Orders' %}</a>
           {% else %}
             <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
           {% endif %}

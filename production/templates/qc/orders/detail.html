@@ -6,12 +6,6 @@
 <div class="content-container">
   <h2 class="form-heading">{% trans "Order Details:" %} {{ order.client_order.order_number }} - {{ order.name }}</h2>
 
-  <div class="progress" style="margin-bottom: 20px;">
-    <div class="progress-bar" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"0" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
-      {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
-    </div>
-  </div>
-
   <div class="details">
     <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
     <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
@@ -27,7 +21,7 @@
   </div>
 
   <div class="form-actions">
-    <a href="{% url 'order_list_technologist' %}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'order_list_qc' %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
   <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
@@ -52,19 +46,22 @@
     </tbody>
   </table>
 
-  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Passports" %}</h3>
-  <div class="passports-list">
-    {% if passports %}
-      {% for passport in passports %}
-        <p class="passport-item" style="color: {{ passport.is_completed|yesno:'green,red' }};">
-          <a href="{% url 'assign_operations' passport.pk %}" class="passport-link">
-            {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Defects" %}</h3>
+  <div class="defects-list">
+    {% if defects %}
+      {% for defect in defects %}
+        <p class="defect-item">
+          <a href="{% url 'defect_detail' order_pk=order.pk pk=defect.pk %}" class="defect-link">
+            {% trans "Defect ID:" %} {{ defect.pk }}
           </a>
         </p>
       {% endfor %}
     {% else %}
-      <p>{% trans "No associated passports." %}</p>
+      <p>{% trans "No associated defects." %}</p>
     {% endif %}
+    <div class="create-defect-form" style="margin-top: 20px;">
+      <a href="{% url 'defect_create' order.pk %}" class="btn btn-primary">{% trans 'Add Defect' %}</a>
+    </div>
   </div>
 </div>
 {% endblock %}
