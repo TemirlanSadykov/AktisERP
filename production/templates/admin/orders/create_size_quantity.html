@@ -34,7 +34,7 @@
   </ul>
 
   <div class="form-actions">
-    <a href="{% url 'order_detail' order.id %}" class="btn create-btn">{% trans "Finish" %}</a>
+    <a href="{% url 'client_order_detail' order.client_order.pk %}" class="btn create-btn">{% trans "Finish" %}</a>
   </div>
 </div>
 

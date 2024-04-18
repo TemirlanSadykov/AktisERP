@@ -2,26 +2,19 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
-from ..decorators import admin_required
-from ..models import UserProfile
-from ..forms import UserWithProfileForm
 from django.urls import reverse_lazy
 from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from ..decorators import employee_required
-from ..forms import UserEditForm
-from ..models import UserProfile
 from django.contrib import messages
-from ..models import Passport, Work, Operation, SizeQuantity
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from ..decorators import admin_required
-from ..models import EmployeeAttendance, Order, AssignedWork, Client, ReassignedWork, Branch, PassportSize, PassportRoll
-from ..forms import DateForm, DateRangeForm, OrderForm, ClientForm, BranchForm, SizeQuantityForm
+from ..models import *
+from ..forms import *
 from ..mixins import *
 from datetime import datetime
 import pandas as pd
@@ -31,6 +24,7 @@ from django.http import JsonResponse
 import json
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from django.http import Http404
 
 @login_required
 @admin_required
@@ -364,10 +358,13 @@ def attendance_list(request):
 
 
 
+
+
+
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderListView(RestrictBranchMixin, ListView):
-    model = Order
-    template_name = 'admin/orders/list.html'
+class ClientOrderListView(RestrictBranchMixin, ListView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/list.html'
     context_object_name = 'orders'
     paginate_by = 10
 
@@ -390,6 +387,56 @@ class OrderListView(RestrictBranchMixin, ListView):
 
         context['orders_with_days_left'] = orders_with_days_left_sorted
         return context
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderCreateView(CreateView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'admin/client/orders/create.html'
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.branch = self.request.user.userprofile.branch
+        self.object.save()
+        form.save_m2m()
+        redirect_url = reverse('client_order_list')
+        return HttpResponseRedirect(redirect_url)
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderDetailView(DetailView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'admin/client/orders/detail.html'
+    context_object_name = 'client_order'
+
+    def get_context_data(self, **kwargs):
+        context = super(ClientOrderDetailView, self).get_context_data(**kwargs)
+        client_order = context['client_order']
+        context['orders'] = client_order.orders.all()
+        today = timezone.localdate()
+        if client_order.term >= today:
+            days_left = (client_order.term - today).days
+        else:
+            days_left = 0
+        context['days_left'] = days_left
+        return context
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderUpdateView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'admin/client/orders/edit.html'
+    success_url = reverse_lazy('client_order_list')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+
+
+
+
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderCreateView(CreateView):
@@ -399,7 +446,7 @@ class OrderCreateView(CreateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        self.object.branch = self.request.user.userprofile.branch
+        self.object.client_order = get_object_or_404(ClientOrder, pk=self.kwargs['client_order_pk'])
         self.object.save()
         form.save_m2m()
         redirect_url = reverse('create_size_quantity', kwargs={'order_id': self.object.id})
@@ -419,25 +466,25 @@ class OrderDetailView(DetailView):
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         context['size_quantity_form'] = SizeQuantityForm()
         today = timezone.localdate()
-        if order.term >= today:
-            days_left = (order.term - today).days
+        if order.client_order.term >= today:
+            days_left = (order.client_order.term - today).days
         else:
             days_left = 0
         context['days_left'] = days_left
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderUpdateView(RestrictBranchMixin, UpdateView):
+class OrderUpdateView(UpdateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/edit.html'
-    success_url = reverse_lazy('order_list')
+    success_url = reverse_lazy('client_order_list')
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class OrderDeleteView(RestrictBranchMixin, DeleteView):
+class OrderDeleteView(DeleteView):
     model = Order
     template_name = 'admin/orders/delete.html'
-    success_url = reverse_lazy('order_list')
+    success_url = reverse_lazy('client_order_list')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class SizeQuantityCreateView(View):

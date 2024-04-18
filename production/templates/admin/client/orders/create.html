@@ -2,14 +2,14 @@
 {% load i18n %}
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Create New Order" %}</h2>
+  <h2 class="form-heading">{% trans "Create New Client Order" %}</h2>
   <form method="post" class="crud-form">
     {% csrf_token %}
     <div class="form-group">
       {{ form.as_p }}
     </div>
     <div class="form-actions">
-      <button type="submit" class="btn create-btn">{% trans "Save" %}</button>
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
       <a href="{% url 'client_order_list' %}" class="btn back-btn">{% trans "Back" %}</a>
     </div>
   </form>

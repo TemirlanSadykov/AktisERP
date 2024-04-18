@@ -86,11 +86,21 @@ class Roll(models.Model):
     def available_meters(self):
         return self.meters - self.used_meters
 
+class Equipment(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return self.name
+    
+class Node(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    def __str__(self):
+        return self.name
+    
 class Operation(models.Model):
     name = models.CharField(max_length=100)
     payment = models.DecimalField(max_digits=10, decimal_places=2)
-    equipment = models.CharField(max_length=100)
-    type = models.CharField(max_length=100)
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations')
+    node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations')
     preferred_completion_time = models.IntegerField()
     average_completion_time = models.IntegerField(null=True)
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True)
@@ -109,12 +119,20 @@ class SizeQuantity(models.Model):
     def __str__(self):
         return f"Size: {self.size}, Quantity: {self.quantity}"
 
-class Order(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
+class ClientOrder(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True)
     objects = BranchAwareManager()
-    name = models.CharField(max_length=100)
     order_number = models.CharField(max_length=100)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='orders')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders')
+    def default_term():
+        return timezone.now() + datetime.timedelta(days=30)
+    term = models.DateField(default=default_term)
+    def __str__(self):
+        return self.order_number
+
+class Order(models.Model):
+    client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders')
+    name = models.CharField(max_length=100)
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders')
     color = models.CharField(max_length=50, null=True)
@@ -133,10 +151,9 @@ class Order(models.Model):
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
-    term = models.DateField(default=default_term)
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders')
     def __str__(self):
-        return f"Order {self.order_number} for {self.client.name}"
+        return f"{self.name} - {self.model}"
     
 class Passport(models.Model):
     date = models.DateField(auto_now_add=True)
@@ -145,7 +162,7 @@ class Passport(models.Model):
     rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports')
     is_completed = models.BooleanField(default=False, verbose_name="Passport Completed")
     def __str__(self):
-        return self.order.order_number
+        return self.order.name
     
 class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes')
@@ -159,7 +176,7 @@ class PassportRoll(models.Model):
     roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls')
     meters = models.DecimalField(max_digits=10, decimal_places=2)
     def __str__(self):
-        return f"{self.meters} meters of {self.roll.name} for {self.passport.order.order_number}"
+        return f"{self.meters} meters of {self.roll.name}"
 
 class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork')
@@ -188,3 +205,30 @@ class ReassignedWork(models.Model):
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
     def __str__(self):
         return f"Reassigned {self.reassigned_quantity} of {self.original_assigned_work} to {self.new_employee}"
+    
+class Defects(models.Model):
+    class DefectType(models.TextChoices):
+        STITCHING = 'STITCHING', 'Stitching Error'
+        CUTTING = 'CUTTING', 'Cutting Error'
+        FABRIC = 'FABRIC', 'Fabric Defect'
+        ASSEMBLY = 'ASSEMBLY', 'Assembly Error'
+        OTHER = 'OTHER', 'Other Error'
+    
+    class Severity(models.TextChoices):
+        MINOR = 'MINOR', 'Minor'
+        MAJOR = 'MAJOR', 'Major'
+        CRITICAL = 'CRITICAL', 'Critical'
+    
+    class Status(models.TextChoices):
+        REPORTED = 'REPORTED', 'Reported'
+        UNDER_REVIEW = 'UNDER_REVIEW', 'Under Review'
+        RESOLVED = 'RESOLVED', 'Resolved'
+    
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='defects')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='defects')
+    quantity = models.IntegerField()
+    defect_type = models.CharField(max_length=20, choices=DefectType.choices)
+    severity = models.CharField(max_length=20, choices=Severity.choices, default=Severity.MINOR)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
+    reported_date = models.DateTimeField(default=timezone.now)
+    resolved_date = models.DateTimeField(null=True, blank=True)

@@ -143,9 +143,17 @@ class PassportSizeForm(forms.ModelForm):
             self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
 
 class OperationForm(forms.ModelForm):
+    equipment = forms.ModelMultipleChoiceField(
+        queryset=Equipment.objects.all(),
+        widget=forms.CheckboxSelectMultiple, 
+    )
+    node = forms.ModelMultipleChoiceField(
+        queryset=Node.objects.all(),
+        widget=forms.CheckboxSelectMultiple, 
+    )
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'type', 'preferred_completion_time', 'photo']
+        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo']
 
 class RollForm(forms.ModelForm):
     class Meta:
@@ -172,18 +180,24 @@ class ClientForm(forms.ModelForm):
         model = Client
         fields = ['name', 'contact_info']
 
+class ClientOrderForm(forms.ModelForm):
+    class Meta:
+        model = ClientOrder
+        fields = ['order_number', 'client', 'term']
+        widgets = {
+            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}), 
+        }
+
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['name', 'order_number', 'client', 'model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment', 'term']
+        fields = ['name', 'model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES), 
         }
 
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
-        self.fields['client'].queryset = Client.objects.all()
         self.fields['model'].queryset = Model.objects.all()
         self.fields['assortment'].queryset = Assortment.objects.all()
 
