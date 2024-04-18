@@ -28,10 +28,12 @@
           <h5 class="card-title">{% trans 'Resources' %}</h5>
           {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
             <a href="{% url 'order_list_technologist' %}" class="btn btn-info">{% trans 'Orders' %}</a>
-            <a href="{% url 'operation_list' %}" class="btn btn-info">{% trans 'Operations' %}</a>
             <a href="{% url 'roll_list' %}" class="btn btn-info">{% trans 'Rolls' %}</a>
             <a href="{% url 'assortment_list' %}" class="btn btn-info">{% trans 'Assortments' %}</a>
             <a href="{% url 'model_list' %}" class="btn btn-info">{% trans 'Models' %}</a>
+            <a href="{% url 'operation_list' %}" class="btn btn-info">{% trans 'Operations' %}</a>
+            <a href="{% url 'node_list' %}" class="btn btn-info">{% trans 'Nodes' %}</a>
+            <a href="{% url 'equipment_list' %}" class="btn btn-info">{% trans 'Equipment' %}</a>
           {% else %}
             <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
           {% endif %}

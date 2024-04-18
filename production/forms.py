@@ -143,14 +143,6 @@ class PassportSizeForm(forms.ModelForm):
             self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
 
 class OperationForm(forms.ModelForm):
-    equipment = forms.ModelMultipleChoiceField(
-        queryset=Equipment.objects.all(),
-        widget=forms.CheckboxSelectMultiple, 
-    )
-    node = forms.ModelMultipleChoiceField(
-        queryset=Node.objects.all(),
-        widget=forms.CheckboxSelectMultiple, 
-    )
     class Meta:
         model = Operation
         fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo']
@@ -214,3 +206,13 @@ class OrderFormTechnologist(forms.ModelForm):
         super(OrderFormTechnologist, self).__init__(*args, **kwargs)
         self.fields['model'].queryset = Model.objects.all()
         self.fields['assortment'].queryset = Assortment.objects.all()
+
+class NodeForm(forms.ModelForm):
+    class Meta:
+        model = Node
+        fields = ['name']
+
+class EquipmentForm(forms.ModelForm):
+    class Meta:
+        model = Equipment
+        fields = ['name']

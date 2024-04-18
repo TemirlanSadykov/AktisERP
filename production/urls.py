@@ -91,6 +91,18 @@ urlpatterns = [
     path('technologist/models/<int:pk>/edit/', ModelUpdateView.as_view(), name='model_edit'),
     path('technologist/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
 
+    path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
+    path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),
+    path('technologist/nodes/<int:pk>/', NodeDetailView.as_view(), name='node_detail'),
+    path('technologist/nodes/<int:pk>/edit/', NodeUpdateView.as_view(), name='node_edit'),
+    path('technologist/nodes/<int:pk>/delete/', NodeDeleteView.as_view(), name='node_delete'),
+
+    path('technologist/equipment/', EquipmentListView.as_view(), name='equipment_list'),
+    path('technologist/equipment/create/', EquipmentCreateView.as_view(), name='equipment_create'),
+    path('technologist/equipment/<int:pk>/', EquipmentDetailView.as_view(), name='equipment_detail'),
+    path('technologist/equipment/<int:pk>/edit/', EquipmentUpdateView.as_view(), name='equipment_edit'),
+    path('technologist/equipment/<int:pk>/delete/', EquipmentDeleteView.as_view(), name='equipment_delete'),
+
     path('employee/works/done/', done_works_list, name='done_works_list'),
     path('employee/works/pending/', pending_works_list, name='pending_works_list'),
     path('employee/works/reassigned/', reassigned_works_list, name='reassigned_works_list'),

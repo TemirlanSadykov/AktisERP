@@ -4,16 +4,13 @@
 {% block content %}
 <div class="content-container">
   <div class="header">
-    <h2 class="list-heading">{% trans "Operations" %}</h2>
-    <p class="create-link"><a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a></p>
+    <h2 class="list-heading">{% trans "Equipment" %}</h2>
+    <p class="create-link"><a href="{% url 'equipment_create' %}" class="btn create-btn">{% trans "Create New Equipment" %}</a></p>
   </div>
-
   <ul class="list-group">
-    {% for operation in operations %}
+    {% for equipment in equipment %}
       <li class="list-group-item">
-        <a href="{% url 'operation_detail' operation.pk %}">
-          {{ operation.node }} - {{ operation.equipment }} - {{ operation.name }}
-        </a>
+        <a href="{% url 'equipment_detail' equipment.pk %}">{{ equipment.name }}</a>
       </li>
     {% endfor %}
   </ul>

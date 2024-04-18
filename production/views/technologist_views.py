@@ -495,3 +495,79 @@ class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
     success_url = reverse_lazy('model_list')
+
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeListVIew(ListView):
+    model = Node
+    template_name = 'technologist/nodes/list.html'
+    context_object_name = 'nodes'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Node.objects.all().order_by('name')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeCreateView(CreateView):
+    model = Node
+    form_class = NodeForm
+    template_name = 'technologist/nodes/create.html'
+    success_url = reverse_lazy('node_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeDetailView(DetailView):
+    model = Node
+    template_name = 'technologist/nodes/detail.html'
+    context_object_name = 'node'
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeUpdateView(UpdateView):
+    model = Node
+    form_class = NodeForm
+    template_name = 'techniologist/nodes/edit.html'
+    success_url = reverse_lazy('node_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeDeleteView(DeleteView):
+    model = Node
+    template_name = 'technologist/nodes/delete.html'
+    success_url = reverse_lazy('node_list')
+
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentListView(ListView):
+    model = Equipment
+    template_name = 'technologist/equipment/list.html'
+    context_object_name = 'equipment'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Equipment.objects.all().order_by('name')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentCreateView(CreateView):
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = 'technologist/equipment/create.html'
+    success_url = reverse_lazy('equipment_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentDetailView(DetailView):
+    model = Equipment
+    template_name = 'technologist/equipment/detail.html'
+    context_object_name = 'equipment'
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentUpdateView(UpdateView):
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = 'technologist/equipment/edit.html'
+    success_url = reverse_lazy('equipment_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentDeleteView(DeleteView):
+    model = Equipment
+    template_name = 'technologist/equipment/delete.html'
+    success_url = reverse_lazy('equipment_list')
