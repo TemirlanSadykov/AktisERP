@@ -206,7 +206,7 @@ class ReassignedWork(models.Model):
     def __str__(self):
         return f"Reassigned {self.reassigned_quantity} of {self.original_assigned_work} to {self.new_employee}"
     
-class Defects(models.Model):
+class Defect(models.Model):
     class DefectType(models.TextChoices):
         STITCHING = 'STITCHING', 'Stitching Error'
         CUTTING = 'CUTTING', 'Cutting Error'
@@ -221,7 +221,7 @@ class Defects(models.Model):
     
     class Status(models.TextChoices):
         REPORTED = 'REPORTED', 'Reported'
-        UNDER_REVIEW = 'UNDER_REVIEW', 'Under Review'
+        UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
         RESOLVED = 'RESOLVED', 'Resolved'
     
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='defects')

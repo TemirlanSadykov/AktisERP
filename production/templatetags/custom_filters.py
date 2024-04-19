@@ -59,3 +59,12 @@ def subtract(required, produced):
 @register.filter(name='available_meters')
 def available_meters(roll):
     return roll.meters - roll.used_meters
+
+@register.filter(name='status_color')
+def status_color(value):
+    colors = {
+        'RESOLVED': 'green',
+        'REPORTED': 'red',
+        'UNRESOLVABLE': 'blue'
+    }
+    return colors.get(value, 'default_color')

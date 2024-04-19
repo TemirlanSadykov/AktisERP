@@ -62,6 +62,7 @@ class OrderDetailTechnologistView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
         context['passports'] = order.passports.all()
+        context['defects'] = Defect.objects.filter(order=order)
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
         if order.client_order.term >= today:
@@ -71,6 +72,52 @@ class OrderDetailTechnologistView(DetailView):
         context['days_left'] = days_left
 
         return context
+    
+@login_required
+@technologist_required
+def defect_detail(request, pk):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        defect = Defect.objects.filter(pk=pk).values(
+            'pk',
+            'size_quantity__size',
+            'quantity',
+            'defect_type',
+            'severity',
+            'status',
+            'reported_date',
+            'resolved_date',
+            'quantity'
+        ).first()
+        if defect:
+            defect['reported_date'] = defect['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
+            defect['resolved_date'] = defect['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if defect['resolved_date'] else None
+            return JsonResponse({'defect': defect}, status=200)
+        else:
+            return JsonResponse({'error': 'Defect not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    
+@login_required
+@technologist_required
+@require_POST
+def defect_update_status_technologist(request, pk):
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status')
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    if new_status not in [choice[0] for choice in Defect.Status.choices]:
+        return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
+
+    try:
+        defect = Defect.objects.get(pk=pk)
+        defect.status = new_status
+        defect.resolved_date = timezone.now() if new_status == Defect.Status.RESOLVED else None
+        defect.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Defect status updated successfully'})
+    except Defect.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Defect not found'}, status=404)
 
 @login_required
 @technologist_required

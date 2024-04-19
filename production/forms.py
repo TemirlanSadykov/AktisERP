@@ -219,7 +219,7 @@ class EquipmentForm(forms.ModelForm):
 
 class DefectForm(forms.ModelForm):
     class Meta:
-        model = Defects
+        model = Defect
         fields = ['size_quantity', 'quantity', 'defect_type', 'severity']
     
     def __init__(self, *args, **kwargs):

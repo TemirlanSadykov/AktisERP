@@ -50,7 +50,7 @@ class OrderDetailQcView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        context['defects'] = Defects.objects.filter(order=order)
+        context['defects'] = Defect.objects.filter(order=order)
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
         if order.client_order.term >= today:
@@ -63,7 +63,7 @@ class OrderDetailQcView(DetailView):
     
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectCreateView(CreateView):
-    model = Defects
+    model = Defect
     form_class = DefectForm
     template_name = 'qc/defects/create.html'
 
@@ -89,13 +89,13 @@ class DefectCreateView(CreateView):
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDetailView(DetailView):
-    model = Defects
+    model = Defect
     template_name = 'qc/defects/detail.html'
     context_object_name = 'defect'
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectUpdateView(UpdateView):
-    model = Defects
+    model = Defect
     form_class = DefectForm
     template_name = 'qc/defects/edit.html'
 
@@ -112,12 +112,12 @@ class DefectUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         defect_pk = self.kwargs['pk']
-        context['defect'] = get_object_or_404(Defects, pk=defect_pk)
+        context['defect'] = get_object_or_404(Defect, pk=defect_pk)
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDeleteView(DeleteView):
-    model = Defects
+    model = Defect
 
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']
