@@ -9,7 +9,7 @@
     {{ form.as_p }}
     <div class="form-actions">
       <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
-      <a href="{% url 'defect_detail' order_pk=defect.order.pk pk=defect.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+      <a href="{% url 'defect_detail' order_pk=defect.passport.order.pk pk=defect.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
     </div>
   </form>
 </div>

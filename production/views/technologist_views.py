@@ -75,7 +75,11 @@ class OrderDetailTechnologistView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
         context['passports'] = order.passports.all()
-        context['defects'] = Defect.objects.filter(order=order)
+        passport = Passport.objects.filter(order=order).first()
+        if passport:
+            context['defects'] = Defect.objects.filter(passport=passport)
+        else:
+            context['defects'] = Defect.objects.none()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
         if order.client_order.term >= today:
@@ -92,18 +96,28 @@ def defect_detail(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         defect = Defect.objects.filter(pk=pk).values(
             'pk',
+            'passport__id',
             'size_quantity__size',
+            'size_quantity__id', 
             'quantity',
             'defect_type',
             'severity',
             'status',
             'reported_date',
-            'resolved_date',
-            'quantity'
+            'resolved_date'
         ).first()
+
         if defect:
             defect['reported_date'] = defect['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
             defect['resolved_date'] = defect['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if defect['resolved_date'] else None
+
+            works = AssignedWork.objects.filter(
+                work__passport_id=defect['passport__id'],
+                work__passport_size__size_quantity_id=defect['size_quantity__id']
+            ).select_related('employee')
+            employee_ids = [work.employee.employee_id for work in works]
+            defect['responsible_employees'] = employee_ids
+            
             return JsonResponse({'defect': defect}, status=200)
         else:
             return JsonResponse({'error': 'Defect not found'}, status=404)

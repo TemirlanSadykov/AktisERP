@@ -233,7 +233,7 @@ class Defect(models.Model):
         UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
         RESOLVED = 'RESOLVED', 'Resolved'
     
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='defects')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='defects', null=True)
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='defects')
     quantity = models.IntegerField()
     defect_type = models.CharField(max_length=20, choices=DefectType.choices)

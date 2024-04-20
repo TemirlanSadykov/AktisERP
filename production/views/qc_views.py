@@ -50,7 +50,11 @@ class OrderDetailQcView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        context['defects'] = Defect.objects.filter(order=order)
+        passport = Passport.objects.filter(order=order).first()
+        if passport:
+            context['defects'] = Defect.objects.filter(passport=passport)
+        else:
+            context['defects'] = Defect.objects.none()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
         if order.client_order.term >= today:

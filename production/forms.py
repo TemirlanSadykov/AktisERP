@@ -218,15 +218,23 @@ class EquipmentForm(forms.ModelForm):
         model = Equipment
         fields = ['name']
 
+class SizeQuantityChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.size
+
 class DefectForm(forms.ModelForm):
+    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+
     class Meta:
         model = Defect
-        fields = ['size_quantity', 'quantity', 'defect_type', 'severity']
-    
+        fields = ['passport', 'size_quantity', 'quantity', 'defect_type', 'severity']
+
     def __init__(self, *args, **kwargs):
         order_pk = kwargs.pop('order_pk', None)
         super().__init__(*args, **kwargs)
-        
+
         if order_pk:
             order = Order.objects.get(pk=order_pk)
+            self.fields['passport'].queryset = Passport.objects.filter(order=order)
             self.fields['size_quantity'].queryset = order.size_quantities.all()
+        

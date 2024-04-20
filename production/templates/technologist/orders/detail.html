@@ -173,14 +173,17 @@
       .then(data => {
         if (data.defect) {
           const defectDetails = document.getElementById('defectDetails');
+          let employeeList = data.defect.responsible_employees.join(', ');
           defectDetails.innerHTML = 
-           `<p><strong>Size:</strong> ${data.defect.size_quantity__size}</p>
+           `<p><strong>Passport:</strong> ${data.defect.passport__id}</p>
+            <p><strong>Size:</strong> ${data.defect.size_quantity__size}</p>
             <p><strong>Quantity:</strong> ${data.defect.quantity}</p>
             <p><strong>Type:</strong> ${data.defect.defect_type}</p>
             <p><strong>Severity:</strong> ${data.defect.severity}</p>
             <p><strong>Status:</strong> ${data.defect.status}</p>
             <p><strong>Reported Date:</strong> ${data.defect.reported_date}</p>
-            <p><strong>Resolved Date:</strong> ${data.defect.resolved_date || 'N/A'}</p>`;
+            <p><strong>Resolved Date:</strong> ${data.defect.resolved_date || 'N/A'}</p>
+            <p><strong>Responsible Employees:</strong> ${employeeList}</p>`;
           showDefectPopup();
         } else {
           alert('No details found for this defect.');
