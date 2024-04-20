@@ -124,6 +124,15 @@ class ClientOrder(models.Model):
     objects = BranchAwareManager()
     order_number = models.CharField(max_length=100)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders')
+    NEW = 0
+    IN_PROGRESS = 1
+    COMPLETED = 2
+    TYPE_CHOICES = [
+        (NEW, 'New'),
+        (IN_PROGRESS, 'In Progress'),
+        (COMPLETED, 'Completed'),
+    ]
+    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW)
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
     term = models.DateField(default=default_term)

@@ -732,3 +732,37 @@ nav form button:hover {
     margin-left: 0;
     margin-bottom: 0;
 }
+
+/* Tabs container styling */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    padding-left: 0;
+}
+
+/* Tab links styling */
+.tabs a {
+    padding: 10px 20px;
+    margin: 0 5px;
+    text-decoration: none;
+    color: #333;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Active tab styling */
+.tabs a.active {
+    color: #fff;
+    background-color: #007BFF; /* Bootstrap primary blue, for example */
+    border-color: #007BFF;
+}
+
+/* Tab hover effect */
+.tabs a:hover {
+    background-color: #007BFF;
+    color: #fff;
+    border-color: #0056b3;
+}

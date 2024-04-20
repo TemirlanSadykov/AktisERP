@@ -369,7 +369,18 @@ class ClientOrderListView(RestrictBranchMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return super().get_queryset().order_by('term')
+        status = self.request.GET.get('status', None)
+        queryset = super().get_queryset().order_by('term')
+
+        if status:
+            try:
+                status = int(status)
+                if status in dict(self.model.TYPE_CHOICES):
+                    queryset = queryset.filter(status=status)
+            except ValueError:
+                pass
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -383,9 +394,9 @@ class ClientOrderListView(RestrictBranchMixin, ListView):
                 'days_left': days_left
             })
 
-        orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
-
-        context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['orders_with_days_left'] = sorted(orders_with_days_left, key=lambda x: x['days_left'])
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['ClientOrder'] = ClientOrder 
         return context
     
 @method_decorator([login_required, admin_required], name='dispatch')

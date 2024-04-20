@@ -3,6 +3,12 @@
 
 {% block content %}
 <div class="content-container">
+  <div class="tabs">
+    <a href="{% url 'client_order_list' %}" class="{% if not selected_status %}active{% endif %}">{% trans "All" %}</a>
+    <a href="?status={{ Order.NEW }}" class="{% if selected_status|stringformat:"s" == Order.NEW|stringformat:"s" %}active{% endif %}">{% trans "New" %}</a>
+    <a href="?status={{ Order.IN_PROGRESS }}" class="{% if selected_status|stringformat:"s" == Order.IN_PROGRESS|stringformat:"s" %}active{% endif %}">{% trans "In Progress" %}</a>
+    <a href="?status={{ Order.COMPLETED }}" class="{% if selected_status|stringformat:"s" == Order.COMPLETED|stringformat:"s" %}active{% endif %}">{% trans "Completed" %}</a>
+  </div>
   <div class="header">
     <h2 class="list-heading">{% trans "Orders" %}</h2>
   </div>

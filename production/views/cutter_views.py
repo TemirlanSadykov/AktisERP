@@ -34,7 +34,18 @@ class OrderListCutterView(RestrictOrderBranchMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return super().get_queryset().order_by('client_order__term')
+        status = self.request.GET.get('status', None)
+        queryset = super().get_queryset().order_by('client_order__term')
+
+        if status:
+            try:
+                status = int(status)
+                if status in dict(self.model.TYPE_CHOICES):
+                    queryset = queryset.filter(status=status)
+            except ValueError:
+                pass
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -51,6 +62,8 @@ class OrderListCutterView(RestrictOrderBranchMixin, ListView):
         orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
 
         context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['Order'] = Order
         return context
 
 @method_decorator([login_required, cutter_required], name='dispatch')
@@ -98,7 +111,16 @@ class PassportCreateView(View):
         form = PassportForm(data={'order': order.pk}) 
         if form.is_valid():
             passport = form.save()
+            order.status = Order.IN_PROGRESS
+            order.save()
+
+            client_order = order.client_order
+            if client_order.status != ClientOrder.COMPLETED: 
+                client_order.status = ClientOrder.IN_PROGRESS
+                client_order.save()
+
             return redirect('create_passport_roll', passport_id=passport.pk)
+
         return redirect('order_detail', pk=pk)
 
 @method_decorator([login_required, cutter_required], name='dispatch')
@@ -267,16 +289,37 @@ class PassportDetailView(DetailView):
 @require_POST
 def passport_delete(request, pk):
     passport = get_object_or_404(Passport, pk=pk)
+    order = passport.order
+    client_order = order.client_order
+
     with transaction.atomic():
+        if passport.is_completed:
+            total_quantity = PassportSize.objects.filter(passport=passport).aggregate(Sum('quantity'))['quantity__sum'] or 0
+
+            if order.completed_quantity is not None:
+                order.completed_quantity -= total_quantity
+                order.save()
+
         passport_rolls = PassportRoll.objects.filter(passport=passport)
         for passport_roll in passport_rolls:
             roll = passport_roll.roll
             if roll.used_meters is not None:
                 roll.used_meters -= passport_roll.meters
                 roll.save()
-        
+
         passport.delete()
         messages.success(request, 'Passport deleted successfully.')
-    
-    order_id = passport.order.id
-    return redirect(reverse('order_detail_cutter', args=[order_id]))
+
+        remaining_passports = Passport.objects.filter(order=order).exists()
+        if not remaining_passports:
+            order.status = Order.NEW
+            order.save()
+            messages.info(request, 'Order status set to NEW due to no remaining passports.')
+
+        other_in_progress_orders = Order.objects.filter(client_order=client_order, status=Order.IN_PROGRESS).exists()
+        if not other_in_progress_orders:
+            client_order.status = ClientOrder.NEW
+            client_order.save()
+            messages.info(request, 'ClientOrder status set to NEW as no other orders are IN PROGRESS.')
+
+    return redirect(reverse('order_detail_cutter', args=[order.id]))
