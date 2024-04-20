@@ -159,10 +159,11 @@ class AssortmentForm(forms.ModelForm):
 
 class ModelForm(forms.ModelForm):
     operations = forms.ModelMultipleChoiceField(
-        queryset=Operation.objects.all(),
-        widget=forms.CheckboxSelectMultiple, 
-        required=False 
+        queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
     )
+
     class Meta:
         model = Model
         fields = ['name', 'operations']

@@ -10,7 +10,7 @@
     <ul class="operations-list">
       {% for operation in model.operations.all %}
         <li class="operation-item">
-          {{ operation.name }}
+          {{ operation.node.name }} - {{ operation.name }}
         </li>
       {% endfor %}
     </ul>
