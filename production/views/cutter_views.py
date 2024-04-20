@@ -313,8 +313,6 @@ def passport_delete(request, pk):
         remaining_passports = Passport.objects.filter(order=order).exists()
         if not remaining_passports:
             order.status = Order.NEW
-            defects = Defect.objects.filter(order=order)
-            defects.delete()
             order.save()
             messages.info(request, 'Order status set to NEW due to no remaining passports.')
 
