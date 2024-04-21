@@ -27,14 +27,43 @@
         <div id="defectDetails" class="defect-details">
           <!-- Defect details will be dynamically inserted here -->
         </div>
-        <form id="statusForm">
+        <form id="defectStatusForm">
           <div class="form-actions">
             {% csrf_token %}
-            <input type="hidden" name="status" id="statusInput">
+            <input type="hidden" name="defectStatus" id="defectStatusInput">
             <input type="hidden" name="defectId" id="defectIdInput">  <!-- Hidden field to store defect ID -->
-            <button type="submit" onclick="updateStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
-            <button type="sumit" onclick="updateStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
+            <button type="submit" onclick="updateDefectStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
+            <button type="sumit" onclick="updateDefectStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
             <button type="button" onclick="closeDefectPopup()" class="btn create-btn">Close</button>
+          </div>
+        </form>
+      </div>  
+    </div>
+  {% endif %}
+
+  {% if discrepancies %}
+    <div class="discrepancies-list">
+      {% for discrepancy in discrepancies %}
+        <p class="discrepancy-item">
+          <a href="#" class="discrepancy-link" data-discrepancy-id="{{ discrepancy.pk }}" style="color: {{ discrepancy.status|status_color }};">
+            {% trans "Discrepancy ID:" %} {{ discrepancy.pk }}
+          </a>
+        </p>
+      {% endfor %}
+    </div>
+    <div id="discrepancyDetailsPopupOverlay" class="popup-overlay" style="display: none;">
+      <div id="discrepancyDetailsPopup" class="popup-content">
+        <div id="discrepancyDetails" class="discrepancy-details">
+          <!-- Discrepancy details will be dynamically inserted here -->
+        </div>
+        <form id="discrepancyStatusForm">
+          <div class="form-actions">
+            {% csrf_token %}
+            <input type="hidden" name="discrepancyStatus" id="discrepancyStatusInput">
+            <input type="hidden" name="discrepancyId" id="discrepancyIdInput">  <!-- Hidden field to store discrepancy ID -->
+            <button type="submit" onclick="updateDiscrepancyStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
+            <button type="sumit" onclick="updateDiscrepancyStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
+            <button type="button" onclick="closeDiscrepancyPopup()" class="btn create-btn">Close</button>
           </div>
         </form>
       </div>  
@@ -112,6 +141,21 @@
     }
     return cookieValue;
   }
+
+  function showDiscrepancyPopup() {
+    document.getElementById('discrepancyDetailsPopup').style.display = 'block';
+    document.getElementById('discrepancyDetailsPopupOverlay').style.display = 'flex';
+  }
+  
+  function closeDiscrepancyPopup() {
+    document.getElementById('discrepancyDetailsPopup').style.display = 'none';
+    document.getElementById('discrepancyDetailsPopupOverlay').style.display = 'none';
+  }
+
+  function updateDiscrepancyStatus(status) {
+    document.getElementById('discrepancyStatusInput').value = status;
+  }
+
   function showDefectPopup() {
     document.getElementById('defectDetailsPopup').style.display = 'block';
     document.getElementById('defectDetailsPopupOverlay').style.display = 'flex';
@@ -122,11 +166,75 @@
     document.getElementById('defectDetailsPopupOverlay').style.display = 'none';
   }
 
-  function updateStatus(status) {
-    document.getElementById('statusInput').value = status;
+  function updateDefectStatus(status) {
+    document.getElementById('defectStatusInput').value = status;
   }
   
   document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.discrepancy-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const discrepancyId = this.getAttribute('data-discrepancy-id');
+        document.getElementById('discrepancyIdInput').value = discrepancyId; // Store discrepancyId in hidden input
+        fetchDiscrepancyDetails(discrepancyId);
+      });
+    });
+  
+    document.getElementById('discrepancyStatusForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+  
+      const discrepancyId = document.getElementById('discrepancyIdInput').value;
+      const status = document.getElementById('discrepancyStatusInput').value;
+      const data = { status: status };
+  
+      const xhr = new XMLHttpRequest();
+      const url = `/production/technologist/orders/discrepancy/${discrepancyId}/update-status/`;
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+  
+      xhr.onload = function() {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+          alert(response.message);
+          closeDiscrepancyPopup();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+          alert(response.message);
+        }
+      };
+  
+      xhr.send(JSON.stringify(data));
+    });
+  
+    function fetchDiscrepancyDetails(discrepancyId) {
+      fetch(`/production/technologist/orders/discrepancy/${discrepancyId}/`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.discrepancy) {
+          const discrepancyDetails = document.getElementById('discrepancyDetails');
+          discrepancyDetails.innerHTML = 
+           `<p><strong>Passport:</strong> ${data.discrepancy.passport__id}</p>
+            <p><strong>Size:</strong> ${data.discrepancy.size_quantity__size}</p>
+            <p><strong>Quantity:</strong> ${data.discrepancy.quantity}</p>
+            <p><strong>Status:</strong> ${data.discrepancy.status}</p>
+            <p><strong>Reported Date:</strong> ${data.discrepancy.reported_date}</p>
+            <p><strong>Resolved Date:</strong> ${data.discrepancy.resolved_date || 'N/A'}</p>`;
+          showDiscrepancyPopup();
+        } else {
+          alert('No details found for this discrepancy.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching discrepancy details:', error);
+        alert('Error fetching discrepancy details.');
+      });
+    }
+
     document.querySelectorAll('.defect-link').forEach(link => {
       link.addEventListener('click', function(e) {
         e.preventDefault();
@@ -136,11 +244,11 @@
       });
     });
   
-    document.getElementById('statusForm').addEventListener('submit', function(event) {
+    document.getElementById('defectStatusForm').addEventListener('submit', function(event) {
       event.preventDefault();
   
       const defectId = document.getElementById('defectIdInput').value;
-      const status = document.getElementById('statusInput').value;
+      const status = document.getElementById('defectStatusInput').value;
       const data = { status: status };
   
       const xhr = new XMLHttpRequest();

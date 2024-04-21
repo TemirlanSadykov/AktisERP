@@ -78,8 +78,10 @@ class OrderDetailTechnologistView(DetailView):
         passport = Passport.objects.filter(order=order).first()
         if passport:
             context['defects'] = Defect.objects.filter(passport=passport)
+            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
         else:
             context['defects'] = Defect.objects.none()
+            context['discrepancies'] = Discrepancy.objects.none()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
         if order.client_order.term >= today:
@@ -145,6 +147,53 @@ def defect_update_status_technologist(request, pk):
         return JsonResponse({'status': 'success', 'message': 'Defect status updated successfully'})
     except Defect.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Defect not found'}, status=404)
+    
+@login_required
+@technologist_required
+def discrepancy_detail(request, pk):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        discrepancy = Discrepancy.objects.filter(pk=pk).values(
+            'pk',
+            'passport__id',
+            'size_quantity__size',
+            'quantity',
+            'status',
+            'reported_date',
+            'resolved_date'
+        ).first()
+
+        if discrepancy:
+            discrepancy['reported_date'] = discrepancy['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
+            discrepancy['resolved_date'] = discrepancy['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if discrepancy['resolved_date'] else None
+            
+            return JsonResponse({'discrepancy': discrepancy}, status=200)
+        else:
+            return JsonResponse({'error': 'Discrepancy not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    
+@login_required
+@technologist_required
+@require_POST
+def discrepancy_update_status_technologist(request, pk):
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status')
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    if new_status not in [choice[0] for choice in Discrepancy.Status.choices]:
+        return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
+
+    try:
+        discrepancy = Discrepancy.objects.get(pk=pk)
+        discrepancy.status = new_status
+        discrepancy.resolved_date = timezone.now() if new_status == Discrepancy.Status.RESOLVED else None
+        discrepancy.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Discrepancy status updated successfully'})
+    except Discrepancy.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Discrepancy not found'}, status=404)
+    
 
 @login_required
 @technologist_required
