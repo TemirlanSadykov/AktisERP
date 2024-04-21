@@ -20,6 +20,8 @@ def user_redirect(request):
         return redirect('cutter_page')
     elif user_profile.type == UserProfile.QC:
         return redirect('qc_page')
+    elif user_profile.type == UserProfile.PACKER:
+        return redirect('packer_page')
     else:
         return redirect('index')
 

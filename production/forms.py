@@ -237,4 +237,20 @@ class DefectForm(forms.ModelForm):
             order = Order.objects.get(pk=order_pk)
             self.fields['passport'].queryset = Passport.objects.filter(order=order)
             self.fields['size_quantity'].queryset = order.size_quantities.all()
+
+class DiscrepancyForm(forms.ModelForm):
+    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+
+    class Meta:
+        model = Discrepancy
+        fields = ['passport', 'size_quantity', 'quantity']
+
+    def __init__(self, *args, **kwargs):
+        order_pk = kwargs.pop('order_pk', None)
+        super().__init__(*args, **kwargs)
+
+        if order_pk:
+            order = Order.objects.get(pk=order_pk)
+            self.fields['passport'].queryset = Passport.objects.filter(order=order)
+            self.fields['size_quantity'].queryset = order.size_quantities.all()
         

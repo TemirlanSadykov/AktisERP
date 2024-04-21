@@ -4,7 +4,7 @@
 {% block content %}
 <div class="content-container">
   <div class="tabs">
-    <a href="{% url 'order_list_technologist' %}" class="{% if not selected_status %}active{% endif %}">{% trans "All" %}</a>
+    <a href="{% url 'order_list_packer' %}" class="{% if not selected_status %}active{% endif %}">{% trans "All" %}</a>
     <a href="?status={{ Order.NEW }}" class="{% if selected_status|stringformat:"s" == Order.NEW|stringformat:"s" %}active{% endif %}">{% trans "New" %}</a>
     <a href="?status={{ Order.IN_PROGRESS }}" class="{% if selected_status|stringformat:"s" == Order.IN_PROGRESS|stringformat:"s" %}active{% endif %}">{% trans "In Progress" %}</a>
     <a href="?status={{ Order.COMPLETED }}" class="{% if selected_status|stringformat:"s" == Order.COMPLETED|stringformat:"s" %}active{% endif %}">{% trans "Completed" %}</a>
@@ -15,7 +15,7 @@
   <ul class="list-group">
     {% for order_info in orders_with_days_left %}
       <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
-        <a href="{% url 'order_detail_technologist' order_info.order.pk %}" style="flex-grow: 1;">
+        <a href="{% url 'order_detail_packer' order_info.order.pk %}" style="flex-grow: 1;">
           {{ order_info.order.client_order.order_number }} - {{ order_info.order.name }}
         </a>
         <span style="flex-shrink: 0;">{% trans "Days left:" %} {{ order_info.days_left }}</span>

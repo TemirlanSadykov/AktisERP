@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Order Details:" %} {{ order.client_order.order_number }} - {{ order.name }}</h2>
+
+  <div class="details">
+    <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
+    <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
+    <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+    <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
+    <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
+    <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
+    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
+    <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+    <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+  </div>
+
+  <div class="form-actions">
+    <a href="{% url 'order_list_packer' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "Size" %}</th>
+        <th>{% trans "Quantity" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for size_quantity in size_quantities %}
+        <tr>
+          <td>{{ size_quantity.size }}</td>
+          <td>{{ size_quantity.quantity }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="2">{% trans "No size quantities available." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Discrepancies" %}</h3>
+  <div class="discrepancies-list">
+    {% if discrepancies %}
+      {% for discrepancy in discrepancies %}
+        <p class="discrepancy-item">
+          <a href="{% url 'discrepancy_detail' order_pk=order.pk pk=discrepancy.pk %}" class="discrepancy-link">
+            {% trans "Discrepancy ID:" %} {{ discrepancy.pk }}
+          </a>
+        </p>
+      {% endfor %}
+    {% else %}
+      <p>{% trans "No associated discrepancies." %}</p>
+    {% endif %}
+    <div class="create-discrepancy-form" style="margin-top: 20px;">
+      <a href="{% url 'discrepancy_create' order.pk %}" class="btn btn-primary">{% trans 'Add Discrepancy' %}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

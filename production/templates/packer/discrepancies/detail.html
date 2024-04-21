@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Discrepancy Details" %} №{{ discrepancy.id }}</h2>
+
+  <div class="details">
+    <p><strong>{% trans "Order" %}:</strong> {{ discrepancy.passport.order.client_order.order_number }} - {{ discrepancy.passport.order.name }}</p>
+    <p><strong>{% trans "Passport" %}:</strong> {{ discrepancy.passport.id }} </p>
+    <p><strong>{% trans "Size" %}:</strong> {{ discrepancy.size_quantity.size }}</p>
+    <p><strong>{% trans "Quantity" %}:</strong> {{ discrepancy.quantity }}</p>
+    <p><strong>{% trans "Reported Date" %}:</strong> {{ discrepancy.reported_date|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Resolved Date" %}:</strong> {{ discrepancy.resolved_date|date:"Y-m-d" }}</p>
+  </div>
+
+  <div class="form-actions secondary">
+    <a href="{% url 'discrepancy_edit' order_pk=discrepancy.passport.order.id pk=discrepancy.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'order_detail_packer' discrepancy.passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <form id="deleteForm" action="{% url 'discrepancy_delete' order_pk=discrepancy.passport.order.pk pk=discrepancy.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this discrepancy?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
+{% endblock %}

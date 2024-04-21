@@ -13,6 +13,7 @@ urlpatterns = [
     path('admin/', admin_page, name='admin_page'),
     path('cutter/', cutter_page, name='cutter_page'),
     path('qc/', qc_page, name='qc_page'),
+    path('packer/', packer_page, name='packer_page'),
 
     path('admin/branches/', BranchListView.as_view(), name='branch_list'),
     path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
@@ -129,5 +130,12 @@ urlpatterns = [
     path('qc/orders/<int:order_pk>/defects/<int:pk>/', DefectDetailView.as_view(), name='defect_detail'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
+    
+    path('packer/orders/', OrderListPackerView.as_view(), name='order_list_packer'),
+    path('packer/orders/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
+    path('packer/orders/<int:order_pk>/discrepancy/create/', DiscrepancyCreateView.as_view(), name='discrepancy_create'),
+    path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/', DiscrepancyDetailView.as_view(), name='discrepancy_detail'),
+    path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
+    path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
 
 ]

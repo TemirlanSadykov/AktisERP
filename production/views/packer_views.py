@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from ..decorators import qc_required
+from ..decorators import packer_required
 from django.utils.decorators import method_decorator
 from ..mixins import *
 from ..models import *
@@ -10,14 +10,14 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 
 @login_required
-@qc_required
-def qc_page(request):
-    return render(request, 'qc_page.html')
+@packer_required
+def packer_page(request):
+    return render(request, 'packer_page.html')
 
-@method_decorator([login_required, qc_required], name='dispatch')
-class OrderListQcView(RestrictOrderBranchMixin, ListView):
+@method_decorator([login_required, packer_required], name='dispatch')
+class OrderListPackerView(RestrictOrderBranchMixin, ListView):
     model = Order
-    template_name = 'qc/orders/list.html'
+    template_name = 'packer/orders/list.html'
     context_object_name = 'orders'
     paginate_by = 10
 
@@ -53,10 +53,10 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         context['orders_with_days_left'] = orders_with_days_left_sorted
         return context
 
-@method_decorator([login_required, qc_required], name='dispatch')
-class OrderDetailQcView(DetailView):
+@method_decorator([login_required, packer_required], name='dispatch')
+class OrderDetailPackerView(DetailView):
     model = Order
-    template_name = 'qc/orders/detail.html'
+    template_name = 'packer/orders/detail.html'
     context_object_name = 'order'
 
     def get_context_data(self, **kwargs):
@@ -64,9 +64,9 @@ class OrderDetailQcView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['defects'] = Defect.objects.filter(passport=passport)
+            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
         else:
-            context['defects'] = Defect.objects.none()
+            context['discrepancies'] = Discrepancy.objects.none()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         today = timezone.localdate() 
         if order.client_order.term >= today:
@@ -77,11 +77,11 @@ class OrderDetailQcView(DetailView):
 
         return context
     
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectCreateView(CreateView):
-    model = Defect
-    form_class = DefectForm
-    template_name = 'qc/defects/create.html'
+@method_decorator([login_required, packer_required], name='dispatch')
+class DiscrepancyCreateView(CreateView):
+    model = Discrepancy
+    form_class = DiscrepancyForm
+    template_name = 'packer/discrepancies/create.html'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -95,7 +95,7 @@ class DefectCreateView(CreateView):
 
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
+        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -103,17 +103,17 @@ class DefectCreateView(CreateView):
         context['order'] = get_object_or_404(Order, pk=order_pk)
         return context
 
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectDetailView(DetailView):
-    model = Defect
-    template_name = 'qc/defects/detail.html'
-    context_object_name = 'defect'
+@method_decorator([login_required, packer_required], name='dispatch')
+class DiscrepancyDetailView(DetailView):
+    model = Discrepancy
+    template_name = 'packer/discrepancies/detail.html'
+    context_object_name = 'discrepancy'
 
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectUpdateView(UpdateView):
-    model = Defect
-    form_class = DefectForm
-    template_name = 'qc/defects/edit.html'
+@method_decorator([login_required, packer_required], name='dispatch')
+class DiscrepancyUpdateView(UpdateView):
+    model = Discrepancy
+    form_class = DiscrepancyForm
+    template_name = 'packer/discrepancies/edit.html'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -123,18 +123,18 @@ class DefectUpdateView(UpdateView):
 
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
+        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        defect_pk = self.kwargs['pk']
-        context['defect'] = get_object_or_404(Defect, pk=defect_pk)
+        discrepancy_pk = self.kwargs['pk']
+        context['discrepancy'] = get_object_or_404(Discrepancy, pk=discrepancy_pk)
         return context
 
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectDeleteView(DeleteView):
-    model = Defect
+@method_decorator([login_required, packer_required], name='dispatch')
+class DiscrepancyDeleteView(DeleteView):
+    model = Discrepancy
 
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
+        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})

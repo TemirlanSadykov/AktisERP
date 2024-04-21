@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Create New Defect" %}</h2>
+  <h2 class="form-heading">{% trans "Create New Discrepancy" %}</h2>
   <form method="post" class="crud-form">
     {% csrf_token %}
     <div class="form-group">
@@ -11,7 +11,7 @@
     </div>
     <div class="form-actions">
       <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
-      <a href="{% url 'order_detail_qc' order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+      <a href="{% url 'order_detail_packer' order.id %}" class="btn back-btn">{% trans "Back" %}</a>
     </div>
   </form>
 </div>

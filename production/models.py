@@ -26,12 +26,14 @@ class UserProfile(models.Model):
     EMPLOYEE = 2
     CUTTER = 3
     QC = 4
+    PACKER = 5
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
         (EMPLOYEE, 'Сотрудник'),
         (CUTTER, 'Закройщик'),
-        (QC, 'ОТК')
+        (QC, 'ОТК'),
+        (PACKER, 'Упаковщик')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE)
     status = models.BooleanField(default=False)
@@ -177,6 +179,19 @@ class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes')
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes')
     quantity = models.IntegerField()
+    CUTTING = 0
+    SEWING = 1
+    QUALITY_CONTROL = 2
+    PACKING = 3
+    DONE = 4
+    STAGE_CHOICES = [
+        (CUTTING, 'Cutting'),
+        (SEWING, 'Sewing'),
+        (QUALITY_CONTROL, 'Quality Control'),
+        (PACKING, 'Packing'),
+        (DONE, 'Done'),
+    ]
+    stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING)
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} pcs"
 
@@ -241,3 +256,19 @@ class Defect(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
     reported_date = models.DateTimeField(default=timezone.now)
     resolved_date = models.DateTimeField(null=True, blank=True)
+
+class Discrepancy(models.Model):
+    class Status(models.TextChoices):
+        REPORTED = 'REPORTED', 'Reported'
+        UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
+        RESOLVED = 'RESOLVED', 'Resolved'
+
+    passport = models.ForeignKey('Passport', on_delete=models.CASCADE, related_name='discrepancies')
+    size_quantity = models.ForeignKey('SizeQuantity', on_delete=models.CASCADE, related_name='discrepancies')
+    quantity = models.IntegerField(help_text="Use negative values for deficiencies and positive for excess.")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
+    reported_date = models.DateTimeField(default=timezone.now)
+    resolved_date = models.DateTimeField(null=True, blank=True)
+    def __str__(self):
+        discrepancy_type = "Deficiency" if self.quantity < 0 else "Excess"
+        return f"{discrepancy_type} of {abs(self.quantity)}"

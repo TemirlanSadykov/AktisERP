@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Edit Discrepancy:" %} {{ discrepancy.id }}</h2>
+  <form method="post" class="crud-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
+      <a href="{% url 'discrepancy_detail' order_pk=discrepancy.passport.order.pk pk=discrepancy.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
