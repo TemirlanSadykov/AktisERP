@@ -181,13 +181,13 @@ def salary_list(request):
             end_time__range=(start_date, end_date),
             end_time__isnull=False,
             is_success=True,  # Only include successful works
-            work__passport__order__branch=request.user.userprofile.branch  # Filter by the current user's branch
+            work__passport__order__client_order__branch=request.user.userprofile.branch  # Filter by the current user's branch
         ).select_related('work__operation', 'employee')
 
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__end_time__range=(start_date, end_date),
             is_success=True,  # Only include successful works
-            original_assigned_work__work__passport__order__branch=request.user.userprofile.branch  # Filter by the current user's branch
+            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch  # Filter by the current user's branch
         ).select_related('original_assigned_work__work__operation', 'new_employee')
 
     # Process assigned works
@@ -225,14 +225,14 @@ def salary_detail(request, pk):
             employee=employee,
             end_time__range=(start_date, end_date),
             is_success=True,
-            work__passport__order__branch=request.user.userprofile.branch
+            work__passport__order__client_order__branch=request.user.userprofile.branch
         ).select_related('work__operation', 'work__passport_size__size_quantity')
 
         reassigned_works = ReassignedWork.objects.filter(
             new_employee=employee,
             original_assigned_work__end_time__range=(start_date, end_date),
             is_success=True,
-            original_assigned_work__work__passport__order__branch=request.user.userprofile.branch
+            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
         ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
 
         for assigned_work in assigned_works:

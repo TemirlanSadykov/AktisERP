@@ -332,15 +332,32 @@ def passport_delete(request, pk):
 def mark_as_sewing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.order 
-        with transaction.atomic(): 
+        order = passport_size.passport.order
+        operations = Operation.objects.filter(node__type=Node.CUTTING)
+        print(operations)
+        with transaction.atomic():
             if passport_size.stage == PassportSize.SEWING:
                 passport_size.stage = PassportSize.CUTTING
+                # Delete assigned and work
             else:
+                for operation in operations:
+                    work = Work.objects.create(
+                        operation=operation,
+                        passport=passport_size.passport,
+                        passport_size=passport_size
+                    )
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=operation.employee,
+                        quantity=passport_size.quantity,
+                        start_time=timezone.now(),
+                        end_time=timezone.now(),
+                        is_success=True
+                    )
                 passport_size.stage = PassportSize.SEWING
-
             passport_size.save()
 
         return JsonResponse({'success': True, 'completed_quantity': order.completed_quantity})
+
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)

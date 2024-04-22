@@ -487,8 +487,6 @@ class OperationUpdateView(UpdateView):
     template_name = 'technologist/operations/edit.html'
     success_url = reverse_lazy('operation_list')
     def form_valid(self, form):
-        # Example print statement
-        print("Form data:", form.cleaned_data)
         return super().form_valid(form)
 
     def form_invalid(self, form):
