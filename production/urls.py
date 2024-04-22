@@ -146,6 +146,8 @@ urlpatterns = [
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/', DiscrepancyDetailView.as_view(), name='discrepancy_detail'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
+    
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
+    path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
 
 ]

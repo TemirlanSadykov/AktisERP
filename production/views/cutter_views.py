@@ -77,13 +77,16 @@ class OrderDetailCutterView(DetailView):
         order = context['order']
         passports = order.passports.all()
 
-        size_data = defaultdict(lambda: defaultdict(int))
+        # Initialize size_data as a defaultdict where each passport.id is another defaultdict
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id] += passport_size.quantity
+                size_data[size][passport.id]['quantity'] += passport_size.quantity
+                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                size_data[size][passport.id]['stage'] = passport_size.stage
                 total_per_size[size] += passport_size.quantity
 
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
@@ -95,7 +98,7 @@ class OrderDetailCutterView(DetailView):
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
         context.update({
-            'size_data': dict(size_data),
+            'size_data': {k: dict(v) for k, v in size_data.items()},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
@@ -323,3 +326,21 @@ def passport_delete(request, pk):
             messages.info(request, 'ClientOrder status set to NEW as no other orders are IN PROGRESS.')
 
     return redirect(reverse('order_detail_cutter', args=[order.id]))
+
+@login_required
+@cutter_required
+def mark_as_sewing(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        order = passport_size.passport.order 
+        with transaction.atomic(): 
+            if passport_size.stage == PassportSize.SEWING:
+                passport_size.stage = PassportSize.CUTTING
+            else:
+                passport_size.stage = PassportSize.SEWING
+
+            passport_size.save()
+
+        return JsonResponse({'success': True, 'completed_quantity': order.completed_quantity})
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)
