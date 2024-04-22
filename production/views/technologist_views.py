@@ -452,8 +452,20 @@ class OperationListView(ListView):
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
     paginate_by = 10
+
     def get_queryset(self):
-        return Operation.objects.all().order_by('name')
+        queryset = super().get_queryset().order_by('name')
+        node_id = self.request.GET.get('node', None)
+        if node_id:
+            queryset = queryset.filter(node_id=node_id)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        nodes = Node.objects.all().order_by('name')
+        context['nodes'] = nodes
+        context['selected_node'] = self.request.GET.get('node', '')
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationCreateView(CreateView):
@@ -669,7 +681,7 @@ class NodeDetailView(DetailView):
 class NodeUpdateView(UpdateView):
     model = Node
     form_class = NodeForm
-    template_name = 'techniologist/nodes/edit.html'
+    template_name = 'technologist/nodes/edit.html'
     success_url = reverse_lazy('node_list')
 
 @method_decorator([login_required, technologist_required], name='dispatch')

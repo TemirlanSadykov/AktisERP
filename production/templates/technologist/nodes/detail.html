@@ -4,7 +4,9 @@
 {% block content %}
 <div class="content-container">
   <h2 class="form-heading">{% trans "Node Details:" %} {{ node.name }}</h2>
-
+  <div class="details">
+    <p><strong>{% trans "Is common:" %}</strong> {{ node.is_common }}</p>
+  </div>
   <div class="form-actions">
     <a href="{% url 'node_edit' node.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>

@@ -3,6 +3,12 @@
 
 {% block content %}
 <div class="content-container">
+  <div class="tabs">
+    <a href="{% url 'operation_list' %}" class="{% if not selected_node %}active{% endif %}">{% trans "All" %}</a>
+    {% for node in nodes %}
+    <a href="?node={{ node.id }}" class="{% if selected_node|stringformat:"s" == node.id|stringformat:"s" %}active{% endif %}">{% trans node.name %}</a>
+    {% endfor %}
+  </div>
   <div class="header">
     <h2 class="list-heading">{% trans "Operations" %}</h2>
     <p class="create-link"><a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a></p>

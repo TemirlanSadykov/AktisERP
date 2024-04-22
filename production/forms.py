@@ -211,7 +211,7 @@ class OrderFormTechnologist(forms.ModelForm):
 class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['name']
+        fields = ['name', 'is_common']
 
 class EquipmentForm(forms.ModelForm):
     class Meta:
