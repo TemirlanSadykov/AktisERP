@@ -57,6 +57,13 @@ urlpatterns = [
     path('admin/clients/<int:pk>/edit/', ClientUpdateView.as_view(), name='client_edit'),
     path('admin/clients/<int:pk>/delete/', ClientDeleteView.as_view(), name='client_delete'),
 
+    path('admin/fixed_salaries/', FixedSalaryListView.as_view(), name='fixed_salary_list'),
+    path('admin/fixed_salaries/create/', FixedSalaryCreateView.as_view(), name='fixed_salary_create'),
+    path('admin/fixed_salaries/<int:pk>/', FixedSalaryDetailView.as_view(), name='fixed_salary_detail'),
+    path('admin/fixed_salaries/<int:pk>/edit/', FixedSalaryUpdateView.as_view(), name='fixed_salary_edit'),
+    path('admin/fixed_salaries/<int:pk>/delete/', FixedSalaryDeleteView.as_view(), name='fixed_salary_delete'),
+
+
     path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
     path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),
     path('technologist/orders/defect/<int:pk>/', defect_detail, name='defect_detail_technologist'),

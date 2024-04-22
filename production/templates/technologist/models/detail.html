@@ -5,7 +5,7 @@
 <div class="content-container">
   <h2 class="form-heading">{% trans "Model Details:" %} {{ model.name }}</h2>
 
-  <h3 class="sub-heading">{% trans "Operations" %}</h3>
+  <p><strong>{% trans "Operations:" %}</strong></p>
   {% if model.operations.all %}
     <ul class="operations-list">
       {% for operation in model.operations.all %}

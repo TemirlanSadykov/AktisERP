@@ -580,3 +580,40 @@ class ClientDeleteView(DeleteView):
     model = Client
     template_name = 'admin/clients/delete.html'
     success_url = reverse_lazy('client_list')
+
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryListView(ListView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/list.html'
+    context_object_name = 'fixed_salaries'
+    paginate_by = 10
+    def get_queryset(self):
+        return FixedSalary.objects.all().order_by('position')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryCreateView(CreateView):
+    model = FixedSalary
+    form_class = FixedSalaryForm
+    template_name = 'admin/fixed_salaries/create.html'
+    success_url = reverse_lazy('fixed_salary_list')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryDetailView(DetailView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/detail.html'
+    context_object_name = 'fixed_salary'
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryUpdateView(UpdateView):
+    model = FixedSalary
+    form_class = FixedSalaryForm
+    template_name = 'admin/fixed_salaries/edit.html'
+    success_url = reverse_lazy('fixed_salary_list')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryDeleteView(DeleteView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/delete.html'
+    success_url = reverse_lazy('fixed_salary_list')

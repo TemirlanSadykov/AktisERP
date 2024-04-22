@@ -49,7 +49,7 @@ class UserProfile(models.Model):
     ]
     station = models.CharField(max_length=100, choices=STATION_CHOICES, default='admin_technologist')
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name}"
+        return f"{self.employee_id} - {self.user.first_name} {self.user.last_name}"
     
 class EmployeeAttendance(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='employee_attendances', null=True, blank=True)
@@ -272,3 +272,10 @@ class Discrepancy(models.Model):
     def __str__(self):
         discrepancy_type = "Deficiency" if self.quantity < 0 else "Excess"
         return f"{discrepancy_type} of {abs(self.quantity)}"
+    
+class FixedSalary(models.Model):
+    position = models.CharField(max_length=100)
+    employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries')
+    salary = models.DecimalField(max_digits=10, decimal_places=2)
+    def __str__(self):
+        return f"{self.position} - {self.salary}"

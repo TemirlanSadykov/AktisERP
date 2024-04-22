@@ -253,4 +253,15 @@ class DiscrepancyForm(forms.ModelForm):
             order = Order.objects.get(pk=order_pk)
             self.fields['passport'].queryset = Passport.objects.filter(order=order)
             self.fields['size_quantity'].queryset = order.size_quantities.all()
+
+class FixedSalaryForm(forms.ModelForm):
+    employees = forms.ModelMultipleChoiceField(
+        queryset=UserProfile.objects.all().order_by('employee_id'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
+    class Meta:
+        model = FixedSalary
+        fields = ['position', 'salary', 'employees']
         
