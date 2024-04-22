@@ -87,7 +87,7 @@ class OrderDetailPackerView(DetailView):
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                # Add quantity to the existing quantity and store passport_size_id
+                size_data[size][passport.id]['stage'] = passport_size.stage  # Include the stage
                 size_data[size][passport.id]['quantity'] += passport_size.quantity
                 size_data[size][passport.id]['passport_size_id'] = passport_size.id
                 total_per_size[size] += passport_size.quantity
@@ -175,7 +175,10 @@ class DiscrepancyDeleteView(DeleteView):
 def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        passport_size.stage = PassportSize.DONE
+        if passport_size.stage == PassportSize.DONE:
+            passport_size.stage = PassportSize.PACKING
+        else:
+            passport_size.stage = PassportSize.DONE
         passport_size.save()
         return JsonResponse({'success': True})
     except PassportSize.DoesNotExist:
