@@ -8,6 +8,8 @@ from ..forms import *
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
+from collections import defaultdict
+from django.http import JsonResponse
 
 @login_required
 @packer_required
@@ -63,18 +65,47 @@ class OrderDetailPackerView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
+        
         if passport:
             context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
         else:
             context['discrepancies'] = Discrepancy.objects.none()
-        context['size_quantities'] = order.size_quantities.all().order_by('size')
-        today = timezone.localdate() 
+
+        today = timezone.localdate()
         if order.client_order.term >= today:
             days_left = (order.client_order.term - today).days
         else:
-            days_left = 0  
+            days_left = 0
         context['days_left'] = days_left
 
+        passports = order.passports.all()
+
+        # Initialize size_data as a defaultdict where each passport.id is another defaultdict
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None}))
+        total_per_size = defaultdict(int)
+
+        for passport in passports:
+            for passport_size in passport.passport_sizes.all():
+                size = passport_size.size_quantity.size
+                # Add quantity to the existing quantity and store passport_size_id
+                size_data[size][passport.id]['quantity'] += passport_size.quantity
+                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                total_per_size[size] += passport_size.quantity
+
+        # Calculate required and missing quantities
+        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+                            for sq in order.size_quantities.all().order_by('size')}
+
+        for size in total_per_size:
+            if size not in required_missing:
+                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+        context.update({
+            'size_data': {k: {k2: dict(v2) for k2, v2 in v.items()} for k, v in size_data.items()},
+            'total_per_size': dict(total_per_size),
+            'required_missing': required_missing,
+            'passports': passports,
+        })
         return context
     
 @method_decorator([login_required, packer_required], name='dispatch')
@@ -138,3 +169,14 @@ class DiscrepancyDeleteView(DeleteView):
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']
         return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
+    
+@login_required
+@packer_required
+def mark_as_done(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        passport_size.stage = PassportSize.DONE
+        passport_size.save()
+        return JsonResponse({'success': True})
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)
