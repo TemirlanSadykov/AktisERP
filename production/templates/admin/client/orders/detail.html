@@ -22,7 +22,7 @@
     {% csrf_token %}
   </form>
 
-  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Orders" %}</h3>
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Models" %}</h3>
   <div class="orders-list">
     {% if orders %}
       {% for order in orders %}
@@ -33,7 +33,7 @@
       </p>
       {% endfor %}
     {% else %}
-      <p>{% trans "No associated orders." %}</p>
+      <p>{% trans "No associated models." %}</p>
     {% endif %}
     <div class="create-passport-form" style="margin-top: 20px;">
       <a href="{% url 'order_create' client_order.pk %}" class="btn btn-primary">{% trans 'Create New Order' %}</a>

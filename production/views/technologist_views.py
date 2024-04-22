@@ -330,41 +330,41 @@ def update_work_success(request):
     except AssignedWork.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Assigned work not found'}, status=404)
     
-@login_required
-@technologist_required
-@require_POST
-def complete_passport(request, passport_id):
-    passport = get_object_or_404(Passport, id=passport_id)
-    total_completed = PassportSize.objects.filter(passport=passport).aggregate(total=Sum('quantity'))['total'] or 0
-    order = passport.order
-    client_order = order.client_order
+# @login_required
+# @technologist_required
+# @require_POST
+# def complete_passport(request, passport_id):
+#     passport = get_object_or_404(Passport, id=passport_id)
+#     total_completed = PassportSize.objects.filter(passport=passport).aggregate(total=Sum('quantity'))['total'] or 0
+#     order = passport.order
+#     client_order = order.client_order
 
-    with transaction.atomic():
-        if not passport.is_completed:
-            passport.is_completed = True
-            order.completed_quantity += total_completed
-        else:
-            passport.is_completed = False
-            order.completed_quantity -= total_completed
+#     with transaction.atomic():
+#         if not passport.is_completed:
+#             passport.is_completed = True
+#             order.completed_quantity += total_completed
+#         else:
+#             passport.is_completed = False
+#             order.completed_quantity -= total_completed
 
-        passport.save()
-        order.save()
+#         passport.save()
+#         order.save()
 
-        if order.completed_quantity >= order.quantity:
-            order.status = Order.COMPLETED
-            order.save()
-            all_orders_completed = not Order.objects.filter(client_order=client_order, status=Order.IN_PROGRESS).exists()
-            if all_orders_completed:
-                client_order.status = ClientOrder.COMPLETED
-                client_order.save()
-        elif order.completed_quantity < order.quantity and order.status == Order.COMPLETED:
-            order.status = Order.IN_PROGRESS
-            order.save()
-            if client_order.status == ClientOrder.COMPLETED:
-                client_order.status = ClientOrder.IN_PROGRESS
-                client_order.save()
+#         if order.completed_quantity >= order.quantity:
+#             order.status = Order.COMPLETED
+#             order.save()
+#             all_orders_completed = not Order.objects.filter(client_order=client_order, status=Order.IN_PROGRESS).exists()
+#             if all_orders_completed:
+#                 client_order.status = ClientOrder.COMPLETED
+#                 client_order.save()
+#         elif order.completed_quantity < order.quantity and order.status == Order.COMPLETED:
+#             order.status = Order.IN_PROGRESS
+#             order.save()
+#             if client_order.status == ClientOrder.COMPLETED:
+#                 client_order.status = ClientOrder.IN_PROGRESS
+#                 client_order.save()
 
-    return redirect('order_detail_technologist', pk=order.pk)
+#     return redirect('order_detail_technologist', pk=order.pk)
 
 @login_required
 @technologist_required

@@ -58,14 +58,14 @@
     </table>
   </form>
   <div class="form-actions">
-    <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
+    {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
       {% csrf_token %}
       {% if passport.is_completed %}
         <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">{% trans "Reopen" %}</button>
       {% else %}
         <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
       {% endif %}
-    </form>
+    </form> {% endcomment %}
     <a href="{% url 'order_detail_technologist' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>

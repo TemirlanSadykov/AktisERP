@@ -10,6 +10,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 from collections import defaultdict
 from django.http import JsonResponse
+from django.db import transaction
 
 @login_required
 @packer_required
@@ -175,11 +176,19 @@ class DiscrepancyDeleteView(DeleteView):
 def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        if passport_size.stage == PassportSize.DONE:
-            passport_size.stage = PassportSize.PACKING
-        else:
-            passport_size.stage = PassportSize.DONE
-        passport_size.save()
-        return JsonResponse({'success': True})
+        order = passport_size.passport.order 
+        with transaction.atomic(): 
+            if passport_size.stage == PassportSize.DONE:
+                passport_size.stage = PassportSize.PACKING
+                order.completed_quantity = max(order.completed_quantity - passport_size.quantity, 0)
+            else:
+                passport_size.stage = PassportSize.DONE
+                order.completed_quantity += passport_size.quantity
+                order.completed_quantity = min(order.completed_quantity, order.quantity)
+
+            passport_size.save()
+            order.save() 
+
+        return JsonResponse({'success': True, 'completed_quantity': order.completed_quantity})
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
