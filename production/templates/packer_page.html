@@ -27,7 +27,7 @@
         <div class="card-body">
           <h5 class="card-title">{% trans 'Resources' %}</h5>
           {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-            <a href="{% url 'order_list_packer' %}" class="btn btn-info">{% trans 'Orders' %}</a>
+            <a href="{% url 'order_list_packer' %}" class="btn btn-info">{% trans 'Models' %}</a>
           {% else %}
             <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
           {% endif %}

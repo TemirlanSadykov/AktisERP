@@ -28,7 +28,7 @@
       {% for order in orders %}
       <p>
         <a href="{% url 'order_detail' order.pk %}" class="order-link">
-          {% trans "Order ID:" %} {{ order.pk }}
+          {% trans "Model" %} {{ order.model.name }}
         </a>
       </p>
       {% endfor %}

@@ -4,10 +4,9 @@
 
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Order Details:" %} {{ order.client_order.order_number }} - {{ order.name }}</h2>
+  <h2 class="form-heading">{% trans "Model Details:" %} {{ order.model.name }}</h2>
 
   <div class="details">
-    <p><strong>{% trans "Name:" %}</strong> {{ order.name }}</p>
     <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
     <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
     <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
