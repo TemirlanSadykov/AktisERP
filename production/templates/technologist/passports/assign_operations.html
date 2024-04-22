@@ -32,6 +32,7 @@
       </thead>
       <tbody>
         {% for operation in operations %}
+            {% if not operation.node.is_common %}
             <tr>
                 <td>{{ operation.name }}</td>
                 {% for sq in size_quantities %}
@@ -53,8 +54,9 @@
                 </td>
                 {% endfor %}
             </tr>
+            {% endif %}
         {% endfor %}
-      </tbody>
+    </tbody>    
     </table>
   </form>
   <div class="form-actions">
