@@ -96,6 +96,17 @@ class Equipment(models.Model):
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True)
     is_common = models.BooleanField(default=False)
+    SEWING = 0
+    CUTTING = 1
+    QC = 2
+    PACKING = 3
+    TYPE_CHOICES = [
+        (SEWING, 'Sewing'),
+        (CUTTING, 'Cuttng'),
+        (QC, 'Quality Control'),
+        (PACKING, 'Packing'),
+    ]
+    type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING)
     def __str__(self):
         return self.name
     
@@ -107,6 +118,7 @@ class Operation(models.Model):
     preferred_completion_time = models.IntegerField()
     average_completion_time = models.IntegerField(null=True)
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True)
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True)
     def __str__(self):
         return self.name
     

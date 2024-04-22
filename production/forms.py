@@ -145,7 +145,7 @@ class PassportSizeForm(forms.ModelForm):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo']
+        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
 
 class RollForm(forms.ModelForm):
     class Meta:
@@ -211,7 +211,7 @@ class OrderFormTechnologist(forms.ModelForm):
 class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['name', 'is_common']
+        fields = ['name', 'is_common', 'type']
 
 class EquipmentForm(forms.ModelForm):
     class Meta:

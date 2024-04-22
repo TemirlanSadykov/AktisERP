@@ -98,7 +98,6 @@ class EmployeeListView(ListView):
     paginate_by = 10
     def get_queryset(self):
         return UserProfile.objects.filter(
-            type__in=[UserProfile.ADMIN, UserProfile.EMPLOYEE, UserProfile.TECHNOLOGIST, UserProfile.CUTTER, UserProfile.QC],
             branch=self.request.user.userprofile.branch
         ).order_by('employee_id')
 
