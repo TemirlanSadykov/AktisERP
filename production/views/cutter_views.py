@@ -334,11 +334,12 @@ def mark_as_sewing(request, passport_size_id):
         passport_size = PassportSize.objects.get(id=passport_size_id)
         order = passport_size.passport.order
         operations = Operation.objects.filter(node__type=Node.CUTTING)
-        print(operations)
         with transaction.atomic():
             if passport_size.stage == PassportSize.SEWING:
                 passport_size.stage = PassportSize.CUTTING
-                # Delete assigned and work
+                for operation in operations:
+                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
+                    work.delete()
             else:
                 for operation in operations:
                     work = Work.objects.create(
