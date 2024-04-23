@@ -176,19 +176,33 @@ class DiscrepancyDeleteView(DeleteView):
 def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.order 
-        with transaction.atomic(): 
+        order = passport_size.passport.order
+        operations = Operation.objects.filter(node__type=Node.PACKING)
+        with transaction.atomic():
             if passport_size.stage == PassportSize.DONE:
                 passport_size.stage = PassportSize.PACKING
-                order.completed_quantity = max(order.completed_quantity - passport_size.quantity, 0)
+                for operation in operations:
+                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
+                    work.delete()
             else:
+                for operation in operations:
+                    work = Work.objects.create(
+                        operation=operation,
+                        passport=passport_size.passport,
+                        passport_size=passport_size
+                    )
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=operation.employee,
+                        quantity=passport_size.quantity,
+                        start_time=timezone.now(),
+                        end_time=timezone.now(),
+                        is_success=True
+                    )
                 passport_size.stage = PassportSize.DONE
-                order.completed_quantity += passport_size.quantity
-                order.completed_quantity = min(order.completed_quantity, order.quantity)
-
             passport_size.save()
-            order.save() 
 
-        return JsonResponse({'success': True, 'completed_quantity': order.completed_quantity})
+        return JsonResponse({'success': True})
+
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)

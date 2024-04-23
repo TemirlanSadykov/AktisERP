@@ -44,11 +44,12 @@
           <td>
               {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
               {% if size_data|get_item:size|get_item:passport.id|get_item:"quantity" > 0 %}
-                  <input type="checkbox" 
-                         class="stage-done-checkbox" 
-                         data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
-                         {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 4 %}checked{% endif %}>
-              {% endif %}
+                <input type="checkbox" 
+                      class="stage-done-checkbox" 
+                      data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
+                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 4 %} checked {% endif %}
+                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" < 3 %} disabled {% endif %}>
+            {% endif %}
           </td>
           {% endfor %}
           <td>{{ total_per_size|get_item:size|default:"0" }}</td>
@@ -59,7 +60,7 @@
       <tr>
           <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
       </tr>
-      {% endfor %}      
+      {% endfor %}   
     </tbody>
   </table>
 

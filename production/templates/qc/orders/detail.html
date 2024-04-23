@@ -3,7 +3,7 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
+<div class="order-detail-cutter-container">
   <h2 class="form-heading">{% trans "Model Details:" %} {{ order.model.name }}</h2>
 
   <div class="details">
@@ -28,19 +28,38 @@
     <thead>
       <tr>
         <th>{% trans "Size" %}</th>
-        <th>{% trans "Quantity" %}</th>
+        {% for passport in passports %}
+        <th>№{{ passport.id }}</th>
+        {% endfor %}
+        <th>{% trans "Sum" %}</th>
+        <th>{% trans "Required" %}</th>
+        <th>{% trans "Missing" %}</th>
       </tr>
     </thead>
     <tbody>
-      {% for size_quantity in size_quantities %}
-        <tr>
-          <td>{{ size_quantity.size }}</td>
-          <td>{{ size_quantity.quantity }}</td>
-        </tr>
+      {% for size, data in required_missing.items %}
+      <tr>
+          <td>{{ size }}</td>
+          {% for passport in passports %}
+          <td>
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+              {% if size_data|get_item:size|get_item:passport.id|get_item:"quantity" > 0 %}
+                <input type="checkbox" 
+                      class="stage-packing-checkbox" 
+                      data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
+                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 3 %} checked {% endif %}
+                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" > 3 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 2 %} disabled {% endif %}>
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+          <td>{{ data.required }}</td>
+          <td>{{ data.missing }}</td>
+      </tr>
       {% empty %}
-        <tr>
-          <td colspan="2">{% trans "No size quantities available." %}</td>
-        </tr>
+      <tr>
+          <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
@@ -63,4 +82,44 @@
     </div>
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var checkboxes = document.querySelectorAll('.stage-packing-checkbox');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+          var passportSizeId = this.dataset.passportSizeId;
+          fetch(`/production/qc/orders/mark-as-packing/${passportSizeId}/`, {
+              method: 'POST',
+              headers: {
+                  'X-CSRFToken': getCookie('csrftoken')
+              },
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (!data.success) {
+                alert('Error: ' + data.error);
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              this.checked = false;
+          });
+        });
+    });
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+  });
+</script>
 {% endblock %}

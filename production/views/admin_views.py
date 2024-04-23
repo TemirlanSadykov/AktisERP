@@ -291,7 +291,7 @@ def export_salaries_to_excel(request):
             passport = work.work.passport
             order = passport.order
             data.append([
-                datetime.now().date(), order.client.name, order.model.name if order.model else '', 
+                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '', 
                 order.assortment.name if order.assortment else '', passport.id, order.color, 
                 order.fabrics, passport.date, work.work.operation.id, 
                 work.work.operation.name, work.work.operation.payment, work.employee.employee_id, 
@@ -304,7 +304,7 @@ def export_salaries_to_excel(request):
             passport = original.work.passport
             order = passport.order
             data.append([
-                datetime.now().date(), order.client.name, order.model.name if order.model else '', 
+                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '', 
                 order.assortment.name if order.assortment else '', passport.id, order.color, 
                 order.fabrics, passport.date, original.work.operation.id, 
                 original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id, 

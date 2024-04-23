@@ -358,7 +358,7 @@ def mark_as_sewing(request, passport_size_id):
                 passport_size.stage = PassportSize.SEWING
             passport_size.save()
 
-        return JsonResponse({'success': True, 'completed_quantity': order.completed_quantity})
+        return JsonResponse({'success': True})
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)

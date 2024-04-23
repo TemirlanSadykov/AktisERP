@@ -19,6 +19,7 @@ from django.db.models import Avg, F, ExpressionWrapper, fields
 from django.views.decorators.http import require_POST
 from django.db.models import Sum
 from ..mixins import *
+from collections import defaultdict
 
 @login_required
 @technologist_required
@@ -74,7 +75,6 @@ class OrderDetailTechnologistView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        context['passports'] = order.passports.all()
         passport = Passport.objects.filter(order=order).first()
         if passport:
             context['defects'] = Defect.objects.filter(passport=passport)
@@ -82,13 +82,34 @@ class OrderDetailTechnologistView(DetailView):
         else:
             context['defects'] = Defect.objects.none()
             context['discrepancies'] = Discrepancy.objects.none()
-        context['size_quantities'] = order.size_quantities.all().order_by('size')
-        today = timezone.localdate() 
-        if order.client_order.term >= today:
-            days_left = (order.client_order.term - today).days
-        else:
-            days_left = 0  
-        context['days_left'] = days_left
+
+        passports = order.passports.all()
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
+        total_per_size = defaultdict(int)
+
+        for passport in passports:
+            for passport_size in passport.passport_sizes.all():
+                size = passport_size.size_quantity.size
+                size_data[size][passport.id]['quantity'] += passport_size.quantity
+                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                size_data[size][passport.id]['stage'] = passport_size.stage
+                total_per_size[size] += passport_size.quantity
+
+        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+                            for sq in order.size_quantities.all().order_by('size')}
+
+        # Adjusting for sizes in passports not in order sizes
+        for size in total_per_size:
+            if size not in required_missing:
+                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+        context.update({
+            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'total_per_size': dict(total_per_size),
+            'required_missing': required_missing,
+            'passports': passports,
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
+        })
 
         return context
     
@@ -725,3 +746,21 @@ class EquipmentDeleteView(DeleteView):
     model = Equipment
     template_name = 'technologist/equipment/delete.html'
     success_url = reverse_lazy('equipment_list')
+
+
+@login_required
+@technologist_required
+def mark_as_qc(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        with transaction.atomic():
+            if passport_size.stage == PassportSize.QUALITY_CONTROL:
+                passport_size.stage = PassportSize.SEWING
+            else:
+                passport_size.stage = PassportSize.QUALITY_CONTROL
+            passport_size.save()
+
+        return JsonResponse({'success': True})
+
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)

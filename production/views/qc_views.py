@@ -8,6 +8,9 @@ from ..forms import *
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
+from collections import defaultdict
+from django.db import transaction
+from django.http import JsonResponse
 
 @login_required
 @qc_required
@@ -67,13 +70,36 @@ class OrderDetailQcView(DetailView):
             context['defects'] = Defect.objects.filter(passport=passport)
         else:
             context['defects'] = Defect.objects.none()
-        context['size_quantities'] = order.size_quantities.all().order_by('size')
-        today = timezone.localdate() 
-        if order.client_order.term >= today:
-            days_left = (order.client_order.term - today).days
-        else:
-            days_left = 0  
-        context['days_left'] = days_left
+        
+        passports = order.passports.all()
+
+        # Initialize size_data as a defaultdict where each passport.id is another defaultdict
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
+        total_per_size = defaultdict(int)
+
+        for passport in passports:
+            for passport_size in passport.passport_sizes.all():
+                size = passport_size.size_quantity.size
+                size_data[size][passport.id]['quantity'] += passport_size.quantity
+                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                size_data[size][passport.id]['stage'] = passport_size.stage
+                total_per_size[size] += passport_size.quantity
+
+        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+                            for sq in order.size_quantities.all().order_by('size')}
+
+        # Adjusting for sizes in passports not in order sizes
+        for size in total_per_size:
+            if size not in required_missing:
+                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+        context.update({
+            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'total_per_size': dict(total_per_size),
+            'required_missing': required_missing,
+            'passports': passports,
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
+        })
 
         return context
     
@@ -138,3 +164,39 @@ class DefectDeleteView(DeleteView):
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']
         return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
+    
+@login_required
+@qc_required
+def mark_as_packing(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        order = passport_size.passport.order
+        operations = Operation.objects.filter(node__type=Node.QC)
+        with transaction.atomic():
+            if passport_size.stage == PassportSize.PACKING:
+                passport_size.stage = PassportSize.QUALITY_CONTROL
+                for operation in operations:
+                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
+                    work.delete()
+            else:
+                for operation in operations:
+                    work = Work.objects.create(
+                        operation=operation,
+                        passport=passport_size.passport,
+                        passport_size=passport_size
+                    )
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=operation.employee,
+                        quantity=passport_size.quantity,
+                        start_time=timezone.now(),
+                        end_time=timezone.now(),
+                        is_success=True
+                    )
+                passport_size.stage = PassportSize.PACKING
+            passport_size.save()
+
+        return JsonResponse({'success': True})
+
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)
