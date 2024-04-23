@@ -184,6 +184,8 @@ def mark_as_done(request, passport_size_id):
                 for operation in operations:
                     work = Work.objects.filter(passport_size=passport_size, operation=operation)
                     work.delete()
+                order.completed_quantity -= passport_size.quantity
+                order.save()
             else:
                 for operation in operations:
                     work = Work.objects.create(
@@ -200,6 +202,8 @@ def mark_as_done(request, passport_size_id):
                         is_success=True
                     )
                 passport_size.stage = PassportSize.DONE
+                order.completed_quantity += passport_size.quantity
+                order.save()
             passport_size.save()
 
         return JsonResponse({'success': True})

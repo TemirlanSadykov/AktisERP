@@ -118,7 +118,7 @@ class Operation(models.Model):
     preferred_completion_time = models.IntegerField()
     average_completion_time = models.IntegerField(null=True)
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True)
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True)
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True)
     def __str__(self):
         return self.name
     
