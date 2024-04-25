@@ -26,6 +26,7 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from urllib.parse import urlencode
+from django.db import transaction
 
 @login_required
 @admin_required
@@ -318,44 +319,47 @@ def export_salaries_to_excel(request):
         assigned_works = AssignedWork.objects.filter(
             end_time__range=(start_date, end_date),
             is_success=True
-        ).select_related('work__operation', 'work__passport', 'work__passport__order', 'employee')
-        
+        ).select_related('work__operation', 'work__passport', 'work__passport__order', 'employee', 'work__passport_size')
+
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__end_time__range=(start_date, end_date),
             is_success=True
-        ).select_related('original_assigned_work', 'new_employee')
-        
+        ).select_related('original_assigned_work', 'new_employee', 'original_assigned_work__work__passport_size')
+
         data = []
 
         for work in assigned_works:
             passport = work.work.passport
+            passport_size = work.work.passport_size  # Assuming 'work' has a direct relation to 'passport_size'
             order = passport.order
             data.append([
-                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '', 
-                order.assortment.name if order.assortment else '', passport.id, order.color, 
-                order.fabrics, passport.date, work.work.operation.id, 
-                work.work.operation.name, work.work.operation.payment, work.employee.employee_id, 
-                work.employee.user.get_full_name(), work.quantity, 
+                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
+                order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
+                order.color, order.fabrics, passport.date, work.work.operation.id,
+                work.work.operation.name, work.work.operation.payment, work.employee.employee_id,
+                work.employee.user.get_full_name(), work.quantity,
                 work.work.operation.payment * work.quantity
             ])
 
         for work in reassigned_works:
             original = work.original_assigned_work
             passport = original.work.passport
+            passport_size = original.work.passport_size  # Assuming 'original' has a direct relation to 'passport_size'
             order = passport.order
             data.append([
-                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '', 
-                order.assortment.name if order.assortment else '', passport.id, order.color, 
-                order.fabrics, passport.date, original.work.operation.id, 
-                original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id, 
-                work.new_employee.user.get_full_name(), work.reassigned_quantity, 
+                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
+                order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
+                order.color, order.fabrics, passport.date, original.work.operation.id,
+                original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id,
+                work.new_employee.user.get_full_name(), work.reassigned_quantity,
                 original.work.operation.payment * work.reassigned_quantity
             ])
         
         df = pd.DataFrame(data, columns=[
             "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
-            "Order's color", "Order's fabrics", "Passport date", "Operation id", "Operation name", 
-            "Operation payment", "Employee's employee_id", "Employee's full name", "Work's quantity", "Salary"
+            "Passport size", "Order's color", "Order's fabrics", "Passport date", "Operation id", 
+            "Operation name", "Operation payment", "Employee's employee_id", "Employee's full name", 
+            "Work's quantity", "Salary"
         ])
         
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -483,6 +487,49 @@ class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
     model = ClientOrder
     template_name = 'admin/client/orders/delete.html'
     success_url = reverse_lazy('client_order_list')
+
+@login_required
+@admin_required
+@require_POST
+def client_order_complete(request, pk):
+    client_order = get_object_or_404(ClientOrder, pk=pk)
+    if client_order.status != ClientOrder.COMPLETED:
+    # Retrieve all orders linked to this client order
+        orders = Order.objects.filter(client_order=client_order)
+
+        # Begin a transaction to ensure all or nothing is saved
+        with transaction.atomic():
+            for order in orders:
+                # Retrieve all passports linked to each order
+                passports = Passport.objects.filter(order=order)
+                for passport in passports:
+                    # Retrieve all passport sizes linked to each passport
+                    passport_sizes = PassportSize.objects.filter(passport=passport)
+                    for passport_size in passport_sizes:
+                        # Assume operations need to be created for QC and Packing stages
+                        operations = Operation.objects.filter(node__type__in=[Node.QC, Node.PACKING])
+                        for operation in operations:
+                            # Create work for each operation
+                            work = Work.objects.create(
+                                operation=operation,
+                                passport=passport,
+                                passport_size=passport_size
+                            )
+                            # Create assigned work assuming quantity and success need handling
+                            AssignedWork.objects.create(
+                                work=work,
+                                employee=operation.employee,
+                                quantity=passport_size.quantity,
+                                start_time=timezone.now(),
+                                end_time=timezone.now(),
+                                is_success=True  # Assuming work is successful for demonstration
+                            )
+
+            # Set the client order status to completed
+            client_order.status = ClientOrder.COMPLETED
+            client_order.save()
+
+    return redirect('client_order_list')
 
 
 

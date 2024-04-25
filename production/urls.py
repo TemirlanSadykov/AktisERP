@@ -43,6 +43,7 @@ urlpatterns = [
     path('admin/client/orders/<int:pk>/', ClientOrderDetailView.as_view(), name='client_order_detail'),
     path('admin/client/orders/<int:pk>/edit/', ClientOrderUpdateView.as_view(), name='client_order_edit'),
     path('admin/client/orders/<int:pk>/delete/', ClientOrderDeleteView.as_view(), name='client_order_delete'),
+    path('admin/client/orders/<int:pk>/complete/', client_order_complete, name='client_order_complete'),
 
     path('admin/orders/create/<int:client_order_pk>', OrderCreateView.as_view(), name='order_create'),
     path('admin/orders/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),

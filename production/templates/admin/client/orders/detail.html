@@ -3,8 +3,23 @@
 {% load i18n %}
 
 {% block content %}
+<style>
+  .content-container .header {
+    display: flex;
+    justify-content: space-between; /* This will push the heading to the left and the form to the right */
+    align-items: center; /* This will vertically center align the items in the flex container */
+  }
+</style>
 <div class="content-container">
+  <div class="header">
   <h2 class="form-heading">{% trans "Client Order Details:" %} {{ client_order.order_number }}</h2>
+  {% if client_order.status != client_order.COMPLETED %}
+      <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">{% trans "Complete" %}</button>
+      </form>
+    {% endif %}
+  </div>
 
   <div class="details">
     <p><strong>{% trans "Client:" %}</strong> {{ client_order.client.name }}</p>

@@ -170,7 +170,6 @@ class DefectDeleteView(DeleteView):
 def mark_as_packing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.order
         operations = Operation.objects.filter(node__type=Node.QC)
         with transaction.atomic():
             if passport_size.stage == PassportSize.PACKING:
