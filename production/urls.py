@@ -34,6 +34,7 @@ urlpatterns = [
     path('admin/salaries/', salary_list, name='salary_list'),
     path('admin/salaries/<int:pk>/', salary_detail, name='salary_detail'),
     path('admin/salaries/export-salaries/', export_salaries_to_excel, name='export_salaries'),
+    path('admin/salaries/process-payments/', process_payments, name='process_payments'),
 
     path('admin/attendances/', attendance_list, name='attendance_list'),
 

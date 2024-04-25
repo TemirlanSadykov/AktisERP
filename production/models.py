@@ -194,13 +194,13 @@ class PassportSize(models.Model):
     quantity = models.IntegerField()
     CUTTING = 0
     SEWING = 1
-    QUALITY_CONTROL = 2
+    QC = 2
     PACKING = 3
     DONE = 4
     STAGE_CHOICES = [
         (CUTTING, 'Cutting'),
         (SEWING, 'Sewing'),
-        (QUALITY_CONTROL, 'Quality Control'),
+        (QC, 'Quality Control'),
         (PACKING, 'Packing'),
         (DONE, 'Done'),
     ]
@@ -230,6 +230,15 @@ class AssignedWork(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
+    PENDING = 0
+    HALF_PAID = 1
+    FULLY_PAID = 2
+    PAYMENT_STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (HALF_PAID, 'Half Paid'),
+        (FULLY_PAID, 'Fully Paid'),
+    ]
+    payment_status = models.IntegerField(choices=PAYMENT_STATUS_CHOICES, default=PENDING)
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.quantity}"
 
@@ -240,6 +249,15 @@ class ReassignedWork(models.Model):
     reason = models.TextField(blank=True, null=True)
     is_completed = models.BooleanField(default=False)
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
+    PENDING = 0
+    HALF_PAID = 1
+    FULLY_PAID = 2
+    PAYMENT_STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (HALF_PAID, 'Half Paid'),
+        (FULLY_PAID, 'Fully Paid'),
+    ]
+    payment_status = models.IntegerField(choices=PAYMENT_STATUS_CHOICES, default=PENDING)
     def __str__(self):
         return f"Reassigned {self.reassigned_quantity} of {self.original_assigned_work} to {self.new_employee}"
     

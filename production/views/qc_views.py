@@ -174,7 +174,7 @@ def mark_as_packing(request, passport_size_id):
         operations = Operation.objects.filter(node__type=Node.QC)
         with transaction.atomic():
             if passport_size.stage == PassportSize.PACKING:
-                passport_size.stage = PassportSize.QUALITY_CONTROL
+                passport_size.stage = PassportSize.QC
                 for operation in operations:
                     work = Work.objects.filter(passport_size=passport_size, operation=operation)
                     work.delete()

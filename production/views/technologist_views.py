@@ -754,10 +754,10 @@ def mark_as_qc(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
         with transaction.atomic():
-            if passport_size.stage == PassportSize.QUALITY_CONTROL:
+            if passport_size.stage == PassportSize.QC:
                 passport_size.stage = PassportSize.SEWING
             else:
-                passport_size.stage = PassportSize.QUALITY_CONTROL
+                passport_size.stage = PassportSize.QC
             passport_size.save()
 
         return JsonResponse({'success': True})

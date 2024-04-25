@@ -24,7 +24,8 @@ from django.http import JsonResponse
 import json
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.http import Http404
+from django.views.decorators.http import require_POST
+from urllib.parse import urlencode
 
 @login_required
 @admin_required
@@ -193,17 +194,62 @@ def salary_list(request):
     # Process assigned works
     for assigned_work in assigned_works:
         employee = assigned_work.employee
-        salaries[employee] = salaries.get(employee, 0) + \
-                             assigned_work.work.operation.payment * assigned_work.quantity
+        if employee not in salaries:
+            salaries[employee] = {'salary': 0, 'status': assigned_work.payment_status}
+        salaries[employee]['salary'] += assigned_work.work.operation.payment * assigned_work.quantity
+        # Update the status if it's more 'final' than the current one
+        salaries[employee]['status'] = max(salaries[employee]['status'], assigned_work.payment_status)
 
     # Process reassigned works
     for reassigned_work in reassigned_works:
         employee = reassigned_work.new_employee
-        salaries[employee] = salaries.get(employee, 0) + \
-                             reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
+        if employee not in salaries:
+            salaries[employee] = {'salary': 0, 'status': reassigned_work.payment_status}
+        salaries[employee]['salary'] += reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
+        # Update the status if it's more 'final' than the current one
+        salaries[employee]['status'] = max(salaries[employee]['status'], reassigned_work.payment_status)
 
     context = {'form': form, 'salaries': salaries}
     return render(request, 'admin/salaries/list.html', context)
+
+@login_required
+@admin_required
+@require_POST
+def process_payments(request):
+    form = DateRangeForm(request.POST)
+    if form.is_valid():
+        start_date = form.cleaned_data['start_date']
+        end_date = form.cleaned_data['end_date'] + timedelta(days=1)
+
+        assigned_works = AssignedWork.objects.filter(
+            end_time__range=(start_date, end_date),
+            work__passport__order__client_order__branch=request.user.userprofile.branch
+        )
+
+        reassigned_works = ReassignedWork.objects.filter(
+            original_assigned_work__end_time__range=(start_date, end_date),
+            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
+        )
+
+        for work in assigned_works:
+            if work.employee.type in [UserProfile.QC, UserProfile.PACKER]:
+                work.payment_status = AssignedWork.HALF_PAID
+            else:
+                work.payment_status = AssignedWork.FULLY_PAID
+            work.save()
+
+        for work in reassigned_works:
+            if work.new_employee.type in [UserProfile.QC, UserProfile.PACKER]:
+                work.payment_status = ReassignedWork.HALF_PAID
+            else:
+                work.payment_status = ReassignedWork.FULLY_PAID
+            work.save()
+        base_url = reverse('salary_list')
+        query_string = urlencode({'start_date': form.cleaned_data['start_date'].strftime('%Y-%m-%d'), 'end_date': form.cleaned_data['end_date'].strftime('%Y-%m-%d')})
+        url = f"{base_url}?{query_string}"
+        return redirect(url)
+    else:
+        return redirect('salary_list')
 
 @login_required
 @admin_required
