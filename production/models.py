@@ -231,12 +231,10 @@ class AssignedWork(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
     PENDING = 0
-    HALF_PAID = 1
-    FULLY_PAID = 2
+    PAID = 1
     PAYMENT_STATUS_CHOICES = [
         (PENDING, 'Pending'),
-        (HALF_PAID, 'Half Paid'),
-        (FULLY_PAID, 'Fully Paid'),
+        (PAID, 'Paid'),
     ]
     payment_status = models.IntegerField(choices=PAYMENT_STATUS_CHOICES, default=PENDING)
     def __str__(self):
@@ -250,12 +248,10 @@ class ReassignedWork(models.Model):
     is_completed = models.BooleanField(default=False)
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
     PENDING = 0
-    HALF_PAID = 1
-    FULLY_PAID = 2
+    PAID = 1
     PAYMENT_STATUS_CHOICES = [
         (PENDING, 'Pending'),
-        (HALF_PAID, 'Half Paid'),
-        (FULLY_PAID, 'Fully Paid'),
+        (PAID, 'Paid'),
     ]
     payment_status = models.IntegerField(choices=PAYMENT_STATUS_CHOICES, default=PENDING)
     def __str__(self):

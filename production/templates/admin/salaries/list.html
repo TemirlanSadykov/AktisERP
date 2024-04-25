@@ -3,9 +3,8 @@
 
 {% block content %}
 <style>
-  .payment-pending { color: red; }
-  .payment-half-paid { color: blue; }
-  .payment-fully-paid { color: green; }
+  .payment-pending { color: blue; }
+  .payment-paid { color: green; }
 </style>
 
 <div class="content-container">
@@ -36,7 +35,7 @@
     <tbody>
       {% for user, data in salaries.items %}
       {% with status=data.status %}
-      <tr class="{% if status == 0 %}payment-pending{% elif status == 1 %}payment-half-paid{% elif status == 2 %}payment-fully-paid{% endif %}">
+      <tr class="{% if status == 0 %}payment-pending{% elif status == 1 %}payment-paid{% endif %}">
         <td>
           <a href="{% url 'salary_detail' pk=user.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
             {{ user.user.get_full_name }}

@@ -232,17 +232,11 @@ def process_payments(request):
         )
 
         for work in assigned_works:
-            if work.employee.type in [UserProfile.QC, UserProfile.PACKER]:
-                work.payment_status = AssignedWork.HALF_PAID
-            else:
-                work.payment_status = AssignedWork.FULLY_PAID
+            work.payment_status = AssignedWork.PAID
             work.save()
 
         for work in reassigned_works:
-            if work.new_employee.type in [UserProfile.QC, UserProfile.PACKER]:
-                work.payment_status = ReassignedWork.HALF_PAID
-            else:
-                work.payment_status = ReassignedWork.FULLY_PAID
+            work.payment_status = ReassignedWork.PAID
             work.save()
         base_url = reverse('salary_list')
         query_string = urlencode({'start_date': form.cleaned_data['start_date'].strftime('%Y-%m-%d'), 'end_date': form.cleaned_data['end_date'].strftime('%Y-%m-%d')})
