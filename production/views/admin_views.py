@@ -507,7 +507,7 @@ def client_order_complete(request, pk):
                     passport_sizes = PassportSize.objects.filter(passport=passport)
                     for passport_size in passport_sizes:
                         # Assume operations need to be created for QC and Packing stages
-                        operations = Operation.objects.filter(node__type__in=[Node.QC, Node.PACKING])
+                        operations = Operation.objects.filter(node__type=Node.QC)
                         for operation in operations:
                             # Create work for each operation
                             work = Work.objects.create(
