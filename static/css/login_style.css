@@ -1,30 +1,27 @@
-/* Adjusts the overall container to center the login form vertically and horizontally */
+/* Global styles */
 .container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; /* Makes sure the container takes up full viewport height */
+    height: 100vh;
 }
 
-/* Styles the login container with a max width, padding, and a subtle border and shadow for depth */
 .login-container {
     width: 100%;
-    max-width: 400px; /* Maximum width of the login form container */
-    padding: 20px; /* Padding inside the container */
-    border: 1px solid #dee2e6; /* Light grey border using Bootstrap's color */
-    border-radius: 5px; /* Rounded corners */
-    box-shadow: 0 2px 4px rgba(0,0,0,.1); /* Subtle shadow for depth */
+    max-width: 400px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
 }
 
-/* Styles the heading of the form for better spacing */
 .form-heading {
-    margin-bottom: 20px; /* Adds bottom margin for spacing */
+    margin-bottom: 20px;
 }
 
-/* Ensures the login button takes full width of the form and adds spacing above */
 .login-form .btn-primary {
-    width: 100%; /* Full-width button */
-    margin-top: 20px; /* Space above the button */
+    width: 100%;
+    margin-top: 20px;
 }
 
 .login-form label {
@@ -33,12 +30,37 @@
     display: block;
 }
 
-/* Styles error messages in Bootstrap's danger color for consistency */
 .error-message {
-    color: #dc3545; /* Bootstrap's danger color for errors */
-    margin-top: 15px; /* Top margin for spacing */
+    color: #dc3545;
+    margin-top: 15px;
 }
 
 input {
     width: 100%;
+}
+
+/* Styles specific for devices with max-width of 768px (e.g., phones) */
+@media (max-width: 768px) {
+    .container {
+        height: auto;  /* Not full viewport height */
+        margin-top: 50px; /* Top margin to not start at the very top */
+    }
+    .login-container {
+        border: none;  /* No border for phone version */
+        box-shadow: none;  /* No shadow for phone version */
+        padding: 10px; /* Reduced padding */
+    }
+    .login-form .btn-primary {
+        margin-top: 10px;  /* Reduced margin above the button */
+    }
+}
+
+/* Optionally, you can adjust the font sizes for smaller screens */
+@media (max-width: 768px) {
+    body {
+        font-size: 16px; /* Increased font size for readability on small devices */
+    }
+    .form-heading {
+        font-size: 24px; /* Larger heading for emphasis */
+    }
 }
