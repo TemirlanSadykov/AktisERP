@@ -6,8 +6,8 @@
 <style>
   .content-container .header {
     display: flex;
-    justify-content: space-between; /* This will push the heading to the left and the form to the right */
-    align-items: center; /* This will vertically center align the items in the flex container */
+    justify-content: space-between;
+    align-items: center;
   }
 </style>
 <div class="content-container">
@@ -25,6 +25,7 @@
     <p><strong>{% trans "Client:" %}</strong> {{ client_order.client.name }}</p>
     <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+    <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
   </div>
 
   <div class="form-actions">

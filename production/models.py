@@ -137,6 +137,7 @@ class SizeQuantity(models.Model):
 class ClientOrder(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True)
     objects = BranchAwareManager()
+    created_at = models.DateTimeField(default=timezone.now)
     order_number = models.CharField(max_length=100)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders')
     NEW = 0

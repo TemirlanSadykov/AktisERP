@@ -104,8 +104,14 @@ class DateForm(forms.Form):
     date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
 
 class DateRangeForm(forms.Form):
-    start_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
-    end_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+    start_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False 
+    )
+    end_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False
+    )
 
 
 

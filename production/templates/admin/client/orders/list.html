@@ -13,6 +13,12 @@
     <h2 class="list-heading">{% trans "Client Orders" %}</h2>
     <p class="create-link"><a href="{% url 'client_order_create' %}" class="btn create-btn">{% trans "Create New Order" %}</a></p>
   </div>
+  <div class="filter-header">
+    <form method="get" class="date-filter-form">
+      {{ form.as_p }}
+      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
+    </form>
+  </div>
   <ul class="list-group">
     {% for order_info in orders_with_days_left %}
       <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
