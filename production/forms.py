@@ -176,6 +176,11 @@ class ModelForm(forms.ModelForm):
         model = Model
         fields = ['name', 'operations']
 
+    def __init__(self, *args, **kwargs):
+        super(ModelForm, self).__init__(*args, **kwargs)
+        common_operations = Operation.objects.filter(node__is_common=True)
+        self.fields['operations'].initial = common_operations
+
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client

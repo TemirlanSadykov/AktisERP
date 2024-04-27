@@ -47,7 +47,7 @@
           </h3>
           <div class="operations-container" id="operations-{{ node.id }}" style="display:none;">
             {% for operation in node.operations.all %}
-                <input type="checkbox" name="operations" value="{{ operation.id }}">
+                <input type="checkbox" name="operations" value="{{ operation.id }}" {% if operation.id in form.operations.value %} checked {% endif %}>
                 {{ operation.name }}<br>
             {% endfor %}
           </div>
