@@ -86,6 +86,7 @@ urlpatterns = [
     path('technologist/operations/<int:pk>/edit/', OperationUpdateView.as_view(), name='operation_edit'),
     path('technologist/operations/<int:pk>/delete/', OperationDeleteView.as_view(), name='operation_delete'),
     path('technologist/operations/<int:operation_id>/calculate_average/', calculate_average_completion_time, name='calculate_average'),
+    path('technologist/operations/upload/', operation_upload, name='operation_upload'),
 
     path('technologist/rolls/', RollListView.as_view(), name='roll_list'),
     path('technologist/rolls/create/', RollCreateView.as_view(), name='roll_create'),

@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
+<div class="order-detail-cutter-container">
   <div class="tabs">
     <a href="{% url 'operation_list' %}" class="{% if not selected_node %}active{% endif %}">{% trans "All" %}</a>
     {% for node in nodes %}
@@ -11,9 +11,43 @@
   </div>
   <div class="header">
     <h2 class="list-heading">{% trans "Operations" %}</h2>
-    <p class="create-link"><a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a></p>
+    <p class="create-link">
+      <a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a>
+      <!-- Trigger/Open The Modal -->
+      <button id="upload_button" type="button" class="btn" data-toggle="modal" data-target="#uploadModal">
+        {% trans "Upload from Excel" %}
+      </button>
+    </p>
   </div>
-
+  <div class="modal" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+      
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{% trans "Upload Operations" %}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="excel_file" id="excel_file" required>
+            <div class="form-group">
+              <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
   <ul class="list-group">
     {% for operation in operations %}
       <li class="list-group-item">

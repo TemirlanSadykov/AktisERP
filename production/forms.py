@@ -8,6 +8,7 @@ from .models import *
 from django_select2 import forms as s2forms
 from django.forms import inlineformset_factory
 from django.forms import ModelChoiceField
+from django.core.validators import FileExtensionValidator
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -265,3 +266,9 @@ class FixedSalaryForm(forms.ModelForm):
         model = FixedSalary
         fields = ['position', 'salary', 'employees']
         
+class UploadFileForm(forms.Form):
+    excel_file = forms.FileField(
+        label='Select an Excel file',
+        help_text='Maximum size allowed is 10MB',
+        validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
+    )

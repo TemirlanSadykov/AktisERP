@@ -611,6 +611,7 @@ class OperationListView(ListView):
         nodes = Node.objects.all().order_by('name')
         context['nodes'] = nodes
         context['selected_node'] = self.request.GET.get('node', '')
+        context['upload_form'] = UploadFileForm()
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -673,6 +674,42 @@ def calculate_average_completion_time(request, operation_id):
         messages.error(request, 'No completed assigned works found for this operation.')
 
     return redirect('operation_detail', pk=operation.pk)
+
+@login_required
+@technologist_required
+@require_POST
+def operation_upload(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                node_name, _, operation_name, equipment_name, time, price, _ = row
+                
+                node, _ = Node.objects.get_or_create(name=node_name)
+                equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
+                
+                operation = Operation(
+                    name=operation_name,
+                    payment=price,
+                    equipment=equipment,
+                    node=node,
+                    preferred_completion_time=time
+                )
+                operation.save()
+
+            messages.success(request, 'Operations uploaded successfully.')
+            return HttpResponseRedirect(reverse_lazy('operation_list'))
+        except Exception as e:
+            messages.error(request, f'There was an error processing the file: {e}')
+        finally:
+            if 'workbook' in locals():
+                workbook.close()
+    else:
+        messages.error(request, 'There was an error with the file upload.')
 
 
 

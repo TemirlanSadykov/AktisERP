@@ -111,7 +111,7 @@ class Node(models.Model):
         return self.name
     
 class Operation(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=300)
     payment = models.DecimalField(max_digits=10, decimal_places=2)
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations')
     node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations')
