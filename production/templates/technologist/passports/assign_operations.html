@@ -7,7 +7,7 @@
   <div class="passport-details">
     <p>
       <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
-      <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
+      <strong>{% trans "Client:" %}</strong> {{ passport.order.client_order.client.name }},
       <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
       <strong>{% trans "Roll:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.name }}{% endfor %},
       <strong>{% trans "Usage:" %}</strong> {% for pr in passport_rolls %} {{ pr.meters }}м{% endfor %},
@@ -68,6 +68,7 @@
         <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
       {% endif %}
     </form> {% endcomment %}
+    <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
     <a href="{% url 'order_detail_technologist' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>

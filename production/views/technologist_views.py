@@ -20,6 +20,12 @@ from django.views.decorators.http import require_POST
 from django.db.models import Sum
 from ..mixins import *
 from collections import defaultdict
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Border, Side
+from django.http import HttpResponse
 
 @login_required
 @technologist_required
@@ -350,42 +356,6 @@ def update_work_success(request):
         return JsonResponse({'status': 'success'})
     except AssignedWork.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Assigned work not found'}, status=404)
-    
-# @login_required
-# @technologist_required
-# @require_POST
-# def complete_passport(request, passport_id):
-#     passport = get_object_or_404(Passport, id=passport_id)
-#     total_completed = PassportSize.objects.filter(passport=passport).aggregate(total=Sum('quantity'))['total'] or 0
-#     order = passport.order
-#     client_order = order.client_order
-
-#     with transaction.atomic():
-#         if not passport.is_completed:
-#             passport.is_completed = True
-#             order.completed_quantity += total_completed
-#         else:
-#             passport.is_completed = False
-#             order.completed_quantity -= total_completed
-
-#         passport.save()
-#         order.save()
-
-#         if order.completed_quantity >= order.quantity:
-#             order.status = Order.COMPLETED
-#             order.save()
-#             all_orders_completed = not Order.objects.filter(client_order=client_order, status=Order.IN_PROGRESS).exists()
-#             if all_orders_completed:
-#                 client_order.status = ClientOrder.COMPLETED
-#                 client_order.save()
-#         elif order.completed_quantity < order.quantity and order.status == Order.COMPLETED:
-#             order.status = Order.IN_PROGRESS
-#             order.save()
-#             if client_order.status == ClientOrder.COMPLETED:
-#                 client_order.status = ClientOrder.IN_PROGRESS
-#                 client_order.save()
-
-#     return redirect('order_detail_technologist', pk=order.pk)
 
 @login_required
 @technologist_required
@@ -464,6 +434,161 @@ def complete_reassigned_work(request):
         return JsonResponse({'message': 'Reassigned work not found'}, status=404)
     except Exception as e:
         return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
+
+@login_required
+@technologist_required
+def download_passport_excel(request, passport_id):
+    # Fetch the Passport and related data
+    passport = get_object_or_404(Passport, pk=passport_id)
+    passport_sizes = PassportSize.objects.filter(passport=passport)
+    passport_rolls = PassportRoll.objects.filter(passport=passport)
+
+    # Create a workbook and initialize a worksheet
+    wb = Workbook()
+    ws = wb.active
+
+    # First row headers
+    headers = [
+        'заказч', 'модель', 'ассортимент', '', '№ рулона', 'цвет', 'Ткань', 'дата кроя'
+    ]
+    ws.append(headers)
+
+    # Set headers style
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    # Insert data in the second row
+    passport_roll = passport_rolls.first() if passport_rolls else None
+    second_row_data = [
+        passport.order.client_order.client.name, passport.order.model.name, passport.order.assortment.name,
+        '', passport_roll.roll.name if passport_roll else '',
+        passport_roll.roll.color if passport_roll else '',
+        passport_roll.roll.fabrics if passport_roll else '',
+        passport.date.strftime("%m/%d/%Y") if passport.date else ''
+    ]
+    ws.append(second_row_data)
+
+    # Define the operation headers
+    operation_headers = [
+        '№', 'Операции', 'Оборуд.', 'тех-процесс', 'расценки', 'трудоемкость'
+    ]
+
+    # Add size columns based on size_quantities in the order
+    sizes = [size.size for size in passport.order.size_quantities.all()]
+    operation_headers.extend(sizes)
+
+    # Append operation headers
+    ws.append(operation_headers)
+
+    # Set style for operation headers
+    for cell in ws[3]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    # Populate the worksheet with operations and their details
+    operations = passport.order.model.operations.all().order_by('node__name')
+
+    for index, operation in enumerate(operations, start=1):
+        # Assume 'get_operation_details' is a method to fetch needed details
+        # You will need to implement this based on your application's specific data
+        operation_details = get_operation_details(operation, passport_sizes)
+        row_data = [index] + operation_details
+        ws.append(row_data)
+
+
+    # Autosize column widths
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length
+
+    # Apply bold font style to headers and sizes
+    bold_font = Font(bold=True)
+    header_rows = [1, 3]  # Rows which contain the headers you mentioned
+
+    # Apply bold font to all cells in the header rows
+    for row in header_rows:
+        for cell in ws[row]:
+            cell.font = bold_font
+
+    # Additionally, bold the size headers individually in case they are not in the above rows
+    size_header_row = 3  # Assuming the size headers are in the third row
+    for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
+        ws.cell(row=size_header_row, column=size_col).font = bold_font
+
+    # Define border style
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Apply borders to the first two rows, creating a box effect
+    for row in ws.iter_rows(min_row=1, max_row=2, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            cell.border = thin_border
+
+    # Insert an empty row after the first two rows
+    ws.insert_rows(3)
+
+    # Now adjust your other rows accordingly since you inserted a new row
+    # You might need to update the `header_rows` and `size_header_row` if you used the previous code snippet
+    header_rows = [1, 4]  # Updated to reflect the new empty row
+    size_header_row = 4   # Updated to reflect the new empty row
+
+    # Apply bold font to all cells in the updated header rows
+    for row in header_rows:
+        for cell in ws[row]:
+            cell.font = bold_font
+
+    # Additionally, bold the size headers individually
+    for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
+        ws.cell(row=size_header_row, column=size_col).font = bold_font
+
+    # Set the HTTP response with a content-type for Excel file
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="Passport_{passport_id}_Details.xlsx"'
+
+    # Save the workbook to the response
+    wb.save(response)
+    return response
+
+def get_operation_details(operation, passport_sizes):
+    # Start with the name of the operation and the name of the equipment
+    details = [
+        operation.node.name,
+        operation.equipment.name,
+        operation.name,
+        operation.payment,
+        operation.preferred_completion_time
+    ]
+
+    # Fetch the related AssignedWork for each size and collect employee IDs
+    for passport_size in passport_sizes:
+        # Get the assigned works
+        assigned_works = AssignedWork.objects.filter(
+            work__operation=operation,
+            work__passport_size=passport_size
+        ).select_related('employee')
+
+        # Get the reassigned works related to the operation and passport size
+        reassigned_works = ReassignedWork.objects.filter(
+            original_assigned_work__work__operation=operation,
+            original_assigned_work__work__passport_size=passport_size
+        ).select_related('new_employee')
+
+        # Collect unique employee IDs for each assigned and reassigned work
+        employee_ids = set(aw.employee.employee_id for aw in assigned_works)
+        # Add the employee IDs from the reassigned works
+        employee_ids.update(rw.new_employee.employee_id for rw in reassigned_works)
+
+        # Append the joined employee IDs to the details
+        details.append(', '.join(employee_ids))
+
+    return details
 
 
 
