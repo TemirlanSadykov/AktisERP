@@ -14,7 +14,7 @@
     <p class="create-link">
       <a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a>
       <!-- Trigger/Open The Modal -->
-      <button id="upload_button" type="button" class="btn" data-toggle="modal" data-target="#uploadModal">
+      <button id="upload_button" type="button" class="btn create-btn" data-toggle="modal" data-target="#uploadModal">
         {% trans "Upload from Excel" %}
       </button>
     </p>
@@ -34,14 +34,12 @@
           <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="file" name="excel_file" id="excel_file" required>
-            <div class="form-group">
-              <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
-            </div>
           </form>
         </div>
         
-        <!-- Modal footer -->
-        <div class="modal-footer">
+        <!-- Modal Footer -->
+        <div class="modal-footer justify-content-between">
+          <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
           <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
         </div>
         
