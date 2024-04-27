@@ -9,6 +9,7 @@ from django_select2 import forms as s2forms
 from django.forms import inlineformset_factory
 from django.forms import ModelChoiceField
 from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -185,8 +186,15 @@ class ClientOrderForm(forms.ModelForm):
         model = ClientOrder
         fields = ['order_number', 'client', 'term']
         widgets = {
-            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}), 
+            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
         }
+
+    def clean_term(self):
+        term = self.cleaned_data.get('term')
+        today = timezone.localdate()
+        if term < today:
+            raise ValidationError("The term date cannot be earlier than today.")
+        return term
 
 class OrderForm(forms.ModelForm):
     class Meta:
