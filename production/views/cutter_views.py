@@ -290,8 +290,8 @@ class PassportDetailView(DetailView):
 @login_required
 @cutter_required
 @require_POST
-def passport_delete(request, pk):
-    passport = get_object_or_404(Passport, pk=pk)
+def passport_delete(request, passport_id):
+    passport = get_object_or_404(Passport, id=passport_id)
     order = passport.order
     client_order = order.client_order
 

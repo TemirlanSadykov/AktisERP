@@ -58,7 +58,7 @@
     <a href="{% url 'order_detail_cutter' passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
-  <form id="deleteForm" action="{% url 'passport_delete' passport.pk %}" method="post" style="display:none;">
+  <form id="deleteForm" action="{% url 'passport_delete' passport_id=passport.id %}" method="post" style="display:none;">
     {% csrf_token %}
   </form>
 </div>

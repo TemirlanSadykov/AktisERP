@@ -463,8 +463,9 @@ class ClientOrderCreateView(CreateView):
         self.object.branch = self.request.user.userprofile.branch
         self.object.save()
         form.save_m2m()
-        redirect_url = reverse('client_order_list')
+        redirect_url = reverse('client_order_detail', kwargs={'pk': self.object.pk})
         return HttpResponseRedirect(redirect_url)
+
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientOrderDetailView(DetailView):
@@ -490,7 +491,9 @@ class ClientOrderUpdateView(RestrictBranchMixin, UpdateView):
     model = ClientOrder
     form_class = ClientOrderForm
     template_name = 'admin/client/orders/edit.html'
-    success_url = reverse_lazy('client_order_list')
+
+    def get_success_url(self):
+        return reverse('client_order_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
@@ -556,7 +559,7 @@ class OrderCreateView(CreateView):
         self.object.client_order = get_object_or_404(ClientOrder, pk=self.kwargs['client_order_pk'])
         self.object.save()
         form.save_m2m()
-        redirect_url = reverse('create_size_quantity', kwargs={'order_id': self.object.id})
+        redirect_url = reverse('create_size_quantity', kwargs={'pk': self.object.id})
         return HttpResponseRedirect(redirect_url)
 
 @method_decorator([login_required, admin_required], name='dispatch')
@@ -595,8 +598,8 @@ class OrderDeleteView(DeleteView):
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class SizeQuantityCreateView(View):
-    def get(self, request, order_id):
-        order = get_object_or_404(Order, pk=order_id)
+    def get(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
         form = SizeQuantityForm()
         size_quantities = order.size_quantities.all()
         return render(request, 'admin/orders/create_size_quantity.html', {
@@ -604,13 +607,13 @@ class SizeQuantityCreateView(View):
             'size_quantities': size_quantities,
             'order': order
         })
-    def post(self, request, order_id):
+    def post(self, request, pk):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             form = SizeQuantityForm(request.POST)
             if form.is_valid():
                 new_size_quantity = form.save(commit=False)
                 new_size_quantity.save()
-                order = get_object_or_404(Order, pk=order_id)
+                order = get_object_or_404(Order, pk=pk)
                 order.size_quantities.add(new_size_quantity)
                 size_quantities = order.size_quantities.values('id', 'size', 'quantity')
                 return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})

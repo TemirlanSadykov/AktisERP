@@ -49,7 +49,7 @@ urlpatterns = [
     path('admin/orders/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
     path('admin/orders/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
     path('admin/orders/<int:pk>/delete/', OrderDeleteView.as_view(), name='order_delete'),
-    path('admin/orders/<int:order_id>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
+    path('admin/orders/<int:pk>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
     path('admin/orders/edit-size-quantity/<int:sq_id>/', edit_size_quantity, name='edit_size_quantity'),
     path('admin/orders/delete-size-quantity/<int:sq_id>/', delete_size_quantity, name='delete_size_quantity'),
 
@@ -128,7 +128,7 @@ urlpatterns = [
     path('cutter/orders/<int:pk>/', OrderDetailCutterView.as_view(), name='order_detail_cutter'),
     path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
     path('cutter/orders/<int:pk>/passport/create', PassportCreateView.as_view(), name='passport_create'),
-    path('cutter/orders/passport/<int:pk>/delete/', passport_delete, name='passport_delete'),
+    path('cutter/orders/passport/<int:passport_id>/delete/', passport_delete, name='passport_delete'),
     path('cutter/orders/passport/<int:passport_id>/create_passport_roll/', PassportRollCreateView.as_view(), name='create_passport_roll'),
     path('cutter/orders/passport/<int:passport_id>/create_passport_size/', PassportSizeCreateView.as_view(), name='create_passport_size'),
     path('cutter/orders/passport/<int:sq_id>/edit_size_quantity/', edit_passport_size_quantity, name='edit_passport_size_quantity'),
