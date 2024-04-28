@@ -231,13 +231,7 @@ class AssignedWork(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
-    PENDING = 0
-    PAID = 1
-    PAYMENT_STATUS_CHOICES = [
-        (PENDING, 'Pending'),
-        (PAID, 'Paid'),
-    ]
-    payment_status = models.IntegerField(choices=PAYMENT_STATUS_CHOICES, default=PENDING)
+    payment_date = models.DateField(null=True)
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.quantity}"
 
@@ -248,13 +242,7 @@ class ReassignedWork(models.Model):
     reason = models.TextField(blank=True, null=True)
     is_completed = models.BooleanField(default=False)
     is_success = models.BooleanField(default=False, verbose_name="Completed Successfully")
-    PENDING = 0
-    PAID = 1
-    PAYMENT_STATUS_CHOICES = [
-        (PENDING, 'Pending'),
-        (PAID, 'Paid'),
-    ]
-    payment_status = models.IntegerField(choices=PAYMENT_STATUS_CHOICES, default=PENDING)
+    payment_date = models.DateField(null=True)
     def __str__(self):
         return f"Reassigned {self.reassigned_quantity} of {self.original_assigned_work} to {self.new_employee}"
     
@@ -307,3 +295,12 @@ class FixedSalary(models.Model):
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     def __str__(self):
         return f"{self.position} - {self.salary}"
+    
+class SalaryPayment(models.Model):
+    fixed_salary = models.ForeignKey(FixedSalary, on_delete=models.CASCADE, related_name='salary_payments')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='salary_payments')
+    payment_date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.employee.user.username} - {self.payment_date} - {self.amount}"

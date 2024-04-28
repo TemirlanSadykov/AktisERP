@@ -170,45 +170,41 @@ def salary_list(request):
     form = DateRangeForm(request.GET or None)
     salaries = {}
 
-    # Initialize assigned_works and reassigned_works outside the if block
     assigned_works = AssignedWork.objects.none()
     reassigned_works = ReassignedWork.objects.none()
 
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
-        
-        # Apply branch filter to assigned_works and reassigned_works queries
+
         assigned_works = AssignedWork.objects.filter(
             end_time__range=(start_date, end_date),
             end_time__isnull=False,
-            is_success=True,  # Only include successful works
-            work__passport__order__client_order__branch=request.user.userprofile.branch  # Filter by the current user's branch
+            is_success=True,
+            work__passport__order__client_order__branch=request.user.userprofile.branch
         ).select_related('work__operation', 'employee')
 
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True,  # Only include successful works
-            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch  # Filter by the current user's branch
+            is_success=True,
+            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
         ).select_related('original_assigned_work__work__operation', 'new_employee')
 
-    # Process assigned works
     for assigned_work in assigned_works:
         employee = assigned_work.employee
         if employee not in salaries:
-            salaries[employee] = {'salary': 0, 'status': assigned_work.payment_status}
+            salaries[employee] = {'salary': 0, 'status': 0}
         salaries[employee]['salary'] += assigned_work.work.operation.payment * assigned_work.quantity
-        # Update the status if it's more 'final' than the current one
-        salaries[employee]['status'] = max(salaries[employee]['status'], assigned_work.payment_status)
+        # Determine status based on payment_date
+        salaries[employee]['status'] = 1 if assigned_work.payment_date else 0
 
-    # Process reassigned works
     for reassigned_work in reassigned_works:
         employee = reassigned_work.new_employee
         if employee not in salaries:
-            salaries[employee] = {'salary': 0, 'status': reassigned_work.payment_status}
+            salaries[employee] = {'salary': 0, 'status': 0}
         salaries[employee]['salary'] += reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
-        # Update the status if it's more 'final' than the current one
-        salaries[employee]['status'] = max(salaries[employee]['status'], reassigned_work.payment_status)
+        # Determine status based on payment_date
+        salaries[employee]['status'] = 1 if reassigned_work.payment_date else 0
 
     context = {'form': form, 'salaries': salaries}
     return render(request, 'admin/salaries/list.html', context)
@@ -233,11 +229,11 @@ def process_payments(request):
         )
 
         for work in assigned_works:
-            work.payment_status = AssignedWork.PAID
+            work.payment_date = timezone.now()
             work.save()
 
         for work in reassigned_works:
-            work.payment_status = ReassignedWork.PAID
+            work.payment_date = timezone.now()
             work.save()
         base_url = reverse('salary_list')
         query_string = urlencode({'start_date': form.cleaned_data['start_date'].strftime('%Y-%m-%d'), 'end_date': form.cleaned_data['end_date'].strftime('%Y-%m-%d')})
