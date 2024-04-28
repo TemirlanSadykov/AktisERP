@@ -114,6 +114,20 @@ class DateRangeForm(forms.Form):
         required=False
     )
 
+class SalaryListForm(forms.Form):
+    start_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False 
+    )
+    end_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False
+    )
+    salary_type = forms.ChoiceField(
+        choices=(('non_fixed', 'Non-fixed'), ('fixed', 'Fixed')),
+        required=False
+    )
+
 
 
 class PassportRollForm(forms.ModelForm):

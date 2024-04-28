@@ -11,6 +11,7 @@
     </form>
   </div>
 
+  {% if form.cleaned_data.salary_type == 'non_fixed' %}
   <table class="table">
     <thead>
       <tr>
@@ -33,13 +34,37 @@
       {% endfor %}
     </tbody>
   </table>
+  {% elif form.cleaned_data.salary_type == 'fixed' %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "Date" %}</th>
+        <th>{% trans "Clock-in Time" %}</th>
+        <th>{% trans "Clock-out Time" %}</th>
+        <th>{% trans "Hours Worked" %}</th> 
+        <th>{% trans "Salary for Day" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for work in works %}
+      <tr>
+        <td>{{ work.date|date:"Y-m-d" }}</td>
+        <td>{{ work.clock_in|date:"H:i:s" }}</td>
+        <td>{{ work.clock_out|date:"H:i:s" }}</td>
+        <td>{{ work.hours_worked }}</td> 
+        <td>{{ work.daily_salary|floatformat:2 }} {% trans "Som" %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 
   <div class="total-salary">
     <h3>{% trans "Total Salary:" %} {{ total_salary|floatformat:2 }} {% trans "Som" %}</h3>
   </div>
 
   <div class="navigation-link">
-    <a href="{% url 'salary_list' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'salary_list' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>
 {% endblock %}

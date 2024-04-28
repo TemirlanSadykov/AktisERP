@@ -18,9 +18,10 @@
       {% csrf_token %}
       <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
       <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+      <input type="hidden" name="salary_type" value="{{ request.GET.salary_type }}">
       <button type="submit" class="btn filter-btn">{% trans "Pay" %}</button>
     </form>
-    <a href="{% url 'export_salaries' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
+    <a href="{% url 'export_salaries' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
       {% trans "Download Excel" %}
     </a>
   </div>
@@ -37,7 +38,7 @@
       {% with status=data.status %}
       <tr class="{% if status == 0 %}payment-pending{% elif status == 1 %}payment-paid{% endif %}">
         <td>
-          <a href="{% url 'salary_detail' pk=user.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
+          <a href="{% url 'salary_detail' pk=user.id %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
             {{ user.user.get_full_name }}
           </a>
         </td>

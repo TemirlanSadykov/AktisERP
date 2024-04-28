@@ -27,6 +27,7 @@ from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from urllib.parse import urlencode
 from django.db import transaction
+from django.db.models import F
 
 @login_required
 @admin_required
@@ -167,7 +168,7 @@ def passport_detail_admin(request, pk):
 @login_required
 @admin_required
 def salary_list(request):
-    form = DateRangeForm(request.GET or None)
+    form = SalaryListForm(request.GET or None)
     salaries = {}
 
     assigned_works = AssignedWork.objects.none()
@@ -176,35 +177,61 @@ def salary_list(request):
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
+        salary_type = form.cleaned_data['salary_type']
 
-        assigned_works = AssignedWork.objects.filter(
-            end_time__range=(start_date, end_date),
-            end_time__isnull=False,
-            is_success=True,
-            work__passport__order__client_order__branch=request.user.userprofile.branch
-        ).select_related('work__operation', 'employee')
+        if salary_type == 'non_fixed':
+            assigned_works = AssignedWork.objects.filter(
+                end_time__range=(start_date, end_date),
+                end_time__isnull=False,
+                is_success=True,
+                work__passport__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('work__operation', 'employee')
 
-        reassigned_works = ReassignedWork.objects.filter(
-            original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True,
-            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
-        ).select_related('original_assigned_work__work__operation', 'new_employee')
+            reassigned_works = ReassignedWork.objects.filter(
+                original_assigned_work__end_time__range=(start_date, end_date),
+                is_success=True,
+                original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('original_assigned_work__work__operation', 'new_employee')
 
-    for assigned_work in assigned_works:
-        employee = assigned_work.employee
-        if employee not in salaries:
-            salaries[employee] = {'salary': 0, 'status': 0}
-        salaries[employee]['salary'] += assigned_work.work.operation.payment * assigned_work.quantity
-        # Determine status based on payment_date
-        salaries[employee]['status'] = 1 if assigned_work.payment_date else 0
+            for assigned_work in assigned_works:
+                employee = assigned_work.employee
+                if employee not in salaries:
+                    salaries[employee] = {'salary': 0, 'status': 0}
+                salaries[employee]['salary'] += assigned_work.work.operation.payment * assigned_work.quantity
+                salaries[employee]['status'] = 1 if assigned_work.payment_date else 0
 
-    for reassigned_work in reassigned_works:
-        employee = reassigned_work.new_employee
-        if employee not in salaries:
-            salaries[employee] = {'salary': 0, 'status': 0}
-        salaries[employee]['salary'] += reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
-        # Determine status based on payment_date
-        salaries[employee]['status'] = 1 if reassigned_work.payment_date else 0
+            for reassigned_work in reassigned_works:
+                employee = reassigned_work.new_employee
+                if employee not in salaries:
+                    salaries[employee] = {'salary': 0, 'status': 0}
+                salaries[employee]['salary'] += reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
+                salaries[employee]['status'] = 1 if reassigned_work.payment_date else 0
+
+        elif salary_type == 'fixed':
+            fixed_salaries = FixedSalary.objects.filter(
+                branch=request.user.userprofile.branch
+            ).prefetch_related('employees')
+
+            for fixed_salary in fixed_salaries:
+                for employee in fixed_salary.employees.all():
+                    days_count = EmployeeAttendance.objects.filter(
+                        employee=employee,
+                        timestamp__range=(start_date, end_date),
+                        is_clock_in=True
+                    ).dates('timestamp', 'day').count()
+
+                    total_salary = days_count * fixed_salary.salary
+                    if employee not in salaries:
+                        salaries[employee] = {'salary': total_salary, 'status': 0}
+                    
+                    # Check for payments within the date range
+                    payment_exists = SalaryPayment.objects.filter(
+                        employee=employee,
+                        fixed_salary=fixed_salary,
+                        payment_date__range=(start_date, end_date)
+                    ).exists()
+                    
+                    salaries[employee]['status'] = 1 if payment_exists else 0
 
     context = {'form': form, 'salaries': salaries}
     return render(request, 'admin/salaries/list.html', context)
@@ -213,74 +240,152 @@ def salary_list(request):
 @admin_required
 @require_POST
 def process_payments(request):
-    form = DateRangeForm(request.POST)
+    form = SalaryListForm(request.POST)
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
+        salary_type = form.cleaned_data['salary_type']
 
-        assigned_works = AssignedWork.objects.filter(
-            end_time__range=(start_date, end_date),
-            work__passport__order__client_order__branch=request.user.userprofile.branch
-        )
+        if salary_type == 'non_fixed':
+            # Process Non-Fixed Salary Payments (Existing logic)
+            assigned_works = AssignedWork.objects.filter(
+                end_time__range=(start_date, end_date),
+                work__passport__order__client_order__branch=request.user.userprofile.branch
+            )
 
-        reassigned_works = ReassignedWork.objects.filter(
-            original_assigned_work__end_time__range=(start_date, end_date),
-            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
-        )
+            reassigned_works = ReassignedWork.objects.filter(
+                original_assigned_work__end_time__range=(start_date, end_date),
+                original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
+            )
 
-        for work in assigned_works:
-            work.payment_date = timezone.now()
-            work.save()
+            for work in assigned_works:
+                work.payment_date = timezone.now()
+                work.save()
 
-        for work in reassigned_works:
-            work.payment_date = timezone.now()
-            work.save()
+            for work in reassigned_works:
+                work.payment_date = timezone.now()
+                work.save()
+
+        elif salary_type == 'fixed':
+            # Process Fixed Salary Payments
+            fixed_salaries = FixedSalary.objects.filter(
+                branch=request.user.userprofile.branch
+            ).prefetch_related('employees')
+
+            for fixed_salary in fixed_salaries:
+                for employee in fixed_salary.employees.all():
+                    days_count = EmployeeAttendance.objects.filter(
+                        employee=employee,
+                        timestamp__range=(start_date, end_date),
+                        is_clock_in=True
+                    ).dates('timestamp', 'day').count()
+
+                    if days_count > 0:
+                        total_salary = days_count * fixed_salary.salary
+                        SalaryPayment.objects.create(
+                            fixed_salary=fixed_salary,
+                            employee=employee,
+                            payment_date=timezone.now(),
+                            amount=total_salary
+                        )
+
         base_url = reverse('salary_list')
-        query_string = urlencode({'start_date': form.cleaned_data['start_date'].strftime('%Y-%m-%d'), 'end_date': form.cleaned_data['end_date'].strftime('%Y-%m-%d')})
+        query_string = urlencode({
+            'start_date': start_date.strftime('%Y-%m-%d'), 
+            'end_date': (end_date - timedelta(days=1)).strftime('%Y-%m-%d'),
+            'salary_type': salary_type
+        })
         url = f"{base_url}?{query_string}"
         return redirect(url)
+
     else:
         return redirect('salary_list')
 
 @login_required
 @admin_required
 def salary_detail(request, pk):
-    employee = get_object_or_404(UserProfile, pk=pk, branch=request.user.userprofile.branch)  # Ensures the employee is from the current user's branch
+    employee = get_object_or_404(UserProfile, pk=pk, branch=request.user.userprofile.branch)
     initial_data = {
         'start_date': request.GET.get('start_date'),
         'end_date': request.GET.get('end_date'),
+        'salary_type': request.GET.get('salary_type', 'non_fixed') 
     }
-    form = DateRangeForm(request.GET or None, initial=initial_data)
+    form = SalaryListForm(request.GET or None, initial=initial_data)
     assigned_work_details = []
     total_salary = 0
 
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
-        
-        assigned_works = AssignedWork.objects.filter(
-            employee=employee,
-            end_time__range=(start_date, end_date),
-            is_success=True,
-            work__passport__order__client_order__branch=request.user.userprofile.branch
-        ).select_related('work__operation', 'work__passport_size__size_quantity')
+        salary_type = form.cleaned_data['salary_type']
 
-        reassigned_works = ReassignedWork.objects.filter(
-            new_employee=employee,
-            original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True,
-            original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
-        ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
+        if salary_type == 'non_fixed':
+            assigned_works = AssignedWork.objects.filter(
+                employee=employee,
+                end_time__range=(start_date, end_date),
+                is_success=True,
+                work__passport__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('work__operation', 'work__passport_size__size_quantity')
 
-        for assigned_work in assigned_works:
-            work_salary, work_details = calculate_salary_and_details(assigned_work)
-            total_salary += work_salary
-            assigned_work_details.append(work_details)
+            reassigned_works = ReassignedWork.objects.filter(
+                new_employee=employee,
+                original_assigned_work__end_time__range=(start_date, end_date),
+                is_success=True,
+                original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
 
-        for reassigned_work in reassigned_works:
-            work_salary, work_details = calculate_salary_and_details(reassigned_work.original_assigned_work, reassigned_quantity=reassigned_work.reassigned_quantity)
-            total_salary += work_salary
-            assigned_work_details.append(work_details)
+            for assigned_work in assigned_works:
+                work_salary, work_details = calculate_salary_and_details(assigned_work)
+                total_salary += work_salary
+                assigned_work_details.append(work_details)
+
+            for reassigned_work in reassigned_works:
+                work_salary, work_details = calculate_salary_and_details(reassigned_work.original_assigned_work, reassigned_quantity=reassigned_work.reassigned_quantity)
+                total_salary += work_salary
+                assigned_work_details.append(work_details)
+
+        elif salary_type == 'fixed':
+            # Assuming fixed_salary is a daily rate from the FixedSalary model
+            try:
+                fixed_salary = FixedSalary.objects.get(employees=employee, branch=request.user.userprofile.branch)
+            except FixedSalary.DoesNotExist:
+                fixed_salary = None
+
+            if fixed_salary:
+                # Fetch attendance records for the employee, marking each clock-in and clock-out
+                attendances = EmployeeAttendance.objects.filter(
+                    employee=employee,
+                    timestamp__range=(start_date, end_date)
+                ).annotate(
+                    date=F('timestamp__date')
+                ).order_by('date', 'timestamp')
+
+                # Collecting pairs of clock-in and clock-out
+                daily_details = {}
+                for attendance in attendances:
+                    day = attendance.timestamp.date()
+                    if day not in daily_details:
+                        daily_details[day] = {'clock_in': None, 'clock_out': None, 'daily_salary': fixed_salary.salary}
+
+                    if attendance.is_clock_in:
+                        daily_details[day]['clock_in'] = attendance.timestamp
+                    else:
+                        daily_details[day]['clock_out'] = attendance.timestamp
+
+                # Append structured data to details list
+                for date, info in daily_details.items():
+                    if info['clock_in'] and info['clock_out']:  # Ensure both clock-in and clock-out are recorded
+                        duration = info['clock_out'] - info['clock_in']
+                        hours, remainder = divmod(duration.total_seconds(), 3600)
+                        minutes, _ = divmod(remainder, 60)
+                        total_salary += fixed_salary.salary
+                        assigned_work_details.append({
+                            'date': date,
+                            'clock_in': info['clock_in'],
+                            'clock_out': info['clock_out'],
+                            'hours_worked': f"{int(hours)}h {int(minutes)}m",  # Format as "Xh Ym"
+                            'daily_salary': fixed_salary.salary
+                        })
 
     context = {
         'form': form,
@@ -306,57 +411,96 @@ def calculate_salary_and_details(work, reassigned_quantity=None):
 @login_required
 @admin_required
 def export_salaries_to_excel(request):
-    form = DateRangeForm(request.GET or None)
-    
+    form = SalaryListForm(request.GET or None)
+
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
-        
-        assigned_works = AssignedWork.objects.filter(
-            end_time__range=(start_date, end_date),
-            is_success=True
-        ).select_related('work__operation', 'work__passport', 'work__passport__order', 'employee', 'work__passport_size')
+        salary_type = form.cleaned_data['salary_type']
 
-        reassigned_works = ReassignedWork.objects.filter(
-            original_assigned_work__end_time__range=(start_date, end_date),
-            is_success=True
-        ).select_related('original_assigned_work', 'new_employee', 'original_assigned_work__work__passport_size')
+        if salary_type == 'non_fixed':
+            assigned_works = AssignedWork.objects.filter(
+                end_time__range=(start_date, end_date),
+                is_success=True
+            ).select_related('work__operation', 'work__passport', 'work__passport__order', 'employee', 'work__passport_size')
 
-        data = []
+            reassigned_works = ReassignedWork.objects.filter(
+                original_assigned_work__end_time__range=(start_date, end_date),
+                is_success=True
+            ).select_related('original_assigned_work', 'new_employee', 'original_assigned_work__work__passport_size')
 
-        for work in assigned_works:
-            passport = work.work.passport
-            passport_size = work.work.passport_size  # Assuming 'work' has a direct relation to 'passport_size'
-            order = passport.order
-            data.append([
-                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
-                order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
-                order.color, order.fabrics, passport.date, work.work.operation.id,
-                work.work.operation.name, work.work.operation.payment, work.employee.employee_id,
-                work.employee.user.get_full_name(), work.quantity,
-                work.work.operation.payment * work.quantity
+            data = []
+
+            for work in assigned_works:
+                passport = work.work.passport
+                passport_size = work.work.passport_size  # Assuming 'work' has a direct relation to 'passport_size'
+                order = passport.order
+                data.append([
+                    datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
+                    order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
+                    order.color, order.fabrics, passport.date, work.work.operation.id,
+                    work.work.operation.name, work.work.operation.payment, work.employee.employee_id,
+                    work.employee.user.get_full_name(), work.quantity,
+                    work.work.operation.payment * work.quantity
+                ])
+
+            for work in reassigned_works:
+                original = work.original_assigned_work
+                passport = original.work.passport
+                passport_size = original.work.passport_size  # Assuming 'original' has a direct relation to 'passport_size'
+                order = passport.order
+                data.append([
+                    datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
+                    order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
+                    order.color, order.fabrics, passport.date, original.work.operation.id,
+                    original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id,
+                    work.new_employee.user.get_full_name(), work.reassigned_quantity,
+                    original.work.operation.payment * work.reassigned_quantity
+                ])
+            
+            df = pd.DataFrame(data, columns=[
+                "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
+                "Passport size", "Order's color", "Order's fabrics", "Passport date", "Operation id", 
+                "Operation name", "Operation payment", "Employee's employee_id", "Employee's full name", 
+                "Work's quantity", "Salary"
             ])
+        elif salary_type == 'fixed':
+            fixed_salaries = FixedSalary.objects.filter(
+                branch=request.user.userprofile.branch
+            ).prefetch_related('employees')
+            data = []
 
-        for work in reassigned_works:
-            original = work.original_assigned_work
-            passport = original.work.passport
-            passport_size = original.work.passport_size  # Assuming 'original' has a direct relation to 'passport_size'
-            order = passport.order
-            data.append([
-                datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
-                order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
-                order.color, order.fabrics, passport.date, original.work.operation.id,
-                original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id,
-                work.new_employee.user.get_full_name(), work.reassigned_quantity,
-                original.work.operation.payment * work.reassigned_quantity
+            for fixed_salary in fixed_salaries:
+                for employee in fixed_salary.employees.all():
+                    attendances = EmployeeAttendance.objects.filter(
+                        employee=employee,
+                        timestamp__range=(start_date, end_date)
+                    ).order_by('timestamp').values_list('timestamp', flat=True)
+                    
+                    if len(attendances) % 2 != 0:
+                        # Handle the case where there is an odd number of timestamps (e.g., missing clock-out)
+                        attendances = attendances[:-1]  # Remove the last timestamp if it's odd
+
+                    for i in range(0, len(attendances), 2):
+                        clock_in = timezone.localtime(attendances[i])
+                        clock_out = timezone.localtime(attendances[i+1])
+                        duration = clock_out - clock_in
+                        hours, remainder = divmod(duration.total_seconds(), 3600)
+                        minutes = remainder // 60
+                        data.append([
+                            employee.user.get_full_name(),
+                            employee.employee_id,
+                            clock_in.date(),
+                            clock_in.strftime('%H:%M:%S'),
+                            clock_out.strftime('%H:%M:%S'),
+                            f"{int(hours)}h {int(minutes)}m",
+                            fixed_salary.salary
+                        ])
+
+            # Create a DataFrame
+            df = pd.DataFrame(data, columns=[
+                "Employee's Full Name", "Employee's ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
             ])
-        
-        df = pd.DataFrame(data, columns=[
-            "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
-            "Passport size", "Order's color", "Order's fabrics", "Passport date", "Operation id", 
-            "Operation name", "Operation payment", "Employee's employee_id", "Employee's full name", 
-            "Work's quantity", "Salary"
-        ])
         
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="salaries.xlsx"'
@@ -679,7 +823,7 @@ class ClientDeleteView(DeleteView):
 
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class FixedSalaryListView(ListView):
+class FixedSalaryListView(RestrictBranchMixin, ListView):
     model = FixedSalary
     template_name = 'admin/fixed_salaries/list.html'
     context_object_name = 'fixed_salaries'
@@ -688,7 +832,7 @@ class FixedSalaryListView(ListView):
         return FixedSalary.objects.all().order_by('position')
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class FixedSalaryCreateView(CreateView):
+class FixedSalaryCreateView(AssignBranchMixin, CreateView):
     model = FixedSalary
     form_class = FixedSalaryForm
     template_name = 'admin/fixed_salaries/create.html'
@@ -701,14 +845,14 @@ class FixedSalaryDetailView(DetailView):
     context_object_name = 'fixed_salary'
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class FixedSalaryUpdateView(UpdateView):
+class FixedSalaryUpdateView(RestrictBranchMixin, UpdateView):
     model = FixedSalary
     form_class = FixedSalaryForm
     template_name = 'admin/fixed_salaries/edit.html'
     success_url = reverse_lazy('fixed_salary_list')
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class FixedSalaryDeleteView(DeleteView):
+class FixedSalaryDeleteView(RestrictBranchMixin, DeleteView):
     model = FixedSalary
     template_name = 'admin/fixed_salaries/delete.html'
     success_url = reverse_lazy('fixed_salary_list')

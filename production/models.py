@@ -290,6 +290,8 @@ class Discrepancy(models.Model):
         return f"{discrepancy_type} of {abs(self.quantity)}"
     
 class FixedSalary(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='fixed_salaries', null=True, blank=True)
+    objects = BranchAwareManager()
     position = models.CharField(max_length=100)
     employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries')
     salary = models.DecimalField(max_digits=10, decimal_places=2)
