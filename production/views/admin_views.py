@@ -221,19 +221,19 @@ def salary_list(request):
                     ).dates('timestamp', 'day').count()
 
                     total_salary = days_count * fixed_salary.salary
-                    if employee not in salaries:
-                        salaries[employee] = {'salary': total_salary, 'status': 0}
-                    
-                    # Check for payments within the date range
-                    payment_exists = SalaryPayment.objects.filter(
-                        employee=employee,
-                        fixed_salary=fixed_salary,
-                        payment_date__range=(start_date, end_date)
-                    ).exists()
-                    
-                    salaries[employee]['status'] = 1 if payment_exists else 0
+                    if total_salary > 0:
+                        if employee not in salaries:
+                            salaries[employee] = {'salary': total_salary, 'status': 0}
+                        
+                        payment_exists = SalaryPayment.objects.filter(
+                            employee=employee,
+                            fixed_salary=fixed_salary,
+                            payment_date__range=(start_date, end_date)
+                        ).exists()
+                        
+                        salaries[employee]['status'] = 1 if payment_exists else 0
 
-    context = {'form': form, 'salaries': salaries}
+    context = {'form': form, 'salaries': {k: v for k, v in salaries.items() if v['salary'] > 0}}
     return render(request, 'admin/salaries/list.html', context)
 
 @login_required
@@ -281,13 +281,25 @@ def process_payments(request):
                     ).dates('timestamp', 'day').count()
 
                     if days_count > 0:
-                        total_salary = days_count * fixed_salary.salary
-                        SalaryPayment.objects.create(
-                            fixed_salary=fixed_salary,
+                        # Calculate first and last day of the month for the start_date
+                        first_day_of_month = start_date.replace(day=1)
+                        last_day_of_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+                        # Check if a payment record already exists for this employee and month
+                        existing_payment = SalaryPayment.objects.filter(
                             employee=employee,
-                            payment_date=timezone.now(),
-                            amount=total_salary
-                        )
+                            payment_date__range=(first_day_of_month, last_day_of_month)
+                        ).exists()
+
+                        # Only create a new payment if there is no existing payment for the month
+                        if not existing_payment:
+                            total_salary = days_count * fixed_salary.salary
+                            SalaryPayment.objects.create(
+                                fixed_salary=fixed_salary,
+                                employee=employee,
+                                payment_date=timezone.now(),
+                                amount=total_salary
+                            )
 
         base_url = reverse('salary_list')
         query_string = urlencode({
