@@ -724,6 +724,13 @@ class OrderDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(OrderDetailView, self).get_context_data(**kwargs)
         order = context['order']
+        passport = Passport.objects.filter(order=order).first()
+        if passport:
+            context['defects'] = Defect.objects.filter(passport=passport)
+            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
+        else:
+            context['defects'] = Defect.objects.none()
+            context['discrepancies'] = Discrepancy.objects.none()
         context['passports'] = order.passports.all()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         context['size_quantity_form'] = SizeQuantityForm()
