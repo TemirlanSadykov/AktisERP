@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin/employees/<int:pk>/', EmployeeDetailView.as_view(), name='employee_detail'),
     path('admin/employees/<int:pk>/edit/', employee_edit, name='employee_edit'),
     path('admin/employees/<int:pk>/delete/', EmployeeDeleteView.as_view(), name='employee_delete'),
+    path('admin/employees/upload_employees/', employee_upload, name='employee_upload'),
 
     path('admin/passports/<int:pk>/', passport_detail_admin, name='passport_detail_admin'),
 

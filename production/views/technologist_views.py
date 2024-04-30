@@ -685,21 +685,21 @@ def operation_upload(request):
         try:
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
-            
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                node_name, _, operation_name, equipment_name, time, price, _ = row
-                
-                node, _ = Node.objects.get_or_create(name=node_name)
-                equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
-                
-                operation = Operation(
-                    name=operation_name,
-                    payment=price,
-                    equipment=equipment,
-                    node=node,
-                    preferred_completion_time=time
-                )
-                operation.save()
+            with transaction.atomic():
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    node_name, _, operation_name, equipment_name, time, price, _ = row
+                    
+                    node, _ = Node.objects.get_or_create(name=node_name)
+                    equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
+                    
+                    operation = Operation(
+                        name=operation_name,
+                        payment=price,
+                        equipment=equipment,
+                        node=node,
+                        preferred_completion_time=time
+                    )
+                    operation.save()
 
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))

@@ -31,6 +31,7 @@ from django.db.models import F
 from collections import defaultdict
 from django.db.models import Count, Q
 from django.db.models.functions import TruncDay
+import openpyxl
 
 @login_required
 @admin_required
@@ -106,6 +107,10 @@ class EmployeeListView(ListView):
         return UserProfile.objects.filter(
             branch=self.request.user.userprofile.branch
         ).order_by('employee_id')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['upload_form'] = UploadFileForm()
+        return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
@@ -142,6 +147,65 @@ class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     model = UserProfile
     template_name = 'admin/employees/delete.html'
     success_url = reverse_lazy('employee_list')
+    
+@login_required
+@admin_required
+@require_POST
+def employee_upload(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            with transaction.atomic():
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    branch_id, first_name, last_name, username, employee_id, type, station, password = row
+                    branch = Branch.objects.get(id=branch_id)
+                    print(branch_id, first_name, last_name, username, employee_id, type, station, password)
+                    try:
+                        print("Try")
+                        # Attempt to find an existing UserProfile with given employee_id and branch
+                        profile = UserProfile.objects.get(employee_id=employee_id, branch=branch)
+                        
+                    except UserProfile.DoesNotExist:
+                        print("New")
+                        # If it does not exist, create User and UserProfile
+                        user = User.objects.create(username=username, first_name=first_name, last_name=last_name)
+                        user.set_password(password)
+                        user.save()
+                        profile = UserProfile.objects.create(
+                            user=user, 
+                            branch=branch, 
+                            employee_id=employee_id, 
+                            type=type, 
+                            station=station, 
+                            status=False
+                        )
+                    else:
+                        print("Existing")
+                        # If UserProfile exists, update both User and UserProfile
+                        user = profile.user
+                        user.first_name = first_name
+                        user.last_name = last_name
+                        user.username = username
+                        user.set_password(password)
+                        user.save()
+                        
+                        profile.type = type
+                        profile.station = station
+                        profile.save()
+
+            messages.success(request, 'Employees uploaded successfully.')
+            return redirect(reverse_lazy('employee_list'))
+        except Exception as e:
+            messages.error(request, f'Error processing the file: {e}')
+            return redirect(reverse_lazy('employee_list'))
+        finally:
+            workbook.close()
+    else:
+        messages.error(request, 'Invalid file format.')
+        return redirect(reverse_lazy('employee_list'))
 
 @login_required
 @admin_required

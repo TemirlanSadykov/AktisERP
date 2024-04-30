@@ -47,7 +47,7 @@ class UserProfile(models.Model):
         ('interns', 'Практиканты'),
         ('others', 'Остальные'),
     ]
-    station = models.CharField(max_length=100, choices=STATION_CHOICES, default='admin_technologist')
+    station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station')
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name} {self.user.last_name}"
     
