@@ -28,6 +28,9 @@ from django.views.decorators.http import require_POST
 from urllib.parse import urlencode
 from django.db import transaction
 from django.db.models import F
+from collections import defaultdict
+from django.db.models import Count, Q
+from django.db.models.functions import TruncDay
 
 @login_required
 @admin_required
@@ -214,13 +217,21 @@ def salary_list(request):
 
             for fixed_salary in fixed_salaries:
                 for employee in fixed_salary.employees.all():
-                    days_count = EmployeeAttendance.objects.filter(
+                    # Ensure there's a matching clock-out for each clock-in
+                    days_with_complete_records = EmployeeAttendance.objects.filter(
                         employee=employee,
-                        timestamp__range=(start_date, end_date),
-                        is_clock_in=True
-                    ).dates('timestamp', 'day').count()
+                        timestamp__range=(start_date, end_date)
+                    ).annotate(
+                        day=TruncDay('timestamp')
+                    ).values('day').annotate(
+                        num_clock_ins=Count('id', filter=Q(is_clock_in=True)),
+                        num_clock_outs=Count('id', filter=Q(is_clock_in=False))
+                    ).filter(
+                        num_clock_ins__gte=1,
+                        num_clock_outs__gte=1
+                    ).count()
 
-                    total_salary = days_count * fixed_salary.salary
+                    total_salary = days_with_complete_records * fixed_salary.salary
                     if total_salary > 0:
                         if employee not in salaries:
                             salaries[employee] = {'salary': total_salary, 'status': 0}
@@ -267,33 +278,37 @@ def process_payments(request):
                 work.save()
 
         elif salary_type == 'fixed':
-            # Process Fixed Salary Payments
             fixed_salaries = FixedSalary.objects.filter(
                 branch=request.user.userprofile.branch
             ).prefetch_related('employees')
 
             for fixed_salary in fixed_salaries:
                 for employee in fixed_salary.employees.all():
-                    days_count = EmployeeAttendance.objects.filter(
+                    # Count days with both clock-in and clock-out
+                    days_with_complete_records = EmployeeAttendance.objects.filter(
                         employee=employee,
-                        timestamp__range=(start_date, end_date),
-                        is_clock_in=True
-                    ).dates('timestamp', 'day').count()
+                        timestamp__range=(start_date, end_date)
+                    ).annotate(
+                        day=TruncDay('timestamp')
+                    ).values('day').annotate(
+                        num_clock_ins=Count('id', filter=Q(is_clock_in=True)),
+                        num_clock_outs=Count('id', filter=Q(is_clock_in=False))
+                    ).filter(
+                        num_clock_ins__gte=1,
+                        num_clock_outs__gte=1
+                    ).count()
 
-                    if days_count > 0:
-                        # Calculate first and last day of the month for the start_date
+                    if days_with_complete_records > 0:
                         first_day_of_month = start_date.replace(day=1)
                         last_day_of_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
 
-                        # Check if a payment record already exists for this employee and month
                         existing_payment = SalaryPayment.objects.filter(
                             employee=employee,
                             payment_date__range=(first_day_of_month, last_day_of_month)
                         ).exists()
 
-                        # Only create a new payment if there is no existing payment for the month
                         if not existing_payment:
-                            total_salary = days_count * fixed_salary.salary
+                            total_salary = days_with_complete_records * fixed_salary.salary
                             SalaryPayment.objects.create(
                                 fixed_salary=fixed_salary,
                                 employee=employee,
@@ -357,35 +372,32 @@ def salary_detail(request, pk):
                 assigned_work_details.append(work_details)
 
         elif salary_type == 'fixed':
-            # Assuming fixed_salary is a daily rate from the FixedSalary model
             try:
                 fixed_salary = FixedSalary.objects.get(employees=employee, branch=request.user.userprofile.branch)
             except FixedSalary.DoesNotExist:
                 fixed_salary = None
 
             if fixed_salary:
-                # Fetch attendance records for the employee, marking each clock-in and clock-out
+                # Fetch and organize attendance records by date
                 attendances = EmployeeAttendance.objects.filter(
                     employee=employee,
                     timestamp__range=(start_date, end_date)
-                ).annotate(
-                    date=F('timestamp__date')
-                ).order_by('date', 'timestamp')
+                ).order_by('timestamp')
 
-                # Collecting pairs of clock-in and clock-out
-                daily_details = {}
+                daily_attendance = defaultdict(lambda: {'clock_in': None, 'clock_out': None})
                 for attendance in attendances:
                     day = attendance.timestamp.date()
-                    if day not in daily_details:
-                        daily_details[day] = {'clock_in': None, 'clock_out': None, 'daily_salary': fixed_salary.salary}
-
                     if attendance.is_clock_in:
-                        daily_details[day]['clock_in'] = attendance.timestamp
+                        if daily_attendance[day]['clock_in'] is None:
+                            daily_attendance[day]['clock_in'] = attendance.timestamp
                     else:
-                        daily_details[day]['clock_out'] = attendance.timestamp
+                        if daily_attendance[day]['clock_out'] is None or attendance.timestamp > daily_attendance[day]['clock_out']:
+                            daily_attendance[day]['clock_out'] = attendance.timestamp
+                        elif daily_attendance[day + timedelta(days=1)]['clock_in'] is not None:
+                            # This is a clock out for the next day's clock in
+                            daily_attendance[day + timedelta(days=1)]['clock_out'] = attendance.timestamp
 
-                # Append structured data to details list
-                for date, info in daily_details.items():
+                for date, info in daily_attendance.items():
                     if info['clock_in'] and info['clock_out']:  # Ensure both clock-in and clock-out are recorded
                         duration = info['clock_out'] - info['clock_in']
                         hours, remainder = divmod(duration.total_seconds(), 3600)
@@ -395,10 +407,9 @@ def salary_detail(request, pk):
                             'date': date,
                             'clock_in': info['clock_in'],
                             'clock_out': info['clock_out'],
-                            'hours_worked': f"{int(hours)}h {int(minutes)}m",  # Format as "Xh Ym"
+                            'hours_worked': f"{int(hours)}h {int(minutes)}m",
                             'daily_salary': fixed_salary.salary
                         })
-
     context = {
         'form': form,
         'employee': employee,
@@ -429,7 +440,7 @@ def export_salaries_to_excel(request):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
         salary_type = form.cleaned_data['salary_type']
-
+        data = []
         if salary_type == 'non_fixed':
             assigned_works = AssignedWork.objects.filter(
                 end_time__range=(start_date, end_date),
@@ -440,8 +451,6 @@ def export_salaries_to_excel(request):
                 original_assigned_work__end_time__range=(start_date, end_date),
                 is_success=True
             ).select_related('original_assigned_work', 'new_employee', 'original_assigned_work__work__passport_size')
-
-            data = []
 
             for work in assigned_works:
                 passport = work.work.passport
@@ -480,7 +489,6 @@ def export_salaries_to_excel(request):
             fixed_salaries = FixedSalary.objects.filter(
                 branch=request.user.userprofile.branch
             ).prefetch_related('employees')
-            data = []
 
             for fixed_salary in fixed_salaries:
                 for employee in fixed_salary.employees.all():
@@ -488,32 +496,35 @@ def export_salaries_to_excel(request):
                         employee=employee,
                         timestamp__range=(start_date, end_date)
                     ).order_by('timestamp').values_list('timestamp', flat=True)
-                    
-                    if len(attendances) % 2 != 0:
-                        # Handle the case where there is an odd number of timestamps (e.g., missing clock-out)
-                        attendances = attendances[:-1]  # Remove the last timestamp if it's odd
 
-                    for i in range(0, len(attendances), 2):
-                        clock_in = timezone.localtime(attendances[i])
-                        clock_out = timezone.localtime(attendances[i+1])
-                        duration = clock_out - clock_in
+                    paired_times = []  # This will store tuples of (clock_in, clock_out)
+                    for i in range(0, len(attendances) - 1, 2):
+                        if len(attendances) > i + 1:
+                            clock_in = attendances[i]
+                            clock_out = attendances[i + 1]
+                            if clock_in < clock_out:  # Ensure it's a valid pair
+                                paired_times.append((clock_in, clock_out))
+
+                    for clock_in, clock_out in paired_times:
+                        clock_in_local = timezone.localtime(clock_in)
+                        clock_out_local = timezone.localtime(clock_out)
+                        duration = clock_out_local - clock_in_local
                         hours, remainder = divmod(duration.total_seconds(), 3600)
                         minutes = remainder // 60
                         data.append([
                             employee.user.get_full_name(),
                             employee.employee_id,
-                            clock_in.date(),
-                            clock_in.strftime('%H:%M:%S'),
-                            clock_out.strftime('%H:%M:%S'),
+                            clock_in_local.date(),
+                            clock_in_local.strftime('%H:%M:%S'),
+                            clock_out_local.strftime('%H:%M:%S'),
                             f"{int(hours)}h {int(minutes)}m",
                             fixed_salary.salary
                         ])
 
-            # Create a DataFrame
             df = pd.DataFrame(data, columns=[
                 "Employee's Full Name", "Employee's ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
             ])
-        
+
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="salaries.xlsx"'
         with pd.ExcelWriter(response, engine='openpyxl') as writer:
@@ -521,7 +532,7 @@ def export_salaries_to_excel(request):
         
         return response
 
-    # Handle form errors or initial page access:
+    # Handle form errors or initial page access
     context = {'form': form}
     return render(request, 'blank.html', context)
 
