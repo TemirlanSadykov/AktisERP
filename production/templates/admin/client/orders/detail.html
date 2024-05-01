@@ -42,11 +42,13 @@
   <div class="orders-list">
     {% if orders %}
       {% for order in orders %}
-      <p>
-        <a href="{% url 'order_detail' order.pk %}" class="order-link">
-          {% trans "Model" %} {{ order.model.name }}
-        </a>
-      </p>
+        <p>
+          <a href="{% url 'order_detail' order.pk %}"
+            class="order-link"
+            style="color: {% if order.status == 2 %}green{% else %}red{% endif %};">
+            {% trans "Model" %} {{ order.model.name }}
+          </a>
+        </p>
       {% endfor %}
     {% else %}
       <p>{% trans "No associated models." %}</p>
