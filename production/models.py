@@ -187,7 +187,7 @@ class Passport(models.Model):
     rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports')
     is_completed = models.BooleanField(default=False, verbose_name="Passport Completed")
     def __str__(self):
-        return self.order.name
+        return f"ID: {str(self.id)}"
     
 class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes')
@@ -264,6 +264,8 @@ class Defect(models.Model):
         UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
         RESOLVED = 'RESOLVED', 'Resolved'
     
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    responsible_employees = models.ManyToManyField(UserProfile, through='DefectResponsibility')
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='defects', null=True)
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='defects')
     quantity = models.IntegerField()
@@ -273,12 +275,22 @@ class Defect(models.Model):
     reported_date = models.DateTimeField(default=timezone.now)
     resolved_date = models.DateTimeField(null=True, blank=True)
 
+class DefectResponsibility(models.Model):
+    defect = models.ForeignKey(Defect, on_delete=models.CASCADE, related_name='defect_responsibilities')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='defect_responsibilities')
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text="Percentage of responsibility attributed to this employee.")
+
+    def __str__(self):
+        return f"{self.employee.user.username} - {self.percentage}%"
+
 class Discrepancy(models.Model):
     class Status(models.TextChoices):
         REPORTED = 'REPORTED', 'Reported'
         UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
         RESOLVED = 'RESOLVED', 'Resolved'
 
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    responsible_employees = models.ManyToManyField(UserProfile, through='DiscrepancyResponsibility')
     passport = models.ForeignKey('Passport', on_delete=models.CASCADE, related_name='discrepancies')
     size_quantity = models.ForeignKey('SizeQuantity', on_delete=models.CASCADE, related_name='discrepancies')
     quantity = models.IntegerField(help_text="Use negative values for deficiencies and positive for excess.")
@@ -288,6 +300,14 @@ class Discrepancy(models.Model):
     def __str__(self):
         discrepancy_type = "Deficiency" if self.quantity < 0 else "Excess"
         return f"{discrepancy_type} of {abs(self.quantity)}"
+    
+class DiscrepancyResponsibility(models.Model):
+    discrepancy = models.ForeignKey(Discrepancy, on_delete=models.CASCADE, related_name='discrepancy_responsibilities')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='discrepancy_responsibilities')
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text="Percentage of responsibility attributed to this employee.")
+
+    def __str__(self):
+        return f"{self.employee.user.username} - {self.percentage}%"
     
 class FixedSalary(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='fixed_salaries', null=True, blank=True)

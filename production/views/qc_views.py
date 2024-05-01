@@ -116,7 +116,12 @@ class DefectCreateView(CreateView):
         return kwargs
 
     def form_valid(self, form):
-        form.instance.order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
+        order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
+        form.instance.order = order
+        unit_price = getattr(order, 'payment', None)
+        quantity = getattr(form.instance, 'quantity', None)
+        if unit_price is not None and quantity is not None:
+            form.instance.cost = unit_price * quantity
         return super().form_valid(form)
 
     def get_success_url(self):

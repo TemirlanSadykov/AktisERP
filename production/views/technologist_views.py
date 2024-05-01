@@ -131,6 +131,7 @@ def defect_detail(request, pk):
             'quantity',
             'defect_type',
             'severity',
+            'cost',
             'status',
             'reported_date',
             'resolved_date'
@@ -184,6 +185,7 @@ def discrepancy_detail(request, pk):
             'passport__id',
             'size_quantity__size',
             'quantity',
+            'cost',
             'status',
             'reported_date',
             'resolved_date'
