@@ -27,11 +27,12 @@ from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 from urllib.parse import urlencode
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Window
 from collections import defaultdict
 from django.db.models import Count, Q
 from django.db.models.functions import TruncDay
 import openpyxl
+from django.db.models.functions import Lead
 
 @login_required
 @admin_required
@@ -162,14 +163,11 @@ def employee_upload(request):
                 for row in sheet.iter_rows(min_row=2, values_only=True):
                     branch_id, first_name, last_name, username, employee_id, type, station, password = row
                     branch = Branch.objects.get(id=branch_id)
-                    print(branch_id, first_name, last_name, username, employee_id, type, station, password)
                     try:
-                        print("Try")
                         # Attempt to find an existing UserProfile with given employee_id and branch
                         profile = UserProfile.objects.get(employee_id=employee_id, branch=branch)
                         
                     except UserProfile.DoesNotExist:
-                        print("New")
                         # If it does not exist, create User and UserProfile
                         user = User.objects.create(username=username, first_name=first_name, last_name=last_name)
                         user.set_password(password)
@@ -183,7 +181,6 @@ def employee_upload(request):
                             status=False
                         )
                     else:
-                        print("Existing")
                         # If UserProfile exists, update both User and UserProfile
                         user = profile.user
                         user.first_name = first_name
@@ -275,27 +272,29 @@ def salary_list(request):
                 salaries[employee]['status'] = 1 if reassigned_work.payment_date else 0
 
         elif salary_type == 'fixed':
-            fixed_salaries = FixedSalary.objects.filter(
-                branch=request.user.userprofile.branch
-            ).prefetch_related('employees')
-
+            fixed_salaries = FixedSalary.objects.filter(branch=request.user.userprofile.branch)
             for fixed_salary in fixed_salaries:
                 for employee in fixed_salary.employees.all():
-                    # Ensure there's a matching clock-out for each clock-in
-                    days_with_complete_records = EmployeeAttendance.objects.filter(
+                    # Fetch all timestamps for the period, extending to capture possible next-day clock-outs
+                    timestamps = EmployeeAttendance.objects.filter(
                         employee=employee,
                         timestamp__range=(start_date, end_date)
-                    ).annotate(
-                        day=TruncDay('timestamp')
-                    ).values('day').annotate(
-                        num_clock_ins=Count('id', filter=Q(is_clock_in=True)),
-                        num_clock_outs=Count('id', filter=Q(is_clock_in=False))
-                    ).filter(
-                        num_clock_ins__gte=1,
-                        num_clock_outs__gte=1
-                    ).count()
+                    ).order_by('timestamp').annotate(
+                        next_timestamp=Window(
+                            expression=Lead('timestamp'),
+                            order_by=F('timestamp').asc(),
+                            partition_by=[F('employee')]
+                        )
+                    )
 
-                    total_salary = days_with_complete_records * fixed_salary.salary
+                    # Process each attendance entry
+                    total_salary = 0
+                    for attendance in timestamps:
+                        if attendance.is_clock_in and attendance.next_timestamp:
+                            # Check if the next timestamp is a clock-out and within a 24-hour window
+                            if (attendance.next_timestamp - attendance.timestamp).total_seconds() <= 86400:
+                                total_salary += fixed_salary.salary
+
                     if total_salary > 0:
                         if employee not in salaries:
                             salaries[employee] = {'salary': total_salary, 'status': 0}
@@ -348,19 +347,29 @@ def process_payments(request):
 
             for fixed_salary in fixed_salaries:
                 for employee in fixed_salary.employees.all():
-                    # Count days with both clock-in and clock-out
-                    days_with_complete_records = EmployeeAttendance.objects.filter(
+                    attendances = EmployeeAttendance.objects.filter(
                         employee=employee,
                         timestamp__range=(start_date, end_date)
-                    ).annotate(
-                        day=TruncDay('timestamp')
-                    ).values('day').annotate(
-                        num_clock_ins=Count('id', filter=Q(is_clock_in=True)),
-                        num_clock_outs=Count('id', filter=Q(is_clock_in=False))
-                    ).filter(
-                        num_clock_ins__gte=1,
-                        num_clock_outs__gte=1
-                    ).count()
+                    ).order_by('timestamp').annotate(
+                        next_timestamp=Window(
+                            expression=Lead('timestamp'),
+                            order_by=F('timestamp').asc(),
+                            partition_by=[F('employee')]
+                        )
+                    )
+
+                    days_processed = set()
+                    for attendance in attendances:
+                        if attendance.is_clock_in and attendance.next_timestamp:
+                            # Check for valid clock-out within 24 hours to accommodate overnight shifts
+                            clock_in_local = timezone.localtime(attendance.timestamp)
+                            clock_out_local = timezone.localtime(attendance.next_timestamp)
+                            if (clock_out_local - clock_in_local).total_seconds() <= 86400:
+                                day_key = clock_in_local.date()
+                                if day_key not in days_processed:
+                                    days_processed.add(day_key)
+
+                    days_with_complete_records = len(days_processed)
 
                     if days_with_complete_records > 0:
                         first_day_of_month = start_date.replace(day=1)
@@ -436,44 +445,38 @@ def salary_detail(request, pk):
                 assigned_work_details.append(work_details)
 
         elif salary_type == 'fixed':
-            try:
-                fixed_salary = FixedSalary.objects.get(employees=employee, branch=request.user.userprofile.branch)
-            except FixedSalary.DoesNotExist:
-                fixed_salary = None
-
+            fixed_salary = FixedSalary.objects.filter(employees=employee, branch=request.user.userprofile.branch).first()
             if fixed_salary:
-                # Fetch and organize attendance records by date
+                # Fetch and annotate attendance records with the next timestamp
                 attendances = EmployeeAttendance.objects.filter(
                     employee=employee,
                     timestamp__range=(start_date, end_date)
-                ).order_by('timestamp')
+                ).order_by('timestamp').annotate(
+                    next_timestamp=Window(
+                        expression=Lead('timestamp'),
+                        order_by=F('timestamp').asc(),
+                        partition_by=[F('employee')]
+                    )
+                )
 
-                daily_attendance = defaultdict(lambda: {'clock_in': None, 'clock_out': None})
                 for attendance in attendances:
-                    day = attendance.timestamp.date()
-                    if attendance.is_clock_in:
-                        if daily_attendance[day]['clock_in'] is None:
-                            daily_attendance[day]['clock_in'] = attendance.timestamp
-                    else:
-                        if daily_attendance[day]['clock_out'] is None or attendance.timestamp > daily_attendance[day]['clock_out']:
-                            daily_attendance[day]['clock_out'] = attendance.timestamp
-                        elif daily_attendance[day + timedelta(days=1)]['clock_in'] is not None:
-                            # This is a clock out for the next day's clock in
-                            daily_attendance[day + timedelta(days=1)]['clock_out'] = attendance.timestamp
+                    if attendance.is_clock_in and attendance.next_timestamp:
+                        # Check for valid clock-out within 24 hours to accommodate overnight shifts
+                        if (attendance.next_timestamp - attendance.timestamp).total_seconds() <= 86400:
+                            clock_in_local = timezone.localtime(attendance.timestamp)
+                            clock_out_local = timezone.localtime(attendance.next_timestamp)
+                            duration = clock_out_local - clock_in_local
+                            hours, remainder = divmod(duration.total_seconds(), 3600)
+                            minutes = remainder // 60
+                            total_salary += fixed_salary.salary
+                            assigned_work_details.append({
+                                'date': clock_in_local.date(),
+                                'clock_in': clock_in_local,
+                                'clock_out': clock_out_local,
+                                'hours_worked': f"{int(hours)}h {int(minutes)}m",
+                                'daily_salary': fixed_salary.salary
+                            })
 
-                for date, info in daily_attendance.items():
-                    if info['clock_in'] and info['clock_out']:  # Ensure both clock-in and clock-out are recorded
-                        duration = info['clock_out'] - info['clock_in']
-                        hours, remainder = divmod(duration.total_seconds(), 3600)
-                        minutes, _ = divmod(remainder, 60)
-                        total_salary += fixed_salary.salary
-                        assigned_work_details.append({
-                            'date': date,
-                            'clock_in': info['clock_in'],
-                            'clock_out': info['clock_out'],
-                            'hours_worked': f"{int(hours)}h {int(minutes)}m",
-                            'daily_salary': fixed_salary.salary
-                        })
     context = {
         'form': form,
         'employee': employee,
