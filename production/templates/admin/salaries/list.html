@@ -31,20 +31,20 @@
       <tr>
         <th>{% trans "Employee" %}</th>
         <th>{% trans "Salary" %} ({% trans "Som" %})</th>
+        <th>{% trans "Error Cost" %}</th> <!-- New column for error costs -->
       </tr>
     </thead>
     <tbody>
       {% for user, data in salaries.items %}
-      {% with status=data.status %}
-      <tr class="{% if status == 0 %}payment-pending{% elif status == 1 %}payment-paid{% endif %}">
+      <tr class="{% if data.status == 0 %}payment-pending{% elif data.status == 1 %}payment-paid{% endif %}">
         <td>
           <a href="{% url 'salary_detail' pk=user.id %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
             {{ user.user.get_full_name }}
           </a>
         </td>
         <td>{{ data.salary|floatformat:2 }}</td>
+        <td class="error-cost">{{ data.error_cost|floatformat:2 }}</td> <!-- Displaying error costs -->
       </tr>
-      {% endwith %}
       {% endfor %}
     </tbody>
   </table>

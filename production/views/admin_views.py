@@ -258,25 +258,34 @@ def salary_list(request):
                 original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
             ).select_related('original_assigned_work__work__operation', 'new_employee')
 
-            for assigned_work in assigned_works:
-                employee = assigned_work.employee
-                if employee not in salaries:
-                    salaries[employee] = {'salary': 0, 'status': 0}
-                salaries[employee]['salary'] += assigned_work.work.operation.payment * assigned_work.quantity
-                salaries[employee]['status'] = 1 if assigned_work.payment_date else 0
+            for work_group in [assigned_works, reassigned_works]:
+                for work in work_group:
+                    employee = work.employee if work_group is assigned_works else work.new_employee
+                    if employee not in salaries:
+                        salaries[employee] = {'salary': 0, 'status': 0, 'errors': 0, 'error_cost': 0}
+                    salaries[employee]['salary'] += work.work.operation.payment * (work.quantity if work_group is assigned_works else work.reassigned_quantity)
+                    salaries[employee]['status'] = 1 if work.payment_date else 0
 
-            for reassigned_work in reassigned_works:
-                employee = reassigned_work.new_employee
-                if employee not in salaries:
-                    salaries[employee] = {'salary': 0, 'status': 0}
-                salaries[employee]['salary'] += reassigned_work.original_assigned_work.work.operation.payment * reassigned_work.reassigned_quantity
-                salaries[employee]['status'] = 1 if reassigned_work.payment_date else 0
+                    # Only calculate error costs for employees with type EMPLOYEE
+                    if employee.type == UserProfile.EMPLOYEE:
+                        defect_responsibilities = DefectResponsibility.objects.filter(
+                            employee=employee,
+                            defect__reported_date__range=(start_date, end_date)
+                        )
+                        for responsibility in defect_responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.defect.cost * (responsibility.percentage / 100)
+
+                        discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
+                            employee=employee,
+                            discrepancy__reported_date__range=(start_date, end_date)
+                        )
+                        for responsibility in discrepancy_responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.discrepancy.cost * (responsibility.percentage / 100)
 
         elif salary_type == 'fixed':
             fixed_salaries = FixedSalary.objects.filter(branch=request.user.userprofile.branch)
             for fixed_salary in fixed_salaries:
                 for employee in fixed_salary.employees.all():
-                    # Fetch all timestamps for the period, extending to capture possible next-day clock-outs
                     timestamps = EmployeeAttendance.objects.filter(
                         employee=employee,
                         timestamp__range=(start_date, end_date)
@@ -292,14 +301,26 @@ def salary_list(request):
                     total_salary = 0
                     for attendance in timestamps:
                         if attendance.is_clock_in and attendance.next_timestamp:
-                            # Check if the next timestamp is a clock-out and within a 24-hour window
                             if (attendance.next_timestamp - attendance.timestamp).total_seconds() <= 86400:
                                 total_salary += fixed_salary.salary
 
                     if total_salary > 0:
                         if employee not in salaries:
-                            salaries[employee] = {'salary': total_salary, 'status': 0}
+                            salaries[employee] = {'salary': total_salary, 'status': 0, 'errors': 0, 'error_cost': 0}
                         
+                        responsibilities = DefectResponsibility.objects.filter(
+                            employee=employee,
+                            defect__reported_date__range=(start_date, end_date)
+                        )
+                        for responsibility in responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.defect.cost * (responsibility.percentage / 100)
+
+                        responsibilities = DiscrepancyResponsibility.objects.filter(
+                            employee=employee,
+                            discrepancy__reported_date__range=(start_date, end_date)
+                        )
+                        for responsibility in responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.discrepancy.cost * (responsibility.percentage / 100)
                         payment_exists = SalaryPayment.objects.filter(
                             employee=employee,
                             fixed_salary=fixed_salary,
@@ -414,6 +435,7 @@ def salary_detail(request, pk):
     form = SalaryListForm(request.GET or None, initial=initial_data)
     assigned_work_details = []
     total_salary = 0
+    error_details = []
 
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
@@ -435,20 +457,25 @@ def salary_detail(request, pk):
                 original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
             ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
 
-            for assigned_work in assigned_works:
-                work_salary, work_details = calculate_salary_and_details(assigned_work)
+            for work in assigned_works:
+                work_salary, work_details = calculate_salary_and_details(work)
                 total_salary += work_salary
                 assigned_work_details.append(work_details)
 
-            for reassigned_work in reassigned_works:
-                work_salary, work_details = calculate_salary_and_details(reassigned_work.original_assigned_work, reassigned_quantity=reassigned_work.reassigned_quantity)
+            for work in reassigned_works:
+                work_salary, work_details = calculate_salary_and_details(work.original_assigned_work, reassigned_quantity=work.reassigned_quantity)
                 total_salary += work_salary
                 assigned_work_details.append(work_details)
+
+            # Calculate errors only if the employee is of type EMPLOYEE
+            if employee.type == UserProfile.EMPLOYEE:
+                error_details = calculate_errors(employee, start_date, end_date)
+                total_error_cost = sum(detail['cost'] for detail in error_details)
+                total_salary -= total_error_cost
 
         elif salary_type == 'fixed':
             fixed_salary = FixedSalary.objects.filter(employees=employee, branch=request.user.userprofile.branch).first()
             if fixed_salary:
-                # Fetch and annotate attendance records with the next timestamp
                 attendances = EmployeeAttendance.objects.filter(
                     employee=employee,
                     timestamp__range=(start_date, end_date)
@@ -462,7 +489,6 @@ def salary_detail(request, pk):
 
                 for attendance in attendances:
                     if attendance.is_clock_in and attendance.next_timestamp:
-                        # Check for valid clock-out within 24 hours to accommodate overnight shifts
                         if (attendance.next_timestamp - attendance.timestamp).total_seconds() <= 86400:
                             clock_in_local = timezone.localtime(attendance.timestamp)
                             clock_out_local = timezone.localtime(attendance.next_timestamp)
@@ -478,13 +504,49 @@ def salary_detail(request, pk):
                                 'daily_salary': fixed_salary.salary
                             })
 
+                # Calculate errors for all employees on fixed salary
+                error_details = calculate_errors(employee, start_date, end_date)
+                total_error_cost = sum(detail['cost'] for detail in error_details)
+                total_salary -= total_error_cost
+
     context = {
         'form': form,
         'employee': employee,
         'works': assigned_work_details,
         'total_salary': total_salary,
+        'errors': error_details
     }
     return render(request, 'admin/salaries/detail.html', context)
+
+def calculate_errors(employee, start_date, end_date):
+    error_details = []
+    defect_responsibilities = DefectResponsibility.objects.filter(
+        employee=employee,
+        defect__reported_date__range=(start_date, end_date)
+    ).select_related('defect')
+
+    discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
+        employee=employee,
+        discrepancy__reported_date__range=(start_date, end_date)
+    ).select_related('discrepancy')
+
+    for responsibility in defect_responsibilities:
+        error_cost = responsibility.defect.cost * (responsibility.percentage / 100)
+        error_details.append({
+            'type': 'Defect',
+            'reported_date': responsibility.defect.reported_date,
+            'cost': error_cost
+        })
+
+    for responsibility in discrepancy_responsibilities:
+        error_cost = responsibility.discrepancy.cost * (responsibility.percentage / 100)
+        error_details.append({
+            'type': 'Discrepancy',
+            'reported_date': responsibility.discrepancy.reported_date,
+            'cost': error_cost
+        })
+
+    return error_details
 
 def calculate_salary_and_details(work, reassigned_quantity=None):
     """Helper function to calculate salary and details for a work or reassigned work."""
@@ -509,6 +571,8 @@ def export_salaries_to_excel(request):
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
         salary_type = form.cleaned_data['salary_type']
         data = []
+        errors_data = []
+
         if salary_type == 'non_fixed':
             assigned_works = AssignedWork.objects.filter(
                 end_time__range=(start_date, end_date),
@@ -522,11 +586,11 @@ def export_salaries_to_excel(request):
 
             for work in assigned_works:
                 passport = work.work.passport
-                passport_size = work.work.passport_size  # Assuming 'work' has a direct relation to 'passport_size'
+                passport_size = work.work.passport_size
                 order = passport.order
                 data.append([
                     datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
-                    order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
+                    order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,
                     order.color, order.fabrics, passport.date, work.work.operation.id,
                     work.work.operation.name, work.work.operation.payment, work.employee.employee_id,
                     work.employee.user.get_full_name(), work.quantity,
@@ -536,23 +600,26 @@ def export_salaries_to_excel(request):
             for work in reassigned_works:
                 original = work.original_assigned_work
                 passport = original.work.passport
-                passport_size = original.work.passport_size  # Assuming 'original' has a direct relation to 'passport_size'
+                passport_size = original.work.passport_size
                 order = passport.order
                 data.append([
                     datetime.now().date(), order.client_order.client.name, order.model.name if order.model else '',
-                    order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,  # Added size
+                    order.assortment.name if order.assortment else '', passport.id, passport_size.size_quantity.size,
                     order.color, order.fabrics, passport.date, original.work.operation.id,
                     original.work.operation.name, original.work.operation.payment, work.new_employee.employee_id,
                     work.new_employee.user.get_full_name(), work.reassigned_quantity,
                     original.work.operation.payment * work.reassigned_quantity
                 ])
-            
-            df = pd.DataFrame(data, columns=[
+
+            salary_df = pd.DataFrame(data, columns=[
                 "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
                 "Passport size", "Order's color", "Order's fabrics", "Passport date", "Operation id", 
                 "Operation name", "Operation payment", "Employee's employee_id", "Employee's full name", 
                 "Work's quantity", "Salary"
             ])
+
+            employees = UserProfile.objects.filter(type=UserProfile.EMPLOYEE)
+
         elif salary_type == 'fixed':
             fixed_salaries = FixedSalary.objects.filter(
                 branch=request.user.userprofile.branch
@@ -565,12 +632,12 @@ def export_salaries_to_excel(request):
                         timestamp__range=(start_date, end_date)
                     ).order_by('timestamp').values_list('timestamp', flat=True)
 
-                    paired_times = []  # This will store tuples of (clock_in, clock_out)
+                    paired_times = []
                     for i in range(0, len(attendances) - 1, 2):
                         if len(attendances) > i + 1:
                             clock_in = attendances[i]
                             clock_out = attendances[i + 1]
-                            if clock_in < clock_out:  # Ensure it's a valid pair
+                            if clock_in < clock_out:
                                 paired_times.append((clock_in, clock_out))
 
                     for clock_in, clock_out in paired_times:
@@ -589,14 +656,48 @@ def export_salaries_to_excel(request):
                             fixed_salary.salary
                         ])
 
-            df = pd.DataFrame(data, columns=[
+            salary_df = pd.DataFrame(data, columns=[
                 "Employee's Full Name", "Employee's ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
             ])
+
+            employees = UserProfile.objects.all()
+
+        # Process errors for selected employees
+        for employee in employees:
+            defect_responsibilities = DefectResponsibility.objects.filter(
+                employee=employee,
+                defect__reported_date__range=(start_date, end_date)
+            )
+            discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
+                employee=employee,
+                discrepancy__reported_date__range=(start_date, end_date)
+            )
+
+            for responsibility in defect_responsibilities:
+                errors_data.append([
+                    employee.user.get_full_name(),
+                    'Defect',
+                    responsibility.defect.reported_date.strftime('%Y-%m-%d'),
+                    responsibility.defect.cost * (responsibility.percentage / 100)
+                ])
+
+            for responsibility in discrepancy_responsibilities:
+                errors_data.append([
+                    employee.user.get_full_name(),
+                    'Discrepancy',
+                    responsibility.discrepancy.reported_date.strftime('%Y-%m-%d'),
+                    responsibility.discrepancy.cost * (responsibility.percentage / 100)
+                ])
+
+        errors_df = pd.DataFrame(errors_data, columns=[
+            "Employee's Full Name", "Error Type", "Reported Date", "Error Cost"
+        ])
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename="salaries.xlsx"'
         with pd.ExcelWriter(response, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
+            salary_df.to_excel(writer, sheet_name='Salaries', index=False)
+            errors_df.to_excel(writer, sheet_name='Errors', index=False)  # Writing errors to a separate sheet
         
         return response
 
