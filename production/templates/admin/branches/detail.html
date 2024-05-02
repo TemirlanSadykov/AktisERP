@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Branch Details:" %} {{ branch.name }}</h2>
+
+  <div class="form-actions">
+    <a href="{% url 'branch_edit' branch.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'branch_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <form id="deleteForm" action="{% url 'branch_delete' branch.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this branch?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
+{% endblock %}

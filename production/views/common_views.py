@@ -16,6 +16,12 @@ def user_redirect(request):
         return redirect('technologist_page')
     elif user_profile.type == UserProfile.EMPLOYEE:
         return redirect('employee_page')
+    elif user_profile.type == UserProfile.CUTTER:
+        return redirect('cutter_page')
+    elif user_profile.type == UserProfile.QC:
+        return redirect('qc_page')
+    elif user_profile.type == UserProfile.PACKER:
+        return redirect('packer_page')
     else:
         return redirect('index')
 
@@ -26,6 +32,10 @@ def clock_in_out(request):
     user_profile.status = not user_profile.status
     user_profile.save()
 
-    EmployeeAttendance.objects.create(employee=request.user.userprofile, is_clock_in=user_profile.status)
+    EmployeeAttendance.objects.create(
+        employee=user_profile, 
+        is_clock_in=user_profile.status,
+        branch=user_profile.branch 
+    )
 
     return redirect('user_redirect')

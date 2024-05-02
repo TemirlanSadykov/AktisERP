@@ -1,16 +1,44 @@
 {% extends 'base.html' %}
 {% load i18n %}
+
 {% block content %}
-  <h2>{% trans "Operation Details: %(name)s" %}{{ operation.name }}</h2>
-  <p>{% trans "Payment:" %} {{ operation.payment }}</p>
-  <p>{% trans "Equipment:" %} {{ operation.equipment }}</p>
-  <p>{% trans "Type:" %} {{ operation.type }}</p>
-  <p>{% trans "Preferred Completion Time:" %} {{ operation.preferred_completion_time }} seconds</p>
-  <p>
-    {% trans "Average Completion Time:" %} {{ operation.average_completion_time }} seconds
-    <a href="{% url 'calculate_average' operation.pk %}" class="btn btn-info btn-sm">{% trans "Calculate Average" %}</a>
-  </p>
-  <a href="{% url 'operation_edit' operation.pk %}">{% trans "Edit" %}</a> |
-  <a href="{% url 'operation_delete' operation.pk %}">{% trans "Delete" %}</a> |
-  <a href="{% url 'operation_list' %}">{% trans "Back" %}</a>
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Operation Details:" %} {{ operation.name }}</h2>
+  {% if operation.photo %}
+    <div class="operation-photo">
+      <img src="{{ operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+    </div>
+  {% endif %}
+  <div class="details">
+    <p><strong>{% trans "Payment:" %}</strong> {{ operation.payment }}</p>
+    <p><strong>{% trans "Equipment:" %}</strong> {{ operation.equipment }}</p>
+    <p><strong>{% trans "Node:" %}</strong> {{ operation.node }}</p>
+    <p><strong>{% trans "Preferred Completion Time:" %}</strong> {{ operation.preferred_completion_time }} {% trans "seconds" %}</p>
+    <p>
+      <strong>{% trans "Average Completion Time:" %}</strong> {{ operation.average_completion_time }} {% trans "seconds" %}
+      <a href="{% url 'calculate_average' operation.pk %}" class="btn calculate-btn">{% trans "Calculate Average" %}</a>
+    </p>
+  {% if operation.employee %}
+    <p><strong>{% trans "Assigned Employee: " %}</strong>{{ operation.employee.employee_id }} - {{ operation.employee.user.get_full_name }} </p>
+  {% endif %}
+  </div>
+
+  <div class="form-actions">
+    <a href="{% url 'operation_edit' operation.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'operation_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <form id="deleteForm" action="{% url 'operation_delete' operation.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this operation?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
 {% endblock %}

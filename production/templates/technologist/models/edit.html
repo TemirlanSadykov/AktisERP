@@ -1,12 +1,36 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-  <h2>{% trans "Edit Model: %(name)s" %}{{ model.name }}</h2>
-  <form method="post">
+<style>
+  label {
+    display: block;
+    margin-top: 10px;
+  }
+  .form-group {
+    margin-top: 20px;
+  }
+</style>
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Create New Model" %}</h2>
+  <form method="post" class="crud-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">{% trans "Update" %}</button>
+    <div class="form-group">
+      <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+      {{ form.name }}
+      {% if form.name.errors %}
+        <div class="error">{{ form.name.errors }}</div>
+      {% endif %}
+      <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
+      {% for operation in form.operations.field.queryset %}
+          <input type="checkbox" name="{{ form.operations.html_name }}" value="{{ operation.id }}"
+            {% if operation.id in form.operations.value %} checked {% endif %}>
+          {{ operation.node.name }} - {{ operation.name }} <br>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
+      <a href="{% url 'model_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
   </form>
-  <a href="{% url 'model_detail' model.pk %}">{% trans "Cancel" %}</a> |
-  <a href="{% url 'model_list' %}">{% trans "Back" %}</a>
+</div>
 {% endblock %}

@@ -1,0 +1,790 @@
+/* Header and navigation styling */
+header {
+    background-color: #f8f9fa; /* Light grey background, matching Bootstrap's default navbar */
+    padding: 10px 0; /* Adds some vertical padding */
+}
+
+nav {
+    display: flex;
+    justify-content: space-between; /* Positions the nav items on opposite ends */
+    align-items: center; /* Vertically centers nav items */
+    padding: 0 15px; /* Adds some horizontal padding */
+}
+
+nav a {
+    color: #007bff; /* Bootstrap's default link color */
+    text-decoration: none; /* Removes underline from links */
+    font-weight: 500; /* Makes the text slightly bolder */
+}
+
+nav a:hover {
+    text-decoration: underline; /* Adds underline on hover for better accessibility */
+}
+
+/* Logout button styling to look more like a link */
+nav form button {
+    border: none; /* Removes the button border */
+    background: none; /* Removes the button background */
+    color: #007bff; /* Uses Bootstrap's default link color */
+    cursor: pointer; /* Changes cursor to pointer on hover */
+    padding: 0; /* Removes padding to make it look more like a link */
+    font-size: 1rem; /* Ensures the font size matches other nav content */
+}
+
+nav form button:hover {
+    text-decoration: underline; /* Adds underline on hover for consistency with link hover */
+}
+
+.dashboard-container {
+    max-width: 800px; /* Set a max-width for the dashboard content */
+    margin: auto; /* Centers the dashboard in the middle of the page */
+    padding: 20px; /* Adds some padding around the content */
+    border: 1px solid #dee2e6; /* Light grey border */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 2px 4px rgba(0,0,0,.1); /* Subtle shadow for depth */
+}
+
+.dashboard-container h1 {
+    color: #343a40; /* Dark grey, similar to Bootstrap's default text color */
+    margin-bottom: 20px; /* Adds space below the heading */
+}
+
+.dashboard-container p {
+    margin-bottom: 15px; /* Adds space below each paragraph */
+}
+
+.dashboard-container a {
+    color: white; /* Bootstrap's default link color */
+    text-decoration: none; /* Removes underline */
+}
+
+.dashboard-container a:hover {
+    text-decoration: underline; /* Adds underline on hover */
+}
+
+.dashboard-container form button.btn {
+    margin-top: 10px; /* Adds space above the button */
+}
+
+.dashboard-container div {
+    margin-top: 20px; /* Adds space above the div, used for the 'clocked in' message */
+}
+
+/* Customizes the look of the buttons */
+.dashboard-container form button.btn {
+    width: auto; /* Auto width based on content */
+    padding: 5px 10px; /* Smaller padding for a more compact look */
+    margin-right: 10px; /* Adds space between buttons, if there are multiple next to each other */
+}
+
+.dashboard-container .row {
+    margin-top: 20px; /* Adds some space above the grid */
+}
+
+.card {
+    border: 1px solid #dee2e6; /* Light grey border */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0,0,0,.1); /* Subtle shadow for depth */
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.card-title {
+    margin-bottom: 20px; /* Adds space below the card title */
+}
+
+.btn-primary, .btn-secondary {
+    margin-bottom: 10px; /* Adds space between buttons */
+    width: 100%; /* Full-width buttons */
+}
+
+/* Removes the last button's margin-bottom for a cleaner look */
+.btn-primary:last-child, .btn-secondary:last-child {
+    margin-bottom: 0;
+}
+
+.btn-success, .btn-warning {
+    margin-bottom: 10px; /* Adds space between buttons */
+    width: 100%; /* Full-width buttons */
+}
+
+.btn-info {
+    margin-bottom: 10px; /* Adds space between buttons */
+    width: 100%; /* Full-width buttons */
+}
+
+/* CREATE templates */
+/* CREATE templates */
+/* CREATE templates */
+/* CREATE templates */
+/* CREATE templates */
+
+.content-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-heading {
+    margin-bottom: 30px;
+    color: #343a40;
+    text-align: center;
+}
+
+.crud-form .form-group {
+    margin-bottom: 25px;
+}
+
+.crud-form p {
+    margin-bottom: 10px;
+}
+
+.crud-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.create-btn {
+    background: #007bff; /* Bootstrap blue */
+    border: 1px solid #007bff;
+    color: #fff; /* White text */
+}
+
+.create-btn:hover {
+    background: #0069d9; /* Slightly darker blue on hover */
+    border-color: #0062cc;
+    color: #fff; /* Text color remains white */
+}
+
+.back-btn {
+    background: #6c757d; /* Bootstrap grey */
+    border: 1px solid #6c757d;
+    color: #fff; /* White text */
+}
+
+.back-btn:hover {
+    background: #5a6268; /* Slightly darker grey on hover */
+    border-color: #545b62;
+    color: #fff; /* Text color remains white */
+}
+
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+/* DETAIL tempaltes */
+
+.details p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.form-actions {
+    margin-top: 30px;
+}
+
+.edit-btn, .delete-btn {
+    margin-right: 10px;
+}
+
+.edit-btn {
+    background: #007bff;
+    border: 1px solid #007bff;
+    color: #fff;
+}
+
+.edit-btn:hover {
+    background: #0069d9;
+    border-color: #0062cc;
+    color: #fff;
+}
+
+.delete-btn {
+    background: #dc3545;
+    border: 1px solid #dc3545;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+    border-color: #bd2130;
+    color: #fff;
+}
+
+.back-btn {
+    background: #6c757d;
+    border: 1px solid #6c757d;
+    color: #fff;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+    border-color: #545b62;
+    color: #fff;
+}
+
+.calculate-btn {
+    background: #17a2b8; /* Bootstrap info color for a distinguished look */
+    border: 1px solid #17a2b8; /* Same color border for a cohesive design */
+    color: #fff; /* White text for readability */
+    padding: 5px 10px; /* Comfortable padding */
+    margin-left: 10px; /* Space from the preceding text */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    text-decoration: none; /* Removes underline from links styled as buttons */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effects */
+}
+
+.calculate-btn:hover, .calculate-btn:focus {
+    background: #138496; /* Slightly darker shade on hover/focus for feedback */
+    border-color: #117a8b; /* Matching darker border */
+    color: #fff; /* Ensuring text remains white */
+    text-decoration: none; /* Continues to remove underline on hover/focus */
+}
+
+/* Style for 'Size and Quantity' button */
+.btn.sq-btn {
+    background: #f0ad4e; /* Bootstrap's 'warning' color for attention */
+    border: 1px solid #f0ad4e; /* Same color border for cohesion */
+    color: #fff; /* White text for clarity */
+    padding: 5px 15px; /* Comfortable padding */
+    margin-right: 10px; /* Space between this button and the next */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    text-decoration: none; /* Removes underline from link styled as button */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.btn.sq-btn:hover, .btn.sq-btn:focus {
+    background: #ec971f; /* Slightly darker shade for interactive feedback */
+    border-color: #d58512; /* Matching darker border */
+    color: #fff; /* Ensure text remains white */
+    text-decoration: none; /* Maintain no underline on hover/focus */
+}
+
+/* Style for 'Operations' button */
+.btn.operations-btn {
+    background: #5bc0de; /* Bootstrap's 'info' color for a cool, informational feel */
+    border: 1px solid #5bc0de; /* Same color border for uniform appearance */
+    color: #fff; /* White text for readability */
+    padding: 5px 15px; /* Consistent padding with other buttons */
+    border-radius: 5px; /* Rounded corners to match the design */
+    text-decoration: none; /* Ensures link styled as button has no underline */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for interactive feedback */
+}
+
+.btn.operations-btn:hover, .btn.operations-btn:focus {
+    background: #31b0d5; /* Slightly darker shade on hover/focus for feedback */
+    border-color: #269abc; /* Coordinated darker border */
+    color: #fff; /* Text color remains white for contrast */
+    text-decoration: none; /* Continues to have no underline on hover/focus */
+}
+
+/* Style for 'Complete' button */
+.complete-btn {
+    background: #28a745; /* Green color indicating completion or success */
+    border: 1px solid #28a745; /* Same color border for a cohesive look */
+    color: #fff; /* White text for readability */
+    padding: 5px 15px; /* Consistent padding with other buttons */
+    margin-top: 10px; /* Space from the preceding elements */
+    border-radius: 5px; /* Rounded corners for a modern aesthetic */
+    text-decoration: none; /* Removes underline from link styled as button */
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.complete-btn:hover, .complete-btn:focus {
+    background: #218838; /* Slightly darker shade for interactive feedback */
+    border-color: #1e7e34; /* Coordinated darker border */
+    color: #fff; /* Ensure text remains white */
+    text-decoration: none; /* Maintain no underline on hover/focus */
+}
+
+/* Style for 'Reopen' button */
+.reopen-btn {
+    background: #ffc107; /* Yellow color for caution or attention */
+    border: 1px solid #ffc107;
+    color: #212529; /* Dark text for contrast */
+    padding: 5px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.reopen-btn:hover, .reopen-btn:focus {
+    background: #e0a800; /* Slightly darker shade for interactive feedback */
+    border-color: #d39e00;
+    color: #212529;
+    text-decoration: none;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.create-link {
+    margin: 0; /* Removes the default margin from the <p> tag to align the button properly */
+}
+
+/* PAGINATION css */
+/* PAGINATION css */
+/* PAGINATION css */
+/* PAGINATION css */
+/* PAGINATION css */
+
+.pagination {
+    text-align: center; /* Center the pagination controls */
+    margin: 20px 0; /* Add some space above and below the pagination */
+}
+
+.pagination-list {
+    display: inline-block; /* Align the pagination items in a row */
+    padding-left: 0; /* Remove default list padding */
+}
+
+.pagination-list li {
+    display: inline; /* Display list items in a line */
+    margin-right: 5px; /* Add some space between pagination items */
+}
+
+.pagination-list li a {
+    text-decoration: none; /* Remove underline from links */
+    padding: 5px 10px; /* Add some padding for clickable area */
+    color: #007bff; /* Bootstrap primary color for links */
+    border: 1px solid #007bff; /* Border to make it look like buttons */
+    border-radius: 5px; /* Slightly rounded corners for a modern look */
+    background-color: #fff; /* White background */
+}
+
+.pagination-list li a:hover,
+.pagination-list li a:focus {
+    background-color: #007bff; /* Background color on hover/focus */
+    color: #fff; /* White text on hover/focus */
+}
+
+.pagination-list li.active a {
+    font-weight: bold; /* Make the active page number bolder */
+    background-color: #007bff; /* Bootstrap primary color for active link */
+    color: #fff; /* White text for active link */
+}
+
+.pagination-list li.active a:hover,
+.pagination-list li.active a:focus {
+    background-color: #0056b3; /* Slightly darker shade for active link hover/focus */
+}
+
+.form-inline {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    margin-bottom: 20px;
+}
+
+.attendance-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attendance-form p {
+    margin-bottom: 0; 
+}
+
+.attendance-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.filter-btn {
+    background: #007bff;
+    border: 1px solid #007bff;
+    color: #fff;
+}
+
+.filter-btn:hover {
+    background: #0069d9;
+    border-color: #0062cc;
+    color: #fff;
+}
+
+/* EMPLOYEE functinality */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+  
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+  
+.table th {
+    background-color: #f2f2f2;
+}
+  
+.start-form button, .finish-form button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+  
+.finish-form button {
+    background-color: #c82333; /* Blue */
+}
+
+.filter-header {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: start; /* Align items to the start of the flex container */
+    gap: 10px; /* Space between the header and the form */
+    margin-bottom: 20px;
+}
+
+.date-filter-form {
+    display: flex;
+    flex-wrap: wrap; /* Allow the items to wrap as needed */
+    gap: 10px; /* Space between form items */
+    align-items: center; /* Align items in the middle of the container */
+}
+
+.date-filter-form label,
+.date-filter-form input,
+.date-filter-form button,
+.date-filter-form p,
+.date-filter-form div {
+    margin: 0; /* Remove default margins */
+    padding: 5px; /* Add some padding for better appearance */
+}
+
+.btn.filter-btn {
+    padding: 5px 10px; /* Adjust padding as needed */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    /* Add more styles here to match your button design */
+}
+
+.size-quantity-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
+.roll-meters-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
+.responsibility-defect-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
+.responsibility-discrepancy-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
+.assign-operations-container {
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.order-detail-cutter-container {
+    margin: 10px auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.operation-photo {
+    /* Aligns the div and its content to the center, you can adjust this according to your layout */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Provides some space around the div, optional */
+    padding: 10px;
+}
+  
+.operation-photo img {
+    /* Ensures the image does not exceed 150px in width */
+    max-width: 150px;
+    /* Ensures the image does not exceed 150px in height */
+    max-height: 150px;
+    /* Ensures the image maintains its aspect ratio */
+    width: auto;
+    height: auto;
+}
+
+.employee-pending-work-container {
+    padding: 20px;
+}
+  
+.employee-header {
+    margin-bottom: 20px;
+    text-align: center;
+}
+  
+.employee-list-heading {
+    margin: 0;
+    color: #333;
+}
+  
+.employee-create-link a {
+    color: #fff;
+    background-color: #007bff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+  
+.employee-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Adjust the space between cards */
+}
+  
+.employee-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+  
+.employee-operation-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    padding: 15px;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+}
+  
+.employee-operation-photo img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+  
+.employee-details {
+    padding: 15px;
+}
+  
+.employee-details > div {
+    margin-bottom: 10px;
+    color: #666;
+}
+  
+.employee-actions button {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+  
+.employee-actions button:hover {
+    background-color: #218838;
+}
+  
+  /* Responsive adjustments */
+@media (max-width: 768px) {
+    .employee-cards-container {
+      gap: 15px;
+    }
+    .employee-card {
+      margin: 0 10px; /* Add some horizontal margin on smaller screens */
+    }
+}
+
+/* Overlay covering the entire screen */
+.reassign-popup-overlay {
+  position: fixed; /* Positioning relative to the viewport */
+  top: 0;
+  left: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+/* Style for the popup box */
+.reassign-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 300px; /* Adjust based on content size */
+  display: none; /* Hidden by default */
+}
+
+/* Style for form elements and labels */
+.reassign-form label {
+  display: block; /* Make labels take up a full row */
+  margin-bottom: 5px; /* Spacing below the label */
+}
+
+.reassign-form input[type="text"],
+.reassign-form input[type="number"] {
+  width: 100%; /* Full width of the popup */
+  padding: 8px; /* Padding inside the input */
+  margin-bottom: 15px; /* Space between form elements */
+  border-radius: 4px; /* Rounded corners */
+  border: 1px solid #ccc; /* Light grey border */
+}
+
+/* Style for buttons */
+.reassign-form button {
+  padding: 10px 15px; /* Padding inside the buttons */
+  border: none;
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Change mouse cursor on hover */
+  margin-right: 10px; /* Space between buttons */
+}
+
+.reassign-form button[type="submit"] {
+  background-color: #4CAF50; /* Green background */
+  color: white; /* White text */
+}
+
+.reassign-form button[type="button"] {
+  background-color: #f44336; /* Red background */
+  color: white; /* White text */
+}
+
+/* Overlay covering the entire screen */
+.popup-overlay {
+    position: fixed; /* Positioning relative to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    z-index: 1000; /* Ensure it's above other content */
+}
+  
+  /* Style for the popup box */
+.popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 400px; /* Adjust based on content size */
+    display: none; /* Hidden by default */
+}
+  
+  /* Style for close button */
+.popup-content button {
+    padding: 10px 15px; /* Padding inside the buttons */
+    border: none;
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Change mouse cursor on hover */
+    color: white; /* White text */
+    margin-top: 10px; /* Space above the button */
+    margin-right: 0;
+    margin-left: 0;
+    margin-bottom: 0;
+}
+
+/* Tabs container styling */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    padding-left: 0;
+}
+
+/* Tab links styling */
+.tabs a {
+    padding: 10px 20px;
+    margin: 0 5px;
+    text-decoration: none;
+    color: #333;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Active tab styling */
+.tabs a.active {
+    color: #fff;
+    background-color: #007BFF; /* Bootstrap primary blue, for example */
+    border-color: #007BFF;
+}
+
+/* Tab hover effect */
+.tabs a:hover {
+    background-color: #007BFF;
+    color: #fff;
+    border-color: #0056b3;
+}

@@ -1,15 +1,73 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-  <h2>{% trans "Create New Model" %}</h2>
-  <form method="post">
+<style>
+  .node-accordion {
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .node-header {
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s;
+  }
+  .node-header:hover {
+    background-color: #e9e9e9;
+  }
+  .operations-container {
+    padding: 10px 20px;
+    display: none;
+    background-color: #fff;
+  }
+  label {
+    margin: 5px 0px;
+  }
+</style>
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Create New Model" %}</h2>
+  <form method="post" class="crud-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">{% trans "Create" %}</button>
+    <div class="form-group">
+      <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+      {{ form.name }}
+      {% if form.name.errors %}
+        <div class="error">{{ form.name.errors }}</div>
+      {% endif %}
+      <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
+      {% for node in nodes %}
+        <div class="node-accordion" id="node-{{ node.id }}">
+          <h3 class="node-header" onclick="toggleOperations({{ node.id }});">
+            {{ node.name }}
+          </h3>
+          <div class="operations-container" id="operations-{{ node.id }}" style="display:none;">
+            {% for operation in node.operations.all %}
+                <input type="checkbox" name="operations" value="{{ operation.id }}" {% if operation.id in form.operations.value %} checked {% endif %}>
+                {{ operation.name }}<br>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
+      <a href="{% url 'model_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
   </form>
-  <a href="{% url 'model_list' %}">{% trans "Back" %}</a>
-{% endblock %}
-
-{% block extra_js %}
-  {{ form.media }}
+</div>
+<script>
+  function toggleOperations(nodeId) {
+    var container = document.getElementById('operations-' + nodeId);
+    if (container.style.display === 'none') {
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+    }
+  }
+</script>
 {% endblock %}

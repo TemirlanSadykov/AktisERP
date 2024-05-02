@@ -1,19 +1,55 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load i18n %}
+
 {% block content %}
-  <h2>{% trans "Passport Details for" %} {{ passport.order.client.name }}</h2>
-  <p>{% trans "Model" %}: {{ passport.order.model.name }}</p>
-  <p>{% trans "Assortment" %}: {{ passport.order.assortment.name }}</p>
-  <p>{% trans "Roll" %}: {{ passport.order.roll.name }}</p>
-  <p>{% trans "Date" %}: {{ passport.date }}</p>
-  <a href="{% url 'passport_edit' passport.pk %}">{% trans "Edit" %}</a>
-  <a href="{% url 'passport_delete' passport.pk %}">{% trans "Delete" %}</a>
-  <a href="{% url 'create_size_quantity' passport.pk %}">{% trans "Size and Quantity" %}</a>
-  <a href="{% url 'assign_operations' passport.pk %}">{% trans "Operations" %}</a>
-  <form method="post" action="{% url 'complete_passport' passport.id %}">
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Passport Details for" %} {{ passport.order.client.name }}</h2>
+
+  <div class="details">
+    <p><strong>{% trans "Model" %}:</strong> {{ passport.order.model.name }}</p>
+    <p><strong>{% trans "Assortment" %}:</strong> {{ passport.order.assortment.name }}</p>
+    <p><strong>{% trans "Roll" %}:</strong> {{ passport.order.roll.name }}</p>
+    <p><strong>{% trans "Date" %}:</strong> {{ passport.date|date:"Y-m-d" }}</p>
+  </div>
+
+  <!-- Primary Actions -->
+  <div class="form-actions primary">
+    <a href="{% url 'create_size_quantity' passport.pk %}" class="btn sq-btn">{% trans "Size and Quantity" %}</a>
+    <a href="{% url 'assign_operations' passport.pk %}" class="btn operations-btn">{% trans "Operations" %}</a>
+
+    
+      <form method="post" action="{% url 'complete_passport' passport.id %}" class="complete-form">
+        {% csrf_token %}
+        {% if not passport.is_completed %}
+        <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">
+          {% trans "Complete" %}
+        </button>
+        {% else %}
+        <button type="submit" class="btn reopen-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">
+          {% trans "Reopen" %}
+        </button>
+        {% endif %}
+      </form>
+    
+  </div>
+
+  <!-- Secondary Actions -->
+  <div class="form-actions secondary">
+    <a href="{% url 'passport_edit' passport.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'order_detail_technologist' passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <form id="deleteForm" action="{% url 'passport_delete' passport.pk %}" method="post" style="display:none;">
     {% csrf_token %}
-    <button type="submit" onclick="return confirm('{% trans "Are you sure you want to mark this passport as completed?" %}');">
-      {% trans "Complete" %}
-    </button>
   </form>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this passport?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
 {% endblock %}

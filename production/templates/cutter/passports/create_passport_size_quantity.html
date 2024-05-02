@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+    <div class="filter-header">
+        <h2 class="list-heading">{% trans "Add Size and Quantity for Passport:" %} #{{ passport.order.id }}</h2>
+        <form id="sizeQuantityForm" method="post" class="date-filter-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>{% trans "Size:" %}</label>
+                {{ form.size_quantity }}
+            </div>
+            <div class="form-group">
+                <label>{% trans "Quantity:" %}</label>
+                {{ form.quantity }}
+            </div>
+            <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
+        </form>
+    </div>
+    <!-- Display of existing passport sizes -->
+    <ul id="sizeQuantityList" class="size-quantity-list">
+        {% for ps in passport_sizes %}
+        <li id="sq-{{ ps.id }}" class="size-quantity-item">
+            <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}</span></span>
+            <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.quantity }}</span></span>
+            <button class="edit-btn" data-sq-id="{{ ps.id }}">{% trans "Edit" %}</button>
+            <button class="delete-btn" data-sq-id="{{ ps.id }}">{% trans "Delete" %}</button>
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="form-actions">
+        <a href="{% url 'passport_detail' passport.id %}" class="btn create-btn">{% trans "Save" %}</a>
+        <a href="{% url 'create_passport_roll' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sizeQuantityList = document.getElementById('sizeQuantityList');
+        sizeQuantityList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-btn')) {
+                handleEdit(e.target);
+            } else if (e.target.classList.contains('delete-btn')) {
+                handleDelete(e.target);
+            }
+        });
+    
+        function handleEdit(button) {
+            let sqId = button.getAttribute("data-sq-id");
+            let parentLi = document.querySelector(`#sq-${sqId}`);
+            let quantitySpan = parentLi.querySelector(".quantity");
+    
+            if (!quantitySpan.isContentEditable) {
+                quantitySpan.contentEditable = "true";
+                quantitySpan.focus();
+                button.textContent = '{% trans "Save" %}';
+            } else {
+                quantitySpan.contentEditable = "false";
+                button.textContent = '{% trans "Edit" %}';
+                const updatedQuantity = quantitySpan.textContent;
+                updateSizeQuantity(sqId, updatedQuantity);
+            }
+        }
+    
+        function updateSizeQuantity(sqId, quantity) {
+            fetch(`/production/cutter/orders/passport/${sqId}/edit_size_quantity/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Update successful');
+                } else {
+                    alert('Failed to update size and quantity');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function handleDelete(button) {
+            const sqId = button.getAttribute("data-sq-id");
+            const confirmDelete = confirm('{% trans "Are you sure you want to delete this item?" %}');
+            if (confirmDelete) {
+                fetch(`/production/cutter/orders/passport/${sqId}/delete_size_quantity/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        const parentLi = document.getElementById(`sq-${sqId}`);
+                        if (parentLi) {
+                            parentLi.remove();
+                        }
+                        console.log('Delete successful');
+                    } else {
+                        alert('Failed to delete size and quantity');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

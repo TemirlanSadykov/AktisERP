@@ -1,33 +1,72 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
-  <h1>{% trans "My Works" %}</h1>
-  <ul>
-    {% for assigned_work in assigned_works %}
-    <li>
-      {% trans "Operation" %}: {{ assigned_work.work.operation.name }} -
-      {% if assigned_work.work.size_quantity %}
-        {% trans "Size" %}: {{ assigned_work.work.size_quantity.size }} -
-        {% trans "Assigned Quantity" %}: {{ assigned_work.quantity }}
-      {% endif %}
-      <p>
-        {% trans "Start" %}: {% if assigned_work.start_time %}{{ assigned_work.start_time|date:"Y-m-d H:i:s" }}{% else %} -- {% endif %} -
-        {% trans "End" %}: {% if assigned_work.end_time %}{{ assigned_work.end_time|date:"Y-m-d H:i:s" }} {% trans "Done" %}{% else %} -- {% endif %}
-      </p>
-      {% if not assigned_work.start_time %}
-        <form action="{% url 'start_work' assigned_work.id %}" method="post">
-          {% csrf_token %}
-          <button type="submit">{% trans "Start" %}</button>
-        </form>
-      {% elif assigned_work.start_time and not assigned_work.end_time %}
-        <form action="{% url 'finish_work' assigned_work.id %}" method="post">
-          {% csrf_token %}
-          <button type="submit">{% trans "Finish" %}</button>
-        </form>
-      {% endif %}
-    </li>
-    {% empty %}
-    <li>{% trans "No works found." %}</li>
-    {% endfor %}
-  </ul>
+<div class="employee-pending-work-container">
+  <div class="employee-header">
+    <h1 class="employee-list-heading">{% trans "My Works" %}</h1>
+  </div>
+
+  {% if assigned_works %}
+    <div class="employee-cards-container">
+      {% for assigned_work in assigned_works %}
+      <div class="employee-card">
+        <div class="employee-operation-name">{{ assigned_work.work.operation.name }}</div>
+        <div class="employee-operation-photo">
+          {% if assigned_work.work.operation.photo %}
+            <img src="{{ assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+          {% else %}
+            {% trans "No photo" %}
+          {% endif %}
+        </div>
+        <div class="employee-details">
+          <div class="employee-size">
+            {% trans "Size:" %}
+            {% if assigned_work.work.passport_size.size_quantity %}
+              {{ assigned_work.work.passport_size.size_quantity.size }}
+            {% else %}
+              --
+            {% endif %}
+          </div>
+          <div class="employee-quantity">
+            {% trans "Assigned Quantity:" %} {{ assigned_work.quantity }}
+          </div>
+          <div class="employee-start-time">
+            {% trans "Start:" %}
+            {% if assigned_work.start_time %}
+              {{ assigned_work.start_time|date:"H:i:s" }}
+            {% else %}
+              --
+            {% endif %}
+          </div>
+          <div class="employee-end-time">
+            {% trans "End:" %}
+            {% if assigned_work.end_time %}
+              {{ assigned_work.end_time|date:"H:i:s" }}
+            {% else %}
+              --
+            {% endif %}
+          </div>
+          <div class="employee-actions">
+            {% if not assigned_work.start_time %}
+              <form action="{% url 'start_work' assigned_work.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">{% trans "Start" %}</button>
+              </form>
+            {% endif %}
+            {% if assigned_work.start_time and not assigned_work.end_time %}
+              <form action="{% url 'finish_work' assigned_work.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">{% trans "Finish" %}</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>{% trans "No works found." %}</p>
+  {% endif %}
+</div>
 {% endblock %}

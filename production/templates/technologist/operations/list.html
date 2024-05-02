@@ -1,17 +1,83 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-  <p><a href="{% url 'operation_create' %}">{% trans "Create Operation" %}</a></p>
 
-  {% if operations %}
-    {% for operation in operations %}
-      <p>
-        <a href="{% url 'operation_detail' operation.pk %}">
-          {% trans "Operation:" %} {{ operation.name }} - {% trans "Equipment:" %} {{ operation.equipment }}
-        </a>
-      </p>
+{% block content %}
+<div class="order-detail-cutter-container">
+  <div class="tabs">
+    <a href="{% url 'operation_list' %}" class="{% if not selected_node %}active{% endif %}">{% trans "All" %}</a>
+    {% for node in nodes %}
+    <a href="?node={{ node.id }}" class="{% if selected_node|stringformat:"s" == node.id|stringformat:"s" %}active{% endif %}">{% trans node.name %}</a>
     {% endfor %}
-  {% else %}
-    <p>{% trans "No operations found." %}</p>
-  {% endif %}
+  </div>
+  <div class="header">
+    <h2 class="list-heading">{% trans "Operations" %}</h2>
+    <p class="create-link">
+      <a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a>
+      <!-- Trigger/Open The Modal -->
+      <button id="upload_button" type="button" class="btn create-btn" data-toggle="modal" data-target="#uploadModal">
+        {% trans "Upload from Excel" %}
+      </button>
+    </p>
+  </div>
+  <div class="modal" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+      
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{% trans "Upload Operations" %}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="excel_file" id="excel_file" required>
+          </form>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer justify-content-between">
+          <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  <ul class="list-group">
+    {% for operation in operations %}
+      <li class="list-group-item">
+        <a href="{% url 'operation_detail' operation.pk %}">
+          {{ operation.node }} - {{ operation.equipment }} - {{ operation.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="pagination">
+    {% if is_paginated %}
+      <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+          <li><a href="?page=1">&laquo; first</a></li>
+          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+        {% endif %}
+  
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+  
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

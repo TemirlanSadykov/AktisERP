@@ -1,0 +1,118 @@
+/* Header and navigation styling */
+header {
+    background-color: #f8f9fa; /* Light grey background, matching Bootstrap's default navbar */
+    padding: 10px 0; /* Adds some vertical padding */
+}
+
+nav {
+    display: flex;
+    justify-content: space-between; /* Positions the nav items on opposite ends */
+    align-items: center; /* Vertically centers nav items */
+    padding: 0 15px; /* Adds some horizontal padding */
+}
+
+nav a {
+    color: #007bff; /* Bootstrap's default link color */
+    text-decoration: none; /* Removes underline from links */
+    font-weight: 500; /* Makes the text slightly bolder */
+}
+
+nav a:hover {
+    text-decoration: underline; /* Adds underline on hover for better accessibility */
+}
+
+/* Logout button styling to look more like a link */
+nav form button {
+    border: none; /* Removes the button border */
+    background: none; /* Removes the button background */
+    color: #007bff; /* Uses Bootstrap's default link color */
+    cursor: pointer; /* Changes cursor to pointer on hover */
+    padding: 0; /* Removes padding to make it look more like a link */
+    font-size: 1rem; /* Ensures the font size matches other nav content */
+}
+
+nav form button:hover {
+    text-decoration: underline; /* Adds underline on hover for consistency with link hover */
+}
+
+.dashboard-container {
+    max-width: 800px; /* Set a max-width for the dashboard content */
+    margin: auto; /* Centers the dashboard in the middle of the page */
+    padding: 20px; /* Adds some padding around the content */
+    border: 1px solid #dee2e6; /* Light grey border */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 2px 4px rgba(0,0,0,.1); /* Subtle shadow for depth */
+}
+
+.dashboard-container h1 {
+    color: #343a40; /* Dark grey, similar to Bootstrap's default text color */
+    margin-bottom: 20px; /* Adds space below the heading */
+}
+
+.dashboard-container p {
+    margin-bottom: 15px; /* Adds space below each paragraph */
+}
+
+.dashboard-container a {
+    color: white; /* Bootstrap's default link color */
+    text-decoration: none; /* Removes underline */
+}
+
+.dashboard-container a:hover {
+    text-decoration: underline; /* Adds underline on hover */
+}
+
+.dashboard-container form button.btn {
+    margin-top: 10px; /* Adds space above the button */
+}
+
+.dashboard-container div {
+    margin-top: 20px; /* Adds space above the div, used for the 'clocked in' message */
+}
+
+/* Customizes the look of the buttons */
+.dashboard-container form button.btn {
+    width: auto; /* Auto width based on content */
+    padding: 5px 10px; /* Smaller padding for a more compact look */
+    margin-right: 10px; /* Adds space between buttons, if there are multiple next to each other */
+}
+
+.dashboard-container .row {
+    margin-top: 20px; /* Adds some space above the grid */
+}
+
+.card {
+    border: 1px solid #dee2e6; /* Light grey border */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0,0,0,.1); /* Subtle shadow for depth */
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.card-title {
+    margin-bottom: 20px; /* Adds space below the card title */
+}
+
+.btn-primary, .btn-secondary {
+    margin-bottom: 10px; /* Adds space between buttons */
+    width: 100%; /* Full-width buttons */
+}
+
+/* Removes the last button's margin-bottom for a cleaner look */
+.btn-primary:last-child, .btn-secondary:last-child {
+    margin-bottom: 0;
+}
+
+.btn-success, .btn-warning {
+    margin-bottom: 10px; /* Adds space between buttons */
+    width: 100%; /* Full-width buttons */
+}
+
+.btn-info {
+    margin-bottom: 10px; /* Adds space between buttons */
+    width: 100%; /* Full-width buttons */
+}

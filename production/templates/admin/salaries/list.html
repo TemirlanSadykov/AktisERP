@@ -1,26 +1,52 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-<h2>{% trans "Salaries" %}</h2>
-<form method="get">
-  {{ form.as_p }}
-  <button type="submit">{% trans "Filter" %}</button>
-</form>
 
-<table>
-  <tr>
-    <th>{% trans "Employee" %}</th>
-    <th>{% trans "Salary" %} {% trans "Som" %}</th>
-  </tr>
-  {% for user, salary in salaries.items %}
-  <tr>
-    <td>
-      <a href="{% url 'salary_detail' employee_id=user.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
-        {{ user.user.get_full_name }}
-      </a>
-    </td>
-    <td>{{ salary|floatformat:2 }}</td>
-  </tr>
-  {% endfor %}
-</table>
+{% block content %}
+<style>
+  .payment-pending { color: blue; }
+  .payment-paid { color: green; }
+</style>
+
+<div class="content-container">
+  <div class="filter-header">
+    <h2 class="list-heading">{% trans "Salaries" %}</h2>
+    <form method="get" class="date-filter-form">
+      {{ form.as_p }}
+      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
+    </form>
+    <form method="post" action="{% url 'process_payments' %}" class="payment-form">
+      {% csrf_token %}
+      <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+      <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+      <input type="hidden" name="salary_type" value="{{ request.GET.salary_type }}">
+      <button type="submit" class="btn filter-btn">{% trans "Pay" %}</button>
+    </form>
+    <a href="{% url 'export_salaries' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
+      {% trans "Download Excel" %}
+    </a>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "Employee" %}</th>
+        <th>{% trans "Salary" %} ({% trans "Som" %})</th>
+        <th>{% trans "Error Cost" %}</th> <!-- New column for error costs -->
+      </tr>
+    </thead>
+    <tbody>
+      {% for user, data in salaries.items %}
+      <tr class="{% if data.status == 0 %}payment-pending{% elif data.status == 1 %}payment-paid{% endif %}">
+        <td>
+          <a href="{% url 'salary_detail' pk=user.id %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
+            {{ user.user.get_full_name }}
+          </a>
+        </td>
+        <td>{{ data.salary|floatformat:2 }}</td>
+        <td class="error-cost">{{ data.error_cost|floatformat:2 }}</td> <!-- Displaying error costs -->
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

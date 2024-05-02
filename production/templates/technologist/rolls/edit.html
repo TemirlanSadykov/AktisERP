@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
-  <h2>Edit Roll: {{ roll.name }}</h2>
-  <form method="post">
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Edit Roll:" %} {{ roll.name }}</h2>
+  <form method="post" class="crud-form">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Update Roll</button>
+    <div class="form-actions">
+      <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
+      <a href="{% url 'roll_detail' roll.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+    </div>
   </form>
-  <a href="{% url 'roll_detail' roll.pk %}">Cancel</a> |
-  <a href="{% url 'roll_list' %}">Back to Roll List</a>
+</div>
 {% endblock %}

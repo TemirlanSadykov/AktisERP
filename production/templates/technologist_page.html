@@ -1,28 +1,46 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
+<div class="dashboard-container">
   <h1>{% trans 'Technologist Dashboard' %}</h1>
   <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a Technologist." %}</p>
-  <p>{% trans 'This is the technologist page where you can access technical resources, manage projects, and collaborate with team members.' %}</p>
-  {% if request.user.userprofile.type == 0 %}
-    <p>{% trans 'You are accessing Technologist page.' %}</p>
-  {% else %}
-    <form action="{% url 'clock_in_out' %}" method="post">
-      {% csrf_token %}
-      <button type="submit" class="btn">
-        {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
-      </button>
-    </form>
-  {% endif %}
-  {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-    <p><a href="{% url 'passport_list' %}">{% trans 'Passports' %}</a></p>
-    <p><a href="{% url 'operation_list' %}">{% trans 'Operations' %}</a></p>
-    <p><a href="{% url 'roll_list' %}">{% trans 'Rolls' %}</a></p>
-    <p><a href="{% url 'assortment_list' %}">{% trans 'Assortments' %}</a></p>
-    <p><a href="{% url 'model_list' %}">{% trans 'Models' %}</a></p>
-  {% else %}
-    <div>
-      <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
+
+  <div class="row">
+    {% if request.user.userprofile.type != 0 %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{% trans 'Clock In/Out' %}</h5>
+            <form action="{% url 'clock_in_out' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-block">
+                {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="col-md-8 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{% trans 'Resources' %}</h5>
+          {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
+            <a href="{% url 'order_list_technologist' %}" class="btn btn-info">{% trans 'Models (Working)' %}</a>
+            <a href="{% url 'roll_list' %}" class="btn btn-info">{% trans 'Rolls' %}</a>
+            <a href="{% url 'assortment_list' %}" class="btn btn-info">{% trans 'Assortments' %}</a>
+            <a href="{% url 'model_list' %}" class="btn btn-info">{% trans 'Models' %}</a>
+            <a href="{% url 'operation_list' %}" class="btn btn-info">{% trans 'Operations' %}</a>
+            <a href="{% url 'node_list' %}" class="btn btn-info">{% trans 'Nodes' %}</a>
+            <a href="{% url 'equipment_list' %}" class="btn btn-info">{% trans 'Equipment' %}</a>
+          {% else %}
+            <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
+          {% endif %}
+        </div>
+      </div>
     </div>
-  {% endif %}
+  </div>
+  
+</div>
 {% endblock %}

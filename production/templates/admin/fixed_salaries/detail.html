@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Fixed Salary Details:" %} {{ fixed_salary.position }}</h2>
+  <div class="details">
+    <p><strong>{% trans "Salary:" %}</strong> {{ fixed_salary.salary }}</p>
+    <p><strong>{% trans "Employees:" %}</strong></p>
+    {% if fixed_salary.employees.all %}
+      <ul class="employees-list">
+        {% for employee in fixed_salary.employees.all %}
+          <li class="employee-item">
+            {{ employee }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>{% trans "No operations associated with this model." %}</p>
+    {% endif %}
+  </div>
+
+  <div class="form-actions">
+    <a href="{% url 'fixed_salary_edit' fixed_salary.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'fixed_salary_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <form id="deleteForm" action="{% url 'fixed_salary_delete' fixed_salary.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this fixed salary?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <div class="filter-header">
+    <h2 class="list-heading">{% trans "Add Roll and Meters for Passport:" %} #{{ passport.order.id }}</h2>
+    <form id="rollMetersForm" method="post" class="date-filter-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>{% trans "Roll:" %}</label>
+            {{ form.roll }}
+        </div>
+        <div class="form-group">
+            <label>{% trans "Meters:" %}</label>
+            {{ form.meters }}
+        </div>
+        <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
+    </form>
+  </div>
+    <ul id="rollMetersList" class="roll-meters-list">
+        {% for pr in passport_rolls %}
+        <li id="rm-{{ pr.id }}" class="roll-meters-item">
+            <span class="detail"><strong>{% trans "Roll:" %}</strong> <span class="roll" data-pr-id="{{ pr.id }}" contenteditable="false">{{ pr.roll.name }}</span></span>
+            <span class="detail"><strong>{% trans "Meters:" %}</strong> <span class="meters" data-pr-id="{{ pr.id }}" contenteditable="false">{{ pr.meters }}</span></span>
+            <button class="edit-btn" data-rm-id="{{ pr.id }}">{% trans "Edit" %}</button>
+            <button class="delete-btn" data-rm-id="{{ pr.id }}">{% trans "Delete" %}</button>
+        </li>
+        {% endfor %}
+    </ul>
+    <div class="form-actions">
+        <a href="{% url 'create_passport_size' passport.id %}" class="btn create-btn">{% trans "Save" %}</a>
+        <a href="{% url 'passport_detail' passport.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const rollMetersList = document.getElementById('rollMetersList');
+        rollMetersList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-btn')) {
+                handleEdit(e.target);
+            } else if (e.target.classList.contains('delete-btn')) {
+                handleDelete(e.target);
+            }
+        });
+    
+        function handleEdit(button) {
+            let prId = button.getAttribute("data-rm-id");
+            let parentLi = document.querySelector(`#rm-${prId}`);
+            let metersSpan = parentLi.querySelector(".meters");
+            if (!metersSpan.isContentEditable) {
+                metersSpan.contentEditable = "true";
+                metersSpan.focus();
+                button.textContent = '{% trans "Save" %}';
+            } else {
+                metersSpan.contentEditable = "false";
+                button.textContent = '{% trans "Edit" %}';
+                const updatedMeters = metersSpan.textContent;
+                updateRollMeters(prId, updatedMeters);
+            }
+        }
+    
+        function updateRollMeters(prId, meters) {
+            fetch(`/production/cutter/orders/passport/${prId}/edit_passport_roll/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ meters: meters })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Meters update successful');
+                } else {
+                    alert('Failed to update meters');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function handleDelete(button) {
+            const prId = button.getAttribute("data-rm-id");
+            const confirmDelete = confirm('{% trans "Are you sure you want to delete this item?" %}');
+            if (confirmDelete) {
+                fetch(`/production/cutter/orders/passport/${prId}/delete_passport_roll/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        const parentLi = document.getElementById(`rm-${prId}`);
+                        if (parentLi) {
+                            parentLi.remove();
+                        }
+                        console.log('Delete successful');
+                    } else {
+                        alert('Failed to delete passport roll');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+    
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

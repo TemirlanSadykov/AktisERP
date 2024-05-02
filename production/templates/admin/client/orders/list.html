@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <div class="tabs">
+    <a href="{% url 'client_order_list' %}" class="{% if not selected_status %}active{% endif %}">{% trans "All" %}</a>
+    <a href="?status={{ ClientOrder.NEW }}" class="{% if selected_status|stringformat:"s" == ClientOrder.NEW|stringformat:"s" %}active{% endif %}">{% trans "New" %}</a>
+    <a href="?status={{ ClientOrder.IN_PROGRESS }}" class="{% if selected_status|stringformat:"s" == ClientOrder.IN_PROGRESS|stringformat:"s" %}active{% endif %}">{% trans "In Progress" %}</a>
+    <a href="?status={{ ClientOrder.COMPLETED }}" class="{% if selected_status|stringformat:"s" == ClientOrder.COMPLETED|stringformat:"s" %}active{% endif %}">{% trans "Completed" %}</a>
+  </div>
+  <div class="header">
+    <h2 class="list-heading">{% trans "Client Orders" %}</h2>
+    <p class="create-link"><a href="{% url 'client_order_create' %}" class="btn create-btn">{% trans "Create New Order" %}</a></p>
+  </div>
+  <div class="filter-header">
+    <form method="get" class="date-filter-form">
+      {{ form.as_p }}
+      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
+    </form>
+  </div>
+  <ul class="list-group">
+    {% for order_info in orders_with_days_left %}
+      <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="{% url 'client_order_detail' order_info.order.pk %}" style="flex-grow: 1;">
+          {{ order_info.order.order_number }}
+        </a>
+        <span style="flex-shrink: 0;">{% trans "Days left:" %} {{ order_info.days_left }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="pagination">
+    {% if is_paginated %}
+      <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+          <li><a href="?page=1">&laquo; first</a></li>
+          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+        {% endif %}
+  
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+  
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

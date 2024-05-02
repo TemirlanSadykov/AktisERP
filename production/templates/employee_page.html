@@ -1,26 +1,42 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
+<div class="dashboard-container">
   <h1>{% trans 'Employee Dashboard' %}</h1>
   <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Employee." %}</p>
-  <p>{% trans 'This is the employee page where you can see your tasks, update your progress, and view announcements.' %}</p>
-  {% if request.user.userprofile.type == 0 %}
-    <p>{% trans 'You are accessing Employee page.' %}</p>
-  {% else %}
-    <form action="{% url 'clock_in_out' %}" method="post">
-      {% csrf_token %}
-      <button type="submit" class="btn">
-        {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
-      </button>
-    </form>
-  {% endif %}
   
-  {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-    <p><a href="{% url 'done_works_list' %}">{% trans 'Done Work' %}</a></p>
-    <p><a href="{% url 'pending_works_list' %}">{% trans 'Pending Work' %}</a></p>
-  {% else %}
-    <div>
-      <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
+  <div class="row">
+    {% if request.user.userprofile.type != 0 %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{% trans 'Clock In/Out' %}</h5>
+            <form action="{% url 'clock_in_out' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-block">
+                {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    
+    <div class="col-md-8 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{% trans 'Your Tasks' %}</h5>
+          {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
+            <a href="{% url 'done_works_list' %}" class="btn btn-success">{% trans 'Done Work' %}</a>
+            <a href="{% url 'pending_works_list' %}" class="btn btn-warning">{% trans 'Pending Work' %}</a>
+            <a href="{% url 'reassigned_works_list' %}" class="btn btn-primary">{% trans 'Reassigned Work' %}</a>
+          {% else %}
+            <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
+          {% endif %}
+        </div>
+      </div>
     </div>
-  {% endif %}
+  </div>
+  
+</div>
 {% endblock %}

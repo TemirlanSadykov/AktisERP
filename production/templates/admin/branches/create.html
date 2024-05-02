@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Create New Branch" %}</h2>
+  <form method="post" class="crud-form">
+    {% csrf_token %}
+    <div class="form-group">
+      {{ form.as_p }}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
+      <a href="{% url 'branch_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -6,6 +6,15 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from .models import *
 from django_select2 import forms as s2forms
+from django.forms import inlineformset_factory
+from django.forms import ModelChoiceField
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+
+class BranchForm(forms.ModelForm):
+    class Meta:
+        model = Branch
+        fields = ['name']
 
 class UserWithProfileForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
@@ -39,11 +48,12 @@ class UserEditForm(forms.ModelForm):
     type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
     status = forms.BooleanField(required=False)
     station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
+    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True, label='Branch')
     new_password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False, help_text="Leave blank if you do not want to change the password.")
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station']
+        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station', 'branch']
 
     def __init__(self, *args, **kwargs):
         super(UserEditForm, self).__init__(*args, **kwargs)
@@ -52,6 +62,7 @@ class UserEditForm(forms.ModelForm):
             self.fields['type'].initial = self.instance.userprofile.type
             self.fields['status'].initial = self.instance.userprofile.status
             self.fields['station'].initial = self.instance.userprofile.station
+            self.fields['branch'].initial = self.instance.userprofile.branch
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -59,7 +70,7 @@ class UserEditForm(forms.ModelForm):
         # Set new password if provided
         new_password = self.cleaned_data.get('new_password')
         if new_password:
-            user.password = make_password(new_password)
+            user.set_password(new_password)
         
         if commit:
             user.save()
@@ -67,13 +78,14 @@ class UserEditForm(forms.ModelForm):
             user.userprofile.type = self.cleaned_data['type']
             user.userprofile.status = self.cleaned_data['status']
             user.userprofile.station = self.cleaned_data['station']
+            user.userprofile.branch = self.cleaned_data['branch']
             user.userprofile.save()
         return user
     
 class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport
-        exclude = ['operations', 'date', 'size_quantities', 'is_completed']
+        exclude = ['size_quantities', 'rolls', 'is_completed']
 
 class OperationAssignmentForm(forms.ModelForm):
     employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")
@@ -93,22 +105,74 @@ class DateForm(forms.Form):
     date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
 
 class DateRangeForm(forms.Form):
-    start_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
-    end_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+    start_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False 
+    )
+    end_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False
+    )
+
+class SalaryListForm(forms.Form):
+    start_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False 
+    )
+    end_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=False
+    )
+    salary_type = forms.ChoiceField(
+        choices=(('non_fixed', 'Non-fixed'), ('fixed', 'Fixed')),
+        required=False
+    )
 
 
 
+class PassportRollForm(forms.ModelForm):
+    class Meta:
+        model = PassportRoll
+        fields = ['roll', 'meters']
+        widgets = {
+            'roll': forms.Select(),
+            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'})
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['roll'].queryset = Roll.objects.all()
 
+class SizeQuantityChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.size
+
+class PassportSizeForm(forms.ModelForm):
+    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------") 
+
+    class Meta:
+        model = PassportSize
+        fields = ['size_quantity', 'quantity']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        passport_id = kwargs.pop('passport_id', None)
+        super().__init__(*args, **kwargs)
+        
+        if passport_id:
+            passport = Passport.objects.get(pk=passport_id)
+            self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
 
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'type', 'preferred_completion_time']
+        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
 
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
-        fields = ['name', 'color', 'fabrics']
+        fields = ['name', 'color', 'fabrics', 'meters']
 
 class AssortmentForm(forms.ModelForm):
     class Meta:
@@ -117,31 +181,153 @@ class AssortmentForm(forms.ModelForm):
 
 class ModelForm(forms.ModelForm):
     operations = forms.ModelMultipleChoiceField(
-        queryset=Operation.objects.all(),
-        widget=forms.CheckboxSelectMultiple, 
-        required=False 
+        queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
     )
+
     class Meta:
         model = Model
         fields = ['name', 'operations']
+
+    def __init__(self, *args, **kwargs):
+        super(ModelForm, self).__init__(*args, **kwargs)
+        common_operations = Operation.objects.filter(node__is_common=True)
+        self.fields['operations'].initial = common_operations
 
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = ['name', 'contact_info']
 
+class ClientOrderForm(forms.ModelForm):
+    class Meta:
+        model = ClientOrder
+        fields = ['order_number', 'client', 'term']
+        widgets = {
+            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
+        }
+
+    def clean_term(self):
+        term = self.cleaned_data.get('term')
+        today = timezone.localdate()
+        if term < today:
+            raise ValidationError("The term date cannot be earlier than today.")
+        return term
+
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['name', 'order_number', 'client', 'model', 'assortment', 'roll', 'status', 'quantity', 'completed_quantity', 'payment', 'term']
+        fields = ['name', 'model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES), 
         }
 
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
-        self.fields['client'].queryset = Client.objects.all()
         self.fields['model'].queryset = Model.objects.all()
         self.fields['assortment'].queryset = Assortment.objects.all()
-        self.fields['roll'].queryset = Roll.objects.all()
+
+        # Make certain fields optional in the form
+        self.fields['model'].required = False
+        self.fields['assortment'].required = False
+
+class OrderFormTechnologist(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['model', 'assortment']
+
+    def __init__(self, *args, **kwargs):
+        super(OrderFormTechnologist, self).__init__(*args, **kwargs)
+        self.fields['model'].queryset = Model.objects.all()
+        self.fields['assortment'].queryset = Assortment.objects.all()
+
+class NodeForm(forms.ModelForm):
+    class Meta:
+        model = Node
+        fields = ['name', 'is_common', 'type']
+
+class EquipmentForm(forms.ModelForm):
+    class Meta:
+        model = Equipment
+        fields = ['name']
+
+class SizeQuantityChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.size
+
+class DefectForm(forms.ModelForm):
+    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+
+    class Meta:
+        model = Defect
+        fields = ['passport', 'size_quantity', 'quantity', 'defect_type', 'severity']
+
+    def __init__(self, *args, **kwargs):
+        order_pk = kwargs.pop('order_pk', None)
+        super().__init__(*args, **kwargs)
+
+        if order_pk:
+            order = Order.objects.get(pk=order_pk)
+            self.fields['passport'].queryset = Passport.objects.filter(order=order)
+            self.fields['size_quantity'].queryset = order.size_quantities.all()
+
+class DiscrepancyForm(forms.ModelForm):
+    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+
+    class Meta:
+        model = Discrepancy
+        fields = ['passport', 'size_quantity', 'quantity']
+
+    def __init__(self, *args, **kwargs):
+        order_pk = kwargs.pop('order_pk', None)
+        super().__init__(*args, **kwargs)
+
+        if order_pk:
+            order = Order.objects.get(pk=order_pk)
+            self.fields['passport'].queryset = Passport.objects.filter(order=order)
+            self.fields['size_quantity'].queryset = order.size_quantities.all()
+
+class FixedSalaryForm(forms.ModelForm):
+    employees = forms.ModelMultipleChoiceField(
+        queryset=UserProfile.objects.all().order_by('employee_id'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
+    class Meta:
+        model = FixedSalary
+        fields = ['position', 'salary', 'employees']
+        
+class UploadFileForm(forms.Form):
+    excel_file = forms.FileField(
+        label='Select an Excel file',
+        help_text='Maximum size allowed is 10MB',
+        validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
+    )
+
+class DefectResponsibilityForm(forms.ModelForm):
+    class Meta:
+        model = DefectResponsibility
+        fields = ['employee', 'percentage']
+        widgets = {
+            'employee': forms.Select(),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['employee'].queryset = UserProfile.objects.all()
+
+class DiscrepancyResponsibilityForm(forms.ModelForm):
+    class Meta:
+        model = DiscrepancyResponsibility
+        fields = ['employee', 'percentage']
+        widgets = {
+            'employee': forms.Select(),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['employee'].queryset = UserProfile.objects.all()

@@ -1,27 +1,91 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block content %}
-  <p><a href="{% url 'employee_create' %}">{% trans "Create Employee" %}</a></p>
-  <style>
-    .status-indicator {
-      height: 10px;
-      width: 10px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 5px;
-    }
-    .status-true {
-      background-color: green;
-    }
-    .status-false {
-      background-color: red;
-    }
-  </style>
 
-  {% for employee in employees %}
-    <p>
-      <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
-      <a href="{% url 'employee_detail' employee.pk %}">{{ employee.user.get_full_name }} - {{ employee.get_station_display }}</a>
+{% block content %}
+<div class="content-container">
+  <div class="header">
+    <h2 class="list-heading">{% trans "Employees" %}</h2>
+    <p class="create-link">
+      <a href="{% url 'employee_create' %}" class="btn create-btn">{% trans "Create Employee" %}</a>
+      <button id="upload_button" type="button" class="btn create-btn" data-toggle="modal" data-target="#uploadModal">
+        {% trans "Upload from Excel" %}
+      </button>
     </p>
-  {% endfor %}
+  </div>
+  <div class="modal" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+      
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{% trans "Upload Employees" %}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <form id="upload_form" action="{% url 'employee_upload' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="excel_file" id="excel_file" required>
+          </form>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer justify-content-between">
+          <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  <ul class="list-group">
+    {% for employee in employees %}
+      <li class="list-group-item">
+        <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
+        <a href="{% url 'employee_detail' employee.pk %}">{{ employee.employee_id }} - {{ employee.user.get_full_name }} - {{ employee.get_station_display }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="pagination">
+    {% if is_paginated %}
+      <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+          <li><a href="?page=1">&laquo; first</a></li>
+          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+        {% endif %}
+  
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+  
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .status-indicator {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+  }
+  .status-true {
+    background-color: green;
+  }
+  .status-false {
+    background-color: red;
+  }
+</style>
 {% endblock %}

@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n %}
+
+{% block content %}
+<div class="order-detail-cutter-container">
+  <h2 class="form-heading">{% trans "Model Details:" %} {{ order.model.name }}</h2>
+
+  <div class="progress" style="margin-bottom: 20px;">
+    <div class="progress-bar" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"0" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
+      {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
+    </div>
+  </div>
+
+  {% if defects %}
+    <div class="defects-list">
+      {% for defect in defects %}
+        <p class="defect-item">
+          <a href="#" class="defect-link" data-defect-id="{{ defect.pk }}" style="color: {{ defect.status|status_color }};">
+            {% trans "Defect ID:" %} {{ defect.pk }}
+          </a>
+        </p>
+      {% endfor %}
+    </div>
+    <div id="defectDetailsPopupOverlay" class="popup-overlay" style="display: none;">
+      <div id="defectDetailsPopup" class="popup-content">
+        <div id="defectDetails" class="defect-details">
+          <!-- Defect details will be dynamically inserted here -->
+        </div>
+        <form id="defectStatusForm">
+          <div class="form-actions">
+            {% csrf_token %}
+            <input type="hidden" name="defectStatus" id="defectStatusInput">
+            <input type="hidden" name="defectId" id="defectIdInput">  <!-- Hidden field to store defect ID -->
+            <button type="submit" onclick="updateDefectStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
+            <button type="sumit" onclick="updateDefectStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
+            <button type="button" onclick="closeDefectPopup()" class="btn create-btn">Close</button>
+          </div>
+        </form>
+      </div>  
+    </div>
+  {% endif %}
+
+  {% if discrepancies %}
+    <div class="discrepancies-list">
+      {% for discrepancy in discrepancies %}
+        <p class="discrepancy-item">
+          <a href="#" class="discrepancy-link" data-discrepancy-id="{{ discrepancy.pk }}" style="color: {{ discrepancy.status|status_color }};">
+            {% trans "Discrepancy ID:" %} {{ discrepancy.pk }}
+          </a>
+        </p>
+      {% endfor %}
+    </div>
+    <div id="discrepancyDetailsPopupOverlay" class="popup-overlay" style="display: none;">
+      <div id="discrepancyDetailsPopup" class="popup-content">
+        <div id="discrepancyDetails" class="discrepancy-details">
+          <!-- Discrepancy details will be dynamically inserted here -->
+        </div>
+        <form id="discrepancyStatusForm">
+          <div class="form-actions">
+            {% csrf_token %}
+            <input type="hidden" name="discrepancyStatus" id="discrepancyStatusInput">
+            <input type="hidden" name="discrepancyId" id="discrepancyIdInput">  <!-- Hidden field to store discrepancy ID -->
+            <button type="submit" onclick="updateDiscrepancyStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
+            <button type="sumit" onclick="updateDiscrepancyStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
+            <button type="button" onclick="closeDiscrepancyPopup()" class="btn create-btn">Close</button>
+          </div>
+        </form>
+      </div>  
+    </div>
+  {% endif %}
+
+  <div class="details">
+    <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
+    <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+    <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
+    <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
+    <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
+    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
+    <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+    <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+  </div>
+
+  <div class="form-actions">
+    <a href="{% url 'order_list_technologist' %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "Size" %}</th>
+        {% for passport in passports %}
+        <th>№{{ passport.id }}</th>
+        {% endfor %}
+        <th>{% trans "Sum" %}</th>
+        <th>{% trans "Required" %}</th>
+        <th>{% trans "Missing" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for size, data in required_missing.items %}
+      <tr>
+          <td>{{ size }}</td>
+          {% for passport in passports %}
+          <td>
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+              {% if size_data|get_item:size|get_item:passport.id|get_item:"quantity" > 0 %}
+                <input type="checkbox" 
+                      class="stage-qc-checkbox" 
+                      data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
+                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 2 %} checked {% endif %}
+                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" > 2 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 1 %} disabled {% endif %}>
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+          <td>{{ data.required }}</td>
+          <td>{{ data.missing }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+          <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Passports" %}</h3>
+  <div class="passports-list">
+    {% if passports %}
+      {% for passport in passports %}
+        <p class="passport-item" style="color: {{ passport.is_completed|yesno:'green,red' }};">
+          <a href="{% url 'assign_operations' passport.pk %}" class="passport-link">
+            {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
+          </a>
+        </p>
+      {% endfor %}
+    {% else %}
+      <p>{% trans "No associated passports." %}</p>
+    {% endif %}
+  </div>
+</div>
+<script>
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function showDiscrepancyPopup() {
+    document.getElementById('discrepancyDetailsPopup').style.display = 'block';
+    document.getElementById('discrepancyDetailsPopupOverlay').style.display = 'flex';
+  }
+  
+  function closeDiscrepancyPopup() {
+    document.getElementById('discrepancyDetailsPopup').style.display = 'none';
+    document.getElementById('discrepancyDetailsPopupOverlay').style.display = 'none';
+  }
+
+  function updateDiscrepancyStatus(status) {
+    document.getElementById('discrepancyStatusInput').value = status;
+  }
+
+  function showDefectPopup() {
+    document.getElementById('defectDetailsPopup').style.display = 'block';
+    document.getElementById('defectDetailsPopupOverlay').style.display = 'flex';
+  }
+  
+  function closeDefectPopup() {
+    document.getElementById('defectDetailsPopup').style.display = 'none';
+    document.getElementById('defectDetailsPopupOverlay').style.display = 'none';
+  }
+
+  function updateDefectStatus(status) {
+    document.getElementById('defectStatusInput').value = status;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function() {
+
+    var checkboxes = document.querySelectorAll('.stage-qc-checkbox');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+          var passportSizeId = this.dataset.passportSizeId;
+          fetch(`/production/technologist/orders/mark-as-qc/${passportSizeId}/`, {
+              method: 'POST',
+              headers: {
+                  'X-CSRFToken': getCookie('csrftoken')
+              },
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (!data.success) {
+                alert('Error: ' + data.error);
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              this.checked = false;
+          });
+        });
+    });
+
+    document.querySelectorAll('.discrepancy-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const discrepancyId = this.getAttribute('data-discrepancy-id');
+        document.getElementById('discrepancyIdInput').value = discrepancyId; // Store discrepancyId in hidden input
+        fetchDiscrepancyDetails(discrepancyId);
+      });
+    });
+  
+    document.getElementById('discrepancyStatusForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+  
+      const discrepancyId = document.getElementById('discrepancyIdInput').value;
+      const status = document.getElementById('discrepancyStatusInput').value;
+      const data = { status: status };
+  
+      const xhr = new XMLHttpRequest();
+      const url = `/production/technologist/orders/discrepancy/${discrepancyId}/update-status/`;
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+  
+      xhr.onload = function() {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+          alert(response.message);
+          closeDiscrepancyPopup();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+          alert(response.message);
+        }
+      };
+  
+      xhr.send(JSON.stringify(data));
+    });
+  
+    function fetchDiscrepancyDetails(discrepancyId) {
+      fetch(`/production/technologist/orders/discrepancy/${discrepancyId}/`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.discrepancy) {
+          const discrepancyDetails = document.getElementById('discrepancyDetails');
+          discrepancyDetails.innerHTML = 
+           `<p><strong>Passport:</strong> ${data.discrepancy.passport__id}</p>
+            <p><strong>Size:</strong> ${data.discrepancy.size_quantity__size}</p>
+            <p><strong>Quantity:</strong> ${data.discrepancy.quantity}</p>
+            <p><strong>Status:</strong> ${data.discrepancy.status}</p>
+            <p><strong>Reported Date:</strong> ${data.discrepancy.reported_date}</p>
+            <p><strong>Resolved Date:</strong> ${data.discrepancy.resolved_date || 'N/A'}</p>`;
+          showDiscrepancyPopup();
+        } else {
+          alert('No details found for this discrepancy.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching discrepancy details:', error);
+        alert('Error fetching discrepancy details.');
+      });
+    }
+
+    document.querySelectorAll('.defect-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const defectId = this.getAttribute('data-defect-id');
+        document.getElementById('defectIdInput').value = defectId; // Store defectId in hidden input
+        fetchDefectDetails(defectId);
+      });
+    });
+  
+    document.getElementById('defectStatusForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+  
+      const defectId = document.getElementById('defectIdInput').value;
+      const status = document.getElementById('defectStatusInput').value;
+      const data = { status: status };
+  
+      const xhr = new XMLHttpRequest();
+      const url = `/production/technologist/orders/defect/${defectId}/update-status/`;
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+  
+      xhr.onload = function() {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+          alert(response.message);
+          closeDefectPopup();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+          alert(response.message);
+        }
+      };
+  
+      xhr.send(JSON.stringify(data));
+    });
+  
+    function fetchDefectDetails(defectId) {
+      fetch(`/production/technologist/orders/defect/${defectId}/`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.defect) {
+          const defectDetails = document.getElementById('defectDetails');
+          let employeeList = data.defect.responsible_employees.join(', ');
+          defectDetails.innerHTML = 
+           `<p><strong>Passport:</strong> ${data.defect.passport__id}</p>
+            <p><strong>Size:</strong> ${data.defect.size_quantity__size}</p>
+            <p><strong>Quantity:</strong> ${data.defect.quantity}</p>
+            <p><strong>Type:</strong> ${data.defect.defect_type}</p>
+            <p><strong>Severity:</strong> ${data.defect.severity}</p>
+            <p><strong>Status:</strong> ${data.defect.status}</p>
+            <p><strong>Reported Date:</strong> ${data.defect.reported_date}</p>
+            <p><strong>Resolved Date:</strong> ${data.defect.resolved_date || 'N/A'}</p>
+            <p><strong>Responsible Employees:</strong> ${employeeList}</p>`;
+          showDefectPopup();
+        } else {
+          alert('No details found for this defect.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching defect details:', error);
+        alert('Error fetching defect details.');
+      });
+    }
+  });
+</script>
+{% endblock %}

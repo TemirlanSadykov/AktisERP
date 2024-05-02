@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Defect Details" %} №{{ defect.id }}</h2>
+
+  <div class="details">
+    <p><strong>{% trans "Order" %}:</strong> {{ defect.passport.order.client_order.order_number }} - {{ defect.passport.order.name }}</p>
+    <p><strong>{% trans "Passport" %}:</strong> {{ defect.passport.id }} </p>
+    <p><strong>{% trans "Size" %}:</strong> {{ defect.size_quantity.size }}</p>
+    <p><strong>{% trans "Quantity" %}:</strong> {{ defect.quantity }}</p>
+    <p><strong>{% trans "Defect Type" %}:</strong> {{ defect.get_defect_type_display }}</p>
+    <p><strong>{% trans "Severity" %}:</strong> {{ defect.get_severity_display }}</p>
+    <p><strong>{% trans "Status" %}:</strong> {{ defect.get_status_display }}</p>
+    <p><strong>{% trans "Reported Date" %}:</strong> {{ defect.reported_date|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Resolved Date" %}:</strong> {{ defect.resolved_date|date:"Y-m-d" }}</p>
+  </div>
+
+  <div class="form-actions secondary">
+    <a href="{% url 'defect_edit' order_pk=defect.passport.order.id pk=defect.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+    <a href="{% url 'order_detail_qc' defect.passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+
+  <form id="deleteForm" action="{% url 'defect_delete' order_pk=defect.passport.order.pk pk=defect.pk %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+</div>
+
+<script>
+  function confirmDelete() {
+    if (confirm("{% trans 'Are you sure you want to delete this defect?' %}")) {
+      document.getElementById('deleteForm').submit();
+    }
+  }
+</script>
+{% endblock %}

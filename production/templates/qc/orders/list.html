@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content-container">
+  <div class="tabs">
+    <a href="{% url 'order_list_qc' %}" class="{% if not selected_status %}active{% endif %}">{% trans "All" %}</a>
+    <a href="?status={{ Order.NEW }}" class="{% if selected_status|stringformat:"s" == Order.NEW|stringformat:"s" %}active{% endif %}">{% trans "New" %}</a>
+    <a href="?status={{ Order.IN_PROGRESS }}" class="{% if selected_status|stringformat:"s" == Order.IN_PROGRESS|stringformat:"s" %}active{% endif %}">{% trans "In Progress" %}</a>
+    <a href="?status={{ Order.COMPLETED }}" class="{% if selected_status|stringformat:"s" == Order.COMPLETED|stringformat:"s" %}active{% endif %}">{% trans "Completed" %}</a>
+  </div>
+  <div class="header">
+    <h2 class="list-heading">{% trans "Models" %}</h2>
+  </div>
+  <ul class="list-group">
+    {% for order_info in orders_with_days_left %}
+      <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="{% url 'order_detail_qc' order_info.order.pk %}" style="flex-grow: 1;">
+          {{ order_info.order.model.name }}
+        </a>
+        <span style="flex-shrink: 0;">{% trans "Days left:" %} {{ order_info.days_left }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="pagination">
+    {% if is_paginated %}
+      <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+          <li><a href="?page=1">&laquo; first</a></li>
+          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+        {% endif %}
+  
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+  
+        {% if page_obj.has_next %}
+          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,3 @@
-# technologist_views.py
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from ..decorators import technologist_required
@@ -19,6 +18,14 @@ from django.db import transaction
 from django.db.models import Avg, F, ExpressionWrapper, fields
 from django.views.decorators.http import require_POST
 from django.db.models import Sum
+from ..mixins import *
+from collections import defaultdict
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Border, Side
+from django.http import HttpResponse
 
 @login_required
 @technologist_required
@@ -26,120 +33,217 @@ def technologist_page(request):
     return render(request, 'technologist_page.html')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class PassportListView(ListView):
-    model = Passport
-    template_name = 'technologist/passports/list.html'
-    context_object_name = 'passports'
+class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
+    model = Order
+    template_name = 'technologist/orders/list.html'
+    context_object_name = 'orders'
+    paginate_by = 10
+
+    def get_queryset(self):
+        status = self.request.GET.get('status', None)
+        queryset = super().get_queryset().order_by('client_order__term')
+
+        if status:
+            try:
+                status = int(status)
+                if status in dict(self.model.TYPE_CHOICES):
+                    queryset = queryset.filter(status=status)
+            except ValueError:
+                pass
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        orders_with_days_left = []
+
+        for order in context['orders']:
+            days_left = (order.client_order.term - today).days
+            orders_with_days_left.append({
+                'order': order,
+                'days_left': days_left
+            })
+
+        orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
+
+        context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['Order'] = Order
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class PassportCreateView(CreateView):
-    model = Passport
-    form_class = PassportForm
-    template_name = 'technologist/passports/create.html'
-    success_url = reverse_lazy('passport_list')
-    def get_success_url(self):
-        passport_id = self.object.pk
-        return reverse('create_size_quantity', kwargs={'passport_id': passport_id})
+class OrderDetailTechnologistView(DetailView):
+    model = Order
+    template_name = 'technologist/orders/detail.html'
+    context_object_name = 'order'
 
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportDetailView(DetailView):
-    model = Passport
-    template_name = 'technologist/passports/detail.html'
-    context_object_name = 'passport'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = context['order']
+        passport = Passport.objects.filter(order=order).first()
+        if passport:
+            context['defects'] = Defect.objects.filter(passport=passport)
+            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
+        else:
+            context['defects'] = Defect.objects.none()
+            context['discrepancies'] = Discrepancy.objects.none()
 
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportUpdateView(UpdateView):
-    model = Passport
-    form_class = PassportForm
-    template_name = 'technologist/passports/edit.html'
-    success_url = reverse_lazy('passport_list')
+        passports = order.passports.all()
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
+        total_per_size = defaultdict(int)
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Passport updated successfully.')
-        return super().form_valid(form)
+        for passport in passports:
+            for passport_size in passport.passport_sizes.all():
+                size = passport_size.size_quantity.size
+                size_data[size][passport.id]['quantity'] += passport_size.quantity
+                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                size_data[size][passport.id]['stage'] = passport_size.stage
+                total_per_size[size] += passport_size.quantity
 
-@method_decorator([login_required, technologist_required], name='dispatch')
-class PassportDeleteView(DeleteView):
-    model = Passport
-    template_name = 'technologist/passports/delete.html'
-    success_url = reverse_lazy('passport_list')
+        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+                            for sq in order.size_quantities.all().order_by('size')}
 
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, 'Passport deleted successfully.')
-        return super().delete(request, *args, **kwargs)
+        # Adjusting for sizes in passports not in order sizes
+        for size in total_per_size:
+            if size not in required_missing:
+                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
-@method_decorator([login_required, technologist_required], name='dispatch')
-class SizeQuantityCreateView(View):
-    def get(self, request, passport_id):
-        passport = get_object_or_404(Passport, pk=passport_id)
-        form = SizeQuantityForm()
-        size_quantities = passport.size_quantities.all()
-        return render(request, 'technologist/passports/create_size_quantity.html', {
-            'form': form,
-            'size_quantities': size_quantities,
-            'passport': passport
+        context.update({
+            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'total_per_size': dict(total_per_size),
+            'required_missing': required_missing,
+            'passports': passports,
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
         })
-    def post(self, request, passport_id):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            form = SizeQuantityForm(request.POST)
-            if form.is_valid():
-                new_size_quantity = form.save(commit=False)
-                new_size_quantity.save()
-                passport = get_object_or_404(Passport, pk=passport_id)
-                passport.size_quantities.add(new_size_quantity)
-                size_quantities = passport.size_quantities.values('id', 'size', 'quantity')
-                return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
-            else:
-                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-        return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
+
+        return context
     
 @login_required
 @technologist_required
-def edit_size_quantity(request, sq_id):
-    size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
+def defect_detail(request, pk):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        defect = Defect.objects.filter(pk=pk).values(
+            'pk',
+            'passport__id',
+            'size_quantity__size',
+            'size_quantity__id', 
+            'quantity',
+            'defect_type',
+            'severity',
+            'cost',
+            'status',
+            'reported_date',
+            'resolved_date'
+        ).first()
 
-    if request.method == 'POST':
-        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
-        form = SizeQuantityForm(data, instance=size_quantity)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({'status': 'success'}, status=200)
+        if defect:
+            defect['reported_date'] = defect['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
+            defect['resolved_date'] = defect['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if defect['resolved_date'] else None
+
+            works = AssignedWork.objects.filter(
+                work__passport_id=defect['passport__id'],
+                work__passport_size__size_quantity_id=defect['size_quantity__id']
+            ).select_related('employee')
+            employee_ids = [work.employee.employee_id for work in works]
+            defect['responsible_employees'] = employee_ids
+            
+            return JsonResponse({'defect': defect}, status=200)
+        else:
+            return JsonResponse({'error': 'Defect not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
     
-    return JsonResponse({'status': 'error'}, status=400)
-
 @login_required
 @technologist_required
-def delete_size_quantity(request, sq_id):
-    if request.method == 'POST':
-        size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
-        size_quantity.delete()
-        return JsonResponse({'status': 'success'}, status=200)
-    return JsonResponse({'status': 'error'}, status=400)
+@require_POST
+def defect_update_status_technologist(request, pk):
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status')
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    if new_status not in [choice[0] for choice in Defect.Status.choices]:
+        return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
+
+    try:
+        defect = Defect.objects.get(pk=pk)
+        defect.status = new_status
+        defect.resolved_date = timezone.now() if new_status == Defect.Status.RESOLVED else None
+        defect.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Defect status updated successfully'})
+    except Defect.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Defect not found'}, status=404)
+    
+@login_required
+@technologist_required
+def discrepancy_detail(request, pk):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        discrepancy = Discrepancy.objects.filter(pk=pk).values(
+            'pk',
+            'passport__id',
+            'size_quantity__size',
+            'quantity',
+            'cost',
+            'status',
+            'reported_date',
+            'resolved_date'
+        ).first()
+
+        if discrepancy:
+            discrepancy['reported_date'] = discrepancy['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
+            discrepancy['resolved_date'] = discrepancy['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if discrepancy['resolved_date'] else None
+            
+            return JsonResponse({'discrepancy': discrepancy}, status=200)
+        else:
+            return JsonResponse({'error': 'Discrepancy not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    
+@login_required
+@technologist_required
+@require_POST
+def discrepancy_update_status_technologist(request, pk):
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status')
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    if new_status not in [choice[0] for choice in Discrepancy.Status.choices]:
+        return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
+
+    try:
+        discrepancy = Discrepancy.objects.get(pk=pk)
+        discrepancy.status = new_status
+        discrepancy.resolved_date = timezone.now() if new_status == Discrepancy.Status.RESOLVED else None
+        discrepancy.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Discrepancy status updated successfully'})
+    except Discrepancy.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Discrepancy not found'}, status=404)
+    
 
 @login_required
 @technologist_required
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
     operations = passport.order.model.operations.all()
-    size_quantities = passport.size_quantities.all()
+    size_quantities = PassportSize.objects.filter(passport=passport)
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Decode the JSON data from the request
         data = json.loads(request.body)
         operation_id = data.get('operation_id')
-        size_quantity_id = data.get('size_quantity_id')
+        passport_size_id = data.get('passport_size_id')
         value = data.get('value')
+
         try:
             with transaction.atomic():
-                errors = False
+                passport_size = PassportSize.objects.get(id=passport_size_id)
+                total_quantity = passport_size.quantity
+                assigned_quantity_sum = 0
 
-                entries = [entry.strip() for entry in value.split(',')]
-                total_quantity = passport.size_quantities.get(id=size_quantity_id).quantity
-                assigned_quantity_sum = 0  # Initialize the sum of assigned quantities
-
-                # Reset quantities for existing assigned work to avoid duplication
-                Work.objects.filter(operation_id=operation_id, size_quantity_id=size_quantity_id, passport=passport).delete()
-
+                entries = value.split(',')
                 for entry in entries:
                     if '(' in entry and ')' in entry:
                         employee_id_input, quantity = entry.split('(')
@@ -149,42 +253,43 @@ def assign_operations(request, passport_id):
                         employee_id_input = entry
                         quantity = total_quantity
 
-                    if employee_id_input:
-                        employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE).first()
-                        if not employee_profile:
-                            errors = True
-                            continue
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE, branch=request.user.userprofile.branch).first()
+                    if not employee_profile:
+                        continue
 
-                        work, created = Work.objects.get_or_create(
-                            operation_id=operation_id,
-                            size_quantity_id=size_quantity_id,
-                            passport=passport
-                        )
-                        AssignedWork.objects.create(
-                            work=work,
-                            employee=employee_profile,
-                            quantity=quantity
-                        )
-                        assigned_quantity_sum += quantity  # Add the quantity to the sum
-
+                    work, created = Work.objects.get_or_create(
+                        operation_id=operation_id,
+                        passport_size=passport_size,
+                        passport=passport
+                    )
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=employee_profile,
+                        quantity=quantity
+                    )
+                    assigned_quantity_sum += quantity
+                    
                 if assigned_quantity_sum != total_quantity:
-                    raise ValueError("The sum of assigned quantities does not match the total quantity.")
+                    raise ValueError("Assigned quantities do not match the required total.")
 
-                if not errors:
-                    return JsonResponse({'status': 'success'})
+                return JsonResponse({'status': 'success'})
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+    passport_rolls = PassportRoll.objects.filter(passport=passport)
     work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__size_quantity'):
-        key = (assigned_work.work.operation_id, assigned_work.work.size_quantity_id)
+    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+        # Key as a tuple of operation_id and passport_size_id
+        key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
         if key not in work_by_op_and_size:
             work_by_op_and_size[key] = [assigned_work]
         else:
             work_by_op_and_size[key].append(assigned_work)
+
     return render(request, 'technologist/passports/assign_operations.html', {
         'passport': passport,
+        'passport_rolls': passport_rolls,
         'operations': operations,
         'size_quantities': size_quantities,
         'work_by_op_and_size': work_by_op_and_size
@@ -195,19 +300,47 @@ def assign_operations(request, passport_id):
 def update_work(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        work_id = data.get('work_id')
-        new_employee_id = data.get('new_employee_id')
-        quantity = data.get('quantity')
+        assigned_work_id = data.get('work_id')
+        value = data.get('value')
 
-        new_employee_profile, created = UserProfile.objects.get_or_create(employee_id=new_employee_id)
+        try:
+            current_assignment = AssignedWork.objects.get(id=assigned_work_id)
+            work = Work.objects.get(id=current_assignment.work.id)
+            if not value.strip():
+                current_assignment.delete()
+                remaining_assignments = AssignedWork.objects.filter(work=work).exists()
+                if not remaining_assignments:
+                    work.delete()
+                return JsonResponse({'status': 'success'})
 
-        assigned_work, created = AssignedWork.objects.get_or_create(id=work_id)
+            new_assignments_data = value.split(',')
+            new_assignments = {}
 
-        assigned_work.employee = new_employee_profile
-        assigned_work.quantity = quantity
-        assigned_work.save()
+            for item in new_assignments_data:
+                employee_id, quantity = item.split('(')
+                employee_id = employee_id.strip()
+                quantity = int(quantity.strip(' )'))
+                new_assignments[employee_id] = quantity
 
-        return JsonResponse({'status': 'success'})
+            for employee_id, quantity in new_assignments.items():
+                employee_profile = UserProfile.objects.filter(
+                    employee_id=employee_id, type=UserProfile.EMPLOYEE,
+                    branch=request.user.userprofile.branch).first()
+
+                if not employee_profile:
+                    continue
+
+                assigned_work, created = AssignedWork.objects.update_or_create(
+                    work=work, employee=employee_profile,
+                    defaults={'quantity': quantity}
+                )
+
+            return JsonResponse({'status': 'success'})
+
+        except Work.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Work not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'error'}, status=400)
 
@@ -218,42 +351,246 @@ def update_work_success(request):
     is_success = request.POST.get('is_success') == 'true'
 
     try:
-        assigned_work = AssignedWork.objects.select_related('work__passport__order').get(pk=work_id)
-        order = assigned_work.work.passport.order
-
-        if is_success and not assigned_work.is_success:
-            assigned_work.is_success = True
-        elif not is_success and assigned_work.is_success:
-            assigned_work.is_success = False
-            assigned_work.start_time = None 
-            assigned_work.end_time = None
-
+        assigned_work = AssignedWork.objects.get(pk=work_id)
+        assigned_work.is_success = is_success
         assigned_work.save()
-        order.save() 
 
         return JsonResponse({'status': 'success'})
     except AssignedWork.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Assigned work not found'}, status=404)
-    
+
 @login_required
 @technologist_required
-@require_POST 
-def complete_passport(request, passport_id):
-    passport = get_object_or_404(Passport, id=passport_id)
-    passport.is_completed = True
-    passport.save()
+def get_reassigned_works(request, assigned_work_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        reassigned_works = ReassignedWork.objects.filter(original_assigned_work_id=assigned_work_id)
+        data = list(reassigned_works.values('id', 'new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_completed', 'is_success'))
+        return JsonResponse({'reassigned_works': data})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
-    total_completed = passport.size_quantities.aggregate(Sum('quantity'))['quantity__sum'] or 0
-    order = passport.order
-    order.completed_quantity += total_completed
-    order.save()
+@login_required
+@require_POST
+def reassign_work(request):
+    data = json.loads(request.body)
+    work_id = data.get('work_id')
+    new_employee_id = data.get('new_employee_id')
+    quantity = data.get('quantity')
+    reason = data.get('reason')
+    print(data)
+    # Validation
+    if not all([work_id, new_employee_id, quantity, reason]):
+        return JsonResponse({'message': 'Missing required data'}, status=400)
 
-    if order.completed_quantity >= order.quantity:
-        order.status = Order.COMPLETED
-        order.save()
+    try:
+        with transaction.atomic():
+            assigned_work = get_object_or_404(AssignedWork, id=work_id)
+            new_employee_profile = get_object_or_404(UserProfile, employee_id=new_employee_id, branch=request.user.userprofile.branch)
 
-    return redirect('passport_list')
+            # Attempt to retrieve an existing reassigned work
+            reassigned_work, created = ReassignedWork.objects.get_or_create(
+                original_assigned_work=assigned_work,
+                new_employee=new_employee_profile,
+                defaults={'reassigned_quantity': quantity, 'reason': reason}
+            )
+
+            if not created:
+                # If the reassigned work is being updated, adjust the assigned_work.quantity
+                # by adding the old reassigned quantity before setting the new one
+                assigned_work.quantity += reassigned_work.reassigned_quantity
+                reassigned_work.reassigned_quantity = quantity
+                reassigned_work.reason = reason
+                reassigned_work.is_success = False
+            
+            if quantity <= 0 or quantity > assigned_work.quantity:
+                return JsonResponse({'message': 'Invalid quantity'}, status=400)
+
+            # Adjust the assigned work quantity by subtracting the new reassigned quantity
+            assigned_work.quantity -= quantity
+            reassigned_work.save()
+            assigned_work.save()
+
+            return JsonResponse({"message": "Work reassigned successfully"}, status=200)
     
+    except AssignedWork.DoesNotExist:
+        return JsonResponse({'message': 'Assigned work not found'}, status=404)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({'message': 'Employee profile not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
+    
+@login_required
+@require_POST
+def complete_reassigned_work(request):
+    reassigned_work_id = request.POST.get('reassigned_work_id')
+    try:
+        reassigned_work = ReassignedWork.objects.get(id=reassigned_work_id)
+        if reassigned_work.is_success:
+            reassigned_work.is_success = False
+            reassigned_work.is_completed = False
+        else:
+            reassigned_work.is_success = True
+
+        reassigned_work.save()
+        return JsonResponse({'message': 'Reassigned work status updated successfully'}, status=200)
+    except ReassignedWork.DoesNotExist:
+        return JsonResponse({'message': 'Reassigned work not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
+
+@login_required
+@technologist_required
+def download_passport_excel(request, passport_id):
+    # Fetch the Passport and related data
+    passport = get_object_or_404(Passport, pk=passport_id)
+    passport_sizes = PassportSize.objects.filter(passport=passport)
+    passport_rolls = PassportRoll.objects.filter(passport=passport)
+
+    # Create a workbook and initialize a worksheet
+    wb = Workbook()
+    ws = wb.active
+
+    # First row headers
+    headers = [
+        'заказч', 'модель', 'ассортимент', '', '№ рулона', 'цвет', 'Ткань', 'дата кроя'
+    ]
+    ws.append(headers)
+
+    # Set headers style
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    # Insert data in the second row
+    passport_roll = passport_rolls.first() if passport_rolls else None
+    second_row_data = [
+        passport.order.client_order.client.name, passport.order.model.name, passport.order.assortment.name,
+        '', passport_roll.roll.name if passport_roll else '',
+        passport_roll.roll.color if passport_roll else '',
+        passport_roll.roll.fabrics if passport_roll else '',
+        passport.date.strftime("%m/%d/%Y") if passport.date else ''
+    ]
+    ws.append(second_row_data)
+
+    # Define the operation headers
+    operation_headers = [
+        '№', 'Операции', 'Оборуд.', 'тех-процесс', 'расценки', 'трудоемкость'
+    ]
+
+    # Add size columns based on size_quantities in the order
+    sizes = [size.size for size in passport.order.size_quantities.all()]
+    operation_headers.extend(sizes)
+
+    # Append operation headers
+    ws.append(operation_headers)
+
+    # Set style for operation headers
+    for cell in ws[3]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    # Populate the worksheet with operations and their details
+    operations = passport.order.model.operations.all().order_by('node__name')
+
+    for index, operation in enumerate(operations, start=1):
+        # Assume 'get_operation_details' is a method to fetch needed details
+        # You will need to implement this based on your application's specific data
+        operation_details = get_operation_details(operation, passport_sizes)
+        row_data = [index] + operation_details
+        ws.append(row_data)
+
+
+    # Autosize column widths
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length
+
+    # Apply bold font style to headers and sizes
+    bold_font = Font(bold=True)
+    header_rows = [1, 3]  # Rows which contain the headers you mentioned
+
+    # Apply bold font to all cells in the header rows
+    for row in header_rows:
+        for cell in ws[row]:
+            cell.font = bold_font
+
+    # Additionally, bold the size headers individually in case they are not in the above rows
+    size_header_row = 3  # Assuming the size headers are in the third row
+    for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
+        ws.cell(row=size_header_row, column=size_col).font = bold_font
+
+    # Define border style
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Apply borders to the first two rows, creating a box effect
+    for row in ws.iter_rows(min_row=1, max_row=2, min_col=1, max_col=ws.max_column):
+        for cell in row:
+            cell.border = thin_border
+
+    # Insert an empty row after the first two rows
+    ws.insert_rows(3)
+
+    # Now adjust your other rows accordingly since you inserted a new row
+    # You might need to update the `header_rows` and `size_header_row` if you used the previous code snippet
+    header_rows = [1, 4]  # Updated to reflect the new empty row
+    size_header_row = 4   # Updated to reflect the new empty row
+
+    # Apply bold font to all cells in the updated header rows
+    for row in header_rows:
+        for cell in ws[row]:
+            cell.font = bold_font
+
+    # Additionally, bold the size headers individually
+    for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
+        ws.cell(row=size_header_row, column=size_col).font = bold_font
+
+    # Set the HTTP response with a content-type for Excel file
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="Passport_{passport_id}_Details.xlsx"'
+
+    # Save the workbook to the response
+    wb.save(response)
+    return response
+
+def get_operation_details(operation, passport_sizes):
+    # Start with the name of the operation and the name of the equipment
+    details = [
+        operation.node.name,
+        operation.equipment.name,
+        operation.name,
+        operation.payment,
+        operation.preferred_completion_time
+    ]
+
+    # Fetch the related AssignedWork for each size and collect employee IDs
+    for passport_size in passport_sizes:
+        # Get the assigned works
+        assigned_works = AssignedWork.objects.filter(
+            work__operation=operation,
+            work__passport_size=passport_size
+        ).select_related('employee')
+
+        # Get the reassigned works related to the operation and passport size
+        reassigned_works = ReassignedWork.objects.filter(
+            original_assigned_work__work__operation=operation,
+            original_assigned_work__work__passport_size=passport_size
+        ).select_related('new_employee')
+
+        # Collect unique employee IDs for each assigned and reassigned work
+        employee_ids = set(aw.employee.employee_id for aw in assigned_works)
+        # Add the employee IDs from the reassigned works
+        employee_ids.update(rw.new_employee.employee_id for rw in reassigned_works)
+
+        # Append the joined employee IDs to the details
+        details.append(', '.join(employee_ids))
+
+    return details
 
 
 
@@ -262,6 +599,22 @@ class OperationListView(ListView):
     model = Operation
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('name')
+        node_id = self.request.GET.get('node', None)
+        if node_id:
+            queryset = queryset.filter(node_id=node_id)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        nodes = Node.objects.all().order_by('name')
+        context['nodes'] = nodes
+        context['selected_node'] = self.request.GET.get('node', '')
+        context['upload_form'] = UploadFileForm()
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationCreateView(CreateView):
@@ -282,6 +635,13 @@ class OperationUpdateView(UpdateView):
     form_class = OperationForm
     template_name = 'technologist/operations/edit.html'
     success_url = reverse_lazy('operation_list')
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Print errors if the form is invalid
+        print("Form errors:", form.errors)
+        return super().form_invalid(form)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationDeleteView(DeleteView):
@@ -296,14 +656,18 @@ def calculate_average_completion_time(request, operation_id):
     assigned_works = AssignedWork.objects.filter(work__operation=operation, end_time__isnull=False, start_time__isnull=False)
 
     if assigned_works.exists():
-        avg_completion_time = assigned_works.annotate(
-            completion_time_per_unit=ExpressionWrapper(
-                (F('end_time') - F('start_time')) / F('quantity'),
-                output_field=fields.DurationField()
-            )
-        ).aggregate(average_time=Avg('completion_time_per_unit'))
+        for assigned_work in assigned_works:
+            reassigned_work = ReassignedWork.objects.filter(original_assigned_work=assigned_work).first()
 
-        average_seconds = avg_completion_time['average_time'].total_seconds()
+            if reassigned_work:
+                adjusted_quantity = assigned_work.quantity + reassigned_work.reassigned_quantity
+            else:
+                adjusted_quantity = assigned_work.quantity
+            assigned_work.completion_time_per_unit = (assigned_work.end_time - assigned_work.start_time) / adjusted_quantity
+
+        total_completion_time = sum([aw.completion_time_per_unit.total_seconds() for aw in assigned_works])
+        average_seconds = total_completion_time / len(assigned_works)
+
         operation.average_completion_time = average_seconds
         operation.save()
 
@@ -313,16 +677,55 @@ def calculate_average_completion_time(request, operation_id):
 
     return redirect('operation_detail', pk=operation.pk)
 
+@login_required
+@technologist_required
+@require_POST
+def operation_upload(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            with transaction.atomic():
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    node_name, _, operation_name, equipment_name, time, price, _ = row
+                    
+                    node, _ = Node.objects.get_or_create(name=node_name)
+                    equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
+                    
+                    operation = Operation(
+                        name=operation_name,
+                        payment=price,
+                        equipment=equipment,
+                        node=node,
+                        preferred_completion_time=time
+                    )
+                    operation.save()
+
+            messages.success(request, 'Operations uploaded successfully.')
+            return HttpResponseRedirect(reverse_lazy('operation_list'))
+        except Exception as e:
+            messages.error(request, f'There was an error processing the file: {e}')
+        finally:
+            if 'workbook' in locals():
+                workbook.close()
+    else:
+        messages.error(request, 'There was an error with the file upload.')
+
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollListView(ListView):
+class RollListView(RestrictBranchMixin, ListView):
     model = Roll
     template_name = 'technologist/rolls/list.html'
     context_object_name = 'rolls'
+    paginate_by = 10
+    def get_queryset(self):
+        return super().get_queryset().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollCreateView(CreateView):
+class RollCreateView(AssignBranchMixin, CreateView):
     model = Roll
     form_class = RollForm
     template_name = 'technologist/rolls/create.html'
@@ -335,14 +738,14 @@ class RollDetailView(DetailView):
     context_object_name = 'roll'
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollUpdateView(UpdateView):
+class RollUpdateView(RestrictBranchMixin, UpdateView):
     model = Roll
     form_class = RollForm
     template_name = 'technologist/rolls/edit.html'
     success_url = reverse_lazy('roll_list')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class RollDeleteView(DeleteView):
+class RollDeleteView(RestrictBranchMixin, DeleteView):
     model = Roll
     template_name = 'technologist/rolls/delete.html'
     success_url = reverse_lazy('roll_list')
@@ -350,13 +753,16 @@ class RollDeleteView(DeleteView):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentListView(ListView):
+class AssortmentListView(RestrictBranchMixin, ListView):
     model = Assortment
     template_name = 'technologist/assortments/list.html'
     context_object_name = 'assortments'
+    paginate_by = 10
+    def get_queryset(self):
+        return super().get_queryset().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentCreateView(CreateView):
+class AssortmentCreateView(AssignBranchMixin, CreateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
@@ -369,14 +775,14 @@ class AssortmentDetailView(DetailView):
     context_object_name = 'assortment'
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentUpdateView(UpdateView):
+class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
     success_url = reverse_lazy('assortment_list')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentDeleteView(DeleteView):
+class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
     model = Assortment
     template_name = 'technologist/assortments/delete.html'
     success_url = reverse_lazy('assortment_list')
@@ -388,6 +794,9 @@ class ModelListView(ListView):
     model = Model
     template_name = 'technologist/models/list.html'
     context_object_name = 'models'
+    paginate_by = 10
+    def get_queryset(self):
+        return Model.objects.all().order_by('name')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelCreateView(CreateView):
@@ -395,6 +804,17 @@ class ModelCreateView(CreateView):
     form_class = ModelForm
     template_name = 'technologist/models/create.html'
     success_url = reverse_lazy('model_list')
+
+    def form_valid(self, form):
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['nodes'] = Node.objects.prefetch_related('operations').all()
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -414,3 +834,97 @@ class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
     success_url = reverse_lazy('model_list')
+
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeListVIew(ListView):
+    model = Node
+    template_name = 'technologist/nodes/list.html'
+    context_object_name = 'nodes'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Node.objects.all().order_by('name')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeCreateView(CreateView):
+    model = Node
+    form_class = NodeForm
+    template_name = 'technologist/nodes/create.html'
+    success_url = reverse_lazy('node_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeDetailView(DetailView):
+    model = Node
+    template_name = 'technologist/nodes/detail.html'
+    context_object_name = 'node'
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeUpdateView(UpdateView):
+    model = Node
+    form_class = NodeForm
+    template_name = 'technologist/nodes/edit.html'
+    success_url = reverse_lazy('node_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeDeleteView(DeleteView):
+    model = Node
+    template_name = 'technologist/nodes/delete.html'
+    success_url = reverse_lazy('node_list')
+
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentListView(ListView):
+    model = Equipment
+    template_name = 'technologist/equipment/list.html'
+    context_object_name = 'equipment'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Equipment.objects.all().order_by('name')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentCreateView(CreateView):
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = 'technologist/equipment/create.html'
+    success_url = reverse_lazy('equipment_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentDetailView(DetailView):
+    model = Equipment
+    template_name = 'technologist/equipment/detail.html'
+    context_object_name = 'equipment'
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentUpdateView(UpdateView):
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = 'technologist/equipment/edit.html'
+    success_url = reverse_lazy('equipment_list')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentDeleteView(DeleteView):
+    model = Equipment
+    template_name = 'technologist/equipment/delete.html'
+    success_url = reverse_lazy('equipment_list')
+
+
+@login_required
+@technologist_required
+def mark_as_qc(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        with transaction.atomic():
+            if passport_size.stage == PassportSize.QC:
+                passport_size.stage = PassportSize.SEWING
+            else:
+                passport_size.stage = PassportSize.QC
+            passport_size.save()
+
+        return JsonResponse({'success': True})
+
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)

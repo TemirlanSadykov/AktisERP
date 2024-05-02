@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="dashboard-container">
+  <h1>{% trans 'QC Dashboard' %}</h1>
+  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a QC." %}</p>
+
+  <div class="row">
+    {% if request.user.userprofile.type != 0 %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{% trans 'Clock In/Out' %}</h5>
+            <form action="{% url 'clock_in_out' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-block">
+                {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="col-md-8 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{% trans 'Resources' %}</h5>
+          {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
+            <a href="{% url 'order_list_qc' %}" class="btn btn-info">{% trans 'Models' %}</a>
+          {% else %}
+            <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+{% endblock %}

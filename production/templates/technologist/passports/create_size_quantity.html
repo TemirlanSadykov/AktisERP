@@ -2,27 +2,43 @@
 {% load i18n %}
 
 {% block content %}
-<h2>Add Size and Quantity for Passport: {{ passport.id }}</h2>
+<div class="content-container">
+  
 
-<form id="sizeQuantityForm" method="post">
-  {% csrf_token %}
-  Size: {{ form.size }}
-  Quantity: {{ form.quantity }}
-  <button type="submit">{% trans "Add" %}</button>
-</form>
+  <div class="filter-header">
+    <h2 class="list-heading">{% trans "Add Size and Quantity for Passport:" %} {{ passport.id }}</h2>
+    <form id="sizeQuantityForm" method="post" class="date-filter-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>{% trans "Size:" %}</label>
+        {{ form.size }}
+      </div>
+      <div class="form-group">
+        <label>{% trans "Quantity:" %}</label>
+        {{ form.quantity }}
+      </div>
+      <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
+    </form>
+  </div>
+  
 
-<ul id="sizeQuantityList">
-  {% for sq in size_quantities %}
-    <li id="sq-{{ sq.id }}">
-      Size: <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span>,
-      Quantity: <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span>
-      <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
-      <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
-    </li>
-  {% endfor %}
-</ul>
+  <ul id="sizeQuantityList" class="size-quantity-list">
+    {% for sq in size_quantities %}
+      <li id="sq-{{ sq.id }}" class="size-quantity-item">
+        <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
+        <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span></span>
+        <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
+        <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
+      </li>
+    {% endfor %}
+  </ul>
 
-<a href="{% url 'assign_operations' passport.id %}">{% trans "Finish and Save" %}</a>
+  <div class="form-actions">
+    <a href="{% url 'assign_operations' passport.id %}" class="btn complete-btn">{% trans "Operations" %}</a>
+    <a href="{% url 'passport_detail' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+  </div>
+</div>
+
 
 <script>
   var passportId = "{{ passport.id }}";
@@ -30,6 +46,8 @@
   var editText = "{% trans 'Edit' %}";
   var saveText = "{% trans 'Save' %}";
   var confirmDeleteText = "{% trans 'Are you sure you want to delete this item?' %}";
+  var sizeText = "{% trans 'Size:' %}";
+  var quantityText = "{% trans 'Quantity:' %}";
 </script>
 
 {% verbatim %}
@@ -144,10 +162,45 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function updateSizeQuantityList(sizeQuantities) {
     const list = document.getElementById('sizeQuantityList');
-    list.innerHTML = '';
+    list.innerHTML = ''; // Clear existing list
     sizeQuantities.forEach(sq => {
       const li = document.createElement('li');
-      li.innerHTML = `Size: <span class="size" data-sq-id="${sq.id}">${sq.size}</span>, Quantity: <span class="quantity" data-sq-id="${sq.id}">${sq.quantity}</span> <button class="edit-btn" data-sq-id="${sq.id}">${editText}</button> <button class="delete-btn" data-sq-id="${sq.id}">${deleteText}</button>`;
+      li.setAttribute('id', 'sq-' + sq.id);
+      li.classList.add('size-quantity-item');
+  
+      const sizeSpan = document.createElement('span');
+      sizeSpan.classList.add('size');
+      sizeSpan.setAttribute('data-sq-id', sq.id);
+      sizeSpan.textContent = sq.size;
+  
+      const quantitySpan = document.createElement('span');
+      quantitySpan.classList.add('quantity');
+      quantitySpan.setAttribute('data-sq-id', sq.id);
+      quantitySpan.textContent = sq.quantity;
+  
+      const editBtn = document.createElement('button');
+      editBtn.classList.add('edit-btn');
+      editBtn.setAttribute('data-sq-id', sq.id);
+      editBtn.textContent = editText;
+  
+      const deleteBtn = document.createElement('button');
+      deleteBtn.classList.add('delete-btn');
+      deleteBtn.setAttribute('data-sq-id', sq.id);
+      deleteBtn.textContent = deleteText;
+
+      const sizeTextEl = document.createElement('strong');
+      sizeTextEl.textContent = sizeText;
+  
+      const quantityTextEl = document.createElement('strong');
+      quantityTextEl.textContent = quantityText;
+  
+      li.appendChild(sizeTextEl);
+      li.appendChild(sizeSpan);
+      li.appendChild(quantityTextEl);
+      li.appendChild(quantitySpan);
+      li.appendChild(editBtn);
+      li.appendChild(deleteBtn);
+  
       list.appendChild(li);
     });
   }

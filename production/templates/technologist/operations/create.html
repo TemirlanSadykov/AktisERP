@@ -1,11 +1,17 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% block content %}
-  <h2>{% trans "Add New Operation" %}</h2>
-  <form method="post">
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Create New Operation" %}</h2>
+  <form method="post" class="crud-form" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">{% trans "Create" %}</button>
+    <div class="form-group">
+      {{ form.as_p }}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
+      <a href="{% url 'operation_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
   </form>
-  <a href="{% url 'operation_list' %}">{% trans "Back" %}</a>
+</div>
 {% endblock %}
