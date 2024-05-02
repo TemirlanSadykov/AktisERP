@@ -32,7 +32,8 @@
             {% csrf_token %}
             <input type="hidden" name="defectStatus" id="defectStatusInput">
             <input type="hidden" name="defectId" id="defectIdInput">  <!-- Hidden field to store defect ID -->
-            <button type="button" onclick="closeDefectPopup()" class="btn create-btn">Close</button>
+            <button type="button" onclick="goDefectDetails()" class="btn create-btn">Details</button>
+            <button type="button" onclick="closeDefectPopup()" class="btn back-btn">Close</button>
           </div>
         </form>
       </div>  
@@ -59,7 +60,8 @@
             {% csrf_token %}
             <input type="hidden" name="discrepancyStatus" id="discrepancyStatusInput">
             <input type="hidden" name="discrepancyId" id="discrepancyIdInput">  <!-- Hidden field to store discrepancy ID -->
-            <button type="button" onclick="closeDiscrepancyPopup()" class="btn create-btn">Close</button>
+            <button type="button" onclick="goDiscrepancyDetails()" class="btn create-btn">Details</button>
+            <button type="button" onclick="closeDiscrepancyPopup()" class="btn back-btn">Close</button>
           </div>
         </form>
       </div>  
@@ -333,6 +335,14 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }
     return cookieValue;
+  }
+
+  function goDefectDetails() {
+    window.location.href = '/production/admin/orders/defects/'+document.getElementById('defectIdInput').value+'/'
+  }
+
+  function goDiscrepancyDetails() {
+    window.location.href = '/production/admin/orders/discrepancies/'+document.getElementById('discrepancyIdInput').value+'/'
   }
 
   function showDiscrepancyPopup() {

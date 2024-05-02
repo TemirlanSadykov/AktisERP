@@ -305,3 +305,29 @@ class UploadFileForm(forms.Form):
         help_text='Maximum size allowed is 10MB',
         validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
     )
+
+class DefectResponsibilityForm(forms.ModelForm):
+    class Meta:
+        model = DefectResponsibility
+        fields = ['employee', 'percentage']
+        widgets = {
+            'employee': forms.Select(),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['employee'].queryset = UserProfile.objects.all()
+
+class DiscrepancyResponsibilityForm(forms.ModelForm):
+    class Meta:
+        model = DiscrepancyResponsibility
+        fields = ['employee', 'percentage']
+        widgets = {
+            'employee': forms.Select(),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['employee'].queryset = UserProfile.objects.all()

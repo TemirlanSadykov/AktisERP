@@ -49,7 +49,7 @@ class UserProfile(models.Model):
     ]
     station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station')
     def __str__(self):
-        return f"{self.employee_id} - {self.user.first_name} {self.user.last_name}"
+        return f"{self.employee_id} - {self.user.first_name}"
     
 class EmployeeAttendance(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='employee_attendances', null=True, blank=True)

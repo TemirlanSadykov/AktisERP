@@ -33,6 +33,7 @@ from django.db.models import Count, Q
 from django.db.models.functions import TruncDay
 import openpyxl
 from django.db.models.functions import Lead
+from decimal import Decimal
 
 @login_required
 @admin_required
@@ -953,3 +954,123 @@ class FixedSalaryDeleteView(RestrictBranchMixin, DeleteView):
     model = FixedSalary
     template_name = 'admin/fixed_salaries/delete.html'
     success_url = reverse_lazy('fixed_salary_list')
+
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class DefectDetailAdminView(CreateView):
+    model = DefectResponsibility
+    form_class = DefectResponsibilityForm
+    template_name = 'admin/defects/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        defect = get_object_or_404(Defect, pk=self.kwargs.get('pk'))
+        context['defect'] = defect
+        context['responsibility_defects'] = DefectResponsibility.objects.filter(defect=defect)
+        return context
+
+    def form_valid(self, form):
+        responsibility = form.save(commit=False)
+        defect_id = self.kwargs['pk']
+        responsibility.defect_id = defect_id
+        responsibility.save()
+        return redirect('defect_detail_admin', pk=defect_id)
+    
+    def get_success_url(self):
+        return reverse('defect_detail_admin', kwargs={'pk': self.kwargs['pk']})
+    
+@login_required
+@admin_required
+@require_POST
+def defect_edit_admin(request, rd_id):
+    try:
+        data = json.loads(request.body)
+        percentage = Decimal(data.get('percentage'))
+        
+        defectResponsibility = DefectResponsibility.objects.get(id=rd_id)
+        defectResponsibility.percentage = percentage
+        defectResponsibility.save()
+        return JsonResponse({'status': 'success', 'message': 'Percentage updated successfully'})
+
+    except DefectResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'DefectResponsibility not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+@login_required
+@admin_required
+@require_POST
+def defect_delete_admin(request, rd_id):
+    try:
+        defectResponsibility = DefectResponsibility.objects.get(id=rd_id)
+        defectResponsibility.delete()
+
+        return JsonResponse({'status': 'success', 'message': 'DefectResponsibility deleted successfully'})
+
+    except DefectResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'DefectResponsibility not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class DiscrepancyDetailAdminView(CreateView):
+    model = DiscrepancyResponsibility
+    form_class = DiscrepancyResponsibilityForm
+    template_name = 'admin/discrepancies/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        discrepancy = get_object_or_404(Discrepancy, pk=self.kwargs.get('pk'))
+        context['discrepancy'] = discrepancy
+        context['responsibility_discrepancies'] = DiscrepancyResponsibility.objects.filter(discrepancy=discrepancy)
+        return context
+
+    def form_valid(self, form):
+        responsibility = form.save(commit=False)
+        discrepancy_id = self.kwargs['pk']
+        responsibility.discrepancy_id = discrepancy_id
+        responsibility.save()
+        return redirect('discrepancy_detail_admin', pk=discrepancy_id)
+    
+    def get_success_url(self):
+        return reverse('discrepancy_detail_admin', kwargs={'pk': self.kwargs['pk']})
+    
+@login_required
+@admin_required
+@require_POST
+def discrepancy_edit_admin(request, rd_id):
+    try:
+        data = json.loads(request.body)
+        percentage = Decimal(data.get('percentage'))
+        
+        discrepancyResponsibility = DiscrepancyResponsibility.objects.get(id=rd_id)
+        discrepancyResponsibility.percentage = percentage
+        discrepancyResponsibility.save()
+        return JsonResponse({'status': 'success', 'message': 'Percentage updated successfully'})
+
+    except DiscrepancyResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'DiscrepancyResponsibility not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+@login_required
+@admin_required
+@require_POST
+def discrepancy_delete_admin(request, rd_id):
+    try:
+        discrepancyResponsibility = DiscrepancyResponsibility.objects.get(id=rd_id)
+        discrepancyResponsibility.delete()
+
+        return JsonResponse({'status': 'success', 'message': 'DiscrepancyResponsibility deleted successfully'})
+
+    except DiscrepancyResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'DiscrepancyResponsibility not found'}, status=404)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

@@ -518,6 +518,28 @@ nav form button:hover {
     background-color: #f9f9f9; /* Light background color for each item */
 }
 
+.responsibility-defect-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
+.responsibility-discrepancy-item {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+    justify-content: space-between; /* Distribute space between the details and the buttons */
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional border for each item */
+    border-radius: 5px; /* Rounded corners for each item */
+    margin-bottom: 10px; /* Space between each item */
+    background-color: #f9f9f9; /* Light background color for each item */
+}
+
 .assign-operations-container {
     margin: auto;
     padding: 20px;
