@@ -291,8 +291,8 @@ class Discrepancy(models.Model):
 
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     responsible_employees = models.ManyToManyField(UserProfile, through='DiscrepancyResponsibility')
-    passport = models.ForeignKey('Passport', on_delete=models.CASCADE, related_name='discrepancies')
-    size_quantity = models.ForeignKey('SizeQuantity', on_delete=models.CASCADE, related_name='discrepancies')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='discrepancies')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='discrepancies')
     quantity = models.IntegerField(help_text="Use negative values for deficiencies and positive for excess.")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
     reported_date = models.DateTimeField(default=timezone.now)

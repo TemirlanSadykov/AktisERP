@@ -675,6 +675,9 @@ def export_salaries_to_excel(request):
 
             for responsibility in defect_responsibilities:
                 errors_data.append([
+                    responsibility.defect.passport.order.model.name,
+                    responsibility.defect.passport,
+                    responsibility.defect.size_quantity.size,
                     employee.user.get_full_name(),
                     'Defect',
                     responsibility.defect.reported_date.strftime('%Y-%m-%d'),
@@ -683,6 +686,9 @@ def export_salaries_to_excel(request):
 
             for responsibility in discrepancy_responsibilities:
                 errors_data.append([
+                    responsibility.discrepancy.passport.order.model.name,
+                    responsibility.discrepancy.passport,
+                    responsibility.discrepancy.size_quantity.size,
                     employee.user.get_full_name(),
                     'Discrepancy',
                     responsibility.discrepancy.reported_date.strftime('%Y-%m-%d'),
@@ -690,7 +696,7 @@ def export_salaries_to_excel(request):
                 ])
 
         errors_df = pd.DataFrame(errors_data, columns=[
-            "Employee's Full Name", "Error Type", "Reported Date", "Error Cost"
+            "Model", "Passport ID", "Size", "Employee's Full Name", "Error Type", "Reported Date", "Error Cost"
         ])
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
