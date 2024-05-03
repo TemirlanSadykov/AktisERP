@@ -229,7 +229,7 @@ def discrepancy_update_status_technologist(request, pk):
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
     operations = passport.order.model.operations.all()
-    size_quantities = PassportSize.objects.filter(passport=passport)
+    size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         data = json.loads(request.body)

@@ -210,7 +210,7 @@ def employee_upload(request):
 def passport_detail_admin(request, pk):
     passport = get_object_or_404(Passport, pk=pk)
     operations = passport.order.model.operations.all() 
-    size_quantities = PassportSize.objects.filter(passport=passport)
+    size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
     passport_rolls = PassportRoll.objects.filter(passport=passport)
 
     work_by_op_and_size = {}
