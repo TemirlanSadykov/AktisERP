@@ -548,6 +548,8 @@ def download_passport_excel(request, passport_id):
     for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
         ws.cell(row=size_header_row, column=size_col).font = bold_font
 
+    ws.column_dimensions['D'].width = 50
+
     # Set the HTTP response with a content-type for Excel file
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
