@@ -222,32 +222,35 @@
       });
     });
   
-    document.getElementById('discrepancyStatusForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-  
-      const discrepancyId = document.getElementById('discrepancyIdInput').value;
-      const status = document.getElementById('discrepancyStatusInput').value;
-      const data = { status: status };
-  
-      const xhr = new XMLHttpRequest();
-      const url = `/production/technologist/orders/discrepancy/${discrepancyId}/update-status/`;
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-  
-      xhr.onload = function() {
-        const response = JSON.parse(xhr.responseText);
-        if (xhr.status === 200) {
-          alert(response.message);
-          closeDiscrepancyPopup();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-          alert(response.message);
-        }
-      };
-  
-      xhr.send(JSON.stringify(data));
-    });
+    const discrepancyForm = document.getElementById('discrepancyStatusForm');
+    if (discrepancyForm){
+      discrepancyForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+    
+        const discrepancyId = document.getElementById('discrepancyIdInput').value;
+        const status = document.getElementById('discrepancyStatusInput').value;
+        const data = { status: status };
+    
+        const xhr = new XMLHttpRequest();
+        const url = `/production/technologist/orders/discrepancy/${discrepancyId}/update-status/`;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+    
+        xhr.onload = function() {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status === 200) {
+            alert(response.message);
+            closeDiscrepancyPopup();
+          } else {
+            console.error('Request failed with status:', xhr.status);
+            alert(response.message);
+          }
+        };
+    
+        xhr.send(JSON.stringify(data));
+      });
+    }
   
     function fetchDiscrepancyDetails(discrepancyId) {
       fetch(`/production/technologist/orders/discrepancy/${discrepancyId}/`, {
@@ -285,33 +288,36 @@
         fetchDefectDetails(defectId);
       });
     });
-  
-    document.getElementById('defectStatusForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-  
-      const defectId = document.getElementById('defectIdInput').value;
-      const status = document.getElementById('defectStatusInput').value;
-      const data = { status: status };
-  
-      const xhr = new XMLHttpRequest();
-      const url = `/production/technologist/orders/defect/${defectId}/update-status/`;
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-  
-      xhr.onload = function() {
-        const response = JSON.parse(xhr.responseText);
-        if (xhr.status === 200) {
-          alert(response.message);
-          closeDefectPopup();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-          alert(response.message);
-        }
-      };
-  
-      xhr.send(JSON.stringify(data));
-    });
+    
+    const defectForm = document.getElementById('defectStatusForm');
+    if (defectForm){
+      defectForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+    
+        const defectId = document.getElementById('defectIdInput').value;
+        const status = document.getElementById('defectStatusInput').value;
+        const data = { status: status };
+    
+        const xhr = new XMLHttpRequest();
+        const url = `/production/technologist/orders/defect/${defectId}/update-status/`;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+    
+        xhr.onload = function() {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status === 200) {
+            alert(response.message);
+            closeDefectPopup();
+          } else {
+            console.error('Request failed with status:', xhr.status);
+            alert(response.message);
+          }
+        };
+    
+        xhr.send(JSON.stringify(data));
+      });
+    }
   
     function fetchDefectDetails(defectId) {
       fetch(`/production/technologist/orders/defect/${defectId}/`, {
