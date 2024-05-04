@@ -580,6 +580,10 @@ nav form button:hover {
 .employee-pending-work-container {
     padding: 20px;
 }
+
+.employee-reassigned-work-container {
+    padding: 20px;
+}
   
 .employee-header {
     margin-bottom: 20px;
