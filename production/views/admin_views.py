@@ -900,6 +900,11 @@ class OrderCreateView(CreateView):
         redirect_url = reverse('create_size_quantity', kwargs={'pk': self.object.id})
         return HttpResponseRedirect(redirect_url)
 
+    def get_context_data(self, **kwargs):
+        context = super(OrderCreateView, self).get_context_data(**kwargs)
+        context['client_order_pk'] = self.kwargs.get('client_order_pk')
+        return context
+
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderDetailView(DetailView):
     model = Order
@@ -933,13 +938,15 @@ class OrderUpdateView(UpdateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/edit.html'
-    success_url = reverse_lazy('client_order_list')
+    def get_success_url(self):
+        return reverse('order_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderDeleteView(DeleteView):
     model = Order
     template_name = 'admin/orders/delete.html'
-    success_url = reverse_lazy('client_order_list')
+    def get_success_url(self):
+        return reverse('client_order_detail', kwargs={'pk': self.object.client_order.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class SizeQuantityCreateView(View):
