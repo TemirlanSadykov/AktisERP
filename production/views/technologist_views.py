@@ -241,7 +241,6 @@ def assign_operations(request, passport_id):
             with transaction.atomic():
                 passport_size = PassportSize.objects.get(id=passport_size_id)
                 total_quantity = passport_size.quantity
-                assigned_quantity_sum = 0
 
                 entries = value.split(',')
                 for entry in entries:
@@ -267,11 +266,7 @@ def assign_operations(request, passport_id):
                         employee=employee_profile,
                         quantity=quantity
                     )
-                    assigned_quantity_sum += quantity
                     
-                if assigned_quantity_sum != total_quantity:
-                    raise ValueError("Assigned quantities do not match the required total.")
-
                 return JsonResponse({'status': 'success'})
 
         except Exception as e:
@@ -691,8 +686,7 @@ def operation_upload(request):
             sheet = workbook.active
             with transaction.atomic():
                 for row in sheet.iter_rows(min_row=2, values_only=True):
-                    node_name, _, operation_name, equipment_name, time, price, _ = row
-                    
+                    node_name, number, operation_name, equipment_name, time, price = row
                     node, _ = Node.objects.get_or_create(name=node_name)
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
                     
@@ -712,8 +706,10 @@ def operation_upload(request):
         finally:
             if 'workbook' in locals():
                 workbook.close()
+        return HttpResponseRedirect(reverse_lazy('operation_list'))
     else:
         messages.error(request, 'There was an error with the file upload.')
+        return HttpResponseRedirect(reverse_lazy('operation_upload'))
 
 
 
