@@ -10,7 +10,7 @@
         <p><strong>{% trans "Passport" %}:</strong> {{ discrepancy.passport.id }}</p>
         <p><strong>{% trans "Size" %}:</strong> {{ discrepancy.size_quantity.size }}</p>
         <p><strong>{% trans "Quantity" %}:</strong> {{ discrepancy.quantity }}</p>
-        <p><strong>{% trans "Cost" %}:</strong> {{ discrepancy.cost }}</p>
+        <p><strong>{% trans "Cost" %}:</strong> <i class="cost">{{ discrepancy.cost }}</i></p>
         <p><strong>{% trans "Status" %}:</strong> {{ discrepancy.get_status_display }}</p>
         <p><strong>{% trans "Reported Date" %}:</strong> {{ discrepancy.reported_date|date:"Y-m-d" }}</p>
         <p><strong>{% trans "Resolved Date" %}:</strong> {{ discrepancy.resolved_date|date:"Y-m-d" }}</p>
@@ -113,6 +113,75 @@
                 })
                 .catch(error => console.error('Error:', error));
             }
+        }
+    
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const costElement = document.querySelector(".cost");
+        
+        costElement.addEventListener("dblclick", function() {
+            if (!costElement.querySelector("input")) {
+                const currentValue = costElement.textContent.trim();
+                const inputElement = document.createElement("input");
+                inputElement.type = "text";
+                inputElement.value = currentValue;
+                inputElement.className = "cost-input";
+                costElement.textContent = "";
+                costElement.appendChild(inputElement);
+                inputElement.focus();
+        
+                inputElement.addEventListener("keydown", function(event) {
+                    if (event.key === "Enter") {
+                        const newValue = inputElement.value.trim();
+                        if (newValue !== currentValue) {
+                            updateCost(newValue);
+                        }
+                        costElement.textContent = newValue;
+                    }
+                });
+    
+                inputElement.addEventListener("blur", function() {
+                    const newValue = inputElement.value.trim();
+                    costElement.textContent = newValue !== "" ? newValue : currentValue;
+                });
+            }
+        });
+    
+        function updateCost(newCost) {
+            const discrepancyId = {{ discrepancy.id }};
+            fetch(`/production/admin/orders/discrepancies/${discrepancyId}/edit_discrepancy_cost/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cost: newCost })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Cost update successful');
+                } else {
+                    alert('Failed to update cost');
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
     
         function getCookie(name) {

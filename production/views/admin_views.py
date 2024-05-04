@@ -1129,6 +1129,23 @@ def defect_delete_admin(request, rd_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
+@login_required
+@admin_required
+@require_POST
+def edit_defect_cost_admin(request, defect_id):
+    defect = get_object_or_404(Defect, pk=defect_id)
+    try:
+        data = json.loads(request.body)
+        new_cost = data.get('cost')
+        if new_cost:
+            new_cost = new_cost.replace(',', '.')
+            new_cost = Decimal(new_cost)
+        defect.cost = new_cost
+        defect.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    
 
 
 @method_decorator([login_required, admin_required], name='dispatch')
@@ -1188,3 +1205,20 @@ def discrepancy_delete_admin(request, rd_id):
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@admin_required
+@require_POST
+def edit_discrepancy_cost_admin(request, discrepancy_id):
+    discrepancy = get_object_or_404(Discrepancy, pk=discrepancy_id)
+    try:
+        data = json.loads(request.body)
+        new_cost = data.get('cost')
+        if new_cost:
+            new_cost = new_cost.replace(',', '.')
+            new_cost = Decimal(new_cost)
+        discrepancy.cost = new_cost
+        discrepancy.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})

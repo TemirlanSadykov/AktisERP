@@ -10,7 +10,7 @@
         <p><strong>{% trans "Passport" %}:</strong> {{ defect.passport.id }}</p>
         <p><strong>{% trans "Size" %}:</strong> {{ defect.size_quantity.size }}</p>
         <p><strong>{% trans "Quantity" %}:</strong> {{ defect.quantity }}</p>
-        <p><strong>{% trans "Cost" %}:</strong> {{ defect.cost }}</p>
+        <p><strong>{% trans "Cost" %}:</strong> <i class="cost">{{ defect.cost }}</i></p>
         <p><strong>{% trans "Defect Type" %}:</strong> {{ defect.get_defect_type_display }}</p>
         <p><strong>{% trans "Severity" %}:</strong> {{ defect.get_severity_display }}</p>
         <p><strong>{% trans "Status" %}:</strong> {{ defect.get_status_display }}</p>
@@ -117,6 +117,81 @@
             }
         }
     
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const costElement = document.querySelector(".cost");
+    
+        // Make the "Cost" field editable on double-click
+        costElement.addEventListener("dblclick", function() {
+            if (!costElement.querySelector("input")) {
+                const currentValue = costElement.textContent.trim();
+                const inputElement = document.createElement("input");
+                inputElement.type = "text";
+                inputElement.value = currentValue;
+                inputElement.className = "cost-input";
+                costElement.textContent = "";
+                costElement.appendChild(inputElement);
+                inputElement.focus();
+    
+                // Handle Enter key press
+                inputElement.addEventListener("keydown", function(event) {
+                    if (event.key === "Enter") {
+                        const newValue = inputElement.value.trim();
+                        if (newValue !== currentValue) {
+                            updateCost(newValue);
+                        }
+                        // Restore to the non-editable state
+                        costElement.textContent = newValue;
+                    }
+                });
+    
+                // Revert to non-editable state if input loses focus
+                inputElement.addEventListener("blur", function() {
+                    const newValue = inputElement.value.trim();
+                    costElement.textContent = newValue !== "" ? newValue : currentValue;
+                });
+            }
+        });
+    
+        function updateCost(newCost) {
+            // Assuming defect.id is available from the surrounding context
+            const defectId = {{ defect.id }};
+            fetch(`/production/admin/orders/defects/${defectId}/edit_defect_cost/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cost: newCost })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Cost update successful');
+                } else {
+                    alert('Failed to update cost');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    
+        // Function to get CSRF token
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
