@@ -19,6 +19,7 @@
   {% endif %}
 
   <div class="form-actions">
+    <a href="{% url 'model_create' %}?copy={{ model.id }}" class="btn edit-btn">{% trans "Copy" %}</a>
     <a href="{% url 'model_edit' model.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
     <a href="{% url 'model_list' %}" class="btn back-btn">{% trans "Back" %}</a>

@@ -803,6 +803,14 @@ class ModelCreateView(CreateView):
     template_name = 'technologist/models/create.html'
     success_url = reverse_lazy('model_list')
 
+    def get_form_kwargs(self):
+        kwargs = super(ModelCreateView, self).get_form_kwargs()
+        if 'copy' in self.request.GET:
+            copy_id = self.request.GET['copy']
+            copy_model = get_object_or_404(Model, pk=copy_id)
+            kwargs['initial'] = {'operations': copy_model.operations.all()}
+        return kwargs
+
     def form_valid(self, form):
         return super().form_valid(form)
     
