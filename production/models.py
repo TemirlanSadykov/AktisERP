@@ -246,70 +246,6 @@ class ReassignedWork(models.Model):
     def __str__(self):
         return f"Reassigned {self.reassigned_quantity} of {self.original_assigned_work} to {self.new_employee}"
     
-class Defect(models.Model):
-    class DefectType(models.TextChoices):
-        STITCHING = 'STITCHING', 'Stitching Error'
-        CUTTING = 'CUTTING', 'Cutting Error'
-        FABRIC = 'FABRIC', 'Fabric Defect'
-        ASSEMBLY = 'ASSEMBLY', 'Assembly Error'
-        OTHER = 'OTHER', 'Other Error'
-    
-    class Severity(models.TextChoices):
-        MINOR = 'MINOR', 'Minor'
-        MAJOR = 'MAJOR', 'Major'
-        CRITICAL = 'CRITICAL', 'Critical'
-    
-    class Status(models.TextChoices):
-        REPORTED = 'REPORTED', 'Reported'
-        UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
-        RESOLVED = 'RESOLVED', 'Resolved'
-    
-    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    responsible_employees = models.ManyToManyField(UserProfile, through='DefectResponsibility')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='defects', null=True)
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='defects')
-    quantity = models.IntegerField()
-    defect_type = models.CharField(max_length=20, choices=DefectType.choices)
-    severity = models.CharField(max_length=20, choices=Severity.choices, default=Severity.MINOR)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
-    reported_date = models.DateTimeField(default=timezone.now)
-    resolved_date = models.DateTimeField(null=True, blank=True)
-
-class DefectResponsibility(models.Model):
-    defect = models.ForeignKey(Defect, on_delete=models.CASCADE, related_name='defect_responsibilities')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='defect_responsibilities')
-    percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text="Percentage of responsibility attributed to this employee.")
-
-    def __str__(self):
-        return f"{self.employee.user.username} - {self.percentage}%"
-
-class Discrepancy(models.Model):
-    class Status(models.TextChoices):
-        REPORTED = 'REPORTED', 'Reported'
-        UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
-        RESOLVED = 'RESOLVED', 'Resolved'
-
-    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    responsible_employees = models.ManyToManyField(UserProfile, through='DiscrepancyResponsibility')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='discrepancies')
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='discrepancies')
-    quantity = models.IntegerField(help_text="Use negative values for deficiencies and positive for excess.")
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
-    reported_date = models.DateTimeField(default=timezone.now)
-    resolved_date = models.DateTimeField(null=True, blank=True)
-    def __str__(self):
-        discrepancy_type = "Deficiency" if self.quantity < 0 else "Excess"
-        return f"{discrepancy_type} of {abs(self.quantity)}"
-    
-class DiscrepancyResponsibility(models.Model):
-    discrepancy = models.ForeignKey(Discrepancy, on_delete=models.CASCADE, related_name='discrepancy_responsibilities')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='discrepancy_responsibilities')
-    percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text="Percentage of responsibility attributed to this employee.")
-
-    def __str__(self):
-        return f"{self.employee.user.username} - {self.percentage}%"
-    
-
 class Error(models.Model):
     class ErrorType(models.TextChoices):
         DEFECT = 'DEFECT', 'Defect'
@@ -353,7 +289,6 @@ class ErrorResponsibility(models.Model):
     def __str__(self):
         return f"{self.employee.user.username} - {self.percentage}%"
 
-    
 class FixedSalary(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='fixed_salaries', null=True, blank=True)
     objects = BranchAwareManager()

@@ -236,9 +236,6 @@ def salary_list(request):
     form = SalaryListForm(request.GET or None)
     salaries = {}
 
-    assigned_works = AssignedWork.objects.none()
-    reassigned_works = ReassignedWork.objects.none()
-
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
@@ -260,27 +257,29 @@ def salary_list(request):
 
             for work_group in [assigned_works, reassigned_works]:
                 for work in work_group:
-                    employee = work.employee if work_group is assigned_works else work.new_employee
+                    if work_group is assigned_works:
+                        employee = work.employee
+                        payment = work.work.operation.payment
+                        quantity = work.quantity
+                    else:  # This is for reassigned_works
+                        employee = work.new_employee
+                        payment = work.original_assigned_work.work.operation.payment
+                        quantity = work.reassigned_quantity
+
                     if employee not in salaries:
                         salaries[employee] = {'salary': 0, 'status': 0, 'errors': 0, 'error_cost': 0}
-                    salaries[employee]['salary'] += work.work.operation.payment * (work.quantity if work_group is assigned_works else work.reassigned_quantity)
+                    
+                    salaries[employee]['salary'] += payment * quantity
                     salaries[employee]['status'] = 1 if work.payment_date else 0
 
-                    # Only calculate error costs for employees with type EMPLOYEE
-                    if employee.type == UserProfile.EMPLOYEE:
-                        defect_responsibilities = DefectResponsibility.objects.filter(
-                            employee=employee,
-                            defect__reported_date__range=(start_date, end_date)
-                        )
-                        for responsibility in defect_responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.defect.cost * (responsibility.percentage / 100)
-
-                        discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
-                            employee=employee,
-                            discrepancy__reported_date__range=(start_date, end_date)
-                        )
-                        for responsibility in discrepancy_responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.discrepancy.cost * (responsibility.percentage / 100)
+            if employee.type == UserProfile.EMPLOYEE:
+                error_responsibilities = ErrorResponsibility.objects.filter(
+                    employee=employee,
+                    error__reported_date__range=(start_date, end_date)
+                )
+                print(error_responsibilities)
+                for responsibility in error_responsibilities:
+                    salaries[employee]['error_cost'] += responsibility.error.cost * (responsibility.percentage / 100)
 
         elif salary_type == 'fixed':
             fixed_salaries = FixedSalary.objects.filter(branch=request.user.userprofile.branch)
@@ -297,7 +296,6 @@ def salary_list(request):
                         )
                     )
 
-                    # Process each attendance entry
                     total_salary = 0
                     for attendance in timestamps:
                         if attendance.is_clock_in and attendance.next_timestamp:
@@ -307,20 +305,14 @@ def salary_list(request):
                     if total_salary > 0:
                         if employee not in salaries:
                             salaries[employee] = {'salary': total_salary, 'status': 0, 'errors': 0, 'error_cost': 0}
-                        
-                        responsibilities = DefectResponsibility.objects.filter(
-                            employee=employee,
-                            defect__reported_date__range=(start_date, end_date)
-                        )
-                        for responsibility in responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.defect.cost * (responsibility.percentage / 100)
 
-                        responsibilities = DiscrepancyResponsibility.objects.filter(
+                        error_responsibilities = ErrorResponsibility.objects.filter(
                             employee=employee,
-                            discrepancy__reported_date__range=(start_date, end_date)
+                            error__reported_date__range=(start_date, end_date)
                         )
-                        for responsibility in responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.discrepancy.cost * (responsibility.percentage / 100)
+                        for responsibility in error_responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.error.cost * (responsibility.percentage / 100)
+
                         payment_exists = SalaryPayment.objects.filter(
                             employee=employee,
                             fixed_salary=fixed_salary,
@@ -519,32 +511,16 @@ def salary_detail(request, pk):
     return render(request, 'admin/salaries/detail.html', context)
 
 def calculate_errors(employee, start_date, end_date):
-    error_details = []
-    defect_responsibilities = DefectResponsibility.objects.filter(
+    error_responsibilities = ErrorResponsibility.objects.filter(
         employee=employee,
-        defect__reported_date__range=(start_date, end_date)
-    ).select_related('defect')
+        error__reported_date__range=(start_date, end_date)
+    ).select_related('error')
 
-    discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
-        employee=employee,
-        discrepancy__reported_date__range=(start_date, end_date)
-    ).select_related('discrepancy')
-
-    for responsibility in defect_responsibilities:
-        error_cost = responsibility.defect.cost * (responsibility.percentage / 100)
-        error_details.append({
-            'type': 'Defect',
-            'reported_date': responsibility.defect.reported_date,
-            'cost': error_cost
-        })
-
-    for responsibility in discrepancy_responsibilities:
-        error_cost = responsibility.discrepancy.cost * (responsibility.percentage / 100)
-        error_details.append({
-            'type': 'Discrepancy',
-            'reported_date': responsibility.discrepancy.reported_date,
-            'cost': error_cost
-        })
+    error_details = [{
+        'type': 'Defect' if resp.error.error_type == Error.ErrorType.DEFECT else 'Discrepancy',
+        'reported_date': resp.error.reported_date,
+        'cost': resp.error.cost * (resp.percentage / 100)
+    } for resp in error_responsibilities]
 
     return error_details
 
@@ -555,7 +531,7 @@ def calculate_salary_and_details(work, reassigned_quantity=None):
     time_spent = (work.end_time - work.start_time).total_seconds() if work.start_time and work.end_time else 0
     return work_salary, {
         'operation': work.work.operation,
-        'size': work.work.passport_size.size_quantity.size,  # Correctly accessing the size through PassportSize
+        'size': work.work.passport_size.size_quantity.size,
         'quantity': quantity,
         'time_spent_seconds': time_spent,
         'work_salary': work_salary
@@ -614,7 +590,7 @@ def export_salaries_to_excel(request):
             salary_df = pd.DataFrame(data, columns=[
                 "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
                 "Passport size", "Order's color", "Order's fabrics", "Passport date", "Operation id", 
-                "Operation name", "Operation payment", "Employee's employee_id", "Employee's full name", 
+                "Operation name", "Operation payment", "ID", "Employee", 
                 "Work's quantity", "Salary"
             ])
 
@@ -657,46 +633,32 @@ def export_salaries_to_excel(request):
                         ])
 
             salary_df = pd.DataFrame(data, columns=[
-                "Employee's Full Name", "Employee's ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
+                "Employee", "ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
             ])
 
             employees = UserProfile.objects.all()
 
         # Process errors for selected employees
         for employee in employees:
-            defect_responsibilities = DefectResponsibility.objects.filter(
+            error_responsibilities = ErrorResponsibility.objects.filter(
                 employee=employee,
-                defect__reported_date__range=(start_date, end_date)
-            )
-            discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
-                employee=employee,
-                discrepancy__reported_date__range=(start_date, end_date)
-            )
+                error__reported_date__range=(start_date, end_date)
+            ).select_related('error')
 
-            for responsibility in defect_responsibilities:
+            for responsibility in error_responsibilities:
                 errors_data.append([
-                    responsibility.defect.passport.order.model.name,
-                    responsibility.defect.passport,
-                    responsibility.defect.size_quantity.size,
+                    responsibility.error.passport.order.model.name,
+                    responsibility.error.passport.id,
+                    responsibility.error.size_quantity.size,
                     employee.user.get_full_name(),
-                    'Defect',
-                    responsibility.defect.reported_date.strftime('%Y-%m-%d'),
-                    responsibility.defect.cost * (responsibility.percentage / 100)
-                ])
-
-            for responsibility in discrepancy_responsibilities:
-                errors_data.append([
-                    responsibility.discrepancy.passport.order.model.name,
-                    responsibility.discrepancy.passport,
-                    responsibility.discrepancy.size_quantity.size,
-                    employee.user.get_full_name(),
-                    'Discrepancy',
-                    responsibility.discrepancy.reported_date.strftime('%Y-%m-%d'),
-                    responsibility.discrepancy.cost * (responsibility.percentage / 100)
+                    employee.employee_id,
+                    'Defect' if responsibility.error.error_type == Error.ErrorType.DEFECT else 'Discrepancy',
+                    responsibility.error.reported_date.strftime('%Y-%m-%d'),
+                    responsibility.error.cost * (responsibility.percentage / 100)
                 ])
 
         errors_df = pd.DataFrame(errors_data, columns=[
-            "Model", "Passport ID", "Size", "Employee's Full Name", "Error Type", "Reported Date", "Error Cost"
+            "Model", "Passport ID", "Size", "Employee", "ID", "Error Type", "Reported Date", "Error Cost"
         ])
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
