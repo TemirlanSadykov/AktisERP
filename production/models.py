@@ -309,6 +309,51 @@ class DiscrepancyResponsibility(models.Model):
     def __str__(self):
         return f"{self.employee.user.username} - {self.percentage}%"
     
+
+class Error(models.Model):
+    class ErrorType(models.TextChoices):
+        DEFECT = 'DEFECT', 'Defect'
+        DISCREPANCY = 'DISCREPANCY', 'Discrepancy'
+    
+    class DefectType(models.TextChoices):
+        STITCHING = 'STITCHING', 'Stitching Error'
+        CUTTING = 'CUTTING', 'Cutting Error'
+        FABRIC = 'FABRIC', 'Fabric Defect'
+        ASSEMBLY = 'ASSEMBLY', 'Assembly Error'
+        OTHER = 'OTHER', 'Other Error'
+
+    class Status(models.TextChoices):
+        REPORTED = 'REPORTED', 'Reported'
+        UNRESOLVABLE = 'UNRESOLVABLE', 'Unresolvable'
+        RESOLVED = 'RESOLVED', 'Resolved'
+    
+    error_type = models.CharField(max_length=20, choices=ErrorType.choices)
+    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    responsible_employees = models.ManyToManyField(UserProfile, through='ErrorResponsibility')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='errors')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='errors')
+    quantity = models.IntegerField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
+    reported_date = models.DateTimeField(default=timezone.now)
+    resolved_date = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        if self.error_type == self.ErrorType.DEFECT:
+            return f"Defect: {self.defect_type} - Severity: {self.severity}"
+        else:
+            discrepancy_type = "Deficiency" if self.quantity < 0 else "Excess"
+            return f"Discrepancy: {discrepancy_type} of {abs(self.quantity)}"
+
+class ErrorResponsibility(models.Model):
+    error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities')
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text="Percentage of responsibility attributed to this employee.")
+
+    def __str__(self):
+        return f"{self.employee.user.username} - {self.percentage}%"
+
+    
 class FixedSalary(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='fixed_salaries', null=True, blank=True)
     objects = BranchAwareManager()

@@ -256,15 +256,16 @@ class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
 
-class DefectForm(forms.ModelForm):
+class ErrorForm(forms.ModelForm):
     size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
 
     class Meta:
-        model = Defect
-        fields = ['passport', 'size_quantity', 'quantity', 'defect_type', 'severity']
-
+        model = Error
+        fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
+    
     def __init__(self, *args, **kwargs):
         order_pk = kwargs.pop('order_pk', None)
+        self.error_type = kwargs.pop('error_type', None)
         super().__init__(*args, **kwargs)
 
         if order_pk:
@@ -272,21 +273,15 @@ class DefectForm(forms.ModelForm):
             self.fields['passport'].queryset = Passport.objects.filter(order=order)
             self.fields['size_quantity'].queryset = order.size_quantities.all()
 
-class DiscrepancyForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+        if self.error_type != 'DEFECT':
+            if 'defect_type' in self.fields:
+                del self.fields['defect_type']
+        else:
+            self.fields['defect_type'].required = True
 
-    class Meta:
-        model = Discrepancy
-        fields = ['passport', 'size_quantity', 'quantity']
-
-    def __init__(self, *args, **kwargs):
-        order_pk = kwargs.pop('order_pk', None)
-        super().__init__(*args, **kwargs)
-
-        if order_pk:
-            order = Order.objects.get(pk=order_pk)
-            self.fields['passport'].queryset = Passport.objects.filter(order=order)
-            self.fields['size_quantity'].queryset = order.size_quantities.all()
+    def save(self, commit=True):
+        self.instance.error_type = self.error_type
+        return super().save(commit=commit)
 
 class FixedSalaryForm(forms.ModelForm):
     employees = forms.ModelMultipleChoiceField(

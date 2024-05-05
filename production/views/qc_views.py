@@ -67,9 +67,9 @@ class OrderDetailQcView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['defects'] = Defect.objects.filter(passport=passport)
+            context['errors'] = Error.objects.filter(passport=passport, error_type=Error.ErrorType.DEFECT)
         else:
-            context['defects'] = Defect.objects.none()
+            context['errors'] = Error.objects.none()
         
         passports = order.passports.all()
 
@@ -105,14 +105,15 @@ class OrderDetailQcView(DetailView):
     
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectCreateView(CreateView):
-    model = Defect
-    form_class = DefectForm
+    model = Error
+    form_class = ErrorForm
     template_name = 'qc/defects/create.html'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         order_pk = self.kwargs.get('order_pk')
         kwargs['order_pk'] = order_pk
+        kwargs['error_type'] = 'DEFECT'
         return kwargs
 
     def form_valid(self, form):
@@ -136,20 +137,21 @@ class DefectCreateView(CreateView):
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDetailView(DetailView):
-    model = Defect
-    template_name = 'qc/defects/detail.html'
-    context_object_name = 'defect'
+    model = Error 
+    template_name = 'qc/defects/detail.html'  
+    context_object_name = 'error'
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectUpdateView(UpdateView):
-    model = Defect
-    form_class = DefectForm
+    model = Error 
+    form_class = ErrorForm
     template_name = 'qc/defects/edit.html'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         order_pk = self.kwargs.get('order_pk')
         kwargs['order_pk'] = order_pk
+        kwargs['error_type'] = 'DEFECT'
         return kwargs
 
     def get_success_url(self):
@@ -158,13 +160,13 @@ class DefectUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        defect_pk = self.kwargs['pk']
-        context['defect'] = get_object_or_404(Defect, pk=defect_pk)
+        error_pk = self.kwargs['pk']
+        context['error'] = get_object_or_404(Error, pk=error_pk)
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDeleteView(DeleteView):
-    model = Defect
+    model = Error
 
     def get_success_url(self):
         order_pk = self.kwargs['order_pk']

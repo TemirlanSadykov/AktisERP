@@ -66,11 +66,11 @@
 
   <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Discrepancies" %}</h3>
   <div class="discrepancies-list">
-    {% if discrepancies %}
-      {% for discrepancy in discrepancies %}
+    {% if errors %}
+      {% for error in errors %}
         <p class="discrepancy-item">
-          <a href="{% url 'discrepancy_detail' order_pk=order.pk pk=discrepancy.pk %}" class="discrepancy-link">
-            {% trans "Discrepancy ID:" %} {{ discrepancy.pk }}
+          <a href="{% url 'discrepancy_detail' order_pk=order.pk pk=error.pk %}" class="discrepancy-link">
+            {% trans "Discrepancy" %} {{ error.passport.id }} - {{ error.size_quantity.size }}
           </a>
         </p>
       {% endfor %}

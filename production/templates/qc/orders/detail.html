@@ -66,11 +66,11 @@
 
   <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Defects" %}</h3>
   <div class="defects-list">
-    {% if defects %}
-      {% for defect in defects %}
+    {% if errors %}
+      {% for error in errors %}
         <p class="defect-item">
-          <a href="{% url 'defect_detail' order_pk=order.pk pk=defect.pk %}" class="defect-link">
-            {% trans "Defect ID:" %} {{ defect.pk }}
+          <a href="{% url 'defect_detail' order_pk=order.pk pk=error.pk %}" class="defect-link">
+            {% trans "Defect" %} {{ error.passport.id }} - {{ error.size_quantity.size }}
           </a>
         </p>
       {% endfor %}
