@@ -984,7 +984,8 @@ class ClientUpdateView(UpdateView):
     model = Client
     form_class = ClientForm
     template_name = 'admin/clients/edit.html'
-    success_url = reverse_lazy('client_list')
+    def get_success_url(self):
+        return reverse('client_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientDeleteView(DeleteView):
