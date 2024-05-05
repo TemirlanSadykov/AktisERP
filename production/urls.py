@@ -66,15 +66,10 @@ urlpatterns = [
     path('admin/fixed_salaries/<int:pk>/edit/', FixedSalaryUpdateView.as_view(), name='fixed_salary_edit'),
     path('admin/fixed_salaries/<int:pk>/delete/', FixedSalaryDeleteView.as_view(), name='fixed_salary_delete'),
 
-    path('admin/orders/defects/<int:pk>/', DefectDetailAdminView.as_view(), name='defect_detail_admin'),
-    path('admin/orders/defects/<int:rd_id>/edit_percentage/', defect_edit_admin, name='defect_edit_admin'),
-    path('admin/orders/defects/<int:rd_id>/delete_percentage/', defect_delete_admin, name='defect_delete_admin'),
-    path('admin/orders/defects/<int:defect_id>/edit_defect_cost/', edit_defect_cost_admin, name='edit_defect_cost_admin'),
-
-    path('admin/orders/discrepancies/<int:pk>/', DiscrepancyDetailAdminView.as_view(), name='discrepancy_detail_admin'),
-    path('admin/orders/discrepancies/<int:rd_id>/edit_percentage/', discrepancy_edit_admin, name='discrepancy_edit_admin'),
-    path('admin/orders/discrepancies/<int:rd_id>/delete_percentage/', discrepancy_delete_admin, name='discrepancy_delete_admin'),
-    path('admin/orders/discrepancies/<int:discrepancy_id>/edit_discrepancy_cost/', edit_discrepancy_cost_admin, name='edit_discrepancy_cost_admin'),
+    path('admin/orders/errors/<int:pk>/', ErrorDetailAdminView.as_view(), name='error_detail_admin'),
+    path('admin/orders/errors/<int:rd_id>/edit_percentage/', error_edit_admin, name='error_edit_admin'),
+    path('admin/orders/errors/<int:rd_id>/delete_percentage/', error_delete_admin, name='error_delete_admin'),
+    path('admin/orders/errors/<int:error_id>/edit_cost/', edit_error_cost_admin, name='edit_error_cost_admin'),
 
     path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
     path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),

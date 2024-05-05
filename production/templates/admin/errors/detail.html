@@ -3,21 +3,21 @@
 
 {% block content %}
 <div class="content-container">
-    <h2 class="form-heading">{% trans "Discrepancy Details" %} №{{ discrepancy.id }}</h2>
+    <h2 class="form-heading">{% if error.error_type == 'DEFECT' %}{% trans "Defect Details" %}{% else %}{% trans "Discrepancy Details" %}{% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}</h2>
 
     <div class="details">
-        <p><strong>{% trans "Model" %}:</strong> {{ discrepancy.passport.order.model.name }}</p>
-        <p><strong>{% trans "Passport" %}:</strong> {{ discrepancy.passport.id }}</p>
-        <p><strong>{% trans "Size" %}:</strong> {{ discrepancy.size_quantity.size }}</p>
-        <p><strong>{% trans "Quantity" %}:</strong> {{ discrepancy.quantity }}</p>
-        <p><strong>{% trans "Cost" %}:</strong> <i class="cost">{{ discrepancy.cost }}</i></p>
-        <p><strong>{% trans "Status" %}:</strong> {{ discrepancy.get_status_display }}</p>
-        <p><strong>{% trans "Reported Date" %}:</strong> {{ discrepancy.reported_date|date:"Y-m-d" }}</p>
-        <p><strong>{% trans "Resolved Date" %}:</strong> {{ discrepancy.resolved_date|date:"Y-m-d" }}</p>
+        <p><strong>{% trans "Model" %}:</strong> {{ error.passport.order.model.name }}</p>
+        <p><strong>{% trans "Passport" %}:</strong> {{ error.passport.id }}</p>
+        <p><strong>{% trans "Size" %}:</strong> {{ error.size_quantity.size }}</p>
+        <p><strong>{% trans "Quantity" %}:</strong> {{ error.quantity }}</p>
+        <p><strong>{% trans "Cost" %}:</strong> <i class="cost">{{ error.cost }}</i></p>
+        <p><strong>{% trans "Status" %}:</strong> {{ error.get_status_display }}</p>
+        <p><strong>{% trans "Reported Date" %}:</strong> {{ error.reported_date|date:"Y-m-d" }}</p>
+        <p><strong>{% trans "Resolved Date" %}:</strong> {{ error.resolved_date|date:"Y-m-d" }}</p>
     </div>
 
     <h3 class="sub-heading">{% trans "Assign Responsibility" %}</h3>
-    <form id="responsibilityDiscrepancyForm" method="post" class="date-filter-form">
+    <form id="responsibilityErrorForm" method="post" class="date-filter-form">
         {% csrf_token %}
         <div class="form-group">
             <label>{% trans "Employee ID:" %}</label>
@@ -29,9 +29,9 @@
         </div>
         <button type="submit" class="btn edit-btn">{% trans "Assign" %}</button>
     </form>
-    <ul id="responsibilityDiscrepancyList" class="responsibility-discrepancy-list">
-        {% for rd in responsibility_discrepancies %}
-        <li id="rd-{{ rd.id }}" class="responsibility-discrepancy-item">
+    <ul id="responsibilityErrorList" class="responsibility-error-list">
+        {% for rd in responsibility_errors %}
+        <li id="rd-{{ rd.id }}" class="responsibility-error-item">
             <span class="detail"><strong>{% trans "Employee:" %}</strong> <span class="employee" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.employee }}</span></span>
             <span class="detail"><strong>{% trans "Percentage:" %}</strong> <span class="percentage" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.percentage }}</span></span>
             <button class="edit-btn" data-rd-id="{{ rd.id }}">{% trans "Edit" %}</button>
@@ -40,13 +40,13 @@
         {% endfor %}
     </ul>
     <div class="form-actions">
-        <a href="{% url 'order_detail' discrepancy.passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+        <a href="{% url 'order_detail' error.passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
     </div>
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const responsibilityDiscrepancyList = document.getElementById('responsibilityDiscrepancyList');
-        responsibilityDiscrepancyList.addEventListener('click', function(e) {
+        const responsibilityErrorList = document.getElementById('responsibilityErrorList');
+        responsibilityErrorList.addEventListener('click', function(e) {
             if (e.target.classList.contains('edit-btn')) {
                 handleEdit(e.target);
             } else if (e.target.classList.contains('delete-btn')) {
@@ -71,7 +71,7 @@
         }
     
         function updatePercentage(rdId, percentage) {
-            fetch(`/production/admin/orders/discrepancies/${rdId}/edit_percentage/`, {
+            fetch(`/production/admin/orders/errors/${rdId}/edit_percentage/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
@@ -92,9 +92,9 @@
 
         function handleDelete(button) {
             const rdId = button.getAttribute("data-rd-id");
-            const confirmDelete = confirm('{% trans "Are you sure you want to delete this discrepancy?" %}');
+            const confirmDelete = confirm('{% trans "Are you sure you want to delete this error responsibility?" %}');
             if (confirmDelete) {
-                fetch(`/production/admin/orders/discrepancies/${rdId}/delete_percentage/`, {
+                fetch(`/production/admin/orders/errors/${rdId}/delete_percentage/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
@@ -108,7 +108,7 @@
                         }
                         console.log('Delete successful');
                     } else {
-                        alert('Failed to delete discrepancy');
+                        alert('Failed to delete error responsibility');
                     }
                 })
                 .catch(error => console.error('Error:', error));
@@ -118,14 +118,14 @@
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+              const cookies = document.cookie.split(';');
+              for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
                 }
+              }
             }
             return cookieValue;
         }
@@ -134,7 +134,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const costElement = document.querySelector(".cost");
-        
+    
+        // Make the "Cost" field editable on double-click
         costElement.addEventListener("dblclick", function() {
             if (!costElement.querySelector("input")) {
                 const currentValue = costElement.textContent.trim();
@@ -145,17 +146,20 @@
                 costElement.textContent = "";
                 costElement.appendChild(inputElement);
                 inputElement.focus();
-        
+    
+                // Handle Enter key press
                 inputElement.addEventListener("keydown", function(event) {
                     if (event.key === "Enter") {
                         const newValue = inputElement.value.trim();
                         if (newValue !== currentValue) {
                             updateCost(newValue);
                         }
+                        // Restore to the non-editable state
                         costElement.textContent = newValue;
                     }
                 });
     
+                // Revert to non-editable state if input loses focus
                 inputElement.addEventListener("blur", function() {
                     const newValue = inputElement.value.trim();
                     costElement.textContent = newValue !== "" ? newValue : currentValue;
@@ -164,8 +168,8 @@
         });
     
         function updateCost(newCost) {
-            const discrepancyId = {{ discrepancy.id }};
-            fetch(`/production/admin/orders/discrepancies/${discrepancyId}/edit_discrepancy_cost/`, {
+            const errorId = {{ error.id }};
+            fetch(`/production/admin/orders/errors/${errorId}/edit_cost/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
@@ -183,18 +187,18 @@
             })
             .catch(error => console.error('Error:', error));
         }
-    
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+              const cookies = document.cookie.split(';');
+              for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
                 }
+              }
             }
             return cookieValue;
         }

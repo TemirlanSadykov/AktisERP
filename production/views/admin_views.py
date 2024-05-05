@@ -917,11 +917,9 @@ class OrderDetailView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['defects'] = Defect.objects.filter(passport=passport)
-            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
+            context['errors'] = Error.objects.filter(passport=passport).order_by('error_type')
         else:
-            context['defects'] = Defect.objects.none()
-            context['discrepancies'] = Discrepancy.objects.none()
+            context['errors'] = Error.objects.none()
         context['passports'] = order.passports.all()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         context['size_quantity_form'] = SizeQuantityForm()
@@ -1072,43 +1070,43 @@ class FixedSalaryDeleteView(RestrictBranchMixin, DeleteView):
 
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class DefectDetailAdminView(CreateView):
-    model = DefectResponsibility
-    form_class = DefectResponsibilityForm
-    template_name = 'admin/defects/detail.html'
+class ErrorDetailAdminView(CreateView):
+    model = ErrorResponsibility
+    form_class = ErrorResponsibilityForm
+    template_name = 'admin/errors/detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        defect = get_object_or_404(Defect, pk=self.kwargs.get('pk'))
-        context['defect'] = defect
-        context['responsibility_defects'] = DefectResponsibility.objects.filter(defect=defect)
+        error = get_object_or_404(Error, pk=self.kwargs.get('pk'))
+        context['error'] = error
+        context['responsibility_errors'] = ErrorResponsibility.objects.filter(error=error)
         return context
 
     def form_valid(self, form):
         responsibility = form.save(commit=False)
-        defect_id = self.kwargs['pk']
-        responsibility.defect_id = defect_id
+        error_id = self.kwargs['pk']
+        responsibility.error_id = error_id
         responsibility.save()
-        return redirect('defect_detail_admin', pk=defect_id)
+        return redirect('error_detail_admin', pk=error_id)
     
     def get_success_url(self):
-        return reverse('defect_detail_admin', kwargs={'pk': self.kwargs['pk']})
-    
+        return reverse('error_detail_admin', kwargs={'pk': self.kwargs['pk']})
+
 @login_required
 @admin_required
 @require_POST
-def defect_edit_admin(request, rd_id):
+def error_edit_admin(request, rd_id):
     try:
         data = json.loads(request.body)
         percentage = Decimal(data.get('percentage'))
         
-        defectResponsibility = DefectResponsibility.objects.get(id=rd_id)
-        defectResponsibility.percentage = percentage
-        defectResponsibility.save()
+        errorResponsibility = ErrorResponsibility.objects.get(id=rd_id)
+        errorResponsibility.percentage = percentage
+        errorResponsibility.save()
         return JsonResponse({'status': 'success', 'message': 'Percentage updated successfully'})
 
-    except DefectResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DefectResponsibility not found'}, status=404)
+    except ErrorResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'ErrorResponsibility not found'}, status=404)
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -1116,109 +1114,32 @@ def defect_edit_admin(request, rd_id):
 @login_required
 @admin_required
 @require_POST
-def defect_delete_admin(request, rd_id):
+def error_delete_admin(request, rd_id):
     try:
-        defectResponsibility = DefectResponsibility.objects.get(id=rd_id)
-        defectResponsibility.delete()
+        errorResponsibility = ErrorResponsibility.objects.get(id=rd_id)
+        errorResponsibility.delete()
 
-        return JsonResponse({'status': 'success', 'message': 'DefectResponsibility deleted successfully'})
+        return JsonResponse({'status': 'success', 'message': 'ErrorResponsibility deleted successfully'})
 
-    except DefectResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DefectResponsibility not found'}, status=404)
+    except ErrorResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'ErrorResponsibility not found'}, status=404)
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    
+
 @login_required
 @admin_required
 @require_POST
-def edit_defect_cost_admin(request, defect_id):
-    defect = get_object_or_404(Defect, pk=defect_id)
+def edit_error_cost_admin(request, error_id):
+    error = get_object_or_404(Error, pk=error_id)
     try:
         data = json.loads(request.body)
         new_cost = data.get('cost')
         if new_cost:
             new_cost = new_cost.replace(',', '.')
             new_cost = Decimal(new_cost)
-        defect.cost = new_cost
-        defect.save()
+        error.cost = new_cost
+        error.save()
         return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
-    
-
-
-@method_decorator([login_required, admin_required], name='dispatch')
-class DiscrepancyDetailAdminView(CreateView):
-    model = DiscrepancyResponsibility
-    form_class = DiscrepancyResponsibilityForm
-    template_name = 'admin/discrepancies/detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        discrepancy = get_object_or_404(Discrepancy, pk=self.kwargs.get('pk'))
-        context['discrepancy'] = discrepancy
-        context['responsibility_discrepancies'] = DiscrepancyResponsibility.objects.filter(discrepancy=discrepancy)
-        return context
-
-    def form_valid(self, form):
-        responsibility = form.save(commit=False)
-        discrepancy_id = self.kwargs['pk']
-        responsibility.discrepancy_id = discrepancy_id
-        responsibility.save()
-        return redirect('discrepancy_detail_admin', pk=discrepancy_id)
-    
-    def get_success_url(self):
-        return reverse('discrepancy_detail_admin', kwargs={'pk': self.kwargs['pk']})
-    
-@login_required
-@admin_required
-@require_POST
-def discrepancy_edit_admin(request, rd_id):
-    try:
-        data = json.loads(request.body)
-        percentage = Decimal(data.get('percentage'))
-        
-        discrepancyResponsibility = DiscrepancyResponsibility.objects.get(id=rd_id)
-        discrepancyResponsibility.percentage = percentage
-        discrepancyResponsibility.save()
-        return JsonResponse({'status': 'success', 'message': 'Percentage updated successfully'})
-
-    except DiscrepancyResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DiscrepancyResponsibility not found'}, status=404)
-    
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    
-@login_required
-@admin_required
-@require_POST
-def discrepancy_delete_admin(request, rd_id):
-    try:
-        discrepancyResponsibility = DiscrepancyResponsibility.objects.get(id=rd_id)
-        discrepancyResponsibility.delete()
-
-        return JsonResponse({'status': 'success', 'message': 'DiscrepancyResponsibility deleted successfully'})
-
-    except DiscrepancyResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DiscrepancyResponsibility not found'}, status=404)
-    
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-@login_required
-@admin_required
-@require_POST
-def edit_discrepancy_cost_admin(request, discrepancy_id):
-    discrepancy = get_object_or_404(Discrepancy, pk=discrepancy_id)
-    try:
-        data = json.loads(request.body)
-        new_cost = data.get('cost')
-        if new_cost:
-            new_cost = new_cost.replace(',', '.')
-            new_cost = Decimal(new_cost)
-        discrepancy.cost = new_cost
-        discrepancy.save()
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
+    except Exception as e :
         return JsonResponse({'status': 'error', 'message': str(e)})

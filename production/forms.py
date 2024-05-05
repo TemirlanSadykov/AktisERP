@@ -301,28 +301,15 @@ class UploadFileForm(forms.Form):
         validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
     )
 
-class DefectResponsibilityForm(forms.ModelForm):
+class ErrorResponsibilityForm(forms.ModelForm):
     class Meta:
-        model = DefectResponsibility
+        model = ErrorResponsibility
         fields = ['employee', 'percentage']
         widgets = {
             'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['employee'].queryset = UserProfile.objects.all()
-
-class DiscrepancyResponsibilityForm(forms.ModelForm):
-    class Meta:
-        model = DiscrepancyResponsibility
-        fields = ['employee', 'percentage']
-        widgets = {
-            'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['employee'].queryset = UserProfile.objects.all()
+        self.fields['employee'].queryset = UserProfile.objects.all().order_by('employee_id')
