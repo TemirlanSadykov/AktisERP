@@ -78,10 +78,8 @@ urlpatterns = [
 
     path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
     path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),
-    path('technologist/orders/defect/<int:pk>/', defect_detail, name='defect_detail_technologist'),
-    path('technologist/orders/defect/<int:pk>/update-status/', defect_update_status_technologist, name='defect_update_status_technologist'),
-    path('technologist/orders/discrepancy/<int:pk>/', discrepancy_detail, name='discrepancy_detail_technologist'),
-    path('technologist/orders/discrepancy/<int:pk>/update-status/', discrepancy_update_status_technologist, name='discrepancy_update_status_technologist'),
+    path('technologist/orders/error/<int:pk>/', error_detail, name='error_detail_technologist'),
+    path('technologist/orders/error/<int:pk>/update-status/', error_update_status, name='error_update_status_technologist'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
