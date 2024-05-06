@@ -232,7 +232,7 @@ class AssignedWork(models.Model):
     is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
     payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
     def __str__(self):
-        return f"{self.employee.employee_id} - {self.work.operation.name} - {self.quantity}"
+        return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
 
 class ReassignedWork(models.Model):
     original_assigned_work = models.ForeignKey(AssignedWork, on_delete=models.CASCADE, related_name='reassignments', verbose_name='Исходное назначенное задание')

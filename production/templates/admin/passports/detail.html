@@ -55,6 +55,7 @@
     </table>
   </form>
   <div class="form-actions">
+    <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
     <a href="{% url 'order_detail' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>

@@ -501,7 +501,6 @@ def download_passport_excel(request, passport_id):
     return response
 
 def get_operation_details(operation, passport_sizes):
-    # Start with the name of the operation and the name of the equipment
     details = [
         operation.node.name,
         operation.equipment.name,
@@ -510,26 +509,24 @@ def get_operation_details(operation, passport_sizes):
         operation.preferred_completion_time
     ]
 
-    # Fetch the related AssignedWork for each size and collect employee IDs
-    for passport_size in passport_sizes:
-        # Get the assigned works
+    # Ensure the sizes are sorted consistently
+    sorted_sizes = sorted(passport_sizes, key=lambda x: x.size_quantity.size)
+    
+    # Fetch and accumulate details for each sorted size
+    for passport_size in sorted_sizes:
         assigned_works = AssignedWork.objects.filter(
             work__operation=operation,
             work__passport_size=passport_size
         ).select_related('employee')
 
-        # Get the reassigned works related to the operation and passport size
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__work__operation=operation,
             original_assigned_work__work__passport_size=passport_size
         ).select_related('new_employee')
 
-        # Collect unique employee IDs for each assigned and reassigned work
         employee_ids = set(aw.employee.employee_id for aw in assigned_works)
-        # Add the employee IDs from the reassigned works
         employee_ids.update(rw.new_employee.employee_id for rw in reassigned_works)
 
-        # Append the joined employee IDs to the details
         details.append(', '.join(employee_ids))
 
     return details
