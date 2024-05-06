@@ -130,7 +130,10 @@ def error_detail(request, pk):
         if error:
             error['reported_date'] = error['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
             error['resolved_date'] = error['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if error['resolved_date'] else None
-            
+            error['status'] = Error.Status(error['status']).label
+            if 'defect_type' in error and error['defect_type']:
+                error['defect_type'] = Error.DefectType(error['defect_type']).label
+
             if error['error_type'] == 'DEFECT':
                 works = AssignedWork.objects.filter(
                     work__passport_id=error['passport__id'],

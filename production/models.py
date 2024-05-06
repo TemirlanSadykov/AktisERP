@@ -298,7 +298,7 @@ class FixedSalary(models.Model):
         return f"{self.position} - {self.salary}"
 
 class SalaryPayment(models.Model):
-    fixed_salary = models.ForeignKey(FixedSalary, on_delete=models.CASCADE, related_name='salary_payments', verbose_name='Фиксированная зарплата')
+    fixed_salary = models.ForeignKey(FixedSalary, on_delete=models.CASCADE, related_name='salary_payments', verbose_name='Оклад')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='salary_payments', verbose_name='Сотрудник')
     payment_date = models.DateField(verbose_name='Дата платежа')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма')

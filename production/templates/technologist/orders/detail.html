@@ -32,9 +32,9 @@
             {% csrf_token %}
             <input type="hidden" name="errorStatus" id="errorStatusInput">
             <input type="hidden" name="errorId" id="errorIdInput">
-            <button type="submit" onclick="updateErrorStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
-            <button type="submit" onclick="updateErrorStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
-            <button type="button" onclick="closeErrorPopup()" class="btn create-btn">Close</button>
+            <button type="submit" onclick="updateErrorStatus('RESOLVED')" class="btn complete-btn">{% trans "Resolved" %}</button>
+            <button type="submit" onclick="updateErrorStatus('UNRESOLVABLE')" class="btn delete-btn">{% trans "Unresolvable" %}</button>
+            <button type="button" onclick="closeErrorPopup()" class="btn create-btn">{% trans "Close" %}</button>
           </div>
         </form>
       </div>  
@@ -218,7 +218,7 @@
         if (data.error) {
           const errorDetails = document.getElementById('errorDetails');
           errorDetails.innerHTML = 
-            `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Defect' : 'Discrepancy'}</p>
+            `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
             <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
             <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
             <p><strong>Количество:</strong> ${data.error.quantity}</p>

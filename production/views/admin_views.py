@@ -272,14 +272,13 @@ def salary_list(request):
                     salaries[employee]['salary'] += payment * quantity
                     salaries[employee]['status'] = 1 if work.payment_date else 0
 
-            if employee.type == UserProfile.EMPLOYEE:
-                error_responsibilities = ErrorResponsibility.objects.filter(
-                    employee=employee,
-                    error__reported_date__range=(start_date, end_date)
-                )
-                print(error_responsibilities)
-                for responsibility in error_responsibilities:
-                    salaries[employee]['error_cost'] += responsibility.error.cost * (responsibility.percentage / 100)
+                    if employee.type == UserProfile.EMPLOYEE:
+                        error_responsibilities = ErrorResponsibility.objects.filter(
+                            employee=employee,
+                            error__reported_date__range=(start_date, end_date)
+                        )
+                        for responsibility in error_responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.error.cost * (responsibility.percentage / 100)
 
         elif salary_type == 'fixed':
             fixed_salaries = FixedSalary.objects.filter(branch=request.user.userprofile.branch)

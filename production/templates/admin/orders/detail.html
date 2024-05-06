@@ -32,8 +32,8 @@
             {% csrf_token %}
             <input type="hidden" name="errorStatus" id="errorStatusInput">
             <input type="hidden" name="errorId" id="errorIdInput">
-            <button type="button" onclick="goErrorDetails()" class="btn create-btn">Details</button>
-            <button type="button" onclick="closeErrorPopup()" class="btn back-btn">Close</button>
+            <button type="button" onclick="goErrorDetails()" class="btn create-btn">{% trans "Details" %}</button>
+            <button type="button" onclick="closeErrorPopup()" class="btn back-btn">{% trans "Close" %}</button>
           </div>
         </form>
       </div>  
@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (data.error) {
           const errorDetails = document.getElementById('errorDetails');
           errorDetails.innerHTML = 
-           `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Defect' : 'Discrepancy'}</p>
+           `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
             <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
             <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
             <p><strong>Количество:</strong> ${data.error.quantity}</p>

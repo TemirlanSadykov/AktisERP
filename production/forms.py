@@ -102,29 +102,34 @@ class SizeQuantityForm(forms.ModelForm):
         fields = ['size', 'quantity']
 
 class DateForm(forms.Form):
-    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+    date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date'}))
 
 class DateRangeForm(forms.Form):
     start_date = forms.DateField(
+        label='Начало',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False 
     )
     end_date = forms.DateField(
+        label='Окончание',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False
     )
 
 class SalaryListForm(forms.Form):
     start_date = forms.DateField(
+        label='Начало',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False 
     )
     end_date = forms.DateField(
+        label='Окончание',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False
     )
     salary_type = forms.ChoiceField(
-        choices=(('non_fixed', 'Non-fixed'), ('fixed', 'Fixed')),
+        label='Тип зарплаты',
+        choices=(('non_fixed', 'По факту'), ('fixed', 'Оклад')),
         required=False
     )
 
