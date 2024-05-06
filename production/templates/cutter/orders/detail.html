@@ -104,7 +104,7 @@
           .then(response => response.json())
           .then(data => {
               if (!data.success) {
-                alert('Error: ' + data.error);
+                alert('Не получилось обновить');
               }
           })
           .catch(error => {

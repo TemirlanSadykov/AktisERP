@@ -205,7 +205,7 @@
                         })
                         .then(res => res.json())
                         .then(data => {
-                            alert(data.message);
+                            alert('Не получилось обновить');
                             closePopup();
                         })
                         .catch(error => console.error('Error:', error));
@@ -248,11 +248,11 @@
       xhr.onload = function() {
         const response = JSON.parse(xhr.responseText);
         if (xhr.status === 200) {
-          alert(response.message);
+          alert("Успешное обновление");
           closePopup();
         } else {
           console.error('Request failed with status:', xhr.status);
-          alert(response.message); 
+          alert('Не получилось обновить');
         }
       };
     
@@ -285,7 +285,7 @@
         inputElement.parentNode.replaceChild(newSpan, inputElement);
       } else {
         console.error('Failed to assign operation', data.message);
-        alert(data.message);
+        alert('Не получилось обновить');
       }
     });
   }
@@ -309,12 +309,12 @@
           callback(newValue); // Update the span text with the new value
         } else {
           console.error('Failed to update work', response.message);
-          alert(response.message);
+          alert('Не получилось обновить');
           callback(); // Revert to original text if the update fails
         }
       } else {
         console.error('Request failed with status:', xhr.status);
-        alert(xhr.status);
+        alert('Не получилось обновить');
         callback(); // Revert to original text if the request fails
       }
     };
@@ -337,7 +337,7 @@
         }
       } else {
         console.error('Failed to update work success status');
-        alert('Failed to update work success status');
+        alert('Не получилось обновить');
       }
     };
   

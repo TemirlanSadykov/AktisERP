@@ -82,9 +82,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    console.log('Percentage update successful');
+                    alert('Успешное обновление');
                 } else {
-                    alert('Failed to update percentage');
+                    alert('Не получилось обновить');
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -106,9 +106,9 @@
                         if (parentLi) {
                             parentLi.remove();
                         }
-                        console.log('Delete successful');
+                        alert('Успешное удаление');
                     } else {
-                        alert('Failed to delete error responsibility');
+                        alert('Не получилось удалить');
                     }
                 })
                 .catch(error => console.error('Error:', error));
@@ -180,9 +180,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert('Cost update successful');
+                    alert('Успешное обновление');
                 } else {
-                    alert('Failed to update cost');
+                    alert('Не получилось обновить');
                 }
             })
             .catch(error => console.error('Error:', error));

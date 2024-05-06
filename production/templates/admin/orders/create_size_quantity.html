@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
         form.reset();  // Clear the form inputs after successful submission
       } else {
         console.error('Submission failed', data.errors);
-        alert(data.errors);
+        alert('Не получилось обновить');
       }
     })
     .catch(error => console.error('There has been a problem with your fetch operation:', error));
@@ -132,8 +132,7 @@ document.addEventListener("DOMContentLoaded", function() {
         sizeSpan.textContent = size;
         quantitySpan.textContent = quantity;
       } else {
-        console.error('Failed to update size and quantity');
-        alert('Failed to update size and quantity');
+        alert('Не получилось обновить');
       }
     });
   }
@@ -153,8 +152,7 @@ document.addEventListener("DOMContentLoaded", function() {
           parentLi.remove();
         }
       } else {
-        console.error('Failed to delete size and quantity');
-        alert('Failed to delete size and quantity');
+        alert('Не получилось удалить');
       }
     });
   }

@@ -158,7 +158,7 @@
         .then(response => response.json())
         .then(data => {
             if (!data.success) {
-              alert('Error: ' + data.error);
+              alert('Ошибка');
             }
         })
         .catch(error => {
@@ -195,11 +195,11 @@
         xhr.onload = function() {
           const response = JSON.parse(xhr.responseText);
           if (xhr.status === 200) {
-            alert(response.message);
+            alert('Успешное обновление');
             closeErrorPopup();
           } else {
             console.error('Request failed with status:', xhr.status);
-            alert(response.message);
+            alert('Не получилось обновить');
           }
         };
     
@@ -218,22 +218,22 @@
         if (data.error) {
           const errorDetails = document.getElementById('errorDetails');
           errorDetails.innerHTML = 
-           `<p><strong>Type:</strong> ${data.error.error_type === 'DEFECT' ? 'Defect' : 'Discrepancy'}</p>
-            <p><strong>Passport:</strong> ${data.error.passport__id}</p>
-            <p><strong>Size:</strong> ${data.error.size_quantity__size}</p>
-            <p><strong>Quantity:</strong> ${data.error.quantity}</p>
-            ${data.error.error_type === 'DEFECT' ? `<p><strong>Defect Type:</strong> ${data.error.defect_type}</p>` : ``}
-            <p><strong>Status:</strong> ${data.error.status}</p>
-            <p><strong>Reported Date:</strong> ${data.error.reported_date}</p>
-            <p><strong>Resolved Date:</strong> ${data.error.resolved_date || 'N/A'}</p>`;
+            `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Defect' : 'Discrepancy'}</p>
+            <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
+            <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
+            <p><strong>Количество:</strong> ${data.error.quantity}</p>
+            ${data.error.error_type === 'DEFECT' ? `<p><strong>Тип Дефекта:</strong> ${data.error.defect_type}</p>` : ``}
+            <p><strong>Статус:</strong> ${data.error.status}</p>
+            <p><strong>Дата Сообщения:</strong> ${data.error.reported_date}</p>
+            <p><strong>Дата Разрешения:</strong> ${data.error.resolved_date || 'N/A'}</p>`;
           showErrorPopup();
         } else {
-          alert('No details found for this error.');
+          alert('Ничего не найдено');
         }
       })
       .catch(error => {
         console.error('Error fetching error details:', error);
-        alert('Error fetching error details.');
+        alert('Ошибка при загрузке');
       });
     }
   });

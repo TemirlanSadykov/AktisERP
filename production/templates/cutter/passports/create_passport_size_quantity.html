@@ -74,9 +74,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    console.log('Update successful');
+                    alert('Успешное обновление');
                 } else {
-                    alert('Failed to update size and quantity');
+                    alert('Не получилось обновить');
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -98,9 +98,9 @@
                         if (parentLi) {
                             parentLi.remove();
                         }
-                        console.log('Delete successful');
+                        alert('Успешное удаление');
                     } else {
-                        alert('Failed to delete size and quantity');
+                        alert('Не получилось удалить');
                     }
                 })
                 .catch(error => console.error('Error:', error));
