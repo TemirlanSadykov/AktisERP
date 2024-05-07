@@ -272,7 +272,7 @@ def salary_list(request):
                     salaries[employee]['salary'] += payment * quantity
                     salaries[employee]['status'] = 1 if work.payment_date else 0
 
-                    if employee.type == UserProfile.EMPLOYEE:
+                    if employee.type not in [UserProfile.ADMIN, UserProfile.TECHNOLOGIST]:
                         error_responsibilities = ErrorResponsibility.objects.filter(
                             employee=employee,
                             error__reported_date__range=(start_date, end_date)
@@ -459,7 +459,7 @@ def salary_detail(request, pk):
                 assigned_work_details.append(work_details)
 
             # Calculate errors only if the employee is of type EMPLOYEE
-            if employee.type == UserProfile.EMPLOYEE:
+            if employee.type not in [UserProfile.ADMIN, UserProfile.TECHNOLOGIST]:
                 error_details = calculate_errors(employee, start_date, end_date)
                 total_error_cost = sum(detail['cost'] for detail in error_details)
                 total_salary -= total_error_cost
@@ -516,7 +516,10 @@ def calculate_errors(employee, start_date, end_date):
     ).select_related('error')
 
     error_details = [{
-        'type': 'Defect' if resp.error.error_type == Error.ErrorType.DEFECT else 'Discrepancy',
+        'type': 'Дефект' if resp.error.error_type == Error.ErrorType.DEFECT else 'Несоответствие',
+        'passport': resp.error.passport.id,
+        'size': resp.error.size_quantity.size,
+        'quantity': resp.error.quantity,
         'reported_date': resp.error.reported_date,
         'cost': resp.error.cost * (resp.percentage / 100)
     } for resp in error_responsibilities]
