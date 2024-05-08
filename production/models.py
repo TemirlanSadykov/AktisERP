@@ -61,14 +61,8 @@ class EmployeeAttendance(models.Model):
         return f"{self.employee.username} - {event_type} at {self.timestamp}"
 
 class Client(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название')
+    name = models.CharField(max_length=100, verbose_name='Имя')
     contact_info = models.TextField(verbose_name='Контактная информация')
-    def __str__(self):
-        return self.name
-
-class Assortment(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
-    name = models.CharField(max_length=100, verbose_name='Название')
     def __str__(self):
         return self.name
 
@@ -109,6 +103,7 @@ class Node(models.Model):
     
 class Operation(models.Model):
     name = models.CharField(max_length=300, verbose_name='Название')
+    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ПП')
     payment = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Оплата')
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations', verbose_name='Оборудование')
     node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations', verbose_name='Узел')
@@ -119,11 +114,26 @@ class Operation(models.Model):
     def __str__(self):
         return self.name
     
-class Model(models.Model):
+class Assortment(models.Model):
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
-    operations = models.ManyToManyField(Operation, related_name='models', verbose_name='Операции')
+    operations = models.ManyToManyField(Operation, related_name='assortments', verbose_name='Операции')
     def __str__(self):
         return self.name
+
+class Model(models.Model):
+    name = models.CharField(max_length=100, verbose_name='Название')
+    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
+    operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
+    def __str__(self):
+        return self.name
+    
+class ModelOperation(models.Model):
+    model = models.ForeignKey(Model, on_delete=models.CASCADE)
+    operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=0)
+    class Meta:
+        ordering = ['order']
 
 class SizeQuantity(models.Model):
     size = models.CharField(max_length=10, verbose_name='Размер')
@@ -173,8 +183,6 @@ class Order(models.Model):
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
     def __str__(self):
         return f"{self.name} - {self.model}"
-    def default_term():
-        return timezone.now() + datetime.timedelta(days=30)
     
 class Passport(models.Model):
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
