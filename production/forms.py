@@ -230,13 +230,11 @@ class ModelCustomForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ModelCustomForm, self).__init__(*args, **kwargs)
-        if self.instance.pk:
-            self.fields['operations'] = forms.ModelMultipleChoiceField(
-                queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
-                widget=forms.CheckboxSelectMultiple,
-                required=False
-            )
-            self.fields['operations'].initial = self.instance.operations.all().order_by('modeloperation__order')
+        self.fields['operations'] = forms.ModelMultipleChoiceField(
+            queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+            widget=forms.CheckboxSelectMultiple,
+            required=False
+        )
 
     def save(self, commit=True):
         model_instance = super().save(commit=False)
