@@ -1,5 +1,91 @@
 {% extends "base.html" %}
 {% load i18n %}
+
+{% block content %}
+<style>
+  .checkbox label {
+    display: block;
+    margin: 5px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
+  .sortable-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    cursor: grab;
+  }
+</style>
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Edit Model" %}</h2>
+  <form method="post" id="modelForm" class="crud-form">
+    {% csrf_token %}
+    {{ form.name.as_p }}
+    <label>{% trans "Operations" %}</label>
+    <div id="operationsContainer">
+      {% for operation in form.fields.operations.queryset %}
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" name="operations" value="{{ operation.id }}"
+          {% if operation in form.fields.operations.initial %} checked {% endif %}>
+          {{ operation.node.name }} - {{ operation.name }}
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="selectedOperations" class="selected-operations"></div>
+
+    <input type="hidden" id="id_operations_data" name="operations_data" value="{{ form.operations_data.value }}">
+
+    <div class="form-actions">
+      <button type="button" onclick="prepareOperations()">Continue</button>
+      <button type="submit" class="btn create-btn">{% trans "Save Changes" %}</button>
+      <a href="{% url 'model_detail' a_id=a_id pk=model.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
+  </form>
+</div>
+<script>
+let selectedOperations = [];
+
+function prepareOperations() {
+  let checkedBoxes = document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked');
+  let operationsContainer = document.getElementById('selectedOperations');
+  operationsContainer.innerHTML = '';
+  checkedBoxes.forEach(function(checkbox) {
+    let label = checkbox.nextSibling.textContent.trim();
+    let div = document.createElement('div');
+    div.className = 'sortable-item';
+    div.textContent = label;
+    div.setAttribute('data-id', checkbox.value);
+    operationsContainer.appendChild(div);
+  });
+
+  new Sortable(operationsContainer, {
+    animation: 150,
+    ghostClass: 'sortable-ghost'
+  });
+}
+
+function submitOperations(event) {
+  event.preventDefault();
+  selectedOperations = [];
+  let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
+  sortedItems.forEach(function(item, index) {
+    selectedOperations.push({operation_id: item.getAttribute('data-id'), order: index});
+  });
+  document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
+  document.getElementById('modelForm').submit();
+}
+
+document.getElementById('modelForm').addEventListener('submit', submitOperations);
+</script>
+{% endblock %}
+{% comment %} {% extends "base.html" %}
+{% load i18n %}
 {% block content %}
 <style>
   label {
@@ -33,4 +119,4 @@
     </div>
   </form>
 </div>
-{% endblock %}
+{% endblock %} {% endcomment %}

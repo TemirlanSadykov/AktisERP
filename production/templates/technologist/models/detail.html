@@ -5,10 +5,11 @@
 <div class="content-container">
   <h2 class="form-heading">{% trans "Model Details:" %} {{ model.name }}</h2>
 
+  <p><strong>{% trans "Assortment:" %}</strong> {{ model.assortment.name }}</p>
   <p><strong>{% trans "Operations:" %}</strong></p>
-  {% if model.operations.all %}
+  {% if ordered_operations %}
     <ul class="operations-list">
-      {% for operation in model.operations.all %}
+      {% for operation in ordered_operations %}
         <li class="operation-item">
           {{ operation.node.name }} - {{ operation.name }}
         </li>
@@ -19,13 +20,13 @@
   {% endif %}
 
   <div class="form-actions">
-    <a href="{% url 'model_create' %}?copy={{ model.id }}" class="btn edit-btn">{% trans "Copy" %}</a>
-    <a href="{% url 'model_edit' model.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="{% url 'model_create' model.assortment.pk %}?copy={{ model.id }}" class="btn edit-btn">{% trans "Copy" %}</a>
+    <a href="{% url 'model_edit' a_id=model.assortment.pk pk=model.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'model_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'model_list' model.assortment.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
-  <form id="deleteForm" action="{% url 'model_delete' model.pk %}" method="post" style="display:none;">
+  <form id="deleteForm" action="{% url 'model_delete' a_id=model.assortment.pk pk=model.pk %}" method="post" style="display:none;">
     {% csrf_token %}
   </form>
 </div>

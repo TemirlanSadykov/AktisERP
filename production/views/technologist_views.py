@@ -176,7 +176,10 @@ def error_update_status(request, pk):
 @technologist_required
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
-    operations = passport.order.model.operations.all()
+    model_operations = ModelOperation.objects.filter(
+        model=passport.order.model
+    ).select_related('operation').order_by('order')
+    operations = [model_op.operation for model_op in model_operations]
     size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -629,20 +632,25 @@ def operation_upload(request):
         try:
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
+            assortment_name = sheet['A1'].value
+            assortment, created = Assortment.objects.get_or_create(name=assortment_name, branch=request.user.userprofile.branch)
+            
             with transaction.atomic():
-                for row in sheet.iter_rows(min_row=2, values_only=True):
+                for row in sheet.iter_rows(min_row=3, values_only=True):
                     node_name, number, operation_name, equipment_name, time, price = row
                     node, _ = Node.objects.get_or_create(name=node_name)
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
                     
                     operation = Operation(
                         name=operation_name,
+                        number=number,
                         payment=price,
                         equipment=equipment,
                         node=node,
                         preferred_completion_time=time
                     )
                     operation.save()
+                    assortment.operations.add(operation)
 
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))
@@ -739,33 +747,29 @@ class ModelListView(ListView):
     context_object_name = 'models'
     paginate_by = 10
     def get_queryset(self):
-        return Model.objects.all().order_by('name')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ModelCreateView(CreateView):
-    model = Model
-    form_class = ModelForm
-    template_name = 'technologist/models/create.html'
-    success_url = reverse_lazy('model_list')
-
-    def get_form_kwargs(self):
-        kwargs = super(ModelCreateView, self).get_form_kwargs()
-        if 'copy' in self.request.GET:
-            copy_id = self.request.GET['copy']
-            copy_model = get_object_or_404(Model, pk=copy_id)
-            kwargs['initial'] = {'operations': copy_model.operations.all()}
-        return kwargs
-
-    def form_valid(self, form):
-        return super().form_valid(form)
-    
-    def form_invalid(self, form):
-        return super().form_invalid(form)
-
+        assortment_id = self.kwargs.get('a_id')
+        return Model.objects.filter(assortment=assortment_id).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['nodes'] = Node.objects.prefetch_related('operations').all()
+        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         return context
+
+@login_required
+@technologist_required
+def model_create(request, a_id):
+    assortment = get_object_or_404(Assortment, pk=a_id)
+    if request.method == 'POST':
+        form = ModelCustomForm(request.POST)
+        if form.is_valid():
+            model_instance = form.save(commit=False)
+            model_instance.assortment = assortment
+            model_instance.save()
+            form.save_operations(model_instance)
+            return redirect('model_list', a_id=a_id)
+    else:
+        form = ModelCustomForm()
+
+    return render(request, 'technologist/models/create.html', {'form': form})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -773,12 +777,27 @@ class ModelDetailView(DetailView):
     template_name = 'technologist/models/detail.html'
     context_object_name = 'model'
 
+    def get_context_data(self, **kwargs):
+        context = super(ModelDetailView, self).get_context_data(**kwargs)
+        model = context['model']
+        context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelUpdateView(UpdateView):
     model = Model
-    form_class = ModelForm
+    form_class = ModelCustomForm
     template_name = 'technologist/models/edit.html'
-    success_url = reverse_lazy('model_list')
+
+    def get_success_url(self):
+        a_id = self.kwargs.get('a_id')
+        return reverse('model_list', kwargs={'a_id': a_id})
+
+    def get_context_data(self, **kwargs):
+        context = super(ModelUpdateView, self).get_context_data(**kwargs)
+        context['a_id'] = self.kwargs.get('a_id')
+        context['pk'] = self.kwargs.get('pk')
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDeleteView(DeleteView):

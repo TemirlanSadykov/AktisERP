@@ -10,7 +10,7 @@
   <ul class="list-group">
     {% for assortment in assortments %}
       <li class="list-group-item">
-        <a href="{% url 'assortment_detail' assortment.pk %}">{{ assortment.name }}</a>
+        <a href="{% url 'model_list' assortment.pk %}">{{ assortment.name }}</a>
       </li>
     {% endfor %}
   </ul>

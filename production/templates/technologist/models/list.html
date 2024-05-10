@@ -4,13 +4,13 @@
 {% block content %}
 <div class="content-container">
   <div class="header">
-    <h2 class="list-heading">{% trans "Models" %}</h2>
-    <p class="create-link"><a href="{% url 'model_create' %}" class="btn create-btn">{% trans "Create" %}</a></p>
+    <h2 class="list-heading">{% trans "Models" %} {{ assortment.name }}</h2>
+    <p class="create-link"><a href="{% url 'model_create' assortment.pk %}" class="btn create-btn">{% trans "Create" %}</a></p>
   </div>
   <ul class="list-group">
     {% for model in models %}
       <li class="list-group-item">
-        <a href="{% url 'model_detail' model.pk %}">{{ model.name }}</a>
+        <a href="{% url 'model_detail' pk=model.pk a_id=assortment.pk %}">{{ model.name }}</a>
       </li>
     {% endfor %}
   </ul>

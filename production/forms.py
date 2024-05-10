@@ -10,6 +10,7 @@ from django.forms import inlineformset_factory
 from django.forms import ModelChoiceField
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
+import json
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -172,7 +173,7 @@ class PassportSizeForm(forms.ModelForm):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
+        fields = ['name', 'number', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
 
 class RollForm(forms.ModelForm):
     class Meta:
@@ -180,11 +181,6 @@ class RollForm(forms.ModelForm):
         fields = ['name', 'color', 'fabrics', 'meters']
 
 class AssortmentForm(forms.ModelForm):
-    class Meta:
-        model = Assortment
-        fields = ['name']
-
-class ModelForm(forms.ModelForm):
     operations = forms.ModelMultipleChoiceField(
         queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
         widget=forms.CheckboxSelectMultiple,
@@ -192,13 +188,74 @@ class ModelForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Model
+        model = Assortment
         fields = ['name', 'operations']
 
     def __init__(self, *args, **kwargs):
-        super(ModelForm, self).__init__(*args, **kwargs)
+        super(AssortmentForm, self).__init__(*args, **kwargs)
         common_operations = Operation.objects.filter(node__is_common=True)
         self.fields['operations'].initial = common_operations
+
+# class ModelForm(forms.ModelForm):
+#     operations = forms.ModelMultipleChoiceField(
+#         queryset=Operation.objects.none(),
+#         widget=forms.CheckboxSelectMultiple,
+#         required=False
+#     )
+
+#     class Meta:
+#         model = Model
+#         fields = ['name', 'assortment', 'operations']
+
+#     def __init__(self, *args, **kwargs):
+#         assortment_id = kwargs.pop('a_id', None)
+#         super(ModelForm, self).__init__(*args, **kwargs)
+
+#         if assortment_id:
+#             self.instance.assortment = Assortment.objects.get(pk=assortment_id)
+
+#         assortment_operations = Operation.objects.filter(
+#             assortments__id=assortment_id
+#         ).select_related('node').order_by('node__name', 'name')
+        
+#         self.fields['operations'].queryset = assortment_operations
+#         self.fields['operations'].initial = assortment_operations
+
+class ModelCustomForm(forms.ModelForm):
+    operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # This stores the JSON order data
+
+    class Meta:
+        model = Model
+        fields = ['name']
+
+    def __init__(self, *args, **kwargs):
+        super(ModelCustomForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['operations'] = forms.ModelMultipleChoiceField(
+                queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+                widget=forms.CheckboxSelectMultiple,
+                required=False
+            )
+            self.fields['operations'].initial = self.instance.operations.all().order_by('modeloperation__order')
+
+    def save(self, commit=True):
+        model_instance = super().save(commit=False)
+        if commit:
+            model_instance.save()
+            self.save_operations(model_instance)
+        return model_instance
+
+    def save_operations(self, model_instance):
+        import json
+        operations_data = self.cleaned_data.get('operations_data', '[]')
+        operations = json.loads(operations_data)
+        model_instance.modeloperation_set.all().delete()
+        for op_data in operations:
+            ModelOperation.objects.create(
+                model=model_instance,
+                operation_id=op_data['operation_id'],
+                order=op_data['order']
+            )
 
 class ClientForm(forms.ModelForm):
     class Meta:
