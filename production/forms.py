@@ -196,31 +196,6 @@ class AssortmentForm(forms.ModelForm):
         common_operations = Operation.objects.filter(node__is_common=True)
         self.fields['operations'].initial = common_operations
 
-# class ModelForm(forms.ModelForm):
-#     operations = forms.ModelMultipleChoiceField(
-#         queryset=Operation.objects.none(),
-#         widget=forms.CheckboxSelectMultiple,
-#         required=False
-#     )
-
-#     class Meta:
-#         model = Model
-#         fields = ['name', 'assortment', 'operations']
-
-#     def __init__(self, *args, **kwargs):
-#         assortment_id = kwargs.pop('a_id', None)
-#         super(ModelForm, self).__init__(*args, **kwargs)
-
-#         if assortment_id:
-#             self.instance.assortment = Assortment.objects.get(pk=assortment_id)
-
-#         assortment_operations = Operation.objects.filter(
-#             assortments__id=assortment_id
-#         ).select_related('node').order_by('node__name', 'name')
-        
-#         self.fields['operations'].queryset = assortment_operations
-#         self.fields['operations'].initial = assortment_operations
-
 class ModelCustomForm(forms.ModelForm):
     operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # This stores the JSON order data
 

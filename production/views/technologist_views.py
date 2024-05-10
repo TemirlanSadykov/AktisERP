@@ -758,6 +758,8 @@ class ModelListView(ListView):
 @technologist_required
 def model_create(request, a_id):
     assortment = get_object_or_404(Assortment, pk=a_id)
+    copy_id = request.GET.get('copy')
+    
     if request.method == 'POST':
         form = ModelCustomForm(request.POST)
         if form.is_valid():
@@ -767,9 +769,16 @@ def model_create(request, a_id):
             form.save_operations(model_instance)
             return redirect('model_list', a_id=a_id)
     else:
-        form = ModelCustomForm()
-
-    return render(request, 'technologist/models/create.html', {'form': form})
+        if copy_id:
+            model_to_copy = get_object_or_404(Model, pk=copy_id)
+            form = ModelCustomForm(instance=model_to_copy)
+            operations_data = [{"operation_id": op.operation.id, "order": op.order}
+                               for op in model_to_copy.modeloperation_set.all()]
+            form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
+            return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_to_copy})
+        else:
+            form = ModelCustomForm()
+            return render(request, 'technologist/models/create.html', {'form': form})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -783,27 +792,31 @@ class ModelDetailView(DetailView):
         context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
         return context
 
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ModelUpdateView(UpdateView):
-    model = Model
-    form_class = ModelCustomForm
-    template_name = 'technologist/models/edit.html'
-
-    def get_success_url(self):
-        a_id = self.kwargs.get('a_id')
-        return reverse('model_list', kwargs={'a_id': a_id})
-
-    def get_context_data(self, **kwargs):
-        context = super(ModelUpdateView, self).get_context_data(**kwargs)
-        context['a_id'] = self.kwargs.get('a_id')
-        context['pk'] = self.kwargs.get('pk')
-        return context
+@login_required
+@technologist_required
+def model_edit(request, pk, a_id):
+    model_instance = get_object_or_404(Model, pk=pk)
+    assortment = get_object_or_404(Assortment, pk=a_id)
+    
+    if request.method == 'POST':
+        form = ModelCustomForm(request.POST, instance=model_instance)
+        if form.is_valid():
+            updated_model = form.save()
+            return redirect('model_detail', a_id=a_id, pk=pk)
+    else:
+        form = ModelCustomForm(instance=model_instance)
+        operations_data = [{"operation_id": op.operation.id, "order": op.order}
+                           for op in model_instance.modeloperation_set.all()]
+        form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
+    
+    return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_instance})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
-    success_url = reverse_lazy('model_list')
+    def get_success_url(self):
+        return reverse('model_list', kwargs={'a_id': self.kwargs.get('a_id')})
 
 
 
