@@ -182,7 +182,7 @@ class RollForm(forms.ModelForm):
 
 class AssortmentForm(forms.ModelForm):
     operations = forms.ModelMultipleChoiceField(
-        queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+        queryset=Operation.objects.all().order_by('number'),
         widget=forms.CheckboxSelectMultiple,
         required=False
     )
@@ -204,9 +204,14 @@ class ModelCustomForm(forms.ModelForm):
         fields = ['name']
 
     def __init__(self, *args, **kwargs):
+        assortment_id = kwargs.pop('a_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
+        if assortment_id:
+            queryset = Assortment.objects.get(pk=assortment_id).operations.select_related('node').order_by('number')
+        else:
+            queryset = Operation.objects.select_related('node').order_by('number')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
-            queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+            queryset=queryset,
             widget=forms.CheckboxSelectMultiple,
             required=False
         )

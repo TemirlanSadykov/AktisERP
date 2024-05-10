@@ -112,7 +112,7 @@ class Operation(models.Model):
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
     def __str__(self):
-        return self.name
+        return f"{self.number} - {self.node.name} - {self.name}"
     
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')

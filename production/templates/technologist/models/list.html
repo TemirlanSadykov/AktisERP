@@ -4,7 +4,8 @@
 {% block content %}
 <div class="content-container">
   <div class="header">
-    <h2 class="list-heading">{% trans "Models" %} {{ assortment.name }}</h2>
+    <h2 class="list-heading">{{ assortment.name }}</h2>
+    <p class="create-link"><a href="{% url 'assortment_detail' assortment.pk %}" class="btn create-btn">{% trans "Details" %}</a></p>
     <p class="create-link"><a href="{% url 'model_create' assortment.pk %}" class="btn create-btn">{% trans "Create" %}</a></p>
   </div>
   <ul class="list-group">

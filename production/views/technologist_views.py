@@ -544,10 +544,10 @@ class OperationListView(ListView):
     model = Operation
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('name')
+        queryset = super().get_queryset().order_by('number')
         node_id = self.request.GET.get('node', None)
         if node_id:
             queryset = queryset.filter(node_id=node_id)
@@ -633,7 +633,10 @@ def operation_upload(request):
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
             assortment_name = sheet['A1'].value
-            assortment, created = Assortment.objects.get_or_create(name=assortment_name, branch=request.user.userprofile.branch)
+            assortment, created = Assortment.objects.get_or_create(
+                name=assortment_name, 
+                branch=request.user.userprofile.branch
+            )
             
             with transaction.atomic():
                 for row in sheet.iter_rows(min_row=3, values_only=True):
@@ -641,24 +644,32 @@ def operation_upload(request):
                     node, _ = Node.objects.get_or_create(name=node_name)
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
                     
-                    operation = Operation(
-                        name=operation_name,
+                    operation, created = Operation.objects.get_or_create(
                         number=number,
-                        payment=price,
-                        equipment=equipment,
-                        node=node,
-                        preferred_completion_time=time
+                        defaults={
+                            'name': operation_name,
+                            'equipment': equipment,
+                            'node': node,
+                            'preferred_completion_time': time,
+                            'payment': price
+                        }
                     )
-                    operation.save()
+
+                    if not created:
+                        operation.name = operation_name
+                        operation.equipment = equipment
+                        operation.node = node
+                        operation.preferred_completion_time = time
+                        operation.payment = price
+                        operation.save()
+                    
                     assortment.operations.add(operation)
 
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))
         except Exception as e:
             messages.error(request, f'There was an error processing the file: {e}')
-        finally:
-            if 'workbook' in locals():
-                workbook.close()
+            workbook.close()
         return HttpResponseRedirect(reverse_lazy('operation_list'))
     else:
         messages.error(request, 'There was an error with the file upload.')
@@ -725,12 +736,19 @@ class AssortmentDetailView(DetailView):
     template_name = 'technologist/assortments/detail.html'
     context_object_name = 'assortment'
 
+    def get_context_data(self, **kwargs):
+        context = super(AssortmentDetailView, self).get_context_data(**kwargs)
+        assortment = context['assortment']
+        context['operations'] = assortment.operations.all().order_by('number')
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
-    success_url = reverse_lazy('assortment_list')
+    def get_success_url(self):
+        return reverse('model_list', kwargs={'a_id': self.kwargs.get('pk')})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
@@ -761,7 +779,7 @@ def model_create(request, a_id):
     copy_id = request.GET.get('copy')
     
     if request.method == 'POST':
-        form = ModelCustomForm(request.POST)
+        form = ModelCustomForm(request.POST, a_id=a_id)
         if form.is_valid():
             model_instance = form.save(commit=False)
             model_instance.assortment = assortment
@@ -771,13 +789,13 @@ def model_create(request, a_id):
     else:
         if copy_id:
             model_to_copy = get_object_or_404(Model, pk=copy_id)
-            form = ModelCustomForm(instance=model_to_copy)
+            form = ModelCustomForm(instance=model_to_copy, a_id=a_id)
             operations_data = [{"operation_id": op.operation.id, "order": op.order}
                                for op in model_to_copy.modeloperation_set.all()]
             form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
             return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_to_copy})
         else:
-            form = ModelCustomForm()
+            form = ModelCustomForm(a_id=a_id)
             return render(request, 'technologist/models/create.html', {'form': form})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -804,7 +822,7 @@ def model_edit(request, pk, a_id):
             updated_model = form.save()
             return redirect('model_detail', a_id=a_id, pk=pk)
     else:
-        form = ModelCustomForm(instance=model_instance)
+        form = ModelCustomForm(instance=model_instance, a_id=a_id)
         operations_data = [{"operation_id": op.operation.id, "order": op.order}
                            for op in model_instance.modeloperation_set.all()]
         form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)

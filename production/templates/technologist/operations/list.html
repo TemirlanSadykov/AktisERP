@@ -50,7 +50,7 @@
     {% for operation in operations %}
       <li class="list-group-item">
         <a href="{% url 'operation_detail' operation.pk %}">
-          {{ operation.node }} - {{ operation.equipment }} - {{ operation.name }}
+          {{ operation.number }} - {{ operation.node }} - {{ operation.equipment }} - {{ operation.name }}
         </a>
       </li>
     {% endfor %}

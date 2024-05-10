@@ -80,8 +80,8 @@
                 <div class="checkbox">
                     <label>
                         <input type="checkbox" name="operations" value="{{ operation.id }}"
-                               {% if operation in model_instance.operations.all %}checked{% endif %}>
-                        {{ operation.node.name }} - {{ operation.name }}
+                        {% if operation in model_instance.operations.all %}checked{% endif %}>
+                        {{ operation }}
                     </label>
                 </div>
             {% endfor %}
