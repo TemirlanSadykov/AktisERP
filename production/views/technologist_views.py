@@ -434,8 +434,10 @@ def download_passport_excel(request, passport_id):
         cell.font = Font(bold=True)
         cell.alignment = Alignment(horizontal='center')
 
-    # Populate the worksheet with operations and their details
-    operations = passport.order.model.operations.all().order_by('node__name')
+    model_operations = ModelOperation.objects.filter(
+        model=passport.order.model
+    ).select_related('operation').order_by('order')
+    operations = [model_op.operation for model_op in model_operations]
 
     for index, operation in enumerate(operations, start=1):
         # Assume 'get_operation_details' is a method to fetch needed details
