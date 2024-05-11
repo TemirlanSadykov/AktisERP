@@ -243,7 +243,7 @@ class ClientForm(forms.ModelForm):
 class ClientOrderForm(forms.ModelForm):
     class Meta:
         model = ClientOrder
-        fields = ['order_number', 'client', 'term']
+        fields = ['order_number', 'client', 'term', 'status']
         widgets = {
             'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
         }
