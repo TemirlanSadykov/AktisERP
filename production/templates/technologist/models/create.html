@@ -66,6 +66,7 @@
 </style>
 <div class="assign-operations-container">
     <h2 class="form-heading">{% trans "Create New Model" %}</h2>
+        
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
@@ -75,12 +76,13 @@
         {% endif %}
         
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
+        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: calc(100% - 16px);">
         <div id="operationsContainer">
             {% for operation in form.fields.operations.queryset %}
-                <div class="checkbox">
+                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
                     <label>
                         <input type="checkbox" name="operations" value="{{ operation.id }}">
-                        {{ operation }}
+                        {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
                     </label>
                 </div>
             {% endfor %}
@@ -98,6 +100,21 @@
 
 <script>
 let selectedOperations = [];
+
+document.getElementById('searchOperations').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const operations = document.querySelectorAll('#operationsContainer .checkbox');
+
+    operations.forEach(op => {
+        const content = op.getAttribute('data-operation-content');
+        const numberPart = content.split('-')[0].trim(); // Assuming the number is always before the first '-'.
+        if (numberPart.includes(searchTerm)) {
+            op.style.display = '';
+        } else {
+            op.style.display = 'none';
+        }
+    });
+});
 
 function prepareOperations() {
     let checkedBoxes = document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked');
