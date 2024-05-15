@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+<div class="dashboard">
+    <header class="dashboard-header">
+        <h1>Advanced Dashboard</h1>
+    </header>
+    <div class="summary">
+        <div class="key-metric">Total Sales: $150,000</div>
+        <div class="key-metric">Total Expenses: $50,000</div>
+        <div class="key-metric">Net Profit: $100,000</div>
+    </div>
+    <div class="container">
+        <!-- Financial and Inventory Cards -->
+        <div class="card full-width">
+            <h2>Yearly Sales Overview</h2>
+            <canvas id="yearly-sales-chart"></canvas>
+        </div>
+        <div class="card">
+            <h2>Sales</h2>
+            <canvas id="sales-chart"></canvas>
+        </div>
+        <div class="card">
+            <h2>Expenses</h2>
+            <canvas id="expenses-chart"></canvas>
+        </div>
+        <div class="card">
+            <h2>Inventory</h2>
+            <p class="number">450 Items</p>
+        </div>
+        <div class="card">
+            <h2>Employee Count</h2>
+            <p class="number">85</p>
+        </div>
+
+        <!-- ERP-specific Modules -->
+        <div class="card">
+            <h2>Procurement</h2>
+            <p class="number">30 Orders</p>
+        </div>
+        <div class="card">
+            <h2>Manufacturing</h2>
+            <p class="number">Production Output: 400 Units</p>
+        </div>
+        <div class="card">
+            <h2>Order Management</h2>
+            <p class="number">Active Orders: 120</p>
+        </div>
+        <div class="card">
+            <h2>Warehouse Management</h2>
+            <p class="number">Stored Items: 1000</p>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chartsData = {
+            yearlySales: {labels: ["2019", "2020", "2021", "2022"], data: [100000, 120000, 150000, 180000], backgroundColor: 'rgba(46, 204, 113, 0.2)', borderColor: 'rgba(46, 204, 113, 1)'},
+            sales: {labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], data: [12000, 19000, 3000, 5000, 2000], backgroundColor: 'rgba(54, 162, 235, 0.2)', borderColor: 'rgba(54, 162, 235, 1)'},
+            expenses: {labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], data: [8000, 10000, 5000, 3000, 5000], backgroundColor: 'rgba(255, 99, 132, 0.2)', borderColor: 'rgba(255, 99, 132, 1)'}
+        };
+
+        var createChart = function(canvasId, type, data) {
+            var ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: canvasId.replace('-chart', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        data: data.data,
+                        backgroundColor: data.backgroundColor,
+                        borderColor: data.borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        };
+
+        createChart('yearly-sales-chart', 'line', chartsData.yearlySales);
+        createChart('sales-chart', 'line', chartsData.sales);
+        createChart('expenses-chart', 'bar', chartsData.expenses);
+
+        // Additional chart initialization can be added here for new ERP modules.
+    });
+</script>
+</body>
+</html>

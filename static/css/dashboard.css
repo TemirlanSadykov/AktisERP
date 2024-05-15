@@ -1,0 +1,67 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background: #f4f4f4;
+}
+
+.dashboard-header {
+    background-color: #34495e;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.summary {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+    background: linear-gradient(to right, #8e9eab, #eef2f3);
+}
+
+.key-metric {
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    font-size: 1.2em;
+    flex: 1;
+    margin: 0 10px;
+    text-align: center;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    /* Remove margin and width styles to adapt to grid */
+}
+
+.card.full-width {
+    grid-column: span 4; /* Adjust depending on the number of columns in the grid */
+}
+
+.card h2 {
+    color: #333;
+}
+
+.number {
+    font-size: 2em;
+    margin-top: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card.full-width {
+        grid-column: span 2; /* Full width on smaller screens */
+    }
+}

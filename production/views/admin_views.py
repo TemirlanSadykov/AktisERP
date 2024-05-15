@@ -44,6 +44,11 @@ def admin_page(request):
     }
     return render(request, 'admin_page.html', context)
 
+@login_required
+@admin_required
+def dashboard_view(request):
+    return render(request, 'dashboard.html')
+
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
     model = Branch
