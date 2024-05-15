@@ -7,80 +7,523 @@
     <title>Advanced Dashboard</title>
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="dashboard">
-    <header class="dashboard-header">
-        <h1>Advanced Dashboard</h1>
-    </header>
-    <div class="summary">
-        <div class="key-metric">Total Sales: $150,000</div>
-        <div class="key-metric">Total Expenses: $50,000</div>
-        <div class="key-metric">Net Profit: $100,000</div>
+    <div class="sidebar">
+        <div>
+            <h2>ERP Dashboard</h2>
+            <ul>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Overview')">Overview</a></li>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Production')">Production</a></li>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Inventory')">Inventory</a></li>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Orders')">Orders</a></li>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Maintenance')">Maintenance</a></li>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Employees')">Employees</a></li>
+            </ul>
+        </div>
     </div>
-    <div class="container">
-        <!-- Financial and Inventory Cards -->
-        <div class="card full-width">
-            <h2>Yearly Sales Overview</h2>
-            <canvas id="yearly-sales-chart"></canvas>
+    <div class="main-content">
+        <div id="Overview" class="tabcontent">
+            <div class="header">
+                <h1>Dashboard</h1>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <h3>Total Production</h3>
+                    <p>5000 units</p>
+                </div>
+                <div class="card">
+                    <h3>Inventory Levels</h3>
+                    <p>15000 items</p>
+                </div>
+                <div class="card">
+                    <h3>Open Orders</h3>
+                    <p>45</p>
+                </div>
+                <div class="card">
+                    <h3>Pending Maintenance</h3>
+                    <p>3 tasks</p>
+                </div>
+            </div>
+            <div class="charts">
+                <div class="chart" id="productionChartContainer">
+                    <canvas id="productionChart"></canvas>
+                </div>
+                <div class="chart" id="inventoryChartContainer">
+                    <canvas id="inventoryChart"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="card">
-            <h2>Sales</h2>
-            <canvas id="sales-chart"></canvas>
+        <div id="Production" class="tabcontent">
+            <h2>Production Overview</h2>
+            <div class="branch-switch">
+                <label for="branchSelect">Select Branch: </label>
+                <select id="branchSelect" onchange="switchBranch()">
+                    <option value="branch1">Branch 1</option>
+                    <option value="branch2">Branch 2</option>
+                </select>
+            </div>
+            <div id="branch1" class="branch">
+                <h3>Branch 1</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Employees</h4>
+                        <ul>
+                            <li>Employee 1</li>
+                            <li>Employee 2</li>
+                            <li>Employee 3</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Units Produced</h4>
+                        <p>2500 units</p>
+                    </div>
+                    <div class="card">
+                        <h4>Models Produced</h4>
+                        <ul>
+                            <li>Model A</li>
+                            <li>Model B</li>
+                            <li>Model C</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Defects</h4>
+                        <ul>
+                            <li>Defect 1</li>
+                            <li>Defect 2</li>
+                            <li>Defect 3</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Discrepancies</h4>
+                        <ul>
+                            <li>Discrepancy 1</li>
+                            <li>Discrepancy 2</li>
+                            <li>Discrepancy 3</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div id="branch2" class="branch" style="display: none;">
+                <h3>Branch 2</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Employees</h4>
+                        <ul>
+                            <li>Employee 4</li>
+                            <li>Employee 5</li>
+                            <li>Employee 6</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Units Produced</h4>
+                        <p>2500 units</p>
+                    </div>
+                    <div class="card">
+                        <h4>Models Produced</h4>
+                        <ul>
+                            <li>Model D</li>
+                            <li>Model E</li>
+                            <li>Model F</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Defects</h4>
+                        <ul>
+                            <li>Defect 4</li>
+                            <li>Defect 5</li>
+                            <li>Defect 6</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Discrepancies</h4>
+                        <ul>
+                            <li>Discrepancy 4</li>
+                            <li>Discrepancy 5</li>
+                            <li>Discrepancy 6</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card">
-            <h2>Expenses</h2>
-            <canvas id="expenses-chart"></canvas>
-        </div>
-        <div class="card">
+        <div id="Inventory" class="tabcontent">
             <h2>Inventory</h2>
-            <p class="number">450 Items</p>
+            <h3>Rolls (Fabrics)</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fabric</th>
+                        <th>Color</th>
+                        <th>Number</th>
+                        <th>Amount Left</th>
+                        <th>Being Used</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cotton</td>
+                        <td>Red</td>
+                        <td>200</td>
+                        <td>150</td>
+                        <td>50</td>
+                    </tr>
+                    <tr>
+                        <td>Polyester</td>
+                        <td>Blue</td>
+                        <td>150</td>
+                        <td>100</td>
+                        <td>50</td>
+                    </tr>
+                    <tr>
+                        <td>Wool</td>
+                        <td>Green</td>
+                        <td>100</td>
+                        <td>80</td>
+                        <td>20</td>
+                    </tr>
+                </tbody>
+            </table>
+            <h3>Accessories</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Accessory</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Amount Left</th>
+                        <th>Being Used</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Buttons</td>
+                        <td>Plastic</td>
+                        <td>5000</td>
+                        <td>4000</td>
+                        <td>1000</td>
+                    </tr>
+                    <tr>
+                        <td>Zippers</td>
+                        <td>Metal</td>
+                        <td>3000</td>
+                        <td>2500</td>
+                        <td>500</td>
+                    </tr>
+                    <tr>
+                        <td>Threads</td>
+                        <td>Cotton</td>
+                        <td>7000</td>
+                        <td>6500</td>
+                        <td>500</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div class="card">
-            <h2>Employee Count</h2>
-            <p class="number">85</p>
+        <div id="Orders" class="tabcontent">
+            <h2>Orders</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Client</th>
+                        <th>Status</th>
+                        <th>Quantity</th>
+                        <th>Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#1001</td>
+                        <td>Client A</td>
+                        <td><span class="status pending">Pending</span></td>
+                        <td>1000</td>
+                        <td>2024-05-20</td>
+                    </tr>
+                    <tr>
+                        <td>#1002</td>
+                        <td>Client B</td>
+                        <td><span class="status in-progress">In Progress</span></td>
+                        <td>500</td>
+                        <td>2024-05-22</td>
+                    </tr>
+                    <tr>
+                        <td>#1003</td>
+                        <td>Client C</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td>2000</td>
+                        <td>2024-05-18</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-
-        <!-- ERP-specific Modules -->
-        <div class="card">
-            <h2>Procurement</h2>
-            <p class="number">30 Orders</p>
+        <div id="Maintenance" class="tabcontent">
+            <h2>Maintenance</h2>
+            <div class="equipment-switch">
+                <label for="equipmentSelect">Select Equipment: </label>
+                <select id="equipmentSelect" onchange="switchEquipment()">
+                    <option value="machineA">Machine A</option>
+                    <option value="machineB">Machine B</option>
+                    <option value="machineC">Machine C</option>
+                    <option value="machineD">Machine D</option>
+                    <option value="machineE">Machine E</option>
+                </select>
+            </div>
+            <div id="machineA" class="equipment">
+                <h3>Machine A</h3>
+                <p>Details about Machine A operations and usage.</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Times Used Per Day</th>
+                            <th>Duration Per Operation (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cutting</td>
+                            <td>10</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>Cutting Patterns</td>
+                            <td>10</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td>Cutting Layers</td>
+                            <td>10</td>
+                            <td>15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="machineB" class="equipment" style="display: none;">
+                <h3>Machine B</h3>
+                <p>Details about Machine B operations and usage.</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Times Used Per Day</th>
+                            <th>Duration Per Operation (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sewing Pocket</td>
+                            <td>8</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>Sewing Crew</td>
+                            <td>8</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>Sewing Sleeve</td>
+                            <td>8</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>Sewing Front</td>
+                            <td>8</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>Sewing Back</td>
+                            <td>8</td>
+                            <td>20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="machineC" class="equipment" style="display: none;">
+                <h3>Machine C</h3>
+                <p>Details about Machine C operations and usage.</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Times Used Per Day</th>
+                            <th>Duration Per Operation (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Assembling</td>
+                            <td>12</td>
+                            <td>10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="machineD" class="equipment" style="display: none;">
+                <h3>Machine D</h3>
+                <p>Details about Machine D operations and usage.</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Times Used Per Day</th>
+                            <th>Duration Per Operation (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Painting</td>
+                            <td>6</td>
+                            <td>25</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="machineE" class="equipment" style="display: none;">
+                <h3>Machine E</h3>
+                <p>Details about Machine E operations and usage.</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Times Used Per Day</th>
+                            <th>Duration Per Operation (minutes)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Packaging 1</td>
+                            <td>15</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td>Packaging 2</td>
+                            <td>15</td>
+                            <td>5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="card">
-            <h2>Manufacturing</h2>
-            <p class="number">Production Output: 400 Units</p>
-        </div>
-        <div class="card">
-            <h2>Order Management</h2>
-            <p class="number">Active Orders: 120</p>
-        </div>
-        <div class="card">
-            <h2>Warehouse Management</h2>
-            <p class="number">Stored Items: 1000</p>
+        <div id="Employees" class="tabcontent">
+            <h2>Employees</h2>
+            <ul class="employee-list">
+                <li><a href="#" onclick="showEmployeeModal('Employee 1')">Employee 1</a></li>
+                <li><a href="#" onclick="showEmployeeModal('Employee 2')">Employee 2</a></li>
+                <li><a href="#" onclick="showEmployeeModal('Employee 3')">Employee 3</a></li>
+                <li><a href="#" onclick="showEmployeeModal('Employee 4')">Employee 4</a></li>
+                <li><a href="#" onclick="showEmployeeModal('Employee 5')">Employee 5</a></li>
+            </ul>
         </div>
     </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var chartsData = {
-            yearlySales: {labels: ["2019", "2020", "2021", "2022"], data: [100000, 120000, 150000, 180000], backgroundColor: 'rgba(46, 204, 113, 0.2)', borderColor: 'rgba(46, 204, 113, 1)'},
-            sales: {labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], data: [12000, 19000, 3000, 5000, 2000], backgroundColor: 'rgba(54, 162, 235, 0.2)', borderColor: 'rgba(54, 162, 235, 1)'},
-            expenses: {labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], data: [8000, 10000, 5000, 3000, 5000], backgroundColor: 'rgba(255, 99, 132, 0.2)', borderColor: 'rgba(255, 99, 132, 1)'}
-        };
+    <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h4 id="employeeName"></h4>
+                    <p id="employeeEarnings"></p>
+                    <p id="employeeEfficiency"></p>
+                    <canvas id="employeeChart"></canvas>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        var createChart = function(canvasId, type, data) {
-            var ctx = document.getElementById(canvasId).getContext('2d');
-            return new Chart(ctx, {
-                type: type,
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        let employeeChartInstance = null;
+
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        function switchBranch() {
+            var branchSelect = document.getElementById("branchSelect");
+            var branch1 = document.getElementById("branch1");
+            var branch2 = document.getElementById("branch2");
+
+            if (branchSelect.value === "branch1") {
+                branch1.style.display = "block";
+                branch2.style.display = "none";
+            } else {
+                branch1.style.display = "none";
+                branch2.style.display = "block";
+            }
+        }
+
+        function switchEquipment() {
+            var equipmentSelect = document.getElementById("equipmentSelect");
+            var equipments = document.getElementsByClassName("equipment");
+
+            for (var i = 0; i < equipments.length; i++) {
+                equipments[i].style.display = "none";
+            }
+
+            var selectedEquipment = document.getElementById(equipmentSelect.value);
+            if (selectedEquipment) {
+                selectedEquipment.style.display = "block";
+            }
+        }
+
+        function showEmployeeModal(employeeName) {
+            var earnings = {
+                "Employee 1": "$5000",
+                "Employee 2": "$4800",
+                "Employee 3": "$4700",
+                "Employee 4": "$4900",
+                "Employee 5": "$5100"
+            };
+
+            var efficiency = {
+                "Employee 1": { defects: 2, discrepancies: 1, completedOnTime: 50, completedOffTime: 5 },
+                "Employee 2": { defects: 3, discrepancies: 2, completedOnTime: 48, completedOffTime: 7 },
+                "Employee 3": { defects: 1, discrepancies: 1, completedOnTime: 49, completedOffTime: 6 },
+                "Employee 4": { defects: 4, discrepancies: 3, completedOnTime: 45, completedOffTime: 8 },
+                "Employee 5": { defects: 2, discrepancies: 2, completedOnTime: 52, completedOffTime: 4 }
+            };
+
+            document.getElementById('employeeName').innerText = employeeName;
+            document.getElementById('employeeEarnings').innerText = "Earnings: " + earnings[employeeName];
+            var eff = efficiency[employeeName];
+            document.getElementById('employeeEfficiency').innerText = `Efficiency: Defects: ${eff.defects}, Discrepancies: ${eff.discrepancies}, Completed On Time: ${eff.completedOnTime}, Completed Off Time: ${eff.completedOffTime}`;
+
+            if (employeeChartInstance) {
+                employeeChartInstance.destroy();
+            }
+
+            var ctx = document.getElementById('employeeChart').getContext('2d');
+            employeeChartInstance = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: data.labels,
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                     datasets: [{
-                        label: canvasId.replace('-chart', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                        data: data.data,
-                        backgroundColor: data.backgroundColor,
-                        borderColor: data.borderColor,
-                        borderWidth: 1
+                        label: 'Efficiency',
+                        data: [80, 85, 88, 90, 87, 85], // Sample data
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: false
                     }]
                 },
                 options: {
@@ -91,14 +534,43 @@
                     }
                 }
             });
-        };
 
-        createChart('yearly-sales-chart', 'line', chartsData.yearlySales);
-        createChart('sales-chart', 'line', chartsData.sales);
-        createChart('expenses-chart', 'bar', chartsData.expenses);
+            $('#employeeModal').modal('show');
+        }
 
-        // Additional chart initialization can be added here for new ERP modules.
-    });
-</script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var productionData = [500, 600, 700, 800, 900, 1000];
+            var inventoryData = [1000, 950, 900, 850, 800, 750];
+
+            var createChart = function(id, data, title) {
+                var ctx = document.getElementById(id).getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: title,
+                            data: data,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            createChart('productionChart', productionData, 'Monthly Production');
+            createChart('inventoryChart', inventoryData, 'Inventory Levels');
+
+            document.querySelector(".tablink").click();
+        });
+    </script>
 </body>
 </html>
