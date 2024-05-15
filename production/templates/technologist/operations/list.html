@@ -17,6 +17,7 @@
       <button id="upload_button" type="button" class="btn create-btn" data-toggle="modal" data-target="#uploadModal">
         {% trans "Upload from Excel" %}
       </button>
+      <a href="{% url 'operation_download' %}" class="btn create-btn">{% trans "Download Excel" %}</a>
     </p>
   </div>
   <div class="modal" id="uploadModal">

@@ -634,18 +634,14 @@ def operation_upload(request):
         try:
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
-            assortment_name = sheet['A1'].value
-            assortment, created = Assortment.objects.get_or_create(
-                name=assortment_name, 
-                branch=request.user.userprofile.branch
-            )
-            
+
             with transaction.atomic():
-                for row in sheet.iter_rows(min_row=3, values_only=True):
-                    node_name, number, operation_name, equipment_name, time, price = row
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    assortment_names, number, operation_name, node_name, equipment_name, time, price = row
+
                     node, _ = Node.objects.get_or_create(name=node_name)
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
-                    
+
                     operation, created = Operation.objects.get_or_create(
                         number=number,
                         defaults={
@@ -664,8 +660,14 @@ def operation_upload(request):
                         operation.preferred_completion_time = time
                         operation.payment = price
                         operation.save()
-                    
-                    assortment.operations.add(operation)
+
+                    assortment_names_list = [name.strip() for name in assortment_names.split(',')]
+                    for assortment_name in assortment_names_list:
+                        assortment, created = Assortment.objects.get_or_create(
+                            name=assortment_name,
+                            branch=request.user.userprofile.branch
+                        )
+                        assortment.operations.add(operation)
 
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))
@@ -677,6 +679,36 @@ def operation_upload(request):
         messages.error(request, 'There was an error with the file upload.')
         return HttpResponseRedirect(reverse_lazy('operation_upload'))
 
+@login_required
+@technologist_required
+def operation_download(request):
+    # Create an in-memory workbook
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Operations"
+
+    # Add headers to the first row
+    headers = ["Ассортимент", "№ПП", "Тех-процесс", "Узел", "Оборудование", "Время", "Оплата"]
+    sheet.append(headers)
+
+    # Add data rows
+    for operation in Operation.objects.all().order_by('number'):
+        assortments = ", ".join(assortment.name for assortment in operation.assortments.all())
+        row = [
+            assortments,
+            operation.number,
+            operation.name,
+            operation.node.name if operation.node else "",
+            operation.equipment.name if operation.equipment else "",
+            operation.preferred_completion_time,
+            operation.payment,
+        ]
+        sheet.append(row)
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=operations.xlsx'
+    workbook.save(response)
+    return response
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
