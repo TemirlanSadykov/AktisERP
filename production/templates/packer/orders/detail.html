@@ -27,7 +27,7 @@
   <table class="table">
     <thead>
       <tr>
-        <th>{% trans "Size" %}</th>
+        <th>{% trans "Size\Passport" %}</th>
         {% for passport in passports %}
         <th>№{{ passport.id }}</th>
         {% endfor %}
@@ -49,6 +49,8 @@
                       data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
                       {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 4 %} checked {% endif %}
                       {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" < 3 %} disabled {% endif %}>
+                      ({{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }})
+
             {% endif %}
           </td>
           {% endfor %}

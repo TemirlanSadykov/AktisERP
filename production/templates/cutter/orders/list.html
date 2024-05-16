@@ -16,7 +16,7 @@
     {% for order_info in orders_with_days_left %}
       <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
         <a href="{% url 'order_detail_cutter' order_info.order.pk %}" style="flex-grow: 1;">
-          {{ order_info.order.model.name }}
+          {{ order_info.order.model.name }} - {{ order_info.order.color }} - {{ order_info.order.fabrics }}
         </a>
         <span style="flex-shrink: 0;">{% trans "Days left:" %} {{ order_info.days_left }}</span>
       </li>
