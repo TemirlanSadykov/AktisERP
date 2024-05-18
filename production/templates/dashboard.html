@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,6 +22,7 @@
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Orders')">Orders</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Maintenance')">Maintenance</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Employees')">Employees</a></li>
+                <li><a href="{% url 'user_redirect' %}">{% trans 'Home' %}</a></li>
             </ul>
         </div>
     </div>

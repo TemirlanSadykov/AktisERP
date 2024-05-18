@@ -15,7 +15,7 @@ urlpatterns = [
     path('qc/', qc_page, name='qc_page'),
     path('packer/', packer_page, name='packer_page'),
 
-    path('admin/dashboard/', dashboard_view, name='dashboard'),
+    path('admin/dashboard/', dashboard_page, name='dashboard_page'),
 
     path('admin/branches/', BranchListView.as_view(), name='branch_list'),
     path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
