@@ -16,6 +16,7 @@
         <div>
             <h2>ERP Dashboard</h2>
             <ul>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Clients')">Clients</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Overview')">Overview</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Production')">Production</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Inventory')">Inventory</a></li>
@@ -58,6 +59,35 @@
                 </div>
             </div>
         </div>
+        <div id="Clients" class="tabcontent" style="display: none;">
+            <h2>Client Rankings</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Client Orders (Number - Models)</th>
+                        <th>Total Value of Ordered Amount (сом)</th>
+                        <th>Total Ordered Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in client_data %}
+                    <tr>
+                        <td>{{ client.client }}</td>
+                        <td>
+                            {% for number, models in client.client_orders_details %}
+                                {% for model in models %}
+                                    <strong>{{ number }}:</strong> {{ model }}<br>
+                                {% endfor %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ client.total_ordered_amount_by_orders }}</td>
+                        <td>{{ client.total_ordered_amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>        
         <div id="Production" class="tabcontent">
             <h2>Production Overview</h2>
             <div class="branch-switch">

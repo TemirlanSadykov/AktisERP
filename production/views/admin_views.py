@@ -29,7 +29,7 @@ from urllib.parse import urlencode
 from django.db import transaction
 from django.db.models import F, Window
 from collections import defaultdict
-from django.db.models import Count, Q
+from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncDay
 import openpyxl
 from django.db.models.functions import Lead
@@ -47,7 +47,31 @@ def admin_page(request):
 @login_required
 @admin_required
 def dashboard_page(request):
-    return render(request, 'dashboard.html')
+    clients = Client.objects.all()
+    client_data = []
+
+    for client in clients:
+        client_orders = ClientOrder.objects.filter(client=client)
+        orders = Order.objects.filter(client_order__in=client_orders)
+        
+        total_ordered_amount_by_orders = orders.aggregate(total_amount=Sum(F('quantity') * F('payment')))['total_amount'] or 0
+        total_ordered_amount = client_orders.aggregate(total_amount=Sum('orders__quantity'))['total_amount'] or 0
+        
+        client_orders_details = [
+            (co.order_number, list(co.orders.values_list('model__name', flat=True)))
+            for co in client_orders
+        ]
+
+        client_data.append({
+            'client': client.name,
+            'client_orders_details': client_orders_details,
+            'total_ordered_amount_by_orders': total_ordered_amount_by_orders,
+            'total_ordered_amount': total_ordered_amount
+        })
+
+    client_data = sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
+
+    return render(request, 'dashboard.html', {'client_data': client_data})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
