@@ -11,7 +11,7 @@
     <div class="employee-cards-container">
         {% for reassigned_work in reassigned_works %}
         <div class="employee-card">
-            <div class="employee-operation-name">{{ reassigned_work.original_assigned_work.work.operation.name }}</div>
+            <div class="employee-operation-name">{{ reassigned_work.original_assigned_work.work.operation.name }} ({{ reassigned_work.original_assigned_work.work.operation.number }})</div>
             <div class="employee-operation-photo">
             {% if reassigned_work.original_assigned_work.work.operation.photo %}
                 <img src="{{ reassigned_work.original_assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">

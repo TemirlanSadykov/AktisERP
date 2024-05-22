@@ -5,12 +5,12 @@
 <div class="content-container">
   <div class="header">
     <h2 class="list-heading">{% trans "Assortments" %}</h2>
-    <p class="create-link"><a href="{% url 'assortment_create' %}" class="btn create-btn">{% trans "Create New Assortment" %}</a></p>
+    <p class="create-link"><a href="{% url 'assortment_create' %}" class="btn create-btn">{% trans "Create Assortment" %}</a></p>
   </div>
   <ul class="list-group">
     {% for assortment in assortments %}
       <li class="list-group-item">
-        <a href="{% url 'assortment_detail' assortment.pk %}">{{ assortment.name }}</a>
+        <a href="{% url 'model_list' assortment.pk %}">{{ assortment.name }}</a>
       </li>
     {% endfor %}
   </ul>

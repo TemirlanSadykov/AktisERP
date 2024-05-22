@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
+<div class="assign-operations-container">
   <div class="filter-header">
     <h2 class="list-heading">{% trans "Work Details for" %} {{ employee.user.get_full_name }}</h2>
     <form method="get" class="date-filter-form">
@@ -63,6 +63,9 @@
     <thead>
       <tr>
         <th>{% trans "Type" %}</th>
+        <th>{% trans "Passport" %}</th>
+        <th>{% trans "Size" %}</th>
+        <th>{% trans "Quantity" %}</th>
         <th>{% trans "Reported Date" %}</th>
         <th>{% trans "Cost" %}</th>
       </tr>
@@ -71,6 +74,9 @@
       {% for error in errors %}
       <tr>
         <td>{{ error.type }}</td>
+        <td>{{ error.passport }}</td>
+        <td>{{ error.size }}</td>
+        <td>{{ error.quantity }}</td>
         <td>{{ error.reported_date|date:"Y-m-d H:i:s" }}</td>
         <td>{{ error.cost|floatformat:2 }} {% trans "Som" %}</td>
       </tr>

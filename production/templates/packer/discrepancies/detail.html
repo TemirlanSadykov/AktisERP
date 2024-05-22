@@ -3,24 +3,25 @@
 
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Discrepancy Details" %} №{{ discrepancy.id }}</h2>
+  <h2 class="form-heading">{% trans "Discrepancy Details:" %} {{ error.passport.id }} - {{ error.size_quantity.size }}</h2>
 
   <div class="details">
-    <p><strong>{% trans "Order" %}:</strong> {{ discrepancy.passport.order.client_order.order_number }} - {{ discrepancy.passport.order.name }}</p>
-    <p><strong>{% trans "Passport" %}:</strong> {{ discrepancy.passport.id }} </p>
-    <p><strong>{% trans "Size" %}:</strong> {{ discrepancy.size_quantity.size }}</p>
-    <p><strong>{% trans "Quantity" %}:</strong> {{ discrepancy.quantity }}</p>
-    <p><strong>{% trans "Reported Date" %}:</strong> {{ discrepancy.reported_date|date:"Y-m-d" }}</p>
-    <p><strong>{% trans "Resolved Date" %}:</strong> {{ discrepancy.resolved_date|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Model" %}:</strong> {{ error.passport.order.model.name }}</p>
+    <p><strong>{% trans "Passport" %}:</strong> {{ error.passport.id }} </p>
+    <p><strong>{% trans "Size" %}:</strong> {{ error.size_quantity.size }}</p>
+    <p><strong>{% trans "Quantity" %}:</strong> {{ error.quantity }}</p>
+    <p><strong>{% trans "Status" %}:</strong> {{ error.get_status_display }}</p>
+    <p><strong>{% trans "Reported Date" %}:</strong> {{ error.reported_date|date:"Y-m-d" }}</p>
+    <p><strong>{% trans "Resolved Date" %}:</strong> {{ error.resolved_date|date:"Y-m-d" }}</p>
   </div>
 
   <div class="form-actions secondary">
-    <a href="{% url 'discrepancy_edit' order_pk=discrepancy.passport.order.id pk=discrepancy.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
+    <a href="{% url 'discrepancy_edit' order_pk=error.passport.order.id pk=error.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'order_detail_packer' discrepancy.passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+    <a href="{% url 'order_detail_packer' error.passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 
-  <form id="deleteForm" action="{% url 'discrepancy_delete' order_pk=discrepancy.passport.order.pk pk=discrepancy.pk %}" method="post" style="display:none;">
+  <form id="deleteForm" action="{% url 'discrepancy_delete' order_pk=error.passport.order.pk pk=error.pk %}" method="post" style="display:none;">
     {% csrf_token %}
   </form>
 </div>

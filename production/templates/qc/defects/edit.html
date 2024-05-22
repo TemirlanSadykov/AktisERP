@@ -3,13 +3,13 @@
 
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Edit Defect:" %} {{ defect.id }}</h2>
+  <h2 class="form-heading">{% trans "Edit Defect:" %} {{ error.passport.id }} - {{ error.size_quantity.size }}</h2>
   <form method="post" class="crud-form">
     {% csrf_token %}
     {{ form.as_p }}
     <div class="form-actions">
       <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
-      <a href="{% url 'defect_detail' order_pk=defect.passport.order.pk pk=defect.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+      <a href="{% url 'defect_detail' order_pk=error.passport.order.pk pk=error.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
     </div>
   </form>
 </div>

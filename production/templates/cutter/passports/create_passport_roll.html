@@ -72,9 +72,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    console.log('Meters update successful');
+                    alert('Успешное обновление');
                 } else {
-                    alert('Failed to update meters');
+                    alert('Не получилось обновить');
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -96,9 +96,9 @@
                         if (parentLi) {
                             parentLi.remove();
                         }
-                        console.log('Delete successful');
+                        alert('Успешное удаление');
                     } else {
-                        alert('Failed to delete passport roll');
+                        alert('Не получилось удалить');
                     }
                 })
                 .catch(error => console.error('Error:', error));

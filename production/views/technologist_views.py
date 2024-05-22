@@ -83,11 +83,9 @@ class OrderDetailTechnologistView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['defects'] = Defect.objects.filter(passport=passport)
-            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
+            context['errors'] = Error.objects.filter(passport=passport).order_by('error_type')
         else:
-            context['defects'] = Defect.objects.none()
-            context['discrepancies'] = Discrepancy.objects.none()
+            context['errors'] = Error.objects.none()
 
         passports = order.passports.all()
         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
@@ -121,115 +119,68 @@ class OrderDetailTechnologistView(DetailView):
     
 @login_required
 @technologist_required
-def defect_detail(request, pk):
+def error_detail(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        defect = Defect.objects.filter(pk=pk).values(
-            'pk',
-            'passport__id',
-            'size_quantity__size',
-            'size_quantity__id', 
-            'quantity',
-            'defect_type',
-            'severity',
-            'cost',
-            'status',
-            'reported_date',
-            'resolved_date'
+        error = Error.objects.filter(pk=pk).values(
+            'pk', 'passport__id', 'size_quantity__size', 'size_quantity__id',
+            'quantity', 'error_type', 'defect_type', 'cost', 'status',
+            'reported_date', 'resolved_date'
         ).first()
 
-        if defect:
-            defect['reported_date'] = defect['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
-            defect['resolved_date'] = defect['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if defect['resolved_date'] else None
+        if error:
+            error['reported_date'] = error['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
+            error['resolved_date'] = error['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if error['resolved_date'] else None
+            error['status'] = Error.Status(error['status']).label
+            if 'defect_type' in error and error['defect_type']:
+                error['defect_type'] = Error.DefectType(error['defect_type']).label
 
-            works = AssignedWork.objects.filter(
-                work__passport_id=defect['passport__id'],
-                work__passport_size__size_quantity_id=defect['size_quantity__id']
-            ).select_related('employee')
-            employee_ids = [work.employee.employee_id for work in works]
-            defect['responsible_employees'] = employee_ids
+            if error['error_type'] == 'DEFECT':
+                works = AssignedWork.objects.filter(
+                    work__passport_id=error['passport__id'],
+                    work__passport_size__size_quantity_id=error['size_quantity__id']
+                ).select_related('employee')
+                employee_ids = [work.employee.employee_id for work in works]
+                error['responsible_employees'] = employee_ids
             
-            return JsonResponse({'defect': defect}, status=200)
+            return JsonResponse({'error': error}, status=200)
         else:
-            return JsonResponse({'error': 'Defect not found'}, status=404)
+            return JsonResponse({'error': 'Error not found'}, status=404)
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
     
 @login_required
 @technologist_required
 @require_POST
-def defect_update_status_technologist(request, pk):
+def error_update_status(request, pk):
     try:
         data = json.loads(request.body)
         new_status = data.get('status')
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-    if new_status not in [choice[0] for choice in Defect.Status.choices]:
+    
+    valid_statuses = [choice[0] for choice in Error.Status.choices]
+    if new_status not in valid_statuses:
         return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
 
     try:
-        defect = Defect.objects.get(pk=pk)
-        defect.status = new_status
-        defect.resolved_date = timezone.now() if new_status == Defect.Status.RESOLVED else None
-        defect.save()
+        error = Error.objects.get(pk=pk)
+        error.status = new_status
+        error.resolved_date = timezone.now() if new_status == Error.Status.RESOLVED else None
+        error.save()
 
-        return JsonResponse({'status': 'success', 'message': 'Defect status updated successfully'})
-    except Defect.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Defect not found'}, status=404)
-    
-@login_required
-@technologist_required
-def discrepancy_detail(request, pk):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        discrepancy = Discrepancy.objects.filter(pk=pk).values(
-            'pk',
-            'passport__id',
-            'size_quantity__size',
-            'quantity',
-            'cost',
-            'status',
-            'reported_date',
-            'resolved_date'
-        ).first()
-
-        if discrepancy:
-            discrepancy['reported_date'] = discrepancy['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
-            discrepancy['resolved_date'] = discrepancy['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if discrepancy['resolved_date'] else None
-            
-            return JsonResponse({'discrepancy': discrepancy}, status=200)
-        else:
-            return JsonResponse({'error': 'Discrepancy not found'}, status=404)
-    else:
-        return JsonResponse({'error': 'Invalid request'}, status=400)
-    
-@login_required
-@technologist_required
-@require_POST
-def discrepancy_update_status_technologist(request, pk):
-    try:
-        data = json.loads(request.body)
-        new_status = data.get('status')
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-    if new_status not in [choice[0] for choice in Discrepancy.Status.choices]:
-        return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
-
-    try:
-        discrepancy = Discrepancy.objects.get(pk=pk)
-        discrepancy.status = new_status
-        discrepancy.resolved_date = timezone.now() if new_status == Discrepancy.Status.RESOLVED else None
-        discrepancy.save()
-
-        return JsonResponse({'status': 'success', 'message': 'Discrepancy status updated successfully'})
-    except Discrepancy.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Discrepancy not found'}, status=404)
-    
+        return JsonResponse({'status': 'success', 'message': 'Error status updated successfully'})
+    except Error.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Error not found'}, status=404)    
 
 @login_required
 @technologist_required
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
-    operations = passport.order.model.operations.all()
-    size_quantities = PassportSize.objects.filter(passport=passport)
+    model_operations = ModelOperation.objects.filter(
+        model=passport.order.model
+    ).select_related('operation').order_by('order')
+    operations = [model_op.operation for model_op in model_operations]
+    size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         data = json.loads(request.body)
@@ -241,7 +192,6 @@ def assign_operations(request, passport_id):
             with transaction.atomic():
                 passport_size = PassportSize.objects.get(id=passport_size_id)
                 total_quantity = passport_size.quantity
-                assigned_quantity_sum = 0
 
                 entries = value.split(',')
                 for entry in entries:
@@ -267,11 +217,7 @@ def assign_operations(request, passport_id):
                         employee=employee_profile,
                         quantity=quantity
                     )
-                    assigned_quantity_sum += quantity
                     
-                if assigned_quantity_sum != total_quantity:
-                    raise ValueError("Assigned quantities do not match the required total.")
-
                 return JsonResponse({'status': 'success'})
 
         except Exception as e:
@@ -488,8 +434,10 @@ def download_passport_excel(request, passport_id):
         cell.font = Font(bold=True)
         cell.alignment = Alignment(horizontal='center')
 
-    # Populate the worksheet with operations and their details
-    operations = passport.order.model.operations.all().order_by('node__name')
+    model_operations = ModelOperation.objects.filter(
+        model=passport.order.model
+    ).select_related('operation').order_by('order')
+    operations = [model_op.operation for model_op in model_operations]
 
     for index, operation in enumerate(operations, start=1):
         # Assume 'get_operation_details' is a method to fetch needed details
@@ -548,6 +496,8 @@ def download_passport_excel(request, passport_id):
     for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
         ws.cell(row=size_header_row, column=size_col).font = bold_font
 
+    ws.column_dimensions['D'].width = 50
+
     # Set the HTTP response with a content-type for Excel file
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -559,7 +509,6 @@ def download_passport_excel(request, passport_id):
     return response
 
 def get_operation_details(operation, passport_sizes):
-    # Start with the name of the operation and the name of the equipment
     details = [
         operation.node.name,
         operation.equipment.name,
@@ -568,26 +517,24 @@ def get_operation_details(operation, passport_sizes):
         operation.preferred_completion_time
     ]
 
-    # Fetch the related AssignedWork for each size and collect employee IDs
-    for passport_size in passport_sizes:
-        # Get the assigned works
+    # Ensure the sizes are sorted consistently
+    sorted_sizes = sorted(passport_sizes, key=lambda x: x.size_quantity.size)
+    
+    # Fetch and accumulate details for each sorted size
+    for passport_size in sorted_sizes:
         assigned_works = AssignedWork.objects.filter(
             work__operation=operation,
             work__passport_size=passport_size
         ).select_related('employee')
 
-        # Get the reassigned works related to the operation and passport size
         reassigned_works = ReassignedWork.objects.filter(
             original_assigned_work__work__operation=operation,
             original_assigned_work__work__passport_size=passport_size
         ).select_related('new_employee')
 
-        # Collect unique employee IDs for each assigned and reassigned work
         employee_ids = set(aw.employee.employee_id for aw in assigned_works)
-        # Add the employee IDs from the reassigned works
         employee_ids.update(rw.new_employee.employee_id for rw in reassigned_works)
 
-        # Append the joined employee IDs to the details
         details.append(', '.join(employee_ids))
 
     return details
@@ -599,10 +546,10 @@ class OperationListView(ListView):
     model = Operation
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
-    paginate_by = 10
+    paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('name')
+        queryset = super().get_queryset().order_by('number')
         node_id = self.request.GET.get('node', None)
         if node_id:
             queryset = queryset.filter(node_id=node_id)
@@ -687,32 +634,81 @@ def operation_upload(request):
         try:
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
+
             with transaction.atomic():
                 for row in sheet.iter_rows(min_row=2, values_only=True):
-                    node_name, _, operation_name, equipment_name, time, price, _ = row
-                    
+                    assortment_names, number, operation_name, node_name, equipment_name, time, price = row
+
                     node, _ = Node.objects.get_or_create(name=node_name)
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
-                    
-                    operation = Operation(
-                        name=operation_name,
-                        payment=price,
-                        equipment=equipment,
-                        node=node,
-                        preferred_completion_time=time
+
+                    operation, created = Operation.objects.get_or_create(
+                        number=number,
+                        defaults={
+                            'name': operation_name,
+                            'equipment': equipment,
+                            'node': node,
+                            'preferred_completion_time': time,
+                            'payment': price
+                        }
                     )
-                    operation.save()
+
+                    if not created:
+                        operation.name = operation_name
+                        operation.equipment = equipment
+                        operation.node = node
+                        operation.preferred_completion_time = time
+                        operation.payment = price
+                        operation.save()
+
+                    assortment_names_list = [name.strip() for name in assortment_names.split(',')]
+                    for assortment_name in assortment_names_list:
+                        assortment, created = Assortment.objects.get_or_create(
+                            name=assortment_name,
+                            branch=request.user.userprofile.branch
+                        )
+                        assortment.operations.add(operation)
 
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))
         except Exception as e:
             messages.error(request, f'There was an error processing the file: {e}')
-        finally:
-            if 'workbook' in locals():
-                workbook.close()
+            workbook.close()
+        return HttpResponseRedirect(reverse_lazy('operation_list'))
     else:
         messages.error(request, 'There was an error with the file upload.')
+        return HttpResponseRedirect(reverse_lazy('operation_upload'))
 
+@login_required
+@technologist_required
+def operation_download(request):
+    # Create an in-memory workbook
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Operations"
+
+    # Add headers to the first row
+    headers = ["Ассортимент", "№ПП", "Тех-процесс", "Узел", "Оборудование", "Время", "Оплата"]
+    sheet.append(headers)
+
+    # Add data rows
+    for operation in Operation.objects.all().order_by('number'):
+        assortments = ", ".join(assortment.name for assortment in operation.assortments.all())
+        row = [
+            assortments,
+            operation.number,
+            operation.name,
+            operation.node.name if operation.node else "",
+            operation.equipment.name if operation.equipment else "",
+            operation.preferred_completion_time,
+            operation.payment,
+        ]
+        sheet.append(row)
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=operations.xlsx'
+    workbook.save(response)
+    return response
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -774,12 +770,19 @@ class AssortmentDetailView(DetailView):
     template_name = 'technologist/assortments/detail.html'
     context_object_name = 'assortment'
 
+    def get_context_data(self, **kwargs):
+        context = super(AssortmentDetailView, self).get_context_data(**kwargs)
+        assortment = context['assortment']
+        context['operations'] = assortment.operations.all().order_by('number')
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
-    success_url = reverse_lazy('assortment_list')
+    def get_success_url(self):
+        return reverse('model_list', kwargs={'a_id': self.kwargs.get('pk')})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
@@ -796,25 +799,38 @@ class ModelListView(ListView):
     context_object_name = 'models'
     paginate_by = 10
     def get_queryset(self):
-        return Model.objects.all().order_by('name')
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ModelCreateView(CreateView):
-    model = Model
-    form_class = ModelForm
-    template_name = 'technologist/models/create.html'
-    success_url = reverse_lazy('model_list')
-
-    def form_valid(self, form):
-        return super().form_valid(form)
-    
-    def form_invalid(self, form):
-        return super().form_invalid(form)
-
+        assortment_id = self.kwargs.get('a_id')
+        return Model.objects.filter(assortment=assortment_id).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['nodes'] = Node.objects.prefetch_related('operations').all()
+        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         return context
+
+@login_required
+@technologist_required
+def model_create(request, a_id):
+    assortment = get_object_or_404(Assortment, pk=a_id)
+    copy_id = request.GET.get('copy')
+    
+    if request.method == 'POST':
+        form = ModelCustomForm(request.POST, a_id=a_id)
+        if form.is_valid():
+            model_instance = form.save(commit=False)
+            model_instance.assortment = assortment
+            model_instance.save()
+            form.save_operations(model_instance)
+            return redirect('model_list', a_id=a_id)
+    else:
+        if copy_id:
+            model_to_copy = get_object_or_404(Model, pk=copy_id)
+            form = ModelCustomForm(instance=model_to_copy, a_id=a_id)
+            operations_data = [{"operation_id": op.operation.id, "order": op.order}
+                               for op in model_to_copy.modeloperation_set.all()]
+            form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
+            return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_to_copy})
+        else:
+            form = ModelCustomForm(a_id=a_id)
+            return render(request, 'technologist/models/create.html', {'form': form})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -822,18 +838,37 @@ class ModelDetailView(DetailView):
     template_name = 'technologist/models/detail.html'
     context_object_name = 'model'
 
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ModelUpdateView(UpdateView):
-    model = Model
-    form_class = ModelForm
-    template_name = 'technologist/models/edit.html'
-    success_url = reverse_lazy('model_list')
+    def get_context_data(self, **kwargs):
+        context = super(ModelDetailView, self).get_context_data(**kwargs)
+        model = context['model']
+        context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
+        return context
+
+@login_required
+@technologist_required
+def model_edit(request, pk, a_id):
+    model_instance = get_object_or_404(Model, pk=pk)
+    assortment = get_object_or_404(Assortment, pk=a_id)
+    
+    if request.method == 'POST':
+        form = ModelCustomForm(request.POST, instance=model_instance)
+        if form.is_valid():
+            updated_model = form.save()
+            return redirect('model_detail', a_id=a_id, pk=pk)
+    else:
+        form = ModelCustomForm(instance=model_instance, a_id=a_id)
+        operations_data = [{"operation_id": op.operation.id, "order": op.order}
+                           for op in model_instance.modeloperation_set.all()]
+        form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
+    
+    return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_instance})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
-    success_url = reverse_lazy('model_list')
+    def get_success_url(self):
+        return reverse('model_list', kwargs={'a_id': self.kwargs.get('a_id')})
 
 
 

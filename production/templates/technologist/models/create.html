@@ -1,73 +1,153 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block content %}
 <style>
-  .node-accordion {
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    overflow: hidden;
+  .assign-operations-container {
+    padding: 20px;
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
-  .node-header {
-    padding: 10px 20px;
-    background-color: #f0f0f0;
-    cursor: pointer;
-    font-size: 16px;
+
+  .form-heading {
     color: #333;
-    border-bottom: 1px solid #ddd;
-    transition: background-color 0.3s;
+    margin-bottom: 20px;
   }
-  .node-header:hover {
-    background-color: #e9e9e9;
-  }
-  .operations-container {
-    padding: 10px 20px;
-    display: none;
+
+  .checkbox label {
+    display: block;
+    padding: 10px;
+    margin: 5px 0;
     background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
   }
-  label {
-    margin: 5px 0px;
+
+  .checkbox input[type="checkbox"] {
+    margin-right: 10px;
+  }
+
+  .sortable-item {
+    padding: 10px;
+    margin-top: 5px;
+    background-color: #e9e9e9;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: grab;
+  }
+
+  .sortable-item:hover {
+    background-color: #dfe3e8;
+  }
+
+  .sortable-ghost {
+    opacity: 0.6;
+    background-color: #c8ccd0;
+  }
+
+  .form-actions {
+    margin-top: 20px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background-color: #0056b3;
   }
 </style>
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Create New Model" %}</h2>
-  <form method="post" class="crud-form">
-    {% csrf_token %}
-    <div class="form-group">
-      <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-      {{ form.name }}
-      {% if form.name.errors %}
-        <div class="error">{{ form.name.errors }}</div>
-      {% endif %}
-      <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
-      {% for node in nodes %}
-        <div class="node-accordion" id="node-{{ node.id }}">
-          <h3 class="node-header" onclick="toggleOperations({{ node.id }});">
-            {{ node.name }}
-          </h3>
-          <div class="operations-container" id="operations-{{ node.id }}" style="display:none;">
-            {% for operation in node.operations.all %}
-                <input type="checkbox" name="operations" value="{{ operation.id }}" {% if operation.id in form.operations.value %} checked {% endif %}>
-                {{ operation.name }}<br>
+<div class="assign-operations-container">
+    <h2 class="form-heading">{% trans "Create New Model" %}</h2>
+        
+    <form method="post" id="modelForm" class="crud-form">
+        {% csrf_token %}
+        <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+            <div class="error">{{ form.name.errors }}</div>
+        {% endif %}
+        
+        <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
+        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: calc(100% - 16px);">
+        <div id="operationsContainer">
+            {% for operation in form.fields.operations.queryset %}
+                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
+                    <label>
+                        <input type="checkbox" name="operations" value="{{ operation.id }}">
+                        {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
+                    </label>
+                </div>
             {% endfor %}
-          </div>
         </div>
-      {% endfor %}
-    </div>
-    <div class="form-actions">
-      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
-      <a href="{% url 'model_list' %}" class="btn back-btn">{% trans "Back" %}</a>
-    </div>
-  </form>
+        
+        {{ form.operations_data }}
+        
+        <div class="form-actions">
+            <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
+            <div id="selectedOperations" class="selected-operations"></div>
+            <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
+        </div>
+    </form>
 </div>
+
 <script>
-  function toggleOperations(nodeId) {
-    var container = document.getElementById('operations-' + nodeId);
-    if (container.style.display === 'none') {
-      container.style.display = 'block';
-    } else {
-      container.style.display = 'none';
-    }
-  }
+let selectedOperations = [];
+
+document.getElementById('searchOperations').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const operations = document.querySelectorAll('#operationsContainer .checkbox');
+
+    operations.forEach(op => {
+        const content = op.getAttribute('data-operation-content');
+        const numberPart = content.split('-')[0].trim(); // Assuming the number is always before the first '-'.
+        if (numberPart.includes(searchTerm)) {
+            op.style.display = '';
+        } else {
+            op.style.display = 'none';
+        }
+    });
+});
+
+function prepareOperations() {
+    let checkedBoxes = document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked');
+    let operationsContainer = document.getElementById('selectedOperations');
+    operationsContainer.innerHTML = '';
+
+    checkedBoxes.forEach(function(checkbox) {
+        let label = checkbox.nextSibling.textContent.trim();
+        let div = document.createElement('div');
+        div.className = 'sortable-item';
+        div.textContent = label;
+        div.setAttribute('data-id', checkbox.value);
+        operationsContainer.appendChild(div);
+    });
+
+    new Sortable(operationsContainer, {
+        animation: 150,
+        ghostClass: 'sortable-ghost'
+    });
+}
+
+function submitOperations(event) {
+    event.preventDefault(); // Prevent form from submitting traditionally
+
+    selectedOperations = []; // Clear the array before pushing new data
+    let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
+    sortedItems.forEach(function(item, index) {
+        selectedOperations.push({operation_id: item.getAttribute('data-id'), order: index});
+    });
+    document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
+    document.getElementById('modelForm').submit(); // Submit the form programmatically
+}
+
+document.getElementById('modelForm').addEventListener('submit', submitOperations);
 </script>
 {% endblock %}

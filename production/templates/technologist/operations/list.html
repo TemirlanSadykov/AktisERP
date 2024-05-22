@@ -12,11 +12,12 @@
   <div class="header">
     <h2 class="list-heading">{% trans "Operations" %}</h2>
     <p class="create-link">
-      <a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create Operation" %}</a>
+      <a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create" %}</a>
       <!-- Trigger/Open The Modal -->
       <button id="upload_button" type="button" class="btn create-btn" data-toggle="modal" data-target="#uploadModal">
         {% trans "Upload from Excel" %}
       </button>
+      <a href="{% url 'operation_download' %}" class="btn create-btn">{% trans "Download Excel" %}</a>
     </p>
   </div>
   <div class="modal" id="uploadModal">
@@ -50,7 +51,7 @@
     {% for operation in operations %}
       <li class="list-group-item">
         <a href="{% url 'operation_detail' operation.pk %}">
-          {{ operation.node }} - {{ operation.equipment }} - {{ operation.name }}
+          {{ operation.number }} - {{ operation.node }} - {{ operation.equipment }} - {{ operation.name }}
         </a>
       </li>
     {% endfor %}

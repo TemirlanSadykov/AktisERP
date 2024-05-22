@@ -12,58 +12,29 @@
     </div>
   </div>
 
-  {% if defects %}
-    <div class="defects-list">
-      {% for defect in defects %}
-        <p class="defect-item">
-          <a href="#" class="defect-link" data-defect-id="{{ defect.pk }}" style="color: {{ defect.status|status_color }};">
-            {% trans "Defect ID:" %} {{ defect.pk }}
+  {% if errors %}
+    <div class="errors-list">
+      {% for error in errors %}
+        <p class="error-item">
+          <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
+            {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans "Discrepancy" %} {% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
           </a>
         </p>
       {% endfor %}
     </div>
-    <div id="defectDetailsPopupOverlay" class="popup-overlay" style="display: none;">
-      <div id="defectDetailsPopup" class="popup-content">
-        <div id="defectDetails" class="defect-details">
-          <!-- Defect details will be dynamically inserted here -->
+    <div id="errorDetailsPopupOverlay" class="popup-overlay" style="display: none;">
+      <div id="errorDetailsPopup" class="popup-content">
+        <div id="errorDetails" class="error-details">
+          <!-- Error details will be dynamically inserted here -->
         </div>
-        <form id="defectStatusForm">
+        <form id="errorStatusForm">
           <div class="form-actions">
             {% csrf_token %}
-            <input type="hidden" name="defectStatus" id="defectStatusInput">
-            <input type="hidden" name="defectId" id="defectIdInput">  <!-- Hidden field to store defect ID -->
-            <button type="submit" onclick="updateDefectStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
-            <button type="sumit" onclick="updateDefectStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
-            <button type="button" onclick="closeDefectPopup()" class="btn create-btn">Close</button>
-          </div>
-        </form>
-      </div>  
-    </div>
-  {% endif %}
-
-  {% if discrepancies %}
-    <div class="discrepancies-list">
-      {% for discrepancy in discrepancies %}
-        <p class="discrepancy-item">
-          <a href="#" class="discrepancy-link" data-discrepancy-id="{{ discrepancy.pk }}" style="color: {{ discrepancy.status|status_color }};">
-            {% trans "Discrepancy ID:" %} {{ discrepancy.pk }}
-          </a>
-        </p>
-      {% endfor %}
-    </div>
-    <div id="discrepancyDetailsPopupOverlay" class="popup-overlay" style="display: none;">
-      <div id="discrepancyDetailsPopup" class="popup-content">
-        <div id="discrepancyDetails" class="discrepancy-details">
-          <!-- Discrepancy details will be dynamically inserted here -->
-        </div>
-        <form id="discrepancyStatusForm">
-          <div class="form-actions">
-            {% csrf_token %}
-            <input type="hidden" name="discrepancyStatus" id="discrepancyStatusInput">
-            <input type="hidden" name="discrepancyId" id="discrepancyIdInput">  <!-- Hidden field to store discrepancy ID -->
-            <button type="submit" onclick="updateDiscrepancyStatus('RESOLVED')" class="btn complete-btn">Resolved</button>
-            <button type="sumit" onclick="updateDiscrepancyStatus('UNRESOLVABLE')" class="btn delete-btn">Unresolvable</button>
-            <button type="button" onclick="closeDiscrepancyPopup()" class="btn create-btn">Close</button>
+            <input type="hidden" name="errorStatus" id="errorStatusInput">
+            <input type="hidden" name="errorId" id="errorIdInput">
+            <button type="submit" onclick="updateErrorStatus('RESOLVED')" class="btn complete-btn">{% trans "Resolved" %}</button>
+            <button type="submit" onclick="updateErrorStatus('UNRESOLVABLE')" class="btn delete-btn">{% trans "Unresolvable" %}</button>
+            <button type="button" onclick="closeErrorPopup()" class="btn create-btn">{% trans "Close" %}</button>
           </div>
         </form>
       </div>  
@@ -91,7 +62,7 @@
   <table class="table">
     <thead>
       <tr>
-        <th>{% trans "Size" %}</th>
+        <th>{% trans "Size\Passport" %}</th>
         {% for passport in passports %}
         <th>№{{ passport.id }}</th>
         {% endfor %}
@@ -113,6 +84,7 @@
                       data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
                       {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 2 %} checked {% endif %}
                       {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" > 2 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 1 %} disabled {% endif %}>
+                      ({{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }})
             {% endif %}
           </td>
           {% endfor %}
@@ -144,7 +116,6 @@
   </div>
 </div>
 <script>
-
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -160,188 +131,110 @@
     return cookieValue;
   }
 
-  function showDiscrepancyPopup() {
-    document.getElementById('discrepancyDetailsPopup').style.display = 'block';
-    document.getElementById('discrepancyDetailsPopupOverlay').style.display = 'flex';
+  function showErrorPopup() {
+    document.getElementById('errorDetailsPopup').style.display = 'block';
+    document.getElementById('errorDetailsPopupOverlay').style.display = 'flex';
   }
   
-  function closeDiscrepancyPopup() {
-    document.getElementById('discrepancyDetailsPopup').style.display = 'none';
-    document.getElementById('discrepancyDetailsPopupOverlay').style.display = 'none';
+  function closeErrorPopup() {
+    document.getElementById('errorDetailsPopup').style.display = 'none';
+    document.getElementById('errorDetailsPopupOverlay').style.display = 'none';
   }
 
-  function updateDiscrepancyStatus(status) {
-    document.getElementById('discrepancyStatusInput').value = status;
+  function updateErrorStatus(status) {
+    document.getElementById('errorStatusInput').value = status;
   }
 
-  function showDefectPopup() {
-    document.getElementById('defectDetailsPopup').style.display = 'block';
-    document.getElementById('defectDetailsPopupOverlay').style.display = 'flex';
-  }
-  
-  function closeDefectPopup() {
-    document.getElementById('defectDetailsPopup').style.display = 'none';
-    document.getElementById('defectDetailsPopupOverlay').style.display = 'none';
-  }
-
-  function updateDefectStatus(status) {
-    document.getElementById('defectStatusInput').value = status;
-  }
-  
   document.addEventListener("DOMContentLoaded", function() {
-
     var checkboxes = document.querySelectorAll('.stage-qc-checkbox');
     checkboxes.forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-          var passportSizeId = this.dataset.passportSizeId;
-          fetch(`/production/technologist/orders/mark-as-qc/${passportSizeId}/`, {
-              method: 'POST',
-              headers: {
-                  'X-CSRFToken': getCookie('csrftoken')
-              },
-          })
-          .then(response => response.json())
-          .then(data => {
-              if (!data.success) {
-                alert('Error: ' + data.error);
-              }
-          })
-          .catch(error => {
-              console.error('Error:', error);
-              this.checked = false;
-          });
+      checkbox.addEventListener('change', function() {
+        var passportSizeId = this.dataset.passportSizeId;
+        fetch(`/production/technologist/orders/mark-as-qc/${passportSizeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+              alert('Ошибка');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.checked = false;
         });
-    });
-
-    document.querySelectorAll('.discrepancy-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const discrepancyId = this.getAttribute('data-discrepancy-id');
-        document.getElementById('discrepancyIdInput').value = discrepancyId; // Store discrepancyId in hidden input
-        fetchDiscrepancyDetails(discrepancyId);
       });
     });
-  
-    document.getElementById('discrepancyStatusForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-  
-      const discrepancyId = document.getElementById('discrepancyIdInput').value;
-      const status = document.getElementById('discrepancyStatusInput').value;
-      const data = { status: status };
-  
-      const xhr = new XMLHttpRequest();
-      const url = `/production/technologist/orders/discrepancy/${discrepancyId}/update-status/`;
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-  
-      xhr.onload = function() {
-        const response = JSON.parse(xhr.responseText);
-        if (xhr.status === 200) {
-          alert(response.message);
-          closeDiscrepancyPopup();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-          alert(response.message);
-        }
-      };
-  
-      xhr.send(JSON.stringify(data));
+
+    document.querySelectorAll('.error-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const errorId = this.getAttribute('data-error-id');
+        document.getElementById('errorIdInput').value = errorId; // Store errorId in hidden input
+        fetchErrorDetails(errorId);
+      });
     });
-  
-    function fetchDiscrepancyDetails(discrepancyId) {
-      fetch(`/production/technologist/orders/discrepancy/${discrepancyId}/`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.discrepancy) {
-          const discrepancyDetails = document.getElementById('discrepancyDetails');
-          discrepancyDetails.innerHTML = 
-           `<p><strong>Passport:</strong> ${data.discrepancy.passport__id}</p>
-            <p><strong>Size:</strong> ${data.discrepancy.size_quantity__size}</p>
-            <p><strong>Quantity:</strong> ${data.discrepancy.quantity}</p>
-            <p><strong>Status:</strong> ${data.discrepancy.status}</p>
-            <p><strong>Reported Date:</strong> ${data.discrepancy.reported_date}</p>
-            <p><strong>Resolved Date:</strong> ${data.discrepancy.resolved_date || 'N/A'}</p>`;
-          showDiscrepancyPopup();
-        } else {
-          alert('No details found for this discrepancy.');
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching discrepancy details:', error);
-        alert('Error fetching discrepancy details.');
+
+    const errorForm = document.getElementById('errorStatusForm');
+    if (errorForm) {
+      errorForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+    
+        const errorId = document.getElementById('errorIdInput').value;
+        const status = document.getElementById('errorStatusInput').value;
+        const data = { status: status };
+    
+        const xhr = new XMLHttpRequest();
+        const url = `/production/technologist/orders/error/${errorId}/update-status/`;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+    
+        xhr.onload = function() {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status === 200) {
+            alert('Успешное обновление');
+            closeErrorPopup();
+          } else {
+            console.error('Request failed with status:', xhr.status);
+            alert('Не получилось обновить');
+          }
+        };
+    
+        xhr.send(JSON.stringify(data));
       });
     }
-
-    document.querySelectorAll('.defect-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const defectId = this.getAttribute('data-defect-id');
-        document.getElementById('defectIdInput').value = defectId; // Store defectId in hidden input
-        fetchDefectDetails(defectId);
-      });
-    });
   
-    document.getElementById('defectStatusForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-  
-      const defectId = document.getElementById('defectIdInput').value;
-      const status = document.getElementById('defectStatusInput').value;
-      const data = { status: status };
-  
-      const xhr = new XMLHttpRequest();
-      const url = `/production/technologist/orders/defect/${defectId}/update-status/`;
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-  
-      xhr.onload = function() {
-        const response = JSON.parse(xhr.responseText);
-        if (xhr.status === 200) {
-          alert(response.message);
-          closeDefectPopup();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-          alert(response.message);
-        }
-      };
-  
-      xhr.send(JSON.stringify(data));
-    });
-  
-    function fetchDefectDetails(defectId) {
-      fetch(`/production/technologist/orders/defect/${defectId}/`, {
+    function fetchErrorDetails(errorId) {
+      fetch(`/production/technologist/orders/error/${errorId}/`, {
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
         }
       })
       .then(response => response.json())
       .then(data => {
-        if (data.defect) {
-          const defectDetails = document.getElementById('defectDetails');
-          let employeeList = data.defect.responsible_employees.join(', ');
-          defectDetails.innerHTML = 
-           `<p><strong>Passport:</strong> ${data.defect.passport__id}</p>
-            <p><strong>Size:</strong> ${data.defect.size_quantity__size}</p>
-            <p><strong>Quantity:</strong> ${data.defect.quantity}</p>
-            <p><strong>Type:</strong> ${data.defect.defect_type}</p>
-            <p><strong>Severity:</strong> ${data.defect.severity}</p>
-            <p><strong>Status:</strong> ${data.defect.status}</p>
-            <p><strong>Reported Date:</strong> ${data.defect.reported_date}</p>
-            <p><strong>Resolved Date:</strong> ${data.defect.resolved_date || 'N/A'}</p>
-            <p><strong>Responsible Employees:</strong> ${employeeList}</p>`;
-          showDefectPopup();
+        if (data.error) {
+          const errorDetails = document.getElementById('errorDetails');
+          errorDetails.innerHTML = 
+            `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
+            <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
+            <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
+            <p><strong>Количество:</strong> ${data.error.quantity}</p>
+            ${data.error.error_type === 'DEFECT' ? `<p><strong>Тип Дефекта:</strong> ${data.error.defect_type}</p>` : ``}
+            <p><strong>Статус:</strong> ${data.error.status}</p>
+            <p><strong>Дата Сообщения:</strong> ${data.error.reported_date}</p>
+            <p><strong>Дата Разрешения:</strong> ${data.error.resolved_date || 'N/A'}</p>`;
+          showErrorPopup();
         } else {
-          alert('No details found for this defect.');
+          alert('Ничего не найдено');
         }
       })
       .catch(error => {
-        console.error('Error fetching defect details:', error);
-        alert('Error fetching defect details.');
+        console.error('Error fetching error details:', error);
+        alert('Ошибка при загрузке');
       });
     }
   });

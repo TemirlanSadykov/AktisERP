@@ -3,6 +3,22 @@
 {% load custom_filters %}
 
 {% block content %}
+<style>
+  @media (max-width: 768px) {
+    .filter-header form {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .filter-header label, .filter-header input, .filter-header button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+  }
+</style>
 <div class="content-container">
   <div class="filter-header">
     <h2 class="list-heading">{% trans "Completed Jobs" %}</h2>
@@ -18,30 +34,32 @@
   </div>
 
   {% if assigned_works %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{% trans "Operation" %}</th>
-        <th>{% trans "Size" %}</th>
-        <th>{% trans "Quantity" %}</th>
-        <th>{% trans "Completed At" %}</th>
-        <th>{% trans "Verified" %}</th>
-        <th>{% trans "Completion Time" %}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for assigned_work in assigned_works %}
-      <tr>
-        <td>{{ assigned_work.work.operation.name }}</td>
-        <td>{{ assigned_work.work.passport_size.size_quantity.size }}</td>
-        <td>{{ assigned_work.quantity }}</td>
-        <td>{{ assigned_work.end_time|date:"Y-m-d H:i:s" }}</td>
-        <td>{% if assigned_work.is_success %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td>
-        <td>{{ assigned_work.start_time|duration:assigned_work.end_time }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{% trans "Operation" %}</th>
+          <th>{% trans "Size" %}</th>
+          <th>{% trans "Quantity" %}</th>
+          <th>{% trans "Completed At" %}</th>
+          <th>{% trans "Verified" %}</th>
+          <th>{% trans "Completion Time" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for assigned_work in assigned_works %}
+        <tr>
+          <td>{{ assigned_work.work.operation.name }} ({{ assigned_work.work.operation.number }})</td>
+          <td>{{ assigned_work.work.passport_size.size_quantity.size }}</td>
+          <td>{{ assigned_work.quantity }}</td>
+          <td>{{ assigned_work.end_time|date:"Y-m-d H:i:s" }}</td>
+          <td>{% if assigned_work.is_success %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</td>
+          <td>{{ assigned_work.start_time|duration:assigned_work.end_time }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
   <p>{% trans "No completed jobs found within the selected period." %}</p>
   {% endif %}

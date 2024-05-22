@@ -85,9 +85,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'JiIPLpYcIiclIDIIUCkfXjyODnyZnxJX',
-        'HOST': 'roundhouse.proxy.rlwy.net',
-        'PORT': '11979',
+        'PASSWORD': 'zirmhuJRrDdQtKdboryareiLLjXGUncU',
+        'HOST': 'monorail.proxy.rlwy.net',
+        'PORT': '32670',
     }
 }
 
@@ -110,6 +110,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SESSION_COOKIE_AGE = 14400
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -155,8 +157,6 @@ LOCALE_PATHS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = ['https://wasteful-direction-production.up.railway.app']
-# CSRF_TRUSTED_ORIGINS = ['https://waggish-jewel-production.up.railway.app']
-# CSRF_TRUSTED_ORIGINS = ['https://aktiserp-production.up.railway.app']
 
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')

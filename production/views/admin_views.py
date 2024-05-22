@@ -29,7 +29,7 @@ from urllib.parse import urlencode
 from django.db import transaction
 from django.db.models import F, Window
 from collections import defaultdict
-from django.db.models import Count, Q
+from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncDay
 import openpyxl
 from django.db.models.functions import Lead
@@ -43,6 +43,35 @@ def admin_page(request):
         'branches': branches,
     }
     return render(request, 'admin_page.html', context)
+
+@login_required
+@admin_required
+def dashboard_page(request):
+    clients = Client.objects.all()
+    client_data = []
+
+    for client in clients:
+        client_orders = ClientOrder.objects.filter(client=client)
+        orders = Order.objects.filter(client_order__in=client_orders)
+        
+        total_ordered_amount_by_orders = orders.aggregate(total_amount=Sum(F('quantity') * F('payment')))['total_amount'] or 0
+        total_ordered_amount = client_orders.aggregate(total_amount=Sum('orders__quantity'))['total_amount'] or 0
+        
+        client_orders_details = [
+            (co.order_number, list(co.orders.values_list('model__name', flat=True)))
+            for co in client_orders
+        ]
+
+        client_data.append({
+            'client': client.name,
+            'client_orders_details': client_orders_details,
+            'total_ordered_amount_by_orders': total_ordered_amount_by_orders,
+            'total_ordered_amount': total_ordered_amount
+        })
+
+    client_data = sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
+
+    return render(request, 'dashboard.html', {'client_data': client_data})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
@@ -210,7 +239,7 @@ def employee_upload(request):
 def passport_detail_admin(request, pk):
     passport = get_object_or_404(Passport, pk=pk)
     operations = passport.order.model.operations.all() 
-    size_quantities = PassportSize.objects.filter(passport=passport)
+    size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
     passport_rolls = PassportRoll.objects.filter(passport=passport)
 
     work_by_op_and_size = {}
@@ -236,9 +265,6 @@ def salary_list(request):
     form = SalaryListForm(request.GET or None)
     salaries = {}
 
-    assigned_works = AssignedWork.objects.none()
-    reassigned_works = ReassignedWork.objects.none()
-
     if form.is_valid():
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date'] + timedelta(days=1)
@@ -260,27 +286,28 @@ def salary_list(request):
 
             for work_group in [assigned_works, reassigned_works]:
                 for work in work_group:
-                    employee = work.employee if work_group is assigned_works else work.new_employee
+                    if work_group is assigned_works:
+                        employee = work.employee
+                        payment = work.work.operation.payment
+                        quantity = work.quantity
+                    else:  # This is for reassigned_works
+                        employee = work.new_employee
+                        payment = work.original_assigned_work.work.operation.payment
+                        quantity = work.reassigned_quantity
+
                     if employee not in salaries:
                         salaries[employee] = {'salary': 0, 'status': 0, 'errors': 0, 'error_cost': 0}
-                    salaries[employee]['salary'] += work.work.operation.payment * (work.quantity if work_group is assigned_works else work.reassigned_quantity)
+                    
+                    salaries[employee]['salary'] += payment * quantity
                     salaries[employee]['status'] = 1 if work.payment_date else 0
 
-                    # Only calculate error costs for employees with type EMPLOYEE
-                    if employee.type == UserProfile.EMPLOYEE:
-                        defect_responsibilities = DefectResponsibility.objects.filter(
+                    if employee.type not in [UserProfile.ADMIN, UserProfile.TECHNOLOGIST]:
+                        error_responsibilities = ErrorResponsibility.objects.filter(
                             employee=employee,
-                            defect__reported_date__range=(start_date, end_date)
+                            error__reported_date__range=(start_date, end_date)
                         )
-                        for responsibility in defect_responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.defect.cost * (responsibility.percentage / 100)
-
-                        discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
-                            employee=employee,
-                            discrepancy__reported_date__range=(start_date, end_date)
-                        )
-                        for responsibility in discrepancy_responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.discrepancy.cost * (responsibility.percentage / 100)
+                        for responsibility in error_responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.error.cost * (responsibility.percentage / 100)
 
         elif salary_type == 'fixed':
             fixed_salaries = FixedSalary.objects.filter(branch=request.user.userprofile.branch)
@@ -297,7 +324,6 @@ def salary_list(request):
                         )
                     )
 
-                    # Process each attendance entry
                     total_salary = 0
                     for attendance in timestamps:
                         if attendance.is_clock_in and attendance.next_timestamp:
@@ -307,20 +333,14 @@ def salary_list(request):
                     if total_salary > 0:
                         if employee not in salaries:
                             salaries[employee] = {'salary': total_salary, 'status': 0, 'errors': 0, 'error_cost': 0}
-                        
-                        responsibilities = DefectResponsibility.objects.filter(
-                            employee=employee,
-                            defect__reported_date__range=(start_date, end_date)
-                        )
-                        for responsibility in responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.defect.cost * (responsibility.percentage / 100)
 
-                        responsibilities = DiscrepancyResponsibility.objects.filter(
+                        error_responsibilities = ErrorResponsibility.objects.filter(
                             employee=employee,
-                            discrepancy__reported_date__range=(start_date, end_date)
+                            error__reported_date__range=(start_date, end_date)
                         )
-                        for responsibility in responsibilities:
-                            salaries[employee]['error_cost'] += responsibility.discrepancy.cost * (responsibility.percentage / 100)
+                        for responsibility in error_responsibilities:
+                            salaries[employee]['error_cost'] += responsibility.error.cost * (responsibility.percentage / 100)
+
                         payment_exists = SalaryPayment.objects.filter(
                             employee=employee,
                             fixed_salary=fixed_salary,
@@ -468,7 +488,7 @@ def salary_detail(request, pk):
                 assigned_work_details.append(work_details)
 
             # Calculate errors only if the employee is of type EMPLOYEE
-            if employee.type == UserProfile.EMPLOYEE:
+            if employee.type not in [UserProfile.ADMIN, UserProfile.TECHNOLOGIST]:
                 error_details = calculate_errors(employee, start_date, end_date)
                 total_error_cost = sum(detail['cost'] for detail in error_details)
                 total_salary -= total_error_cost
@@ -519,32 +539,19 @@ def salary_detail(request, pk):
     return render(request, 'admin/salaries/detail.html', context)
 
 def calculate_errors(employee, start_date, end_date):
-    error_details = []
-    defect_responsibilities = DefectResponsibility.objects.filter(
+    error_responsibilities = ErrorResponsibility.objects.filter(
         employee=employee,
-        defect__reported_date__range=(start_date, end_date)
-    ).select_related('defect')
+        error__reported_date__range=(start_date, end_date)
+    ).select_related('error')
 
-    discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
-        employee=employee,
-        discrepancy__reported_date__range=(start_date, end_date)
-    ).select_related('discrepancy')
-
-    for responsibility in defect_responsibilities:
-        error_cost = responsibility.defect.cost * (responsibility.percentage / 100)
-        error_details.append({
-            'type': 'Defect',
-            'reported_date': responsibility.defect.reported_date,
-            'cost': error_cost
-        })
-
-    for responsibility in discrepancy_responsibilities:
-        error_cost = responsibility.discrepancy.cost * (responsibility.percentage / 100)
-        error_details.append({
-            'type': 'Discrepancy',
-            'reported_date': responsibility.discrepancy.reported_date,
-            'cost': error_cost
-        })
+    error_details = [{
+        'type': 'Дефект' if resp.error.error_type == Error.ErrorType.DEFECT else 'Несоответствие',
+        'passport': resp.error.passport.id,
+        'size': resp.error.size_quantity.size,
+        'quantity': resp.error.quantity,
+        'reported_date': resp.error.reported_date,
+        'cost': resp.error.cost * (resp.percentage / 100)
+    } for resp in error_responsibilities]
 
     return error_details
 
@@ -555,7 +562,7 @@ def calculate_salary_and_details(work, reassigned_quantity=None):
     time_spent = (work.end_time - work.start_time).total_seconds() if work.start_time and work.end_time else 0
     return work_salary, {
         'operation': work.work.operation,
-        'size': work.work.passport_size.size_quantity.size,  # Correctly accessing the size through PassportSize
+        'size': work.work.passport_size.size_quantity.size,
         'quantity': quantity,
         'time_spent_seconds': time_spent,
         'work_salary': work_salary
@@ -614,7 +621,7 @@ def export_salaries_to_excel(request):
             salary_df = pd.DataFrame(data, columns=[
                 "Today's date", "Client's name", "Model's name", "Assortment's name", "Passport id", 
                 "Passport size", "Order's color", "Order's fabrics", "Passport date", "Operation id", 
-                "Operation name", "Operation payment", "Employee's employee_id", "Employee's full name", 
+                "Operation name", "Operation payment", "ID", "Employee", 
                 "Work's quantity", "Salary"
             ])
 
@@ -657,46 +664,32 @@ def export_salaries_to_excel(request):
                         ])
 
             salary_df = pd.DataFrame(data, columns=[
-                "Employee's Full Name", "Employee's ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
+                "Employee", "ID", "Date", "Clock in", "Clock out", "Hours worked", "Salary per day"
             ])
 
             employees = UserProfile.objects.all()
 
         # Process errors for selected employees
         for employee in employees:
-            defect_responsibilities = DefectResponsibility.objects.filter(
+            error_responsibilities = ErrorResponsibility.objects.filter(
                 employee=employee,
-                defect__reported_date__range=(start_date, end_date)
-            )
-            discrepancy_responsibilities = DiscrepancyResponsibility.objects.filter(
-                employee=employee,
-                discrepancy__reported_date__range=(start_date, end_date)
-            )
+                error__reported_date__range=(start_date, end_date)
+            ).select_related('error')
 
-            for responsibility in defect_responsibilities:
+            for responsibility in error_responsibilities:
                 errors_data.append([
-                    responsibility.defect.passport.order.model.name,
-                    responsibility.defect.passport,
-                    responsibility.defect.size_quantity.size,
+                    responsibility.error.passport.order.model.name,
+                    responsibility.error.passport.id,
+                    responsibility.error.size_quantity.size,
                     employee.user.get_full_name(),
-                    'Defect',
-                    responsibility.defect.reported_date.strftime('%Y-%m-%d'),
-                    responsibility.defect.cost * (responsibility.percentage / 100)
-                ])
-
-            for responsibility in discrepancy_responsibilities:
-                errors_data.append([
-                    responsibility.discrepancy.passport.order.model.name,
-                    responsibility.discrepancy.passport,
-                    responsibility.discrepancy.size_quantity.size,
-                    employee.user.get_full_name(),
-                    'Discrepancy',
-                    responsibility.discrepancy.reported_date.strftime('%Y-%m-%d'),
-                    responsibility.discrepancy.cost * (responsibility.percentage / 100)
+                    employee.employee_id,
+                    'Defect' if responsibility.error.error_type == Error.ErrorType.DEFECT else 'Discrepancy',
+                    responsibility.error.reported_date.strftime('%Y-%m-%d'),
+                    responsibility.error.cost * (responsibility.percentage / 100)
                 ])
 
         errors_df = pd.DataFrame(errors_data, columns=[
-            "Model", "Passport ID", "Size", "Employee's Full Name", "Error Type", "Reported Date", "Error Cost"
+            "Model", "Passport ID", "Size", "Employee", "ID", "Error Type", "Reported Date", "Error Cost"
         ])
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -900,6 +893,11 @@ class OrderCreateView(CreateView):
         redirect_url = reverse('create_size_quantity', kwargs={'pk': self.object.id})
         return HttpResponseRedirect(redirect_url)
 
+    def get_context_data(self, **kwargs):
+        context = super(OrderCreateView, self).get_context_data(**kwargs)
+        context['client_order_pk'] = self.kwargs.get('client_order_pk')
+        return context
+
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderDetailView(DetailView):
     model = Order
@@ -912,11 +910,9 @@ class OrderDetailView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['defects'] = Defect.objects.filter(passport=passport)
-            context['discrepancies'] = Discrepancy.objects.filter(passport=passport)
+            context['errors'] = Error.objects.filter(passport=passport).order_by('error_type')
         else:
-            context['defects'] = Defect.objects.none()
-            context['discrepancies'] = Discrepancy.objects.none()
+            context['errors'] = Error.objects.none()
         context['passports'] = order.passports.all()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
         context['size_quantity_form'] = SizeQuantityForm()
@@ -933,13 +929,15 @@ class OrderUpdateView(UpdateView):
     model = Order
     form_class = OrderForm
     template_name = 'admin/orders/edit.html'
-    success_url = reverse_lazy('client_order_list')
+    def get_success_url(self):
+        return reverse('order_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderDeleteView(DeleteView):
     model = Order
     template_name = 'admin/orders/delete.html'
-    success_url = reverse_lazy('client_order_list')
+    def get_success_url(self):
+        return reverse('client_order_detail', kwargs={'pk': self.object.client_order.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class SizeQuantityCreateView(View):
@@ -1017,7 +1015,8 @@ class ClientUpdateView(UpdateView):
     model = Client
     form_class = ClientForm
     template_name = 'admin/clients/edit.html'
-    success_url = reverse_lazy('client_list')
+    def get_success_url(self):
+        return reverse('client_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientDeleteView(DeleteView):
@@ -1065,43 +1064,43 @@ class FixedSalaryDeleteView(RestrictBranchMixin, DeleteView):
 
 
 @method_decorator([login_required, admin_required], name='dispatch')
-class DefectDetailAdminView(CreateView):
-    model = DefectResponsibility
-    form_class = DefectResponsibilityForm
-    template_name = 'admin/defects/detail.html'
+class ErrorDetailAdminView(CreateView):
+    model = ErrorResponsibility
+    form_class = ErrorResponsibilityForm
+    template_name = 'admin/errors/detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        defect = get_object_or_404(Defect, pk=self.kwargs.get('pk'))
-        context['defect'] = defect
-        context['responsibility_defects'] = DefectResponsibility.objects.filter(defect=defect)
+        error = get_object_or_404(Error, pk=self.kwargs.get('pk'))
+        context['error'] = error
+        context['responsibility_errors'] = ErrorResponsibility.objects.filter(error=error)
         return context
 
     def form_valid(self, form):
         responsibility = form.save(commit=False)
-        defect_id = self.kwargs['pk']
-        responsibility.defect_id = defect_id
+        error_id = self.kwargs['pk']
+        responsibility.error_id = error_id
         responsibility.save()
-        return redirect('defect_detail_admin', pk=defect_id)
+        return redirect('error_detail_admin', pk=error_id)
     
     def get_success_url(self):
-        return reverse('defect_detail_admin', kwargs={'pk': self.kwargs['pk']})
-    
+        return reverse('error_detail_admin', kwargs={'pk': self.kwargs['pk']})
+
 @login_required
 @admin_required
 @require_POST
-def defect_edit_admin(request, rd_id):
+def error_edit_admin(request, rd_id):
     try:
         data = json.loads(request.body)
         percentage = Decimal(data.get('percentage'))
         
-        defectResponsibility = DefectResponsibility.objects.get(id=rd_id)
-        defectResponsibility.percentage = percentage
-        defectResponsibility.save()
+        errorResponsibility = ErrorResponsibility.objects.get(id=rd_id)
+        errorResponsibility.percentage = percentage
+        errorResponsibility.save()
         return JsonResponse({'status': 'success', 'message': 'Percentage updated successfully'})
 
-    except DefectResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DefectResponsibility not found'}, status=404)
+    except ErrorResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'ErrorResponsibility not found'}, status=404)
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -1109,75 +1108,32 @@ def defect_edit_admin(request, rd_id):
 @login_required
 @admin_required
 @require_POST
-def defect_delete_admin(request, rd_id):
+def error_delete_admin(request, rd_id):
     try:
-        defectResponsibility = DefectResponsibility.objects.get(id=rd_id)
-        defectResponsibility.delete()
+        errorResponsibility = ErrorResponsibility.objects.get(id=rd_id)
+        errorResponsibility.delete()
 
-        return JsonResponse({'status': 'success', 'message': 'DefectResponsibility deleted successfully'})
+        return JsonResponse({'status': 'success', 'message': 'ErrorResponsibility deleted successfully'})
 
-    except DefectResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DefectResponsibility not found'}, status=404)
+    except ErrorResponsibility.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'ErrorResponsibility not found'}, status=404)
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    
 
-
-@method_decorator([login_required, admin_required], name='dispatch')
-class DiscrepancyDetailAdminView(CreateView):
-    model = DiscrepancyResponsibility
-    form_class = DiscrepancyResponsibilityForm
-    template_name = 'admin/discrepancies/detail.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        discrepancy = get_object_or_404(Discrepancy, pk=self.kwargs.get('pk'))
-        context['discrepancy'] = discrepancy
-        context['responsibility_discrepancies'] = DiscrepancyResponsibility.objects.filter(discrepancy=discrepancy)
-        return context
-
-    def form_valid(self, form):
-        responsibility = form.save(commit=False)
-        discrepancy_id = self.kwargs['pk']
-        responsibility.discrepancy_id = discrepancy_id
-        responsibility.save()
-        return redirect('discrepancy_detail_admin', pk=discrepancy_id)
-    
-    def get_success_url(self):
-        return reverse('discrepancy_detail_admin', kwargs={'pk': self.kwargs['pk']})
-    
 @login_required
 @admin_required
 @require_POST
-def discrepancy_edit_admin(request, rd_id):
+def edit_error_cost_admin(request, error_id):
+    error = get_object_or_404(Error, pk=error_id)
     try:
         data = json.loads(request.body)
-        percentage = Decimal(data.get('percentage'))
-        
-        discrepancyResponsibility = DiscrepancyResponsibility.objects.get(id=rd_id)
-        discrepancyResponsibility.percentage = percentage
-        discrepancyResponsibility.save()
-        return JsonResponse({'status': 'success', 'message': 'Percentage updated successfully'})
-
-    except DiscrepancyResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DiscrepancyResponsibility not found'}, status=404)
-    
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    
-@login_required
-@admin_required
-@require_POST
-def discrepancy_delete_admin(request, rd_id):
-    try:
-        discrepancyResponsibility = DiscrepancyResponsibility.objects.get(id=rd_id)
-        discrepancyResponsibility.delete()
-
-        return JsonResponse({'status': 'success', 'message': 'DiscrepancyResponsibility deleted successfully'})
-
-    except DiscrepancyResponsibility.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'DiscrepancyResponsibility not found'}, status=404)
-    
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        new_cost = data.get('cost')
+        if new_cost:
+            new_cost = new_cost.replace(',', '.')
+            new_cost = Decimal(new_cost)
+        error.cost = new_cost
+        error.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e :
+        return JsonResponse({'status': 'error', 'message': str(e)})

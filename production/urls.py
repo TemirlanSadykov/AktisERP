@@ -15,6 +15,8 @@ urlpatterns = [
     path('qc/', qc_page, name='qc_page'),
     path('packer/', packer_page, name='packer_page'),
 
+    path('admin/dashboard/', dashboard_page, name='dashboard_page'),
+
     path('admin/branches/', BranchListView.as_view(), name='branch_list'),
     path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
     path('admin/branches/<int:pk>/', BranchDetailView.as_view(), name='branch_detail'),
@@ -66,21 +68,15 @@ urlpatterns = [
     path('admin/fixed_salaries/<int:pk>/edit/', FixedSalaryUpdateView.as_view(), name='fixed_salary_edit'),
     path('admin/fixed_salaries/<int:pk>/delete/', FixedSalaryDeleteView.as_view(), name='fixed_salary_delete'),
 
-    path('admin/orders/defects/<int:pk>/', DefectDetailAdminView.as_view(), name='defect_detail_admin'),
-    path('admin/orders/defects/<int:rd_id>/edit_percentage/', defect_edit_admin, name='defect_edit_admin'),
-    path('admin/orders/defects/<int:rd_id>/delete_percentage/', defect_delete_admin, name='defect_delete_admin'),
-
-    path('admin/orders/discrepancies/<int:pk>/', DiscrepancyDetailAdminView.as_view(), name='discrepancy_detail_admin'),
-    path('admin/orders/discrepancies/<int:rd_id>/edit_percentage/', discrepancy_edit_admin, name='discrepancy_edit_admin'),
-    path('admin/orders/discrepancies/<int:rd_id>/delete_percentage/', discrepancy_delete_admin, name='discrepancy_delete_admin'),
-
+    path('admin/orders/errors/<int:pk>/', ErrorDetailAdminView.as_view(), name='error_detail_admin'),
+    path('admin/orders/errors/<int:rd_id>/edit_percentage/', error_edit_admin, name='error_edit_admin'),
+    path('admin/orders/errors/<int:rd_id>/delete_percentage/', error_delete_admin, name='error_delete_admin'),
+    path('admin/orders/errors/<int:error_id>/edit_cost/', edit_error_cost_admin, name='edit_error_cost_admin'),
 
     path('technologist/orders/', OrderListTechnologistView.as_view(), name='order_list_technologist'),
     path('technologist/orders/<int:pk>/', OrderDetailTechnologistView.as_view(), name='order_detail_technologist'),
-    path('technologist/orders/defect/<int:pk>/', defect_detail, name='defect_detail_technologist'),
-    path('technologist/orders/defect/<int:pk>/update-status/', defect_update_status_technologist, name='defect_update_status_technologist'),
-    path('technologist/orders/discrepancy/<int:pk>/', discrepancy_detail, name='discrepancy_detail_technologist'),
-    path('technologist/orders/discrepancy/<int:pk>/update-status/', discrepancy_update_status_technologist, name='discrepancy_update_status_technologist'),
+    path('technologist/orders/error/<int:pk>/', error_detail, name='error_detail_technologist'),
+    path('technologist/orders/error/<int:pk>/update-status/', error_update_status, name='error_update_status_technologist'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
@@ -96,6 +92,7 @@ urlpatterns = [
     path('technologist/operations/<int:pk>/delete/', OperationDeleteView.as_view(), name='operation_delete'),
     path('technologist/operations/<int:operation_id>/calculate_average/', calculate_average_completion_time, name='calculate_average'),
     path('technologist/operations/upload/', operation_upload, name='operation_upload'),
+    path('technologist/operations/download/', operation_download, name='operation_download'),
 
     path('technologist/rolls/', RollListView.as_view(), name='roll_list'),
     path('technologist/rolls/create/', RollCreateView.as_view(), name='roll_create'),
@@ -109,11 +106,11 @@ urlpatterns = [
     path('technologist/assortments/<int:pk>/edit/', AssortmentUpdateView.as_view(), name='assortment_edit'),
     path('technologist/assortments/<int:pk>/delete/', AssortmentDeleteView.as_view(), name='assortment_delete'),
 
-    path('technologist/models/', ModelListView.as_view(), name='model_list'),
-    path('technologist/models/create/', ModelCreateView.as_view(), name='model_create'),
-    path('technologist/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
-    path('technologist/models/<int:pk>/edit/', ModelUpdateView.as_view(), name='model_edit'),
-    path('technologist/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
+    path('technologist/assortments/<int:a_id>/models/', ModelListView.as_view(), name='model_list'),
+    path('technologist/assortments/<int:a_id>/models/create/', model_create, name='model_create'),
+    path('technologist/assortments/<int:a_id>/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
+    path('technologist/assortments/<int:a_id>/models/<int:pk>/edit/', model_edit, name='model_edit'),
+    path('technologist/assortments/<int:a_id>/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
 
     path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
     path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),

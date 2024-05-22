@@ -23,10 +23,10 @@
               </select>
             </div>
           </form>
-          <a href="{% url 'technologist_page' %}" class="btn btn-primary mb-3">{% trans 'Go to Technologist Page' %}</a>
-          <a href="{% url 'cutter_page' %}" class="btn btn-primary mb-3">{% trans 'Go to Cutter Page' %}</a>
-          <a href="{% url 'qc_page' %}" class="btn btn-primary mb-3">{% trans 'Go to QC Page' %}</a>
-          <a href="{% url 'packer_page' %}" class="btn btn-primary mb-3">{% trans 'Go to Packer Page' %}</a>
+          <a href="{% url 'cutter_page' %}" class="btn btn-primary mb-3">{% trans 'Cutter' %}</a>
+          <a href="{% url 'technologist_page' %}" class="btn btn-primary mb-3">{% trans 'Technologist' %}</a>
+          <a href="{% url 'qc_page' %}" class="btn btn-primary mb-3">{% trans 'QC' %}</a>
+          <a href="{% url 'packer_page' %}" class="btn btn-primary mb-3">{% trans 'Packer' %}</a>
         </div>
       </div>
     </div>
@@ -34,6 +34,7 @@
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title">{% trans 'Resources' %}</h5>
+          <a href="{% url 'dashboard_page' %}" class="btn btn-primary mb-3">{% trans 'Dashboard' %}</a>
           <a href="{% url 'client_order_list' %}" class="btn btn-secondary">{% trans 'Orders' %}</a>
           <a href="{% url 'employee_list' %}" class="btn btn-secondary">{% trans 'Employees' %}</a>
           <a href="{% url 'salary_list' %}" class="btn btn-secondary">{% trans 'Salaries' %}</a>

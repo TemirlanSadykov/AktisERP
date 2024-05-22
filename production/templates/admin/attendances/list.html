@@ -4,11 +4,11 @@
 {% block content %}
 <div class="content-container">
   <h1 class="list-heading">{% trans "Attendance List" %}</h1>
-  <div class="form-inline">
-    <form method="post" class="attendance-form">
+  <div class="filter-heading">
+    <form method="post" class="date-filter-form">
       {% csrf_token %}
       {{ form.as_p }}
-      <button type="submit" class="btn filter-btn">{% trans "Show Attendances" %}</button>
+      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
     </form>
   </div>
 

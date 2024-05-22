@@ -22,7 +22,7 @@
     <table class="table">
       <thead>
         <tr>
-          <th>{% trans "Operation \ Size" %}</th>
+          <th style="width: 500px;">{% trans "Operation \ Size" %}</th>
           {% for ps in size_quantities %}
             <th>
               {{ ps.size_quantity.size }}<br>
@@ -55,6 +55,7 @@
     </table>
   </form>
   <div class="form-actions">
+    <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
     <a href="{% url 'order_detail' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
 </div>

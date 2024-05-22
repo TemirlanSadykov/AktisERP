@@ -68,3 +68,14 @@ def status_color(value):
         'UNRESOLVABLE': 'blue'
     }
     return colors.get(value, 'default_color')
+
+@register.filter(name='get_stage')
+def get_stage(key):
+    stages = {
+        0: 'Раскрой',
+        1: 'Шитье',
+        2: 'ОТК',
+        3: 'Упаковка',
+        4: 'Готово'
+    }
+    return stages.get(key, 'default_stage')

@@ -10,6 +10,7 @@ from django.forms import inlineformset_factory
 from django.forms import ModelChoiceField
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
+import json
 
 class BranchForm(forms.ModelForm):
     class Meta:
@@ -102,29 +103,34 @@ class SizeQuantityForm(forms.ModelForm):
         fields = ['size', 'quantity']
 
 class DateForm(forms.Form):
-    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))
+    date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date'}))
 
 class DateRangeForm(forms.Form):
     start_date = forms.DateField(
+        label='Начало',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False 
     )
     end_date = forms.DateField(
+        label='Окончание',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False
     )
 
 class SalaryListForm(forms.Form):
     start_date = forms.DateField(
+        label='Начало',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False 
     )
     end_date = forms.DateField(
+        label='Окончание',
         widget=forms.TextInput(attrs={'type': 'date'}),
         required=False
     )
     salary_type = forms.ChoiceField(
-        choices=(('non_fixed', 'Non-fixed'), ('fixed', 'Fixed')),
+        label='Тип зарплаты',
+        choices=(('non_fixed', 'По факту'), ('fixed', 'Оклад')),
         required=False
     )
 
@@ -167,7 +173,7 @@ class PassportSizeForm(forms.ModelForm):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
+        fields = ['name', 'number', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
 
 class RollForm(forms.ModelForm):
     class Meta:
@@ -175,25 +181,59 @@ class RollForm(forms.ModelForm):
         fields = ['name', 'color', 'fabrics', 'meters']
 
 class AssortmentForm(forms.ModelForm):
-    class Meta:
-        model = Assortment
-        fields = ['name']
-
-class ModelForm(forms.ModelForm):
     operations = forms.ModelMultipleChoiceField(
-        queryset=Operation.objects.select_related('node').order_by('node__name', 'name'),
+        queryset=Operation.objects.all().order_by('number'),
         widget=forms.CheckboxSelectMultiple,
         required=False
     )
 
     class Meta:
-        model = Model
+        model = Assortment
         fields = ['name', 'operations']
 
     def __init__(self, *args, **kwargs):
-        super(ModelForm, self).__init__(*args, **kwargs)
+        super(AssortmentForm, self).__init__(*args, **kwargs)
         common_operations = Operation.objects.filter(node__is_common=True)
         self.fields['operations'].initial = common_operations
+
+class ModelCustomForm(forms.ModelForm):
+    operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # This stores the JSON order data
+
+    class Meta:
+        model = Model
+        fields = ['name']
+
+    def __init__(self, *args, **kwargs):
+        assortment_id = kwargs.pop('a_id', None)
+        super(ModelCustomForm, self).__init__(*args, **kwargs)
+        if assortment_id:
+            queryset = Assortment.objects.get(pk=assortment_id).operations.select_related('node').order_by('number')
+        else:
+            queryset = Operation.objects.select_related('node').order_by('number')
+        self.fields['operations'] = forms.ModelMultipleChoiceField(
+            queryset=queryset,
+            widget=forms.CheckboxSelectMultiple,
+            required=False
+        )
+
+    def save(self, commit=True):
+        model_instance = super().save(commit=False)
+        if commit:
+            model_instance.save()
+            self.save_operations(model_instance)
+        return model_instance
+
+    def save_operations(self, model_instance):
+        import json
+        operations_data = self.cleaned_data.get('operations_data', '[]')
+        operations = json.loads(operations_data)
+        model_instance.modeloperation_set.all().delete()
+        for op_data in operations:
+            ModelOperation.objects.create(
+                model=model_instance,
+                operation_id=op_data['operation_id'],
+                order=op_data['order']
+            )
 
 class ClientForm(forms.ModelForm):
     class Meta:
@@ -203,7 +243,7 @@ class ClientForm(forms.ModelForm):
 class ClientOrderForm(forms.ModelForm):
     class Meta:
         model = ClientOrder
-        fields = ['order_number', 'client', 'term']
+        fields = ['order_number', 'client', 'term', 'status']
         widgets = {
             'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
         }
@@ -256,15 +296,16 @@ class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
 
-class DefectForm(forms.ModelForm):
+class ErrorForm(forms.ModelForm):
     size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
 
     class Meta:
-        model = Defect
-        fields = ['passport', 'size_quantity', 'quantity', 'defect_type', 'severity']
-
+        model = Error
+        fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
+    
     def __init__(self, *args, **kwargs):
         order_pk = kwargs.pop('order_pk', None)
+        self.error_type = kwargs.pop('error_type', None)
         super().__init__(*args, **kwargs)
 
         if order_pk:
@@ -272,21 +313,15 @@ class DefectForm(forms.ModelForm):
             self.fields['passport'].queryset = Passport.objects.filter(order=order)
             self.fields['size_quantity'].queryset = order.size_quantities.all()
 
-class DiscrepancyForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+        if self.error_type != 'DEFECT':
+            if 'defect_type' in self.fields:
+                del self.fields['defect_type']
+        else:
+            self.fields['defect_type'].required = True
 
-    class Meta:
-        model = Discrepancy
-        fields = ['passport', 'size_quantity', 'quantity']
-
-    def __init__(self, *args, **kwargs):
-        order_pk = kwargs.pop('order_pk', None)
-        super().__init__(*args, **kwargs)
-
-        if order_pk:
-            order = Order.objects.get(pk=order_pk)
-            self.fields['passport'].queryset = Passport.objects.filter(order=order)
-            self.fields['size_quantity'].queryset = order.size_quantities.all()
+    def save(self, commit=True):
+        self.instance.error_type = self.error_type
+        return super().save(commit=commit)
 
 class FixedSalaryForm(forms.ModelForm):
     employees = forms.ModelMultipleChoiceField(
@@ -306,28 +341,15 @@ class UploadFileForm(forms.Form):
         validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
     )
 
-class DefectResponsibilityForm(forms.ModelForm):
+class ErrorResponsibilityForm(forms.ModelForm):
     class Meta:
-        model = DefectResponsibility
+        model = ErrorResponsibility
         fields = ['employee', 'percentage']
         widgets = {
             'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['employee'].queryset = UserProfile.objects.all()
-
-class DiscrepancyResponsibilityForm(forms.ModelForm):
-    class Meta:
-        model = DiscrepancyResponsibility
-        fields = ['employee', 'percentage']
-        widgets = {
-            'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '1.00'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['employee'].queryset = UserProfile.objects.all()
+        self.fields['employee'].queryset = UserProfile.objects.all().order_by('employee_id')
