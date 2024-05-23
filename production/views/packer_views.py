@@ -1,16 +1,18 @@
-from django.shortcuts import render
+from collections import defaultdict
+
 from django.contrib.auth.decorators import login_required
-from ..decorators import packer_required
+from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+from ..decorators import packer_required
+from ..forms import *
 from ..mixins import *
 from ..models import *
-from ..forms import *
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from django.shortcuts import get_object_or_404
-from collections import defaultdict
-from django.http import JsonResponse
-from django.db import transaction
+
 
 @login_required
 @packer_required

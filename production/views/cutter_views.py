@@ -1,25 +1,23 @@
-from django.contrib.auth.decorators import login_required
-from ..decorators import cutter_required
-from django.utils.decorators import method_decorator
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from ..forms import *
-from django.urls import reverse_lazy
-from django.contrib import messages
-from django.utils.decorators import method_decorator
-from django.shortcuts import render, redirect, get_object_or_404
-from ..models import *
-from django.views import View
-from ..mixins import *
-from django.urls import reverse
-from django.db import transaction
 from collections import defaultdict
-from django.db.models import Sum
-from django.http import HttpResponseRedirect
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_POST
-import json
 from decimal import Decimal
+import json
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.db.models import Sum
+from django.http import JsonResponse
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.http import require_POST
+from django.views.generic import ListView, DetailView, CreateView
+from django.shortcuts import get_object_or_404, redirect, render
+
+from ..decorators import cutter_required
+from ..forms import *
+from ..mixins import *
+from ..models import *
 
 @login_required
 @cutter_required
