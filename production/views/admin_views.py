@@ -31,7 +31,7 @@ from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
-# @cache_page(CACHE_TTL)
+@cache_page(CACHE_TTL)
 @login_required
 @admin_required
 def admin_page(request):
@@ -41,7 +41,7 @@ def admin_page(request):
     }
     return render(request, 'admin_page.html', context)
 
-# @cache_page(CACHE_TTL)
+@cache_page(CACHE_TTL)
 @login_required
 @admin_required
 def dashboard_page(request):
