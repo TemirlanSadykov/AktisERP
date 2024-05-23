@@ -1,10 +1,11 @@
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
-
-from ..models import EmployeeAttendance, UserProfile
-
-
+from ..models import UserProfile
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.dispatch import receiver
+from ..models import EmployeeAttendance
 
 @login_required
 def user_redirect(request):

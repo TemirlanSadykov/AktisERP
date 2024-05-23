@@ -1,27 +1,31 @@
-from collections import defaultdict
-import json
-import openpyxl
-
-
-from django.contrib import messages
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy, reverse
-from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_POST
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView 
-from openpyxl import Workbook
-from openpyxl.styles import  Alignment, Border, Font, Side
-from openpyxl.utils import get_column_letter
-
 from ..decorators import technologist_required
 from ..forms import *
-from ..mixins import *
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.utils.decorators import method_decorator
+from django.shortcuts import render, redirect, get_object_or_404
 from ..models import *
-
-
+from django.urls import reverse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.http import HttpResponseRedirect
+from django.http import JsonResponse
+import json
+from django.db import transaction
+from django.db.models import Avg, F, ExpressionWrapper, fields
+from django.views.decorators.http import require_POST
+from django.db.models import Sum
+from ..mixins import *
+from collections import defaultdict
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Border, Side
+from django.http import HttpResponse
 
 @login_required
 @technologist_required

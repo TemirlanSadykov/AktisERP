@@ -1,14 +1,11 @@
-from datetime import datetime
-
-from django.contrib.auth.decorators import login_required
-from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from ..decorators import employee_required
+from ..models import Work, AssignedWork, ReassignedWork
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-
-from ..decorators import employee_required
-from ..models import AssignedWork, ReassignedWork
-
+from datetime import datetime
+from django.db import transaction
 
 @login_required
 @employee_required

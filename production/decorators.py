@@ -1,6 +1,5 @@
 from django.http import HttpResponseForbidden
 from functools import wraps
-
 from .models import UserProfile
 
 def employee_required(view_func):
