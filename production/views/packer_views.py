@@ -18,7 +18,7 @@ from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
-@cache_page(CACHE_TTL)
+# @cache_page(CACHE_TTL)
 @login_required
 @packer_required
 def packer_page(request):

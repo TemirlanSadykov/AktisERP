@@ -24,7 +24,7 @@ from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
-@cache_page(CACHE_TTL)
+# @cache_page(CACHE_TTL)
 @login_required
 @cutter_required
 def cutter_page(request):

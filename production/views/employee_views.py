@@ -14,7 +14,7 @@ from ..models import AssignedWork, ReassignedWork
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
-@cache_page(CACHE_TTL)
+# @cache_page(CACHE_TTL)
 @login_required
 @employee_required
 def employee_page(request):
