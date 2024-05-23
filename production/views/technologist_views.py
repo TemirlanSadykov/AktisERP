@@ -2,14 +2,16 @@ from collections import defaultdict
 import json
 import openpyxl
 
-
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView 
 from openpyxl import Workbook
@@ -22,7 +24,9 @@ from ..mixins import *
 from ..models import *
 
 
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
+@cache_page(CACHE_TTL)
 @login_required
 @technologist_required
 def technologist_page(request):
