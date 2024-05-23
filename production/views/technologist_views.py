@@ -243,52 +243,58 @@ def assign_operations(request, passport_id):
 
 @login_required
 @technologist_required
+@require_POST
 def update_work(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        assigned_work_id = data.get('work_id')
-        value = data.get('value')
+    data = json.loads(request.body)
+    assigned_work_id = data.get('work_id')
+    value = data.get('value')
 
-        try:
-            current_assignment = AssignedWork.objects.get(id=assigned_work_id)
-            work = Work.objects.get(id=current_assignment.work.id)
-            if not value.strip():
-                current_assignment.delete()
-                remaining_assignments = AssignedWork.objects.filter(work=work).exists()
-                if not remaining_assignments:
-                    work.delete()
-                return JsonResponse({'status': 'success'})
+    try:
+        current_assignment = AssignedWork.objects.get(id=assigned_work_id)
+        work = Work.objects.get(id=current_assignment.work.id)
 
-            new_assignments_data = value.split(',')
-            new_assignments = {}
-
-            for item in new_assignments_data:
-                employee_id, quantity = item.split('(')
-                employee_id = employee_id.strip()
-                quantity = int(quantity.strip(' )'))
-                new_assignments[employee_id] = quantity
-
-            for employee_id, quantity in new_assignments.items():
-                employee_profile = UserProfile.objects.filter(
-                    employee_id=employee_id, type=UserProfile.EMPLOYEE,
-                    branch=request.user.userprofile.branch).first()
-
-                if not employee_profile:
-                    continue
-
-                assigned_work, created = AssignedWork.objects.update_or_create(
-                    work=work, employee=employee_profile,
-                    defaults={'quantity': quantity}
-                )
-
+        if not value.strip():
+            current_assignment.delete()
+            remaining_assignments = AssignedWork.objects.filter(work=work).exists()
+            if not remaining_assignments:
+                work.delete()
             return JsonResponse({'status': 'success'})
 
-        except Work.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Work not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        new_assignments_data = value.split(',')
+        first = True  # Flag to track the first item
 
-    return JsonResponse({'status': 'error'}, status=400)
+        for item in new_assignments_data:
+            employee_id, quantity = item.split('(')
+            employee_id = employee_id.strip()
+            quantity = int(quantity.strip(' )'))
+
+            employee_profile = UserProfile.objects.filter(
+                employee_id=employee_id, type=UserProfile.EMPLOYEE,
+                branch=request.user.userprofile.branch).first()
+
+            if not employee_profile:
+                continue
+
+            # Handle the first item by updating existing assigned work
+            if first:
+                current_assignment.employee = employee_profile
+                current_assignment.quantity = quantity
+                current_assignment.save()
+                first = False  # Update the flag after handling the first item
+            else:
+                # Create new assigned works for subsequent items
+                AssignedWork.objects.create(
+                    work=work,
+                    employee=employee_profile,
+                    quantity=quantity
+                )
+
+        return JsonResponse({'status': 'success'})
+
+    except Work.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Work not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 @login_required
 @technologist_required
