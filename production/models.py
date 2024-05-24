@@ -143,23 +143,43 @@ class SizeQuantity(models.Model):
     def __str__(self):
         return f"Размер: {self.size}, Количество: {self.quantity}"
     
+# class ClientOrder(models.Model):
+#     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')
+#     created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
+#     order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
+#     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
+#     NEW = 0
+#     IN_PROGRESS = 1
+#     COMPLETED = 2
+#     TYPE_CHOICES = [
+#         (NEW, 'Новый'),
+#         (IN_PROGRESS, 'В процессе'),
+#         (COMPLETED, 'Завершен'),
+#     ]
+#     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
+#     def default_term():
+#         return timezone.now() + datetime.timedelta(days=30)
+#     term = models.DateField(default=default_term, verbose_name='Срок выполнения')
+#     def __str__(self):
+#         return self.order_number
+
 class ClientOrder(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')
-    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
-    order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    order_number = models.CharField(max_length=100)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
     TYPE_CHOICES = [
-        (NEW, 'Новый'),
-        (IN_PROGRESS, 'В процессе'),
-        (COMPLETED, 'Завершен'),
+        (NEW, 'New'),
+        (IN_PROGRESS, 'In progress'),
+        (COMPLETED, 'Completed'),
     ]
-    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
+    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW)
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
-    term = models.DateField(default=default_term, verbose_name='Срок выполнения')
+    term = models.DateField(default=default_term)
     def __str__(self):
         return self.order_number
 
