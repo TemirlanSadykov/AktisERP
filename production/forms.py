@@ -1,12 +1,16 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
-from django.forms import ModelChoiceField
-
+from django.contrib.auth.forms import UserCreationForm
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 from .models import *
-
+from django_select2 import forms as s2forms
+from django.forms import inlineformset_factory
+from django.forms import ModelChoiceField
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+import json
 
 class BranchForm(forms.ModelForm):
     class Meta:
