@@ -552,7 +552,12 @@ class OperationListView(ListView):
     model = Operation
     template_name = 'technologist/operations/list.html'
     context_object_name = 'operations'
-    paginate_by = 20
+
+    def get_paginate_by(self, queryset):
+        node_id = self.request.GET.get('node', None)
+        if node_id:
+            return None
+        return 15
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('number')
