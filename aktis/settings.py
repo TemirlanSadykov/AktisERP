@@ -29,6 +29,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+# Cache time to live is 1 hour
+CACHE_TTL = 60 * 60
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -90,6 +93,18 @@ DATABASES = {
         'PORT': '32670',
     }
 }
+
+# Redis cache
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": os.environ.get('REDIS_TLS_URL'),
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient"
+#         },
+#         "KEY_PREFIX": "example"
+#     }
+# }
 
 
 # Password validation
@@ -156,7 +171,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://wasteful-direction-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://wasteful-direction-production.up.railway.app', 'https://aktiserp-ken.up.railway.app']
 
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')

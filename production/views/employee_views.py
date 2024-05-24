@@ -1,12 +1,20 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from datetime import datetime
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from ..decorators import employee_required
-from ..models import Work, AssignedWork, ReassignedWork
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.db import transaction
+from django.views.decorators.cache import cache_page
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from datetime import datetime
-from django.db import transaction
 
+from ..decorators import employee_required
+from ..models import AssignedWork, ReassignedWork
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+
+# @cache_page(CACHE_TTL)
 @login_required
 @employee_required
 def employee_page(request):
