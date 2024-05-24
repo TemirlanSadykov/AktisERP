@@ -46,10 +46,12 @@ def admin_page(request):
 @admin_required
 def dashboard_page(request):
     clients = Client.objects.all()
+    
     client_data = []
 
     for client in clients:
         client_orders = ClientOrder.objects.filter(client=client)
+        
         orders = Order.objects.filter(client_order__in=client_orders)
         
         total_ordered_amount_by_orders = orders.aggregate(total_amount=Sum(F('quantity') * F('payment')))['total_amount'] or 0
@@ -61,6 +63,7 @@ def dashboard_page(request):
         ]
 
         client_data.append({
+            'id': client.id,
             'client': client.name,
             'client_orders_details': client_orders_details,
             'total_ordered_amount_by_orders': total_ordered_amount_by_orders,
@@ -68,7 +71,7 @@ def dashboard_page(request):
         })
 
     client_data = sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
-
+    
     return render(request, 'dashboard.html', {'client_data': client_data})
 
 @method_decorator([login_required, admin_required], name='dispatch')
