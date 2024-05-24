@@ -7,15 +7,15 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
-
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse_lazy
-from django.shortcuts import render
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.db import transaction
+from django.db.models import F, Window, Sum
+from django.db.models.functions import Lead
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+from django.urls import reverse_lazy, reverse
 from django.utils import timezone
-from datetime import timedelta
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views import View
@@ -24,28 +24,14 @@ from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
 
 from ..decorators import admin_required
-from ..models import *
 from ..forms import *
 from ..mixins import *
-from datetime import datetime
-import pandas as pd
-from django.http import HttpResponse
-from django.views import View
-from django.http import JsonResponse
-import json
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from django.views.decorators.http import require_POST
-from urllib.parse import urlencode
-from django.db import transaction
-from django.db.models import F, Window
-from collections import defaultdict
-from django.db.models import Sum, Count, F
-from django.db.models.functions import TruncDay
-import openpyxl
-from django.db.models.functions import Lead
-from decimal import Decimal
+from ..models import *
 
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+
+# @cache_page(CACHE_TTL)
 @login_required
 @admin_required
 def admin_page(request):
@@ -55,6 +41,7 @@ def admin_page(request):
     }
     return render(request, 'admin_page.html', context)
 
+# @cache_page(CACHE_TTL)
 @login_required
 @admin_required
 def dashboard_page(request):

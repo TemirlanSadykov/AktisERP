@@ -12,14 +12,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-
 from django.views.decorators.http import require_POST
-from django.db.models import Sum
-from ..mixins import *
-from collections import defaultdict
-import openpyxl
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView 
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment
+from openpyxl.styles import  Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 
 from ..decorators import technologist_required

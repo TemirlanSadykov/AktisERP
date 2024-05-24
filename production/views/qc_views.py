@@ -12,7 +12,7 @@ from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from ..decorators import qc_required
-from django.utils.decorators import method_decorator
+from ..forms import *
 from ..mixins import *
 from ..models import *
 
