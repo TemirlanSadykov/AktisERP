@@ -171,6 +171,8 @@ AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
 AWS_S3_ADDRESSING_STYLE = "virtual"
 
+OPENAI_API_KEY = config('OPENAI_API_KEY')
+
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,

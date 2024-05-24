@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">Ask ChatGPT</h2>
+  <form method="post" class="crud-form">
+    {% csrf_token %}
+    <div class="form-group">
+      <textarea name="prompt" placeholder="Enter your question here..." rows="4" cols="50"></textarea>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn create-btn">Ask</button>
+    </div>
+  </form>
+  <div class="response-container">
+    {% if response %}
+        {% if response|stringformat:"s" == response %}
+            <p>Response: {{ response }}</p>
+        {% else %}
+            <ul>
+                {% for key, value in response.items %}
+                    <li>{{ key|capfirst }}: {{ value }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const form = document.querySelector(".crud-form");
+      form.addEventListener("submit", function(event) {
+          event.preventDefault();
+          const formData = new FormData(form);
+          fetch(`/production/admin/chatgpt/`, { 
+              method: 'POST',
+              body: formData,
+              headers: {
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'X-CSRFToken': getCookie('csrftoken')
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Received data:', data);  // Check what the actual data is
+            displayResponse(data.response);
+          })
+          .catch(error => console.error('Error:', error));
+      });
+  
+      function displayResponse(response) {
+        console.log(document.querySelector('.response-container'));  // This should log the element or null
+        const responseContainer = document.querySelector('.response-container');
+        if (responseContainer) {
+            responseContainer.innerHTML = '';  // Clear previous responses
+            responseContainer.innerHTML = response;  // Set new response
+        } else {
+            console.error('The .response-container does not exist.');
+        }
+      }
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+  });
+  </script>
+{% endblock %}

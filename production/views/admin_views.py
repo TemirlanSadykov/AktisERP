@@ -34,6 +34,91 @@ from django.db.models.functions import TruncDay
 import openpyxl
 from django.db.models.functions import Lead
 from decimal import Decimal
+import requests
+from django.conf import settings
+from django.utils.dateparse import parse_date
+import re
+
+def serialize_order_data():
+    orders = Order.objects.select_related('client_order', 'model').all()
+    data_summary = "Order status summary:\n"
+    for order in orders:
+        status = dict(Order.TYPE_CHOICES)[order.status]
+        data_summary += f"Order {order.client_order.order_number} for model {order.model.name}: {status}\n"
+    return data_summary
+
+def serialize_attendance_data():
+    employees = EmployeeAttendance.objects.values('employee__user__first_name', 'employee__user__last_name').annotate(total_attendances=Count('id')).order_by('-total_attendances')
+    data_summary = "Employee attendance summary:\n"
+    for employee in employees:
+        data_summary += f"{employee['employee__user__first_name']} {employee['employee__user__last_name']}: {employee['total_attendances']} attendances\n"
+    return data_summary
+
+def handle_user_query(request, user_input):
+    user_input_lower = user_input.lower()
+
+    # Check for attendance-related queries
+    if "attendance" in user_input_lower:
+        request.session['last_query'] = 'attendance'
+        attendance_data = serialize_attendance_data()
+        return ask_chatgpt(user_input, attendance_data)
+
+    # Check for order-related queries
+    if "order" in user_input_lower:
+        request.session['last_query'] = 'order'
+        order_data = serialize_order_data()
+        return ask_chatgpt(user_input, order_data)
+
+    # Reset context if it's a new query type
+    request.session['last_query'] = ''
+    return None
+
+
+def ask_chatgpt(question, context):
+    headers = {
+        "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    data = {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": context},
+            {"role": "user", "content": question}
+        ],
+        "max_tokens": 500
+    }
+    response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
+    if response.status_code == 200:
+        response_json = response.json()
+        try:
+            return response_json['choices'][0]['message']['content']
+        except KeyError:
+            return "Error processing your request."
+    else:
+        return "Error: " + response.json().get('error', {}).get('message', 'Unknown error')
+
+@login_required
+@admin_required
+def chatgpt_page(request):
+    if request.method == "GET":
+        # Render the initial form page
+        return render(request, 'chatgpt.html')
+
+    elif request.method == "POST" and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        user_input = request.POST.get('prompt')
+        if user_input:
+            # Get the context data, assuming serialize_attendance_data() returns your contextual string
+            attendance_data = serialize_attendance_data()
+            # Ask ChatGPT with the context
+            response = ask_chatgpt(user_input, attendance_data)
+            return JsonResponse({'response': response})
+        else:
+            return JsonResponse({'response': 'No input provided'}, status=400)
+    
+    # Return an error if it's a non-AJAX POST request or other unexpected method
+    return JsonResponse({'response': 'Invalid request method or not an AJAX request'}, status=400)
+
+
 
 @login_required
 @admin_required
