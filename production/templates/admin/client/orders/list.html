@@ -2,56 +2,93 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
-  <div class="tabs">
-    <a href="{% url 'client_order_list' %}" class="{% if not selected_status %}active{% endif %}">{% trans "All" %}</a>
-    <a href="?status={{ ClientOrder.NEW }}" class="{% if selected_status|stringformat:"s" == ClientOrder.NEW|stringformat:"s" %}active{% endif %}">{% trans "New" %}</a>
-    <a href="?status={{ ClientOrder.IN_PROGRESS }}" class="{% if selected_status|stringformat:"s" == ClientOrder.IN_PROGRESS|stringformat:"s" %}active{% endif %}">{% trans "In Progress" %}</a>
-    <a href="?status={{ ClientOrder.COMPLETED }}" class="{% if selected_status|stringformat:"s" == ClientOrder.COMPLETED|stringformat:"s" %}active{% endif %}">{% trans "Completed" %}</a>
+<div class="container-fluid main-cont">
+  <div class="d-flex justify-content-between button-top flex-wrap">
+      <button class="btn btn-custom mb-2 mb-md-0">BACK TO HOME</button>
+      <button class="btn btn-outline-custom">LOGOUT</button>
   </div>
-  <div class="header">
-    <h2 class="list-heading">{% trans "Client Orders" %}</h2>
-    <p class="create-link"><a href="{% url 'client_order_create' %}" class="btn create-btn">{% trans "Create" %}</a></p>
-  </div>
-  <div class="filter-header">
-    <form method="get" class="date-filter-form">
-      {{ form.as_p }}
-      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
-    </form>
-  </div>
-  <ul class="list-group">
-    {% for order_info in orders_with_days_left %}
-      <li class="list-group-item" style="display: flex; justify-content: space-between; align-items: center;">
-        <a href="{% url 'client_order_detail' order_info.order.pk %}" style="flex-grow: 1;">
-          {{ order_info.order.order_number }}
-        </a>
-        <span style="flex-shrink: 0;">{% trans "Days left:" %} {{ order_info.days_left }}</span>
+
+  <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+          <a href="{% url 'client_order_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'client_order_list' %}" role="tab" aria-controls="all"
+              aria-selected="false">{% trans "All" %}</a>
       </li>
-    {% endfor %}
+      <li class="nav-item">
+          <a class="nav-link {% if selected_status|stringformat:"s" == ClientOrder.NEW|stringformat:"s" %}active{% endif %}" id="new-tab"  href="?status={{ ClientOrder.NEW }}" role="tab" aria-controls="new"
+              aria-selected="true">{% trans "New" %}</a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link {% if selected_status|stringformat:"s" == ClientOrder.IN_PROGRESS|stringformat:"s" %}active{% endif %}" id="in-progress-tab"  href="?status={{ ClientOrder.IN_PROGRESS }}" role="tab"
+              aria-controls="in-progress" aria-selected="false">{% trans "In Progress" %}</a>
+      </li>
+      <li class="nav-item">
+          <a class="nav-link {% if selected_status|stringformat:"s" == ClientOrder.COMPLETED|stringformat:"s" %}active{% endif %}" id="completed-tab"  href="?status={{ ClientOrder.COMPLETED }}" role="tab"
+              aria-controls="completed" aria-selected="false">{% trans "Completed" %}</a>
+      </li>
   </ul>
 
-  <div class="pagination">
-    {% if is_paginated %}
-      <ul class="pagination-list">
-        {% if page_obj.has_previous %}
-          <li><a href="?page=1">&laquo; first</a></li>
-          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
-        {% endif %}
-  
-        {% for num in paginator.page_range %}
-          {% if page_obj.number == num %}
-            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
-          {% else %}
-            <li><a href="?page={{ num }}">{{ num }}</a></li>
-          {% endif %}
-        {% endfor %}
-  
-        {% if page_obj.has_next %}
-          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
-          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
-        {% endif %}
-      </ul>
-    {% endif %}
+
+  <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
+          <div class="row">
+              <div class="col-lg-6 col-md-6 col-sm-4">
+                  <h4 class="font-weight-bold">{% trans "Client Orders" %}</h4>
+              </div>
+              <div class="col-lg-6 col-md-6 col-sm-2 text-md-right text-sm-right">
+                <a href="{% url 'client_order_create' %}" class="btn btn-custom">{% trans "Create" %}</a>
+              </div>
+          </div>
+          <br>
+          <div class="form-row align-items-center">
+                <form method="get" class="date-filter-form">
+                  {{ form.as_p }}
+                  <button type="submit" class="btn btn-custom">{% trans "Filter" %}</button>
+                </form>
+              </div>
+          </div>
+          <br><br>
+          <ul class="list-group custom-list-group">
+            {% for order_info in orders_with_days_left %}
+              <li class="list-group-item custom-list-item">
+                <a href="{% url 'client_order_detail' order_info.order.pk %}" class="order-link ">
+                  {{ order_info.order.order_number }}
+                </a>
+                <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
+              </li>
+            {% endfor %}
+        </ul>
+      </div>
   </div>
+  <br>
+</div>
+
+<div class="pagination-container">
+  {% if is_paginated %}
+  <div class="list-group-item d-flex justify-content-between align-items-center lower-column custom-padding">
+      <span>Teenzbro No2</span>
+      <span>Days Left: 40</span>
+  </div>
+  <nav aria-label="Page navigation">
+      <ul class="pagination">
+          {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+          {% endif %}
+
+          {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+          {% endif %}
+      </ul>
+  </nav>
+  {% endif %}
 </div>
 {% endblock %}
