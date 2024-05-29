@@ -10,6 +10,12 @@
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="http://cdn.pydata.org/bokeh/release/bokeh-3.4.1.min.css"/>
+    <link rel="stylesheet" type="text/css" href="http://cdn.pydata.org/bokeh/release/bokeh-widgets-3.4.1.min.css"/>
+    <link rel="stylesheet" type="text/css" href="http://cdn.pydata.org/bokeh/release/bokeh-tables-3.4.1.min.css"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bokeh/3.4.1/bokeh.min.js" integrity="sha512-iH5rrOjYD1wVVcGRP3MAYcLXOsuDrbf0zPLvAv/H5ehk97HJfbmk9mQ6FDFwDWXiaGdZ9cS7GskmMei2Wc7q0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div class="sidebar">
@@ -61,48 +67,130 @@
         </div>
         <div id="Clients" class="col-md-12" style="display: none;">
             <h2>Client Rankings</h2>
-            
-                <!-- Accordion -->
-                {% for data in client_data %}
-                <div id="accordion">
-                    
-                    <div class="card w-100">
-                      <div class="card-header" id="headingOne">
-                        <h5 class="mb-0">
-                          <button class="btn btn-link" data-toggle="collapse" data-target="#collapse{{forloop.counter}}" aria-expanded="true" aria-controls="collapseOne">
-                            {{ data.client }}
-                            
-                          </button>
-                        </h5>
-                      </div>
-                  
-                      <div id="collapse{{forloop.counter}}" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
-                        <div class="card-body row">
-                            <div class="col-4">
-                                <p>Client Orders</p>
-                                {% for client_order in data.client_orders_details %}
-                                <a href="{% url 'client_order_detail' data.id %}"><small>{{ client_order }}</small></a>
-                                {% endfor %}
-                            
-                            </div>
-                            <div class="col-4">
-                                <p class="text-start h6">Total Value of Ordered Amount (сом) : {{ data.total_ordered_amount_by_orders }}</p>
-                            </div>
-                            <div class="col-4">
-                                <p class="text-start h6">Total Ordered Amount : {{ data.total_ordered_amount }}</p>
-                                {{ data.client_orders_details }}
-                            </div>
-                            
-                        </div>
-                      </div>
-                    </div>
-                  
-                  </div>
-                  {% endfor %}
 
-                  <!-- End of accordion -->
+            <div class="client_data">
+                
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Client</th>
+                        <th scope="col">Order Details</th>
+                        <th scope="col">Total Ordered Amount</th>
+                        <th scope="col">Completed Orders</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in client_data %}
+                        <tr>
+                            <td><a href="#"  data-toggle="modal" data-target="#clientDetails{{ data.id }}">{{data.client}}</a></td>
+                            {% if data.orders_by_clients.0.order_number == None %}
+                            <td><a href="#"  data-toggle="modal" data-target="#clientOrderDetails{{ data.id }}">None</a></td>
+                            {% else %}
+                            <td><a href="#"  data-toggle="modal" data-target="#clientOrderDetails{{ data.id }}">{{ data.orders_by_clients.0.order_number }}</a></td>
+                            {% endif %}
+                            <td>{{data.total_ordered_amount}}</td>
+                            <td>{{data.completed_client_orders.0.order_number}}</td>
                        
-        </div>        
+
+                        <!-- Client Name Modal -->
+                        <div class="modal fade" id="clientDetails{{ data.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                                <div class="modal-body">
+                                    <h5>Client Details</h5>
+                                    <p>Client Name: {{ data.client }}</p>
+                                    <p>Client Contact Information: {{ data.contact_info }}</p>
+                                </div>
+                                <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Order Details Modal -->
+                        <div class="modal fade" id="clientOrderDetails{{data.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="filter-header">
+                                        <form action="{% url 'dashboard_page' %}" method="GET">
+                                            <label for="from">From:</label>
+                                            <input type="date" id="search_from" name="search_from">
+                                            <label for="to">To:</label>
+                                            <input type="date" id="search_to" name="search_to">
+                                            <input type="submit" value="Search">
+                                          </form>
+                                    </div>
+                                    <div>
+                                        <h5>Order Details</h5>
+                                        <p>Id: {{ data.orders_by_clients.0.id }}</p>
+                                        <p>Branch Id: {{ data.orders_by_clients.0.branch_id }}</p>
+                                        <p>Date of Creation: {{ data.orders_by_clients.0.created_at }}</p>
+                                         {% if data.orders_by_clients.0.status == 0 %}
+                                            <p>Status: New</p>
+                                        {% elif data.orders_by_clients.0.status == 1 %}
+                                            <p>Status: In Progress</p>
+                                        {% elif data.orders_by_clients.0.status == 2 %}
+                                        <p>Status: Completed</p>
+                                        {% endif %}
+
+                                        <p>Term: {{ data.orders_by_clients.0.term }}</p>
+                                    </div>
+                                    <!-- <div id="linechart2">
+                                        {{ div3|safe }}
+                                    </div> -->
+
+                                    <div id="chartjslinechart">
+                                        <canvas id="lchart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+            <!-- Total Client Orders Chart -->
+            <div id="dashboard">
+                <div id="linechart">
+                    {{ div|safe }}
+                </div>
+
+                <p>Graph showng the total orders from clients</p>
+                <div id="totalbarchart">
+                    {{ div2|safe }}
+                </div>
+            </div>
+
+                       
+        </div> 
+
+        
+
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+          </div>       
         <div id="Production" class="tabcontent">
             <h2>Production Overview</h2>
             <div class="branch-switch">
@@ -486,6 +574,86 @@
         </div>
     </div>
 
+<!-- Bar Chart javascript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+<script>
+    function drawLineChart(labels, dataset){
+
+        let ctx = document.getElementById('lchart').getContext('2d');
+        let myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Solid Line',
+                        data: dataset,
+                        borderColor: 'blue',
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Months',
+                            font: {
+                                padding: 4,
+                                size: 20,
+                                weight: 'bold',
+                                family: 'Arial'
+                            },
+                            color: 'darkblue'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Values',
+                            font: {
+                                size: 20,
+                                weight: 'bold',
+                                family: 'Arial'
+                            },
+                            color: 'darkblue'
+                        },
+                        beginAtZero: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Values',
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Ajax call to pick data from Django
+    url = 'linechart'
+
+    function dashboardData(url){
+        fetch(url, {
+            method:"GET",
+            headers: {
+    "X-Requested-With": "XMLHttpRequest",
+  }
+        })
+        .then(response =>response.json())
+        .then(response =>{
+            const months = response.months
+            const data = response.data
+            drawLineChart(months, data)
+        })
+    }
+    dashboardData(url)
+    
+</script>
+<!-- End of Bar chart javascript -->
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -620,4 +788,13 @@
         });
     </script>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+
+    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-3.4.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-3.4.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-tables-3.4.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-api-3.4.1.min.js"></script>
+    {{ script|safe }}
+    {{ script2|safe }}
+    {{ script3|safe }}
 </html>

@@ -23,6 +23,9 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
 
+from bokeh.embed import components
+from bokeh.models import ColumnDataSource, NumeralTickFormatter
+from bokeh.plotting import figure
 from ..decorators import admin_required
 from ..forms import *
 from ..mixins import *
@@ -47,12 +50,22 @@ def admin_page(request):
 def dashboard_page(request):
     clients = Client.objects.all()
     
+    client_names = [x[1] for x in list(clients.values_list())]
+    all_client_orders = []
+    total_client_orders = []
     client_data = []
-
+    orders_by_clients = []
+    date_from = request.GET.get('search_from')
+    date_to = request.GET.get('search_to')
+    
+    print(date_from, date_to)
     for client in clients:
         client_orders = ClientOrder.objects.filter(client=client)
+        orders_by_clients = list(client_orders.values())
         
         orders = Order.objects.filter(client_order__in=client_orders)
+        completed_client_orders = list(ClientOrder.objects.filter(client=client, status=2).values())
+        # print(list(Order.objects.all().values()))
         
         total_ordered_amount_by_orders = orders.aggregate(total_amount=Sum(F('quantity') * F('payment')))['total_amount'] or 0
         total_ordered_amount = client_orders.aggregate(total_amount=Sum('orders__quantity'))['total_amount'] or 0
@@ -61,18 +74,84 @@ def dashboard_page(request):
             (co.order_number, list(co.orders.values_list('model__name', flat=True)))
             for co in client_orders
         ]
+        
 
         client_data.append({
             'id': client.id,
             'client': client.name,
+            'contact_info':client.contact_info,
             'client_orders_details': client_orders_details,
             'total_ordered_amount_by_orders': total_ordered_amount_by_orders,
-            'total_ordered_amount': total_ordered_amount
+            'total_ordered_amount': total_ordered_amount,
+            'completed_client_orders':completed_client_orders,
+            'orders_by_clients':orders_by_clients,
         })
-
+        all_client_orders.append(total_ordered_amount)
+        total_client_orders.append(int(total_ordered_amount_by_orders))
+        orders_by_clients.append(orders_by_clients)
+    # print(orders_by_clients[0]['term'].strftime('%B'))
+    # print(orders_by_clients)
+    # print(total_client_orders)
     client_data = sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
+   
+    # Client Orders Bar graph
+    fig = figure(x_range=client_names, height=350, title="Total Client Orders", toolbar_location=None, tools="")
+    fig.vbar(x=client_names, top=all_client_orders, width=0.9)
+    fig.xgrid.grid_line_color = None
+    fig.y_range.start = 0
+    script,div = components(fig)
+    # context = {
+    #     'client_names':client_names,
+    #     'script':script,
+    #     'div':div,
+    # }
+
+    # Total client Orders Bar grapgh
+    figure2 = figure(x_range=client_names, height=350, title="Total Client Orders", toolbar_location=None, tools="")
+    figure2.vbar(x=client_names, top=total_client_orders, width=0.9)
+    figure2.xgrid.grid_line_color = None
+    figure2.y_range.start = 0
+    script2,div2 = components(figure2)
+    # context = {
+    #     'client_data':client_data,
+    #     'client_names':client_names,
+    #     'script':script,
+    #     'div':div,
+    #     'script2':script2,
+    #     'div2':div2,
+    # }
+    # Line Chart of client against their orders
+    months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    sales = [100,250,200,500,300,800,600,900,50,400,100,750]
+    p = figure(width=400, height=400)
+    p.line(months, sales, line_width=2, color="blue")
     
-    return render(request, 'dashboard.html', {'client_data': client_data})
+    script3,div3 = components(p)
+    context = {
+        'client_data':client_data,
+        'client_names':client_names,
+        'script':script,
+        'div':div,
+        'script2':script2,
+        'div2':div2,
+        'script3':script3,
+        'div3':div3,
+    }
+    
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+@admin_required
+def plot_linechart(request):
+
+    plot_data = {
+        "months":['January', 'February','March', 'April', 'May'],
+        "data": [10, 25, 13, 18, 30],
+    }
+    return JsonResponse(plot_data)
+
+
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):

@@ -15,9 +15,9 @@ class BranchAwareManager(models.Manager):
         return self.get_queryset().filter(branch=user.profile.branch)
 
 class UserProfile(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', null=True, blank=True, verbose_name='Филиал')
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
-    employee_id = models.CharField(max_length=100, verbose_name='ID сотрудника')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    employee_id = models.CharField(max_length=100)
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['employee_id', 'branch'], name='unique_employee_id_per_branch')
@@ -29,26 +29,26 @@ class UserProfile(models.Model):
     QC = 4
     PACKER = 5
     TYPE_CHOICES = [
-        (ADMIN, 'Администратор'),
-        (TECHNOLOGIST, 'Технолог'),
-        (EMPLOYEE, 'Сотрудник'),
-        (CUTTER, 'Закройщик'),
-        (QC, 'ОТК'),
-        (PACKER, 'Упаковщик'),
+        (ADMIN, 'ADMIN'),
+        (TECHNOLOGIST, 'TECHNOLOGIST'),
+        (EMPLOYEE, 'EMPLOYEE'),
+        (CUTTER, 'CUTTER'),
+        (QC, 'QC'),
+        (PACKER, 'PACKER'),
     ]
-    type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
-    status = models.BooleanField(default=False, verbose_name='Статус')
+    type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE)
+    status = models.BooleanField(default=False)
     STATION_CHOICES = [
-        ('admin_technologist', 'Админ/Технолог'),
-        ('cutting_station', 'Закройный участок'),
-        ('sewing_station', 'Швейный участок'),
-        ('ironing_station', 'Утюжный участок'),
-        ('quality_control', 'ОТК'),
-        ('package', 'Упаковка'),
-        ('interns', 'Практиканты'),
-        ('others', 'Остальные'),
+        ('admin_technologist', 'admin_technologist'),
+        ('cutting_station', 'cutting_station'),
+        ('sewing_station', 'sewing_station'),
+        ('ironing_station', 'ironing_station'),
+        ('quality_control', 'QC'),
+        ('package', 'package'),
+        ('interns', 'interns'),
+        ('others', 'others'),
     ]
-    station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station', verbose_name='Станция')
+    station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station')
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"
     
@@ -60,21 +60,21 @@ class EmployeeAttendance(models.Model):
     is_clock_in = models.BooleanField(default=False)
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
-        return f"{self.employee.username} - {event_type} at {self.timestamp}"
+        return f"{self.employee.user} - {event_type} at {self.timestamp}"
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
-    contact_info = models.TextField(verbose_name='Контактная информация')
+    contact_info = models.TextField()
     def __str__(self):
         return self.name
 
 class Roll(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Филиал')
-    name = models.CharField(max_length=100, verbose_name='Название')
-    color = models.CharField(max_length=50, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, verbose_name='Ткани')
-    meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
-    used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True)
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=50)
+    fabrics = models.CharField(max_length=100)
+    meters = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
     @property
@@ -82,51 +82,51 @@ class Roll(models.Model):
         return self.meters - self.used_meters
 
 class Equipment(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    name = models.CharField(max_length=100, unique=True)
     def __str__(self):
         return self.name
     
 class Node(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
-    is_common = models.BooleanField(default=False, verbose_name='Общий')
+    name = models.CharField(max_length=100, unique=True)
+    is_common = models.BooleanField(default=False)
     SEWING = 0
     CUTTING = 1
     QC = 2
     PACKING = 3
     TYPE_CHOICES = [
-        (SEWING, 'Шитье'),
-        (CUTTING, 'Резка'),
-        (QC, 'ОТК'),
-        (PACKING, 'Упаковка'),
+        (SEWING, 'SEWING'),
+        (CUTTING, 'CUTTING'),
+        (QC, 'QC'),
+        (PACKING, 'PACKING'),
     ]
-    type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
+    type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING)
     def __str__(self):
         return self.name
     
 class Operation(models.Model):
-    name = models.CharField(max_length=300, verbose_name='Название')
-    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ПП')
-    payment = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Оплата')
-    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations', verbose_name='Оборудование')
-    node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations', verbose_name='Узел')
-    preferred_completion_time = models.IntegerField(verbose_name='Предпочтительное время выполнения')
-    average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
-    photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
+    name = models.CharField(max_length=300)
+    number = models.CharField(max_length=100, null=True, blank=True)
+    payment = models.DecimalField(max_digits=10, decimal_places=2)
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations')
+    node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations')
+    preferred_completion_time = models.IntegerField()
+    average_completion_time = models.IntegerField(null=True)
+    photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True)
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True)
     def __str__(self):
         return f"{self.number} - {self.node.name} - {self.name}"
     
 class Assortment(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
-    name = models.CharField(max_length=100, verbose_name='Название')
-    operations = models.ManyToManyField(Operation, related_name='assortments', verbose_name='Операции')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True)
+    name = models.CharField(max_length=100)
+    operations = models.ManyToManyField(Operation, related_name='assortments')
     def __str__(self):
         return self.name
 
 class Model(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название')
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
-    operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
+    name = models.CharField(max_length=100)
+    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', null=True, blank=True)
+    operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models')
     def __str__(self):
         return self.name
     
@@ -138,95 +138,95 @@ class ModelOperation(models.Model):
         ordering = ['order']
 
 class SizeQuantity(models.Model):
-    size = models.CharField(max_length=10, verbose_name='Размер')
-    quantity = models.IntegerField(verbose_name='Количество')
+    size = models.CharField(max_length=10)
+    quantity = models.IntegerField()
     def __str__(self):
-        return f"Размер: {self.size}, Количество: {self.quantity}"
+        return f"size: {self.size}, quantity: {self.quantity}"
     
 class ClientOrder(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')
-    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
-    order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    order_number = models.CharField(max_length=100)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
     TYPE_CHOICES = [
-        (NEW, 'Новый'),
-        (IN_PROGRESS, 'В процессе'),
-        (COMPLETED, 'Завершен'),
+        (NEW, 'NEW'),
+        (IN_PROGRESS, 'IN_PROGRESS'),
+        (COMPLETED, 'COMPLETED'),
     ]
-    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
+    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW)
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
-    term = models.DateField(default=default_term, verbose_name='Срок выполнения')
+    term = models.DateField(default=default_term)
     def __str__(self):
         return self.order_number
 
 class Order(models.Model):
-    client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
-    name = models.CharField(max_length=100, verbose_name='Название')
-    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
-    color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, null=True, verbose_name='Ткани')
+    client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders')
+    name = models.CharField(max_length=100)
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders')
+    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders')
+    color = models.CharField(max_length=50, null=True)
+    fabrics = models.CharField(max_length=100, null=True)
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
     TYPE_CHOICES = [
-        (NEW, 'Новый'),
-        (IN_PROGRESS, 'В процессе'),
-        (COMPLETED, 'Завершен'),
+        (NEW, 'NEW'),
+        (IN_PROGRESS, 'IN_PROGRESS'),
+        (COMPLETED, 'COMPLETED'),
     ]
-    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
-    quantity = models.IntegerField(verbose_name='Количество')
-    completed_quantity = models.IntegerField(default=0, verbose_name='Завершенное количество')
-    payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
-    size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
+    status = models.IntegerField(choices=TYPE_CHOICES, default=NEW)
+    quantity = models.IntegerField()
+    completed_quantity = models.IntegerField(default=0)
+    payment = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders')
     def __str__(self):
         return f"{self.name} - {self.model}"
     
 class Passport(models.Model):
-    date = models.DateField(auto_now_add=True, verbose_name='Дата')
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='passports', verbose_name='Заказ')
-    size_quantities = models.ManyToManyField(SizeQuantity, through='PassportSize', related_name='passports', verbose_name='Размеры и количества')
-    rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports', verbose_name='Рулоны')
-    is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
+    date = models.DateField(auto_now_add=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='passports')
+    size_quantities = models.ManyToManyField(SizeQuantity, through='PassportSize', related_name='passports')
+    rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports')
+    is_completed = models.BooleanField(default=False)
     def __str__(self):
         return f"ID: {str(self.id)}"
     
 class PassportSize(models.Model):
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
-    quantity = models.IntegerField(verbose_name='Количество')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes')
+    quantity = models.IntegerField()
     CUTTING = 0
     SEWING = 1
     QC = 2
     PACKING = 3
     DONE = 4
     STAGE_CHOICES = [
-        (CUTTING, 'Резка'),
-        (SEWING, 'Шитье'),
-        (QC, 'ОТК'),
-        (PACKING, 'Упаковка'),
-        (DONE, 'Готово'),
+        (CUTTING, 'CUTTING'),
+        (SEWING, 'SEWING'),
+        (QC, 'QC'),
+        (PACKING, 'PACKING'),
+        (DONE, 'DONE'),
     ]
-    stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
+    stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING)
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"
 
 class PassportRoll(models.Model):
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
-    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон')
-    meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls')
+    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls')
+    meters = models.DecimalField(max_digits=10, decimal_places=2)
     def __str__(self):
-        return f"{self.meters} метров {self.roll.name}"
+        return f"{self.meters} meters {self.roll.name}"
 
 class Work(models.Model):
-    employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')
-    operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='works', verbose_name='Паспорт')
-    passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True, verbose_name='Размер и количество')
+    employees = models.ManyToManyField(UserProfile, through='AssignedWork')
+    operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='works')
+    passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True)
     def __str__(self):
         if self.passport_size:
             return f"{self.operation.name} - {self.passport_size.size_quantity.size}"
@@ -234,54 +234,54 @@ class Work(models.Model):
             return f"{self.operation.name} - Нет размера"
     
 class AssignedWork(models.Model):
-    work = models.ForeignKey(Work, on_delete=models.CASCADE, related_name='assigned_works', verbose_name='Работа')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='assigned_tasks', verbose_name='Сотрудник')
-    quantity = models.IntegerField(verbose_name='Количество')
-    start_time = models.DateTimeField(null=True, blank=True, verbose_name='Время начала')
-    end_time = models.DateTimeField(null=True, blank=True, verbose_name='Время окончания')
-    is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
-    payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
+    work = models.ForeignKey(Work, on_delete=models.CASCADE, related_name='assigned_works')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='assigned_tasks')
+    quantity = models.IntegerField()
+    start_time = models.DateTimeField(null=True, blank=True )
+    end_time = models.DateTimeField(null=True, blank=True)
+    is_success = models.BooleanField(default=False)
+    payment_date = models.DateField(null=True)
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
 
 class ReassignedWork(models.Model):
-    original_assigned_work = models.ForeignKey(AssignedWork, on_delete=models.CASCADE, related_name='reassignments', verbose_name='Исходное назначенное задание')
-    new_employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='reassigned_works', verbose_name='Новый сотрудник')
-    reassigned_quantity = models.IntegerField(verbose_name='Переназначенное количество')
-    reason = models.TextField(blank=True, null=True, verbose_name='Причина')
-    is_completed = models.BooleanField(default=False, verbose_name='Завершено')
-    is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
-    payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
+    original_assigned_work = models.ForeignKey(AssignedWork, on_delete=models.CASCADE, related_name='reassignments')
+    new_employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='reassigned_works')
+    reassigned_quantity = models.IntegerField()
+    reason = models.TextField(blank=True, null=True)
+    is_completed = models.BooleanField(default=False)
+    is_success = models.BooleanField(default=False)
+    payment_date = models.DateField(null=True)
     def __str__(self):
         return f"Переназначено {self.reassigned_quantity} от {self.original_assigned_work} к {self.new_employee}"
     
 class Error(models.Model):
     class ErrorType(models.TextChoices):
-        DEFECT = 'DEFECT', 'Дефект'
-        DISCREPANCY = 'DISCREPANCY', 'Расхождение'
+        DEFECT = 'DEFECT', 'DEFECT'
+        DISCREPANCY = 'DISCREPANCY', 'DISCREPANCY'
     
     class DefectType(models.TextChoices):
-        STITCHING = 'STITCHING', 'Ошибка шитья'
-        CUTTING = 'CUTTING', 'Ошибка резки'
-        FABRIC = 'FABRIC', 'Дефект ткани'
-        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
-        OTHER = 'OTHER', 'Прочие ошибки'
+        STITCHING = 'STITCHING', 'STITCHING'
+        CUTTING = 'CUTTING', 'CUTTING'
+        FABRIC = 'FABRIC', 'FABRIC'
+        ASSEMBLY = 'ASSEMBLY', 'ASSEMBLY'
+        OTHER = 'OTHER', 'OTHER'
 
     class Status(models.TextChoices):
-        REPORTED = 'REPORTED', 'Сообщено'
-        UNRESOLVABLE = 'UNRESOLVABLE', 'Неразрешимо'
-        RESOLVED = 'RESOLVED', 'Разрешено'
+        REPORTED = 'REPORTED', 'REPORTED'
+        UNRESOLVABLE = 'UNRESOLVABLE', 'UNRESOLVABLE'
+        RESOLVED = 'RESOLVED', 'RESOLVED'
     
-    error_type = models.CharField(max_length=20, choices=ErrorType.choices, verbose_name='Тип ошибки')
-    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Тип дефекта')
-    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Стоимость')
-    responsible_employees = models.ManyToManyField(UserProfile, through='ErrorResponsibility', verbose_name='Ответственные сотрудники')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='errors', verbose_name='Паспорт')
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='errors', verbose_name='Размер и количество')
-    quantity = models.IntegerField(verbose_name='Количество')
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED, verbose_name='Статус')
-    reported_date = models.DateTimeField(default=timezone.now, verbose_name='Дата сообщения')
-    resolved_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата решения')
+    error_type = models.CharField(max_length=20, choices=ErrorType.choices)
+    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    responsible_employees = models.ManyToManyField(UserProfile, through='ErrorResponsibility')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='errors')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='errors')
+    quantity = models.IntegerField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED)
+    reported_date = models.DateTimeField(default=timezone.now)
+    resolved_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         if self.error_type == self.ErrorType.DEFECT:
@@ -291,27 +291,27 @@ class Error(models.Model):
             return f"Несоответствие: {discrepancy_type} на {abs(self.quantity)}"
 
 class ErrorResponsibility(models.Model):
-    error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Ошибка')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Сотрудник')
-    percentage = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Процент ответственности', help_text="Процент ответственности, приписываемый этому сотруднику.")
+    error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities')
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text="Процент ответственности, приписываемый этому сотруднику.")
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.percentage}%"
 
 class FixedSalary(models.Model):
-    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='fixed_salaries', null=True, blank=True, verbose_name='Филиал')
-    position = models.CharField(max_length=100, verbose_name='Должность')
-    employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries', verbose_name='Сотрудники')
-    salary = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Зарплата')
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='fixed_salaries', null=True, blank=True)
+    position = models.CharField(max_length=100)
+    employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries')
+    salary = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"{self.position} - {self.salary}"
 
 class SalaryPayment(models.Model):
-    fixed_salary = models.ForeignKey(FixedSalary, on_delete=models.CASCADE, related_name='salary_payments', verbose_name='Оклад')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='salary_payments', verbose_name='Сотрудник')
-    payment_date = models.DateField(verbose_name='Дата платежа')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма')
+    fixed_salary = models.ForeignKey(FixedSalary, on_delete=models.CASCADE, related_name='salary_payments')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='salary_payments')
+    payment_date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.payment_date} - {self.amount}"
