@@ -16,6 +16,7 @@ urlpatterns = [
     path('packer/', packer_page, name='packer_page'),
 
     path('admin/dashboard/', dashboard_page, name='dashboard_page'),
+    path('admin/dashboard/linechart/', plot_linechart, name='plot_linechart'),
 
     path('admin/branches/', BranchListView.as_view(), name='branch_list'),
     path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
