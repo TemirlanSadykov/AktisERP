@@ -1,13 +1,57 @@
+
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
-<div class="container-fluid main-cont">
-  <div class="d-flex justify-content-between button-top flex-wrap">
-      <button class="btn btn-custom mb-2 mb-md-0">BACK TO HOME</button>
-      <button class="btn btn-outline-custom">LOGOUT</button>
+<div class="d-flex" id="wrapper">
+<div class=" border-right" id="sidebar-wrapper">
+  <div class="d-flex justify-content-between align-items-centero">
+    <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
   </div>
-
+  <div class="sidebar-heading text-white"></div>
+  <div class="list-group list-group-flush">
+    <a href="{% url 'dashboard_page' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-home"></i> {% trans 'Dashboard' %}</a>
+    <a href="{% url 'client_order_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-table"></i></i> {% trans 'Orders' %}</a>
+    <a href="{% url 'employee_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-users"></i> {% trans 'Employees' %}</a>
+    <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-user"></i> {% trans 'Clients' %}</a>
+    <a href="{% url 'attendance_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-clipboard-list"></i> {% trans 'Attendances' %}</a>
+    <a href="{% url 'branch_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-cogs"> </i>{% trans 'Branches' %}</a>
+    <a href="{% url 'salary_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-coins"></i> {% trans 'Salaries' %}</a>
+    <a href="{% url 'fixed_salary_list' %}" class="list-group-item list-group-item-action text-black"><i
+        class="fas fa-file-invoice-dollar"></i> {% trans 'Fixed Salaries' %}</a>
+  </div>
+</div>
+<div id="page-content-wrapper">
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #343C6A; text-align: center;">{% trans 'Orders' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: auto;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <a class="dropdown-item">
+            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+          </a>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container-fluid main-cont">
   <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item">
           <a href="{% url 'client_order_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'client_order_list' %}" role="tab" aria-controls="all"
@@ -26,8 +70,6 @@
               aria-controls="completed" aria-selected="false">{% trans "Completed" %}</a>
       </li>
   </ul>
-
-
   <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
           <div class="row">
@@ -61,7 +103,6 @@
   </div>
   <br>
 </div>
-
 <div class="pagination-container">
   {% if is_paginated %}
   <div class="list-group-item d-flex justify-content-between align-items-center lower-column custom-padding">
@@ -74,7 +115,6 @@
           <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
           <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
           {% endif %}
-
           {% for num in paginator.page_range %}
           {% if page_obj.number == num %}
           <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
@@ -82,7 +122,6 @@
           <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
           {% endif %}
           {% endfor %}
-
           {% if page_obj.has_next %}
           <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
           <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
@@ -90,5 +129,7 @@
       </ul>
   </nav>
   {% endif %}
+</div>
+</div>
 </div>
 {% endblock %}
