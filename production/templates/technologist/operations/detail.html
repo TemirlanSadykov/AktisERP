@@ -26,7 +26,7 @@
         {% if operation.copied_operations.all %}
           <ul class="list-group" id="operationsList">
           {% for derived_op in operation.copied_operations.all %}
-            <li class="list-group-item"><a href="{% url 'operation_detail' derived_op.pk %}">{{ derived_op.number }} - {{ derived_op.name }}</a></li>
+            <li class="list-group-item"><a href="{% url 'operation_detail' derived_op.pk %}">{{ derived_op }}</a></li>
           {% endfor %}
           </ul>
         {% else %}
@@ -42,7 +42,7 @@
   <div class="form-actions">
     <a href="{% url 'operation_edit' operation.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'operation_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    {% comment %} <a href="{% url 'operation_list' %}" class="btn back-btn">{% trans "Back" %}</a> {% endcomment %}
   </div>
 
   <form id="deleteForm" action="{% url 'operation_delete' operation.pk %}" method="post" style="display:none;">

@@ -7,6 +7,7 @@
     <h2 class="list-heading">{{ assortment.name }}</h2>
     <p class="create-link"><a href="{% url 'assortment_detail' assortment.pk %}" class="btn create-btn">{% trans "Assortment Details" %}</a></p>
     <p class="create-link"><a href="{% url 'model_create' assortment.pk %}" class="btn create-btn">{% trans "Create Model" %}</a></p>
+    <p class="create-link"><a href="{% url 'assortment_list' %}" class="btn back-btn">{% trans "Back" %}</a></p>
   </div>
   <ul class="list-group">
     {% for model in models %}
