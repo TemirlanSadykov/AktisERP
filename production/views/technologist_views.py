@@ -561,6 +561,7 @@ class OperationListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('number')
+        queryset = queryset.filter(original_operation__isnull=True)
         node_id = self.request.GET.get('node', None)
         if node_id:
             queryset = queryset.filter(node_id=node_id)
@@ -773,7 +774,24 @@ class AssortmentCreateView(AssignBranchMixin, CreateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
-    success_url = reverse_lazy('assortment_list')
+    def get_success_url(self):
+        return reverse('assortment_operation_create', kwargs={'pk': self.object.id})
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class AssortmentOperationCreateView(CreateView):
+    model = Operation
+    form_class = OperationForm
+    template_name = 'technologist/operations/create.html'
+    def get_context_data(self, **kwargs):
+        context = super(AssortmentOperationCreateView, self).get_context_data(**kwargs)
+        context['pk'] = self.kwargs['pk']
+        return context
+    def form_valid(self, form):
+        operation = form.save(commit=False)
+        operation.save()
+        assortment = Assortment.objects.get(pk=self.kwargs['pk'])
+        assortment.operations.add(operation)
+        return HttpResponseRedirect(reverse('assortment_operation_create', kwargs={'pk': self.kwargs['pk']}))
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDetailView(DetailView):
@@ -793,7 +811,7 @@ class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
     def get_success_url(self):
-        return reverse('model_list', kwargs={'a_id': self.kwargs.get('pk')})
+        return reverse('assortment_detail', kwargs={'pk': self.kwargs.get('pk')})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
@@ -829,19 +847,40 @@ def model_create(request, a_id):
             model_instance = form.save(commit=False)
             model_instance.assortment = assortment
             model_instance.save()
-            form.save_operations(model_instance)
-            return redirect('model_list', a_id=a_id)
+            if copy_id:
+                # If copying, create new derived operations
+                form.save_operations(model_instance, copy=True)
+            else:
+                # Normal creation process
+                form.save_operations(model_instance)
+            return redirect('model_operation_edit', a_id=a_id, pk=model_instance.id)
     else:
+        form = ModelCustomForm(a_id=a_id, instance=None)
         if copy_id:
+            # When copying, provide the model to copy from for initial data setup
             model_to_copy = get_object_or_404(Model, pk=copy_id)
             form = ModelCustomForm(instance=model_to_copy, a_id=a_id)
-            operations_data = [{"operation_id": op.operation.id, "order": op.order}
-                               for op in model_to_copy.modeloperation_set.all()]
-            form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
-            return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_to_copy})
-        else:
-            form = ModelCustomForm(a_id=a_id)
-            return render(request, 'technologist/models/create.html', {'form': form})
+            return render(request, 'technologist/models/edit.html', {'form': form})
+
+        return render(request, 'technologist/models/create.html', {'form': form})
+        
+@login_required
+@technologist_required
+def model_operation_edit(request, a_id, pk):
+    model_instance = get_object_or_404(Model, pk=pk)
+    operations = model_instance.modeloperation_set.select_related('operation').order_by('order')
+    
+    if request.method == 'POST':
+        # Handle the form submission to update operations
+        for operation in operations:
+            op_form = OperationEditForm(request.POST, instance=operation.operation, prefix=str(operation.operation.id))
+            if op_form.is_valid():
+                op_form.save()
+        return redirect('model_list', a_id=a_id)
+    else:
+        forms = [OperationEditForm(instance=operation.operation, prefix=str(operation.operation.id)) for operation in operations]
+        return render(request, 'technologist/models/edit_operations.html', {'model': model_instance, 'forms': forms})
+
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -857,22 +896,18 @@ class ModelDetailView(DetailView):
 
 @login_required
 @technologist_required
-def model_edit(request, pk, a_id):
+def model_edit(request, a_id, pk):
     model_instance = get_object_or_404(Model, pk=pk)
-    assortment = get_object_or_404(Assortment, pk=a_id)
-    
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, instance=model_instance)
         if form.is_valid():
-            updated_model = form.save()
-            return redirect('model_detail', a_id=a_id, pk=pk)
+            model_instance = form.save()
+            # Redirect as needed, possibly to operations edit
+            return redirect('model_operation_edit', a_id=a_id, pk=model_instance.id)
     else:
-        form = ModelCustomForm(instance=model_instance, a_id=a_id)
-        operations_data = [{"operation_id": op.operation.id, "order": op.order}
-                           for op in model_instance.modeloperation_set.all()]
-        form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
+        form = ModelCustomForm(instance=model_instance)  # Existing data is loaded here
     
-    return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_instance})
+    return render(request, 'technologist/models/edit.html', {'form': form, 'model': model_instance})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDeleteView(DeleteView):

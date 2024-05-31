@@ -78,14 +78,15 @@
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
-            {% for operation in form.fields.operations.queryset %}
-                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
-                    <label>
-                        <input type="checkbox" name="operations" value="{{ operation.id }}" {% if operation in model_instance.operations.all %}checked{% endif %}>
-                        {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
-                    </label>
-                </div>
-            {% endfor %}
+          {% for operation in form.fields.operations.queryset %}
+              <div class="checkbox">
+                  <label>
+                      <input type="checkbox" name="operations" value="{{ operation.id }}"
+                          {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
+                      {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
+                  </label>
+              </div>
+          {% endfor %}
         </div>
         
         {{ form.operations_data }}
@@ -150,5 +151,4 @@ function submitOperations(event) {
 
 document.getElementById('modelForm').addEventListener('submit', submitOperations);
 </script>
-
 {% endblock %}

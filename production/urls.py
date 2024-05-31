@@ -105,12 +105,14 @@ urlpatterns = [
     path('technologist/assortments/<int:pk>/', AssortmentDetailView.as_view(), name='assortment_detail'),
     path('technologist/assortments/<int:pk>/edit/', AssortmentUpdateView.as_view(), name='assortment_edit'),
     path('technologist/assortments/<int:pk>/delete/', AssortmentDeleteView.as_view(), name='assortment_delete'),
+    path('technologist/assortments/<int:pk>/operations/create', AssortmentOperationCreateView.as_view(), name='assortment_operation_create'),
 
     path('technologist/assortments/<int:a_id>/models/', ModelListView.as_view(), name='model_list'),
     path('technologist/assortments/<int:a_id>/models/create/', model_create, name='model_create'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/edit/', model_edit, name='model_edit'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
+    path('technologist/assortments/<int:a_id>/models/<int:pk>/edit-operations', model_operation_edit, name='model_operation_edit'),
 
     path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
     path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),

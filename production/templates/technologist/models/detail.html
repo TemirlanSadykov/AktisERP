@@ -2,16 +2,18 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
+<div class="order-detail-cutter-container">
   <h2 class="form-heading">{% trans "Model Details:" %} {{ model.name }}</h2>
 
   <p><strong>{% trans "Assortment:" %}</strong> {{ model.assortment.name }}</p>
   <p><strong>{% trans "Operations:" %}</strong></p>
   {% if ordered_operations %}
-    <ul class="operations-list">
+    <ul class="list-group">
       {% for operation in ordered_operations %}
-        <li class="operation-item">
-          {{ operation }}
+        <li class="list-group-item">
+          <a href="{% url 'operation_detail' operation.pk %}">
+            {{ operation }}
+          </a>
         </li>
       {% endfor %}
     </ul>

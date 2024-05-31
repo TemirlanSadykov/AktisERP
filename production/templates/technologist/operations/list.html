@@ -48,9 +48,9 @@
   </div>
   <ul class="list-group" id="operationsList">
     {% for operation in operations %}
-      <li class="list-group-item" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
+      <li class="list-group-item" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
         <a href="{% url 'operation_detail' operation.pk %}">
-          {{ operation.number }} - {{ operation.node.name }} - {{ operation.equipment }} - {{ operation.name }}
+          {{ operation }}
         </a>
       </li>
     {% endfor %}
