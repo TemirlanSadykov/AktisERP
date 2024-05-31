@@ -2,39 +2,11 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-<div class="d-flex" id="wrapper">
-<div class=" border-right" id="sidebar-wrapper">
-  <div class="d-flex justify-content-between align-items-centero">
-    <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-      <i class="fas fa-bars"></i>
-    </button>
-  </div>
-  <div class="sidebar-heading text-white"></div>
-  <div class="list-group list-group-flush">
-    <a href="{% url 'dashboard_page' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-home"></i> {% trans 'Dashboard' %}</a>
-    <a href="{% url 'client_order_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-table"></i></i> {% trans 'Orders' %}</a>
-    <a href="{% url 'employee_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-users"></i> {% trans 'Employees' %}</a>
-    <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-user"></i> {% trans 'Clients' %}</a>
-    <a href="{% url 'attendance_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-clipboard-list"></i> {% trans 'Attendances' %}</a>
-    <a href="{% url 'branch_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-cogs"> </i>{% trans 'Branches' %}</a>
-    <a href="{% url 'salary_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-coins"></i> {% trans 'Salaries' %}</a>
-    <a href="{% url 'fixed_salary_list' %}" class="list-group-item list-group-item-action text-black"><i
-        class="fas fa-file-invoice-dollar"></i> {% trans 'Fixed Salaries' %}</a>
-  </div>
-</div>
-<div id="page-content-wrapper">
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #343C6A; text-align: center;">{% trans 'Orders' %}</h4>
+  <h4 style="color: #232323;">{% trans 'Orders' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
       <li class="nav-item dropdown" style="margin: auto;">
@@ -105,10 +77,6 @@
 </div>
 <div class="pagination-container">
   {% if is_paginated %}
-  <div class="list-group-item d-flex justify-content-between align-items-center lower-column custom-padding">
-      <span>Teenzbro No2</span>
-      <span>Days Left: 40</span>
-  </div>
   <nav aria-label="Page navigation">
       <ul class="pagination">
           {% if page_obj.has_previous %}
@@ -129,7 +97,5 @@
       </ul>
   </nav>
   {% endif %}
-</div>
-</div>
 </div>
 {% endblock %}

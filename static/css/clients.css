@@ -141,7 +141,7 @@
 }
 
 .pagination {
-    display: inline-block;
+    /* display: inline-block; */
     padding-left: 0;
     margin: 20px 0;
     border-radius: 0.25rem;
@@ -174,6 +174,12 @@
     border: 1px solid rgba(0, 0, 0, .125) !important;
 }
 
+.sidebar-navi{
+  color: #232323;
+  text-align: center;
+  height: 60px; 
+  margin-top: 10px;
+}
 
 /* Admin DashBoard CSS Start */
 #wrapper {
@@ -183,7 +189,7 @@
     position: relative;
     font-family: system-ui;
     font-weight: 500;
-    background-color: #f5f7fa;
+    /* background-color: #f5f7fa; */
   }
   
 
@@ -383,3 +389,155 @@
     }
   }
 
+/* employes page css */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.bg-danger {
+  background-color: red;
+}
+
+.bg-success {
+  background-color: green;
+}
+
+.list-group-item {
+  font-size: 1.1em;
+}
+
+.pagination .page-item .page-link {
+  color: #007bff;
+}
+
+
+
+
+/* client page css */
+.clients-wrapper {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.clients-container {
+  background: #fff;
+  padding: 60px;
+
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* border: 1px solid #ddd; */
+}
+
+.clients-header {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  text-align: right;
+}
+
+.clients-header h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.clients-create-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.clients-create-button:hover {
+  background-color: #0056b3;
+}
+
+.clients-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.clients-list li {
+  padding: 15px;
+  border: 1px solid #ddd;
+  color: #007bff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.clients-list li:hover {
+  background-color: #f0f0f5;
+}
+
+
+
+
+
+/* Attendence css */
+.unique-container {
+  background-color: #fff;
+  padding: 60px;
+  width: 100%;
+}
+
+h1.unique-header, h2.unique-subheader {
+  text-align: center;
+  color: #333;
+}
+
+.unique-filter-section {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.unique-records-section {
+  padding: 10px;
+}
+
+ul.unique-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+li.unique-list-item {
+  background-color: #fff;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+}
+
+
+
+/* Salaries css */
+.tableChange {
+  margin-top: 20px;
+}
+th, td {
+  text-align: center;
+}
+.btnWidth{
+width:300px;
+}
+.salaryConta{
+padding: 60px;
+}

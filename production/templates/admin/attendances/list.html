@@ -2,25 +2,66 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
-  <h1 class="list-heading">{% trans "Attendance List" %}</h1>
-  <div class="filter-heading">
-    <form method="post" class="date-filter-form">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
-    </form>
-  </div>
 
-  {% if attendances %}
-    <h2>{% trans "Attendance Records:" %}</h2>
-    <ul class="list-group">
-      {% for attendance in attendances %}
-        <li class="list-group-item">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>{% trans "No attendance records found." %}</p>
-  {% endif %}
-</div>
+
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323;">{% trans "Attendance List" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item dropdown" style="margin: auto;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <a class="dropdown-item">
+              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            </a>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
+    <div class="unique-container">
+        <div class="unique-filter-section">
+            <form method="post" class="date-filter-form">
+              {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class=" btn filter-btn" >{% trans "Filter" %}</button>
+            </form>
+          </div>
+
+        <div class="unique-records-section">
+          {% if attendances %}
+            <h2 class="unique-subheader">{% trans "Attendance Records:" %}</h2>
+            <ul id="attendance-records" class="unique-list list-group">
+              {% for attendance in attendances %}
+
+                <li class="unique-list-item list-group-item">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <p>{% trans "No attendance records found." %}</p>
+              {% endif %}
+        </div>
+    </div>
+    <script>
+        function filterRecords() {
+            const dateInput = document.getElementById('date').value;
+            const records = document.querySelectorAll('#attendance-records li');
+            
+            records.forEach(record => {
+                if (record.textContent.includes(dateInput) || dateInput === "") {
+                    record.style.display = "flex";
+                } else {
+                    record.style.display = "none";
+                }
+            });
+        }
+    </script>
+
 {% endblock %}

@@ -1,52 +1,67 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
-<style>
-  .payment-pending { color: blue; }
-  .payment-paid { color: green; }
-</style>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323;">{% trans "Salaries" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item dropdown" style="margin: auto;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <a class="dropdown-item">
+              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            </a>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
+    <div class="container salaryConta">
+            <form method="get" class="date-filter-form formCenter">
+              <div class="form-row">
+              {{ form.as_p }}
+              </div>
+              <button type="submit" class=" btn btn-primary btn filter-btn btnWidth ml-auto">{% trans "Filter" %}</button>
+              
+            </form>
+            <form method="post" action="{% url 'process_payments' %}" class="payment-form formCenter">
+              {% csrf_token %}
+              <input type="hidden" name="start_date " class="form-control" value="{{ request.GET.start_date }}">
+              <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+              <input type="hidden" name="salary_type" calss="form-control" value="{{ request.GET.salary_type }}">
+              <button type="submit" class="btn filter-btn btn btn-success btnWidth">{% trans "Pay" %}</button>
+            </form>
+            <a class="btn btn-info btnWidth formCenter" href="{% url 'export_salaries' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
+              {% trans "Download Excel" %}
+            </a>
 
-<div class="content-container">
-  <div class="filter-header">
-    <h2 class="list-heading">{% trans "Salaries" %}</h2>
-    <form method="get" class="date-filter-form">
-      {{ form.as_p }}
-      <button type="submit" class="btn filter-btn">{% trans "Filter" %}</button>
-    </form>
-    <form method="post" action="{% url 'process_payments' %}" class="payment-form">
-      {% csrf_token %}
-      <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
-      <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
-      <input type="hidden" name="salary_type" value="{{ request.GET.salary_type }}">
-      <button type="submit" class="btn filter-btn">{% trans "Pay" %}</button>
-    </form>
-    <a href="{% url 'export_salaries' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
-      {% trans "Download Excel" %}
-    </a>
-  </div>
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{% trans "Employee" %}</th>
-        <th>{% trans "Salary" %} ({% trans "Som" %})</th>
-        <th>{% trans "Error Cost" %}</th> <!-- New column for error costs -->
-      </tr>
-    </thead>
-    <tbody>
-      {% for user, data in salaries.items %}
-      <tr class="{% if data.status == 0 %}payment-pending{% elif data.status == 1 %}payment-paid{% endif %}">
-        <td>
-          <a href="{% url 'salary_detail' pk=user.id %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
-            {{ user.user.get_full_name }}
-          </a>
-        </td>
-        <td>{{ data.salary|floatformat:2 }}</td>
-        <td class="error-cost">{{ data.error_cost|floatformat:2 }}</td> <!-- Displaying error costs -->
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+        <table class="table table-bordered table-striped tableChange">
+          <thead>
+            <tr>
+              <th>{% trans "Employee" %}</th>
+              <th>{% trans "Salary" %} ({% trans "Som" %})</th>
+              <th>{% trans "Error Cost" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user, data in salaries.items %}
+            <tr class="{% if data.status == 0 %}payment-pending{% elif data.status == 1 %}payment-paid{% endif %}">
+              <td>
+                <a href="{% url 'salary_detail' pk=user.id %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
+                  {{ user.user.get_full_name }}
+                </a>
+              </td>
+              <td>{{ data.salary|floatformat:2 }}</td>
+              <td class="error-cost">{{ data.error_cost|floatformat:2 }}</td> <!-- Displaying error costs -->
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
 {% endblock %}

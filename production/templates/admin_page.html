@@ -2,69 +2,38 @@
 {% load i18n %}
 {% load static %}
 {% block content %}
-<div class="d-flex" id="wrapper">
-  <div class=" border-right" id="sidebar-wrapper">
-    <div class="d-flex justify-content-between align-items-centero">
-      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <div class="sidebar-heading text-white"></div>
-    <div class="list-group list-group-flush">
-      <a href="{% url 'dashboard_page' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-home"></i> {% trans 'Dashboard' %}</a>
-      <a href="{% url 'client_order_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-table"></i></i> {% trans 'Orders' %}</a>
-      <a href="{% url 'employee_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-users"></i> {% trans 'Employees' %}</a>
-      <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-user"></i> {% trans 'Clients' %}</a>
-      <a href="{% url 'attendance_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-clipboard-list"></i> {% trans 'Attendances' %}</a>
-      <a href="{% url 'branch_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-cogs"> </i>{% trans 'Branches' %}</a>
-      <a href="{% url 'salary_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-coins"></i> {% trans 'Salaries' %}</a>
-      <a href="{% url 'fixed_salary_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-file-invoice-dollar"></i> {% trans 'Fixed Salaries' %}</a>
-    </div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323;">{% trans 'Admin Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: auto;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <a class="dropdown-item">
+            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+          </a>
+        </form>
+      </li>
+    </ul>
   </div>
-
-
-  <div id="page-content-wrapper">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-      <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
-      <h4 style="color: #343C6A;">{% trans 'Admin Dashboard' %}</h4>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-        <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-          <li class="nav-item dropdown" style="margin: auto;">
-            {{ request.user.username }}
-          </li>
-          <li class="nav-item dropdown">
-            <form action="{% url 'logout' %}" method="post">
-              {% csrf_token %}
-              <a class="dropdown-item">
-                <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
-              </a>
-            </form>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    
+</nav>
     <div class="container-fluid ">
       <div class="row mt-4">
         <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'technologist_page' %}" style="text-decoration: none;">
+
           <div class="card text-black h-100">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <a href="{% url 'technologist_page' %}" style="text-decoration: none;">
                     <h5 class="card-title">{% trans 'Technologist' %}</h5>
-                  </a>
 
                 </div>
                 <div class="icon">
@@ -73,15 +42,18 @@
               </div>
             </div>
           </div>
+        </a>
+
         </div>
         <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'cutter_page' %}" style="text-decoration: none;">
+
           <div class="card text-black h-100">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <a href="{% url 'cutter_page' %}" style="text-decoration: none;">
                     <h5 class="card-title">{% trans 'Cutter' %}</h5>
-                  </a>
+                
                 </div>
                 <div class="icon">
                   <img src="{% static 'img/cutter.png' %}" alt="" style="width: 100px;">
@@ -89,17 +61,19 @@
               </div>
             </div>
           </div>
+        </a>
         </div>
       </div>
       <div class="row mt-4">
+
         <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'qc_page' %}" style="text-decoration: none;">
+
           <div class="card text-black h-100">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <a href="{% url 'qc_page' %}" style="text-decoration: none;">
                     <h5 class="card-title">{% trans 'QC (Quality control)' %}</h5>
-                  </a>
                 </div>
                 <div class="icon">
                   <img src="{% static 'img/qc.png' %}" alt="" style="width: 100px;">
@@ -107,15 +81,18 @@
               </div>
             </div>
           </div>
+        </a>
+
         </div>
+
         <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'packer_page' %}" style="text-decoration: none;">
+
           <div class="card text-black h-100">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <a href="{% url 'packer_page' %}" style="text-decoration: none;">
                     <h5 class="card-title">{% trans 'Packer' %}</h5>
-                  </a>
                 </div>
                 <div class="icon">
                   <img src="{% static 'img/packer.png' %}" alt="" style="width: 100px;">
@@ -123,9 +100,15 @@
               </div>
             </div>
           </div>
+        </a>
+
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+
+
+
+
+
 {% endblock %}

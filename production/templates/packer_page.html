@@ -4,7 +4,6 @@
 <div class="dashboard-container">
   <h1>{% trans 'Packer Dashboard' %}</h1>
   <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a Packer." %}</p>
-
   <div class="row">
     {% if request.user.userprofile.type != 0 %}
       <div class="col-md-4 mb-4">

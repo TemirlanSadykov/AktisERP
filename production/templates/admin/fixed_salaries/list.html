@@ -1,42 +1,62 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
-<div class="content-container">
-  <div class="header">
-    <h2 class="list-heading">{% trans "Fixed Salaries" %}</h2>
-    <p class="create-link"><a href="{% url 'fixed_salary_create' %}" class="btn create-btn">{% trans "Create" %}</a></p>
-  </div>
-  <ul class="list-group">
-    {% for fixed_salary in fixed_salaries %}
-      <li class="list-group-item">
-        <a href="{% url 'fixed_salary_detail' fixed_salary.pk %}">{{ fixed_salary.position }}</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; ">{% trans "Fixed Salaries" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: auto;">
+        {{ request.user.username }}
       </li>
-    {% endfor %}
-  </ul>
-  
-  <div class="pagination">
-    {% if is_paginated %}
-      <ul class="pagination-list">
-        {% if page_obj.has_previous %}
-          <li><a href="?page=1">&laquo; first</a></li>
-          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
-        {% endif %}
-  
-        {% for num in paginator.page_range %}
-          {% if page_obj.number == num %}
-            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
-          {% else %}
-            <li><a href="?page={{ num }}">{{ num }}</a></li>
-          {% endif %}
-        {% endfor %}
-  
-        {% if page_obj.has_next %}
-          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
-          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
-        {% endif %}
-      </ul>
-    {% endif %}
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <a class="dropdown-item">
+            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+          </a>
+        </form>
+      </li>
+    </ul>
   </div>
+</nav>
+  <div class="clients-wrapper">
+      <div class="clients-container">
+          <div class="clients-header">
+              <a href="{% url 'fixed_salary_create' %}" class="btn create-btn">{% trans "Create" %}</a>
+          </div>
+          <ul class="clients-list">
+            {% for fixed_salary in fixed_salaries %}
+              <li class="list-group-item">
+                <a href="{% url 'fixed_salary_detail' fixed_salary.pk %}">{{ fixed_salary.position }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+
+      </div>
+
+      {% if is_paginated %}
+          <ul class="pagination-list">
+            {% if page_obj.has_previous %}
+              <li><a href="?page=1">&laquo; first</a></li>
+              <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+            {% endif %}
+      
+            {% for num in paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
+              {% else %}
+                <li><a href="?page={{ num }}">{{ num }}</a></li>
+              {% endif %}
+            {% endfor %}
+      
+            {% if page_obj.has_next %}
+              <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+              <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+            {% endif %}
+          </ul>
+        {% endif %}
 </div>
 {% endblock %}
