@@ -163,4 +163,6 @@ urlpatterns = [
     path('technologist/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
     path('qc/orders/mark-as-packing/<int:passport_size_id>/', mark_as_packing, name='mark-as-packing'),
 
+    path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
+
 ]

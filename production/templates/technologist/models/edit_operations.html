@@ -2,6 +2,27 @@
 {% load i18n %}
 
 {% block content %}
+<style>
+    .operations-table th, .operations-table td {
+        padding: 8px; /* Adjust padding to fit content comfortably */
+    }
+    .operations-table th:nth-child(1), /* Operation Number */
+    .operations-table th:nth-child(3), /* Payment */
+    .operations-table th:nth-child(4),
+    .operations-table td:nth-child(1),
+    .operations-table td:nth-child(3),
+    .operations-table td:nth-child(4) { /* Preferred Completion Time */
+        width: 10%; /* Smaller width for these columns */
+    }
+    .operations-table th:nth-child(2), /* Name */
+    .operations-table td:nth-child(2) {
+        width: 70%; /* Largest width for the Name column */
+    }
+    .operations-table td input {
+        width: 100%; /* Make input take the full width of the cell */
+        box-sizing: border-box; /* Includes padding and border in the element's total width */
+    }
+</style>
 <div class="assign-operations-container">
     <h2 class="form-heading">{% trans 'Creating Operations for' %} {{ model.name }}</h2>
     <form method="post" class="operations-form">

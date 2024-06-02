@@ -208,18 +208,14 @@ class ModelCustomForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.assortment_id = kwargs.pop('a_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
+        # Load only original operations where original_operation is null
+        queryset = Operation.objects.filter(original_operation__isnull=True).select_related('node').order_by('number')
+
         if self.instance and self.instance.pk:
-            # Editing an existing model: load operations associated with the model's assortment
-            queryset = self.instance.assortment.operations.select_related('node').order_by('number')
             # Pre-fill operations that are already associated with the model
-            initial = [mo.operation.original_operation.id for mo in self.instance.modeloperation_set.all()]
-        elif self.assortment_id:
-            # Creating a new model: load operations from the specified assortment
-            queryset = Assortment.objects.get(pk=self.assortment_id).operations.select_related('node').order_by('number')
-            initial = []
+            initial = [mo.operation.original_operation.id for mo in self.instance.modeloperation_set.all() if mo.operation.original_operation is None]
         else:
-            # Fallback, should not generally occur
-            queryset = Operation.objects.select_related('node').order_by('number')
+            # For new model creation, no operations are pre-filled
             initial = []
 
         self.fields['operations'] = forms.ModelMultipleChoiceField(

@@ -775,7 +775,7 @@ class AssortmentCreateView(AssignBranchMixin, CreateView):
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
     def get_success_url(self):
-        return reverse('assortment_operation_create', kwargs={'pk': self.object.id})
+        return reverse('model_list', kwargs={'a_id': self.object.id})
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentOperationCreateView(CreateView):
@@ -1009,3 +1009,15 @@ def mark_as_qc(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    
+@login_required
+@technologist_required
+def update_assortment_name(request, pk):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        assortment = Assortment.objects.get(pk=pk)
+        assortment.name = data['name']
+        assortment.save()
+        return JsonResponse({'status': 'success', 'message': 'Assortment name updated successfully'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

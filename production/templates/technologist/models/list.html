@@ -4,8 +4,15 @@
 {% block content %}
 <div class="content-container">
   <div class="header">
-    <h2 class="list-heading">{{ assortment.name }}</h2>
-    <p class="create-link"><a href="{% url 'assortment_detail' assortment.pk %}" class="btn create-btn">{% trans "Assortment Details" %}</a></p>
+    <h2 class="list-heading">
+      <span id="editable-assortment-name" 
+            contentEditable="false" 
+            ondblclick="makeEditable(this)" 
+            onblur="saveChanges(this)">
+        {{ assortment.name }}
+      </span>
+    </h2>
+    {% comment %} <p class="create-link"><a href="{% url 'assortment_detail' assortment.pk %}" class="btn create-btn">{% trans "Assortment Details" %}</a></p> {% endcomment %}
     <p class="create-link"><a href="{% url 'model_create' assortment.pk %}" class="btn create-btn">{% trans "Create Model" %}</a></p>
     <p class="create-link"><a href="{% url 'assortment_list' %}" class="btn back-btn">{% trans "Back" %}</a></p>
   </div>
@@ -41,4 +48,61 @@
     {% endif %}
   </div>
 </div>
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function makeEditable(element) {
+    element.contentEditable = true;
+    element.focus(); // Focus on the element to start editing immediately
+    element.onkeypress = function(event) { handleKeyPress(event, element); }; // Add keypress event to handle Enter
+  }
+  
+  function handleKeyPress(event, element) {
+    if (event.keyCode === 13) { // Enter key
+      event.preventDefault();
+      finishEditing(element);
+    }
+  }
+  
+  function finishEditing(element) {
+    element.contentEditable = false; // Disable editing
+    updateAssortmentName(element.innerText);
+    element.onkeypress = null; // Remove keypress event handler
+  }
+  
+  function saveChanges(element) {
+    if (element.contentEditable === "true") {
+      finishEditing(element);
+    }
+  }
+  
+  function updateAssortmentName(name) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '{% url 'update_assortment_name' assortment.pk %}', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+  
+    xhr.onload = function() {
+      if (xhr.status == 200) {
+        console.log('Update successful');
+      } else {
+        console.error(JSON.parse(xhr.responseText));
+      }
+    };
+    xhr.send(JSON.stringify({ name: name }));
+  }
+  </script>
 {% endblock %}

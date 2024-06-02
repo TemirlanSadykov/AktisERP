@@ -115,9 +115,9 @@ class Operation(models.Model):
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
     original_operation = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='copied_operations', verbose_name='Оригинальная операция')
     def __str__(self):
-        related_models = self.models.all()  # Get all models related to this operation
-        models_names = ', '.join([model.name for model in related_models])
-        return f"{self.number} ({models_names}) - {self.node.name} - {self.name}"
+        # related_models = self.models.all()  # Get all models related to this operation
+        # models_names = ', '.join([model.name for model in related_models])
+        return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
     
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
