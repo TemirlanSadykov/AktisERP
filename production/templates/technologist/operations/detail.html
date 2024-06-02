@@ -19,21 +19,6 @@
       <strong>{% trans "Average Completion Time:" %}</strong> {{ operation.average_completion_time }} {% trans "seconds" %}
       <a href="{% url 'calculate_average' operation.pk %}" class="btn calculate-btn">{% trans "Calculate Average" %}</a>
     </p>
-    {% if operation.original_operation %}
-      <p><strong>{% trans "Original Operation:" %}</strong> <a href="{% url 'operation_detail' operation.original_operation.pk %}">{{ operation.original_operation.number }} - {{ operation.original_operation.node.name }} - {{ operation.original_operation.name }}</a></p>
-    {% else %}
-      <p><strong>{% trans "Derived Operations:" %}</strong>
-        {% if operation.copied_operations.all %}
-          <ul class="list-group" id="operationsList">
-          {% for derived_op in operation.copied_operations.all %}
-            <li class="list-group-item"><a href="{% url 'operation_detail' derived_op.pk %}">{{ derived_op }}</a></li>
-          {% endfor %}
-          </ul>
-        {% else %}
-          {% trans "No derived operations." %}
-        {% endif %}
-      </p>
-    {% endif %}
     {% if operation.employee %}
       <p><strong>{% trans "Assigned Employee:" %}</strong> {{ operation.employee.employee_id }} - {{ operation.employee.user.get_full_name }}</p>
     {% endif %}

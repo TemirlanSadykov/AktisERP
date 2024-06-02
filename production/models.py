@@ -113,11 +113,14 @@ class Operation(models.Model):
     average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
-    original_operation = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='copied_operations', verbose_name='Оригинальная операция')
     def __str__(self):
-        # related_models = self.models.all()  # Get all models related to this operation
-        # models_names = ', '.join([model.name for model in related_models])
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        super().save(*args, **kwargs)  # Save first to ensure we have an ID
+        if creating:
+            self.number = f"{self.node.id}N{self.id}O"
+            super().save(update_fields=['number'])
     
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')

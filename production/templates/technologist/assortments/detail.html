@@ -19,7 +19,6 @@
     <p>{% trans "No operations associated with this assortment." %}</p>
   {% endif %}
   <div class="form-actions">
-    <a href="{% url 'assortment_operation_create' assortment.pk %}" class="btn edit-btn">{% trans "Add Operation" %}</a>
     <a href="{% url 'assortment_edit' assortment.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
     <a href="{% url 'model_list' assortment.pk %}" class="btn back-btn">{% trans "Back" %}</a>

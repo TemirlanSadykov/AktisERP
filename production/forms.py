@@ -170,28 +170,12 @@ class PassportSizeForm(forms.ModelForm):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'number', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
+        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
 
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
         fields = ['name', 'color', 'fabrics', 'meters']
-
-# class AssortmentForm(forms.ModelForm):
-#     operations = forms.ModelMultipleChoiceField(
-#         queryset=Operation.objects.all().order_by('number'),
-#         widget=forms.CheckboxSelectMultiple,
-#         required=False
-#     )
-
-#     class Meta:
-#         model = Assortment
-#         fields = ['name', 'operations']
-
-#     def __init__(self, *args, **kwargs):
-#         super(AssortmentForm, self).__init__(*args, **kwargs)
-#         common_operations = Operation.objects.filter(node__is_common=True)
-#         self.fields['operations'].initial = common_operations
 
 class AssortmentForm(forms.ModelForm):
     class Meta:

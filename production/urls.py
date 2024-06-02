@@ -105,7 +105,6 @@ urlpatterns = [
     path('technologist/assortments/<int:pk>/', AssortmentDetailView.as_view(), name='assortment_detail'),
     path('technologist/assortments/<int:pk>/edit/', AssortmentUpdateView.as_view(), name='assortment_edit'),
     path('technologist/assortments/<int:pk>/delete/', AssortmentDeleteView.as_view(), name='assortment_delete'),
-    path('technologist/assortments/<int:pk>/operations/create', AssortmentOperationCreateView.as_view(), name='assortment_operation_create'),
 
     path('technologist/assortments/<int:a_id>/models/', ModelListView.as_view(), name='model_list'),
     path('technologist/assortments/<int:a_id>/models/create/', model_create, name='model_create'),

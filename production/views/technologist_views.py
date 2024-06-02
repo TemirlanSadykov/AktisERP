@@ -561,7 +561,6 @@ class OperationListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('number')
-        queryset = queryset.filter(original_operation__isnull=True)
         node_id = self.request.GET.get('node', None)
         if node_id:
             queryset = queryset.filter(node_id=node_id)
@@ -580,7 +579,7 @@ class OperationCreateView(CreateView):
     model = Operation
     form_class = OperationForm
     template_name = 'technologist/operations/create.html'
-    success_url = reverse_lazy('operation_list')
+    success_url = reverse_lazy('operation_create')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationDetailView(DetailView):
@@ -776,22 +775,6 @@ class AssortmentCreateView(AssignBranchMixin, CreateView):
     template_name = 'technologist/assortments/create.html'
     def get_success_url(self):
         return reverse('model_list', kwargs={'a_id': self.object.id})
-    
-@method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentOperationCreateView(CreateView):
-    model = Operation
-    form_class = OperationForm
-    template_name = 'technologist/operations/create.html'
-    def get_context_data(self, **kwargs):
-        context = super(AssortmentOperationCreateView, self).get_context_data(**kwargs)
-        context['pk'] = self.kwargs['pk']
-        return context
-    def form_valid(self, form):
-        operation = form.save(commit=False)
-        operation.save()
-        assortment = Assortment.objects.get(pk=self.kwargs['pk'])
-        assortment.operations.add(operation)
-        return HttpResponseRedirect(reverse('assortment_operation_create', kwargs={'pk': self.kwargs['pk']}))
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDetailView(DetailView):
