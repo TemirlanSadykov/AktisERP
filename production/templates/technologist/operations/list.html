@@ -2,99 +2,147 @@
 {% load i18n %}
 
 {% block content %}
-<div class="order-detail-cutter-container">
-  <div class="tabs">
-    <a href="{% url 'operation_list' %}" class="{% if not selected_node %}active{% endif %}">{% trans "All" %}</a>
-    {% for node in nodes %}
-    <a href="?node={{ node.id }}" class="{% if selected_node|stringformat:"s" == node.id|stringformat:"s" %}active{% endif %}">{% trans node.name %}</a>
-    {% endfor %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %} - {% trans "Operations" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: auto;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <a class="dropdown-item">
+            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+          </a>
+        </form>
+      </li>
+    </ul>
   </div>
-  <div class="header">
-    <h2 class="list-heading">{% trans "Operations" %}</h2>
-    <p class="create-link">
-      <a href="{% url 'operation_create' %}" class="btn create-btn">{% trans "Create" %}</a>
-      <button id="upload_button" type="button" class="btn create-btn" data-toggle="modal" data-target="#uploadModal">
-        {% trans "Upload from Excel" %}
+</nav>
+
+
+  <div class=" border-right" id="sidebar-wrapper">
+    <div class="d-flex justify-content-between align-items-centero">
+      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
       </button>
-      <a href="{% url 'operation_download' %}" class="btn create-btn">{% trans "Download Excel" %}</a>
-    </p>
-  </div>
-  <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
-  <div class="modal" id="uploadModal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h4 class="modal-title">{% trans "Upload Operations" %}</h4>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        
-        <!-- Modal Body -->
-        <div class="modal-body">
-          <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="excel_file" id="excel_file" required>
-          </form>
-        </div>
-        
-        <!-- Modal Footer -->
-        <div class="modal-footer justify-content-between">
-          <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
-        </div>
-        
-      </div>
+    </div>
+    <!-- <div class="sidebar-heading sidebar-navi">Navigation</div> -->
+    <div class="list-group list-group-flush">
+      <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
+        <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
+      <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
+          <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
+      <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-home"></i> {% trans 'Rolls' %}</a>
+      <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
+      <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-users"></i> {% trans 'Operations' %}</a>
+      <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-user"></i> {% trans 'Nodes' %}</a>
+      <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
     </div>
   </div>
-  <ul class="list-group" id="operationsList">
-    {% for operation in operations %}
-      <li class="list-group-item" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
-        <a href="{% url 'operation_detail' operation.pk %}">
-          {{ operation.number }} - {{ operation.node.name }} - {{ operation.equipment }} - {{ operation.name }}
-        </a>
+
+
+
+
+<div class="container-fluid main-cont">
+  <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+          <a href="{% url 'operation_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab" role="tab" aria-controls="all"
+              aria-selected="false">{% trans "All" %}</a>
       </li>
-    {% endfor %}
+        {% for node in nodes %}
+        <li>
+
+        <a href="?node={{ node.id }}" class="nav-link {% if selected_node|stringformat:"s" == node.id|stringformat:"s" %}active{% endif %}" role="tab" aria-controls="all"
+        aria-selected="false">{% trans node.name %}</a>
+      </li>
+
+        {% endfor %}
   </ul>
 
-  {% if not selected_node %}
-  <div class="pagination">
-    {% if is_paginated %}
-      <ul class="pagination-list">
-        {% if page_obj.has_previous %}
-          <li><a href="?page=1">&laquo; first</a></li>
-          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+
+  <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
+          <div class="row">
+              <div class="col-lg-6 col-md-6 col-sm-4">
+                  <h4 class="font-weight-bold">{% trans "Operations" %}</h4>
+              </div>
+              <div class="col-lg-6 col-md-6 col-sm-2 text-md-right text-sm-right">
+                <a href="{% url 'operation_create' %}" class="btn btn-custom" style="margin-bottom: 6px;">{% trans "Create" %}</a>
+                <button id="upload_button" type="button" class="btn btn-custom" data-toggle="modal" data-target="#uploadModal" style="margin-bottom: 5px;">
+                  {% trans "Upload from Excel" %}
+                </button>
+                <a href="{% url 'operation_download' %}" class="btn btn-custom">{% trans "Download Excel" %}</a>
+              
+              </div>
+          </div>
+          </div>
+          <br>
+          <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
+          <br>
+
+
+          <ul class="list-group custom-list-group" id="operationsList">
+            {% for operation in operations %}
+            <li class="list-group-item custom-list-item"  data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
+                <a href="{% url 'operation_detail' operation.pk %}" class="order-link ">
+                  {{ operation.number }} - {{ operation.node.name }} - {{ operation.equipment }} - {{ operation.name }}
+                </a>
+                <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
+              </li>
+            {% endfor %}
+        </ul>
+
+      </div>
+      <div class="pagination-container">
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+                {% endif %}
+      
+                {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+                {% endfor %}
+      
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
         {% endif %}
-  
-        {% for num in paginator.page_range %}
-          {% if page_obj.number == num %}
-            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
-          {% else %}
-            <li><a href="?page={{ num }}">{{ num }}</a></li>
-          {% endif %}
-        {% endfor %}
-  
-        {% if page_obj.has_next %}
-          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
-          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
-        {% endif %}
-      </ul>
-    {% endif %}
+      </div>
   </div>
-  {% endif %}
-</div>
-<script>
-  document.getElementById('searchOperations').addEventListener('input', function(e) {
-      const searchTerm = e.target.value.toLowerCase();
-      const operations = document.querySelectorAll('#operationsList .list-group-item');
-  
-      operations.forEach(op => {
-          const content = op.getAttribute('data-operation-content').toLowerCase();
-          if (content.includes(searchTerm)) {
-              op.style.display = '';
-          } else {
-              op.style.display = 'none';
-          }
-      });
-  });
-</script>
+  <script>
+    document.getElementById('searchOperations').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const operations = document.querySelectorAll('#operationsList .list-group-item');
+    
+        operations.forEach(op => {
+            const content = op.getAttribute('data-operation-content').toLowerCase();
+            if (content.includes(searchTerm)) {
+                op.style.display = '';
+            } else {
+                op.style.display = 'none';
+            }
+        });
+    });
+  </script>
 {% endblock %}

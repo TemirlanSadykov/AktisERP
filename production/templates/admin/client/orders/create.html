@@ -1,17 +1,42 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Create New Client Order" %}</h2>
-  <form method="post" class="crud-form">
-    {% csrf_token %}
-    <div class="form-group">
-      {{ form.as_p }}
-    </div>
-    <div class="form-actions">
-      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
-      <a href="{% url 'client_order_list' %}" class="btn back-btn">{% trans "Back" %}</a>
-    </div>
-  </form>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323;">{% trans 'Orders Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: auto;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <a class="dropdown-item">
+            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+          </a>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container">
+  <div class="row justify-content-center">
+      <div class="col-md-6">
+          <div class="form-container" style="padding:20px;">
+              <h3 class="text-center">{% trans "Create New Client Order" %}</h3>
+              <form method="post" class="crud-form">
+                {% csrf_token %}
+                  <div class="form-group">
+                    {{ form.as_p }}
+                  </div>
+                  <button type="submit" class="btn btn-create btn-block btnset">{% trans "Create" %}</button>
+                  <a href="{% url 'client_order_list' %}" class=" btn btn-back btn-block mt-2 btn back-btn btnback">{% trans "Back" %}</a>
+              </form>
+          </div>
+      </div>
+  </div>
 </div>
 {% endblock %}

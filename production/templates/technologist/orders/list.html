@@ -2,15 +2,54 @@
 {% load i18n %}
 {% block content %}
 
-<div class="container-fluid main-cont">
-  <div class="d-flex justify-content-between button-top flex-wrap">
-      <a href="{% url 'user_redirect' %}" class="btn btn-custom mb-2 mb-md-0">{% trans 'BACK TO HOME' %}</a>
-      <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
-    </form>
-  </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item dropdown" style="margin: auto;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <a class="dropdown-item">
+              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            </a>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
+    <div class=" border-right" id="sidebar-wrapper">
+      <div class="d-flex justify-content-between align-items-centero">
+        <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
+            <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
+        <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
+            <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
+        <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
+            class="fas fa-home"></i> {% trans 'Rolls' %}</a>
+        <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
+            class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
+        <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
+            class="fas fa-users"></i> {% trans 'Operations' %}</a>
+        <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
+            class="fas fa-user"></i> {% trans 'Nodes' %}</a>
+        <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
+            class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
+      </div>
+    </div>
+    <!-- <div id="page-content-wrapper">
+</div> -->
+<div class="container-fluid main-cont">
   <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item">
           <a class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'order_list_technologist' %}" role="tab" aria-controls="all"
@@ -29,8 +68,6 @@
               aria-controls="completed" aria-selected="false">{% trans "Completed" %}</a>
       </li>
   </ul>
-
-
   <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
           <div class="row">
@@ -54,8 +91,6 @@
       </div>
   </div>
   <br>
-</div>
-
 
 <div class="pagination-container">
   {% if is_paginated %}
@@ -82,4 +117,5 @@
   </nav>
   {% endif %}
 </div>
+<!-- </div> -->
 {% endblock %}

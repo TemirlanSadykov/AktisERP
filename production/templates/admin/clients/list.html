@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
-
-
-
   <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
@@ -39,7 +35,6 @@
               {% endfor %}
             </ul>
         </div>
-
         {% if is_paginated %}
             <ul class="pagination-list">
               {% if page_obj.has_previous %}
@@ -62,8 +57,4 @@
             </ul>
           {% endif %}
 </div>
-
-
- 
-
 {% endblock %}

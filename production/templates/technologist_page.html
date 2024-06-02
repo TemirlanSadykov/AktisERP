@@ -2,9 +2,27 @@
 {% load i18n %}
 {% block content %}
 
-<div class="dashboard-container">
-  <h1>{% trans 'Technologist Dashboard' %}</h1>
-  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as a Technologist." %}</p>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item dropdown" style="margin: auto;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <a class="dropdown-item">
+              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            </a>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
   <div class="row">
     {% if request.user.userprofile.type != 0 %}
@@ -21,26 +39,39 @@
           </div>
         </div>
       </div>
+    </div>
     {% endif %}
 
-    <div class="col-md-8 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">{% trans 'Resources' %}</h5>
+    <div class="d-flex" id="wrapper">
+      <div class=" border-right" id="sidebar-wrapper">
+        <div class="d-flex justify-content-between align-items-centero">
+          <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+        <!-- <div class="sidebar-heading sidebar-navi">Navigation</div> -->
+        <div class="list-group list-group-flush">
           {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-            <a href="{% url 'order_list_technologist' %}" class="btn btn-info">{% trans 'Models' %}</a>
-            <a href="{% url 'roll_list' %}" class="btn btn-info">{% trans 'Rolls' %}</a>
-            <a href="{% url 'assortment_list' %}" class="btn btn-info">{% trans 'Assortments' %}</a>
-            <a href="{% url 'operation_list' %}" class="btn btn-info">{% trans 'Operations' %}</a>
-            <a href="{% url 'node_list' %}" class="btn btn-info">{% trans 'Nodes' %}</a>
-            <a href="{% url 'equipment_list' %}" class="btn btn-info">{% trans 'Equipment' %}</a>
-          {% else %}
-            <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
-          {% endif %}
+          <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
+            <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
+          <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
+              <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
+          <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
+              class="fas fa-home"></i> {% trans 'Rolls' %}</a>
+          <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
+              class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
+          <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
+              class="fas fa-users"></i> {% trans 'Operations' %}</a>
+          <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
+              class="fas fa-user"></i> {% trans 'Nodes' %}</a>
+          <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
+              class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
+              {% else %}
+              <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
+            {% endif %}
         </div>
       </div>
-    </div>
-  </div>
-  
+      <div id="page-content-wrapper">
+</div>
 </div>
 {% endblock %}

@@ -30,7 +30,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @technologist_required
 def technologist_page(request):
-    return render(request, 'technologist_page.html')
+    context = {
+               'sidebar_type': 'technology'
+               }
+    return render(request, 'technologist_page.html', context)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):

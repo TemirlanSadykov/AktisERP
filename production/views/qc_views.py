@@ -22,7 +22,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @qc_required
 def qc_page(request):
-    return render(request, 'qc_page.html')
+    context = {
+            'sidebar_type': 'qc_page'
+            }
+    return render(request, 'qc_page.html', context)
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class OrderListQcView(RestrictOrderBranchMixin, ListView):

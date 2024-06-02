@@ -1,32 +1,67 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323;">{% trans 'QC Dashboard' %} - {% trans "Models" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item dropdown" style="margin: auto;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <a class="dropdown-item">
+              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            </a>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+    <div class=" border-right" id="sidebar-wrapper">
+      <div class="d-flex justify-content-between align-items-centero">
+        <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <!-- <div class="sidebar-heading sidebar-navi">Navigation</div> -->
+      <div class="list-group list-group-flush">
+        <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
+            <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
+          <a href="{% url 'order_list_qc' %}" class="list-group-item list-group-item-action text-black">
+              <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
+      </div>
+    </div>
+
+
 <div class="container-fluid main-cont">
-  <div class="d-flex justify-content-between button-top flex-wrap">
-      <a href="{% url 'user_redirect' %}" class="btn btn-custom mb-2 mb-md-0">{% trans 'BACK TO HOME' %}</a>
-      <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
-    </form>
-  </div>
-  <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
-          <a class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'order_list_qc' %}" role="tab" aria-controls="all"
-              aria-selected="false">{% trans "All" %}</a>
-      </li>
-      <li class="nav-item">
-          <a class="nav-link {% if selected_status|stringformat:"s" == Order.NEW|stringformat:"s" %}active{% endif %}" id="new-tab"  href="?status={{ Order.NEW }}" role="tab" aria-controls="new"
-              aria-selected="true">{% trans "New" %}</a>
-      </li>
-      <li class="nav-item">
-          <a class="nav-link {% if selected_status|stringformat:"s" == Order.IN_PROGRESS|stringformat:"s" %}active{% endif %}" id="in-progress-tab"  href="?status={{ Order.IN_PROGRESS }}" role="tab"
-              aria-controls="in-progress" aria-selected="false">{% trans "In Progress" %}</a>
-      </li>
-      <li class="nav-item">
-          <a class="nav-link {% if selected_status|stringformat:"s" == Order.COMPLETED|stringformat:"s" %}active{% endif %}" id="completed-tab"  href="?status={{ Order.COMPLETED }}" role="tab"
-              aria-controls="completed" aria-selected="false">{% trans "Completed" %}</a>
-      </li>
-  </ul>
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'order_list_qc' %}" role="tab" aria-controls="all"
+                aria-selected="false">{% trans "All" %}</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if selected_status|stringformat:"s" == Order.NEW|stringformat:"s" %}active{% endif %}" id="new-tab"  href="?status={{ Order.NEW }}" role="tab" aria-controls="new"
+                aria-selected="true">{% trans "New" %}</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if selected_status|stringformat:"s" == Order.IN_PROGRESS|stringformat:"s" %}active{% endif %}" id="in-progress-tab"  href="?status={{ Order.IN_PROGRESS }}" role="tab"
+                aria-controls="in-progress" aria-selected="false">{% trans "In Progress" %}</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if selected_status|stringformat:"s" == Order.COMPLETED|stringformat:"s" %}active{% endif %}" id="completed-tab"  href="?status={{ Order.COMPLETED }}" role="tab"
+                aria-controls="completed" aria-selected="false">{% trans "Completed" %}</a>
+        </li>
+    </ul>
+
+
   <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
           <div class="row">
@@ -37,6 +72,7 @@
           </div>
           </div>
           <br>
+
           <ul class="list-group custom-list-group">
             {% for order_info in orders_with_days_left %}
             <li class="list-group-item custom-list-item">
@@ -50,7 +86,9 @@
       </div>
   </div>
   <br>
-</div>
+
+
+
 <div class="pagination-container">
   {% if is_paginated %}
   <nav aria-label="Page navigation">

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 {% load i18n %}
-
 {% block content %}
 <style>
   .content-container .header {
@@ -20,14 +19,12 @@
       </form>
     {% endif %}
   </div>
-
   <div class="details">
     <p><strong>{% trans "Client:" %}</strong> {{ client_order.client.name }}</p>
     <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
     <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
   </div>
-
   <div class="form-actions">
     <a href="{% url 'client_order_edit' client_order.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
