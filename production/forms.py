@@ -203,128 +203,53 @@ class ModelCustomForm(forms.ModelForm):
 
     class Meta:
         model = Model
-        fields = ['name']
+        fields = ['name', 'operations']  # Ensure 'operations' is handled by the form
 
     def __init__(self, *args, **kwargs):
         self.assortment_id = kwargs.pop('a_id', None)
+        copy_id = kwargs.pop('copy_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
-        # Load only original operations where original_operation is null
-        queryset = Operation.objects.filter(original_operation__isnull=True).select_related('node').order_by('number')
-
-        if self.instance and self.instance.pk:
-            # Pre-fill operations that are already associated with the model
-            initial = [mo.operation.original_operation.id for mo in self.instance.modeloperation_set.all() if mo.operation.original_operation is None]
-        else:
-            # For new model creation, no operations are pre-filled
-            initial = []
-
+        queryset = Operation.objects.all().select_related('node').order_by('number')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
             queryset=queryset,
             widget=forms.CheckboxSelectMultiple,
-            required=False,
-            initial=initial
+            required=False
         )
+        # Set initial operations based on instance or copy_id
+        if copy_id:
+            original_model = Model.objects.get(pk=copy_id)
+            self.fields['operations'].initial = [op.pk for op in original_model.operations.all()]
+        elif self.instance.pk:
+            self.fields['operations'].initial = [op.pk for op in self.instance.operations.all()]
 
     def save(self, commit=True):
         model_instance = super().save(commit=False)
-        if self.assortment_id and not self.instance.pk:
+        if self.assortment_id:
             model_instance.assortment = Assortment.objects.get(pk=self.assortment_id)
+        
         if commit:
             model_instance.save()
-            self.save_operations(model_instance)
+            self.save_m2m()
+            if 'operations_data' in self.cleaned_data and self.cleaned_data['operations_data']:
+                operations_data = json.loads(self.cleaned_data['operations_data'])
+                self.update_operations_order(model_instance, operations_data)
         return model_instance
 
-    def save_operations(self, model_instance, copy=False):
-        # Parse the operations data from the form's JSON field
-        operations_data = json.loads(self.cleaned_data.get('operations_data', '[]'))
-
-        # Get all existing ModelOperations for the model to update their order or delete them if not needed
-        current_model_operations = {mo.operation.original_operation_id: mo for mo in model_instance.modeloperation_set.select_related('operation')}
-
-        # Set of IDs from new operations to add or update
-        new_operations_ids = {int(op['operation_id']) for op in operations_data}
-
+    def update_operations_order(self, model_instance, operations_data):
         with transaction.atomic():
-            if copy:
-                # When copying, create new derived operations based on selected abstract operations
-                for op_data in operations_data:
-                    operation_id = int(op_data['operation_id'])
-                    order = op_data['order']
-                    original_operation = Operation.objects.get(pk=operation_id)
-                    # Create new derived operation
-                    copied_operation = Operation.objects.create(
-                        name=original_operation.name,
-                        number=original_operation.number,
-                        payment=original_operation.payment,
-                        equipment=original_operation.equipment,
-                        node=original_operation.node,
-                        preferred_completion_time=original_operation.preferred_completion_time,
-                        average_completion_time=original_operation.average_completion_time,
-                        photo=original_operation.photo,
-                        employee=original_operation.employee,
-                        original_operation=original_operation
-                    )
-                    # Link new derived operation to the new model instance
-                    ModelOperation.objects.create(
-                        model=model_instance,
-                        operation=copied_operation,
-                        order=order
-                    )
-            else:
-                # First, delete any current model operations and their specific copies that are not in the new operations list
-                for op_id, model_op in current_model_operations.items():
-                    if op_id not in new_operations_ids:
-                        model_op.operation.delete()  # Delete the derived operation if it's no longer selected
-                        model_op.delete()  # Delete the model-operation link
+            # Clear existing operations to reset them with new order
+            ModelOperation.objects.filter(model=model_instance).delete()
 
-                # Iterate over the operations data provided by the form
-                for op_data in operations_data:
-                    operation_id = int(op_data['operation_id'])
-                    order = op_data['order']
-
-                    # Check if there's already a derived operation for this abstract operation linked to the model
-                    if operation_id in current_model_operations:
-                        # If it exists, update its order if necessary
-                        model_op = current_model_operations[operation_id]
-                        if model_op.order != order:
-                            model_op.order = order
-                            model_op.save()
-                    else:
-                        # No existing derived operation, need to check if any exists in the db linked to this model
-                        existing_derived_operation = ModelOperation.objects.filter(
-                            operation__original_operation_id=operation_id,
-                            model=model_instance
-                        ).first()
-
-                        if existing_derived_operation:
-                            # If a derived operation already exists, update its order
-                            existing_derived_operation.order = order
-                            existing_derived_operation.save()
-                        else:
-                            # Create a new derived operation
-                            original_operation = Operation.objects.get(pk=operation_id)
-                            copied_operation = Operation.objects.create(
-                                name=original_operation.name,
-                                number=original_operation.number,
-                                payment=original_operation.payment,
-                                equipment=original_operation.equipment,
-                                node=original_operation.node,
-                                preferred_completion_time=original_operation.preferred_completion_time,
-                                average_completion_time=original_operation.average_completion_time,
-                                photo=original_operation.photo,
-                                employee=original_operation.employee,
-                                original_operation=original_operation
-                            )
-                            ModelOperation.objects.create(
-                                model=model_instance,
-                                operation=copied_operation,
-                                order=order
-                            )
-
-class OperationEditForm(forms.ModelForm):
-    class Meta:
-        model = Operation
-        fields = ['name', 'payment', 'preferred_completion_time']
+            # Re-add operations with the correct order
+            for operation_info in operations_data:
+                operation_id = operation_info['operation_id']
+                order = operation_info['order']
+                operation = Operation.objects.get(pk=operation_id)
+                ModelOperation.objects.create(
+                    model=model_instance,
+                    operation=operation,
+                    order=order
+                )
 
 class ClientForm(forms.ModelForm):
     class Meta:

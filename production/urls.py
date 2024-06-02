@@ -112,7 +112,6 @@ urlpatterns = [
     path('technologist/assortments/<int:a_id>/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/edit/', model_edit, name='model_edit'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/edit-operations', model_operation_edit, name='model_operation_edit'),
 
     path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
     path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),

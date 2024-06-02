@@ -837,49 +837,28 @@ class ModelListView(ListView):
 
 @login_required
 @technologist_required
-def model_create(request, a_id):
+def model_create(request, a_id, pk=None):
     assortment = get_object_or_404(Assortment, pk=a_id)
     copy_id = request.GET.get('copy')
-    
-    if request.method == 'POST':
-        form = ModelCustomForm(request.POST, a_id=a_id)
-        if form.is_valid():
-            model_instance = form.save(commit=False)
-            model_instance.assortment = assortment
-            model_instance.save()
-            if copy_id:
-                # If copying, create new derived operations
-                form.save_operations(model_instance, copy=True)
-            else:
-                # Normal creation process
-                form.save_operations(model_instance)
-            return redirect('model_operation_edit', a_id=a_id, pk=model_instance.id)
-    else:
-        form = ModelCustomForm(a_id=a_id, instance=None)
-        if copy_id:
-            # When copying, provide the model to copy from for initial data setup
-            model_to_copy = get_object_or_404(Model, pk=copy_id)
-            form = ModelCustomForm(instance=model_to_copy, a_id=a_id)
-            return render(request, 'technologist/models/edit.html', {'form': form})
+    original = get_object_or_404(Model, pk=copy_id) if copy_id else None
 
-        return render(request, 'technologist/models/create.html', {'form': form})
-        
-@login_required
-@technologist_required
-def model_operation_edit(request, a_id, pk):
-    model_instance = get_object_or_404(Model, pk=pk)
-    operations = model_instance.modeloperation_set.select_related('operation').order_by('order')
-    
     if request.method == 'POST':
-        # Handle the form submission to update operations
-        for operation in operations:
-            op_form = OperationEditForm(request.POST, instance=operation.operation, prefix=str(operation.operation.id))
-            if op_form.is_valid():
-                op_form.save()
-        return redirect('model_list', a_id=a_id)
+        form = ModelCustomForm(request.POST, instance=None, a_id=a_id, copy_id=copy_id)
+        if form.is_valid():
+            form.save()
+            return redirect('model_list', a_id=a_id)
     else:
-        forms = [OperationEditForm(instance=operation.operation, prefix=str(operation.operation.id)) for operation in operations]
-        return render(request, 'technologist/models/edit_operations.html', {'model': model_instance, 'forms': forms})
+        form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
+
+    template_name = 'technologist/models/edit.html' if original else 'technologist/models/create.html'
+    context = {
+        'form': form,
+        'assortment': assortment,
+        'is_copying': bool(copy_id),  # Pass whether it's a copy
+        'copy_model': original if copy_id else None  # Pass the model being copied
+    }
+    return render(request, template_name, context)
+
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -901,11 +880,10 @@ def model_edit(request, a_id, pk):
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, instance=model_instance)
         if form.is_valid():
-            model_instance = form.save()
-            # Redirect as needed, possibly to operations edit
-            return redirect('model_operation_edit', a_id=a_id, pk=model_instance.id)
+            form.save()
+            return redirect('model_list', a_id=a_id)
     else:
-        form = ModelCustomForm(instance=model_instance)  # Existing data is loaded here
+        form = ModelCustomForm(instance=model_instance)
     
     return render(request, 'technologist/models/edit.html', {'form': form, 'model': model_instance})
 

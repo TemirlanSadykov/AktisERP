@@ -65,8 +65,11 @@
   }
 </style>
 <div class="assign-operations-container">
+  {% if is_copying %}
+    <h2 class="form-heading">{% trans "Copying Model:" %} {{ copy_model.name }}</h2>
+  {% else %}
     <h2 class="form-heading">{% trans "Edit Model" %}</h2>
-    
+  {% endif %}    
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
@@ -79,11 +82,11 @@
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
           {% for operation in form.fields.operations.queryset %}
-              <div class="checkbox">
+              <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
                   <label>
                       <input type="checkbox" name="operations" value="{{ operation.id }}"
                           {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
-                      {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
+                      {{ operation }}
                   </label>
               </div>
           {% endfor %}
