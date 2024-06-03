@@ -15,7 +15,7 @@
           <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
             <a class="dropdown-item">
-              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+              <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
             </a>
           </form>
         </li>
@@ -29,9 +29,11 @@
             </div>
             <ul class="clients-list">
               {% for client in clients %}
+              <a href="{% url 'client_detail' client.pk %}">
                 <li class="list-group-item">
-                  <a href="{% url 'client_detail' client.pk %}">{{ client.name }}</a>
+                  {{ client.name }}
                 </li>
+              </a>
               {% endfor %}
             </ul>
         </div>

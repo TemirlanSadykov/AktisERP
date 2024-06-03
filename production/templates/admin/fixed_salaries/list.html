@@ -15,7 +15,7 @@
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
           <a class="dropdown-item">
-            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
           </a>
         </form>
       </li>
@@ -29,9 +29,11 @@
           </div>
           <ul class="clients-list">
             {% for fixed_salary in fixed_salaries %}
+            <a href="{% url 'fixed_salary_detail' fixed_salary.pk %}">
               <li class="list-group-item">
-                <a href="{% url 'fixed_salary_detail' fixed_salary.pk %}">{{ fixed_salary.position }}</a>
+                {{ fixed_salary.position }}
               </li>
+            </a>
             {% endfor %}
           </ul>
 

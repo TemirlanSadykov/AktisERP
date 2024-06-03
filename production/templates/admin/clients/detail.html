@@ -1,25 +1,90 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load static %}
 {% block content %}
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Client Details:" %} {{ client.name }}</h2>
-  <div class="details">
-    <p><strong>{% trans "Contact Info:" %}</strong> {{ client.contact_info }}</p>
-  </div>
-  <div class="form-actions">
-    <a href="{% url 'client_edit' client.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
-    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'client_list' %}" class="btn back-btn">{% trans "Back" %}</a>
-  </div>
-  <form id="deleteForm" action="{% url 'client_delete' client.pk %}" method="post" style="display:none;">
-    {% csrf_token %}
-  </form>
-</div>
-<script>
-  function confirmDelete() {
-    if (confirm("{% trans 'Are you sure you want to delete this client?' %}")) {
-      document.getElementById('deleteForm').submit();
-    }
-  }
-</script>
+
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; ">{% trans "Employee" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item dropdown" style="margin: auto;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <a class="dropdown-item">
+              <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+            </a>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+    <div class="container maincontr" style="margin-bottom: 12px; margin-top:12px;">
+        <div class="row">
+            <div class="col-md-1">
+               <a href="{% url 'client_edit' client.pk %}" > <img src="{% static 'img/left.png' %}" alt="" class="image-logo" style="width:40px"></a>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+              Client
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 details">
+                      <p><strong> {% trans "Client Details:" %}</strong>{{ client.name }}</p>
+                      <p><strong>{% trans "Contact Info:" %}</strong> {{ client.contact_info }}</p>
+                        <a href="{% url 'client_edit' client.pk %}"><img src="{% static 'img/edit.png' %}" alt="" style="width:40px; margin-top: 20px;"></a>
+                        <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/delete.png' %}" alt="" style="width:40px; margin-top: 20px;"></a>
+                    </div>
+                    <form id="deleteForm" action="{% url 'client_delete' client.pk %}" method="post" style="display:none;">
+                      {% csrf_token %}
+                    </form>
+                    <div class="col-md-5 text-center">
+                        <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal" id="deleteModal">
+              <div class="modal-content">
+                  <span class="close" id="closeBtn">&times;</span>
+                  <p>{% trans "Are you sure you want to delete this client?" %}</p>
+                  <div class="modal-buttons">
+                      <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+                      <button class="btn cancel" id="cancelBtn">Cancel</button>
+                  </div>
+              </div>
+          </div>
+
+        </div>
+    </div>
+
+    <script>
+      document.getElementById('deleteBtn').onclick = function() {
+          document.getElementById('deleteModal').style.display = 'flex';
+      };
+
+      document.getElementById('closeBtn').onclick = function() {
+          document.getElementById('deleteModal').style.display = 'none';
+      };
+
+      document.getElementById('cancelBtn').onclick = function() {
+          document.getElementById('deleteModal').style.display = 'none';
+      };
+
+      document.getElementById('confirmDeleteBtn').onclick = function() {
+          document.getElementById('deleteForm').submit();
+      };
+  </script>
+
 {% endblock %}

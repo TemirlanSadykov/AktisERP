@@ -16,7 +16,7 @@
           <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
             <a class="dropdown-item">
-              <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+              <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
             </a>
           </form>
         </li>
@@ -30,11 +30,12 @@
         </div>
         <ul class="list-group" >
           {% for employee in employees %}
-            <li class="list-group-item d-flex align-items-center" style="border: 1px solid rgba(0, 0, 0, .125) !important;">
+          <a href="{% url 'employee_detail' employee.pk %}">
+            <li class="list-group-item d-flex align-items-center" style="border: 1px solid rgba(0, 0, 0, .125) !important; color:blue;">
               <span class="status-dot bg-success"></span>
                 <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
-                <a href="{% url 'employee_detail' employee.pk %}">{{ employee.employee_id }} - {{ employee.user.get_full_name }} - {{ employee.get_station_display }}</a>
-            </li>
+                {{ employee.employee_id }} - {{ employee.user.get_full_name }} - {{ employee.get_station_display }}
+            </li></a>
             {% endfor %}
         </ul>
         <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
