@@ -648,11 +648,16 @@ def operation_upload(request):
 
             with transaction.atomic():
                 for row in sheet.iter_rows(min_row=2, values_only=True):
-                    assortment_names, number, operation_name, node_name, equipment_name, time, price = row
+                    number, operation_name, node_name, node_number, equipment_name, time, price = row
 
-                    node, _ = Node.objects.get_or_create(name=node_name)
+                    node, created = Node.objects.get_or_create(
+                        number=node_number,
+                        defaults={'name': node_name}
+                    )
+                    if not created and node.name != node_name:
+                        node.name = node_name
+                        node.save()
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
-
                     operation, created = Operation.objects.get_or_create(
                         number=number,
                         defaults={
@@ -663,7 +668,6 @@ def operation_upload(request):
                             'payment': price
                         }
                     )
-
                     if not created:
                         operation.name = operation_name
                         operation.equipment = equipment
@@ -671,15 +675,6 @@ def operation_upload(request):
                         operation.preferred_completion_time = time
                         operation.payment = price
                         operation.save()
-
-                    assortment_names_list = [name.strip() for name in assortment_names.split(',')]
-                    for assortment_name in assortment_names_list:
-                        assortment, created = Assortment.objects.get_or_create(
-                            name=assortment_name,
-                            branch=request.user.userprofile.branch
-                        )
-                        assortment.operations.add(operation)
-
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))
         except Exception as e:
@@ -693,23 +688,19 @@ def operation_upload(request):
 @login_required
 @technologist_required
 def operation_download(request):
-    # Create an in-memory workbook
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Operations"
 
-    # Add headers to the first row
-    headers = ["Ассортимент", "№ПП", "Тех-процесс", "Узел", "Оборудование", "Время", "Оплата"]
+    headers = ["№ПП (авто генерация)", "Тех-процесс", "Узел", "№ узла", "Оборудование", "Время", "Оплата"]
     sheet.append(headers)
 
-    # Add data rows
     for operation in Operation.objects.all().order_by('number'):
-        assortments = ", ".join(assortment.name for assortment in operation.assortments.all())
         row = [
-            assortments,
             operation.number,
             operation.name,
             operation.node.name if operation.node else "",
+            operation.node.number if operation.node else "",
             operation.equipment.name if operation.equipment else "",
             operation.preferred_completion_time,
             operation.payment,

@@ -88,6 +88,7 @@ class Equipment(models.Model):
     
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
     is_common = models.BooleanField(default=False, verbose_name='Общий')
     SEWING = 0
     CUTTING = 1
@@ -117,9 +118,11 @@ class Operation(models.Model):
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
     def save(self, *args, **kwargs):
         creating = self._state.adding
-        super().save(*args, **kwargs)  # Save first to ensure we have an ID
+        super().save(*args, **kwargs)
         if creating:
-            self.number = f"{self.node.id}N{self.id}O"
+            current_count = Operation.objects.filter(node=self.node).count()
+            new_operation_number = current_count + 1
+            self.number = f"{self.node.number}N{new_operation_number}O"
             super().save(update_fields=['number'])
     
 class Assortment(models.Model):
