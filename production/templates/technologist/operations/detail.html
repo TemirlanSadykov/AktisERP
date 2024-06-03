@@ -22,6 +22,14 @@
     {% if operation.employee %}
       <p><strong>{% trans "Assigned Employee:" %}</strong> {{ operation.employee.employee_id }} - {{ operation.employee.user.get_full_name }}</p>
     {% endif %}
+    <p><strong>{% trans "Used in Models:" %}</strong>
+    <ul>
+      {% for model in models %}
+        <li>{{ model.name }}</li>
+      {% empty %}
+        <li>{% trans "This operation is not used in any models." %}</li>
+      {% endfor %}
+    </ul>
   </div>
 
   <div class="form-actions">

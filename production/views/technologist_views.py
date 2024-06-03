@@ -586,6 +586,12 @@ class OperationDetailView(DetailView):
     model = Operation
     template_name = 'technologist/operations/detail.html'
     context_object_name = 'operation'
+    def get_context_data(self, **kwargs):
+        context = super(OperationDetailView, self).get_context_data(**kwargs)
+        operation = self.object
+        models = Model.objects.filter(operations=operation)
+        context['models'] = models
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationUpdateView(UpdateView):
