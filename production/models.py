@@ -202,7 +202,7 @@ class Passport(models.Model):
     rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports', verbose_name='Рулоны')
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
     def __str__(self):
-        return f"ID: {str(self.id)}"
+        return f"ID {str(self.id)}"
     
 class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')
