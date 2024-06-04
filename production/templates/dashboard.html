@@ -16,8 +16,8 @@
         <div>
             <h2>ERP Dashboard</h2>
             <ul>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Clients')">Clients</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Overview')">Overview</a></li>
+                <li><a href="#" class="tablink" onclick="openTab(event, 'Clients')">Clients</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Production')">Production</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Inventory')">Inventory</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Orders')">Orders</a></li>
@@ -73,12 +73,10 @@
                 <tbody>
                     {% for client in client_data %}
                     <tr>
-                        <td>{{ client.client }}</td>
+                        <td><a href="#" data-toggle="modal" data-target="#clientModal" onclick="fetchClientDetails({{ client.id }})">{{ client.client }}</a></td>
                         <td>
-                            {% for number, models in client.client_orders_details %}
-                                {% for model in models %}
-                                    <strong>{{ number }}:</strong> {{ model }}<br>
-                                {% endfor %}
+                            {% for order_number, client_order_id, model_list in client.client_orders_details %}
+                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank">{{ order_number }}</a></strong><br>
                             {% endfor %}
                         </td>
                         <td>{{ client.total_ordered_amount_by_orders }}</td>
@@ -87,6 +85,21 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="modal fade" id="clientModal" tabindex="-1" role="dialog" aria-labelledby="clientModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="clientModalLabel">Client Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Client details will be filled here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>        
         <div id="Production" class="tabcontent">
             <h2>Production Overview</h2>
@@ -603,6 +616,52 @@
 
             document.querySelector(".tablink").click();
         });
+    </script>
+    <script>
+        function fetchClientDetails(clientId) {
+            fetch(`/production/api/clients/${clientId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#clientModal .modal-body');
+                    // Set up the basic client info
+                    modalBody.innerHTML = `
+                        <p>Name: ${data.name}</p>
+                        <p>Contact Info: ${data.contact_info}</p>
+                        <p>Total Spendings: ${data.total_spendings}</p>
+                        <canvas id="spendingChart" width="400" height="400"></canvas>
+                    `; // Ensure there is a canvas element for the chart
+        
+                    // Prepare the data for the chart
+                    const labels = data.spendings_over_time.map(item => item.date);
+                    const co = data.spendings_over_time.map(item => item.co);
+                    const spendings = data.spendings_over_time.map(item => item.spendings);
+                    const tooltipLabels = labels.map((label, index) => `${label} - ${co[index]}`);
+                    // Render the chart using Chart.js
+                    var ctx = document.getElementById('spendingChart').getContext('2d');
+                    var spendingChart = new Chart(ctx, {
+                        type: 'line', // or 'bar' if you prefer
+                        data: {
+                          labels: labels,  // Use original labels for X-axis
+                          datasets: [{
+                            label: "Spendings Over Time",
+                            data: spendings,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                          }]
+                        },
+                        options: {
+                          scales: {
+                            y: {
+                              beginAtZero: true
+                            }
+                          },
+                        }
+                    });
+                    spendingChart.update();
+                })
+                .catch(error => console.error('Error loading client details:', error));
+        }           
     </script>
 </body>
 </html>

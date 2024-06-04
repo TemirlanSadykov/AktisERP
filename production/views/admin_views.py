@@ -41,7 +41,6 @@ def admin_page(request):
     }
     return render(request, 'admin_page.html', context)
 
-# @cache_page(CACHE_TTL)
 @login_required
 @admin_required
 def dashboard_page(request):
@@ -52,15 +51,21 @@ def dashboard_page(request):
         client_orders = ClientOrder.objects.filter(client=client)
         orders = Order.objects.filter(client_order__in=client_orders)
         
-        total_ordered_amount_by_orders = orders.aggregate(total_amount=Sum(F('quantity') * F('payment')))['total_amount'] or 0
-        total_ordered_amount = client_orders.aggregate(total_amount=Sum('orders__quantity'))['total_amount'] or 0
+        total_ordered_amount_by_orders = orders.aggregate(
+            total_amount=Sum(F('quantity') * F('payment'))
+        )['total_amount'] or 0
+        
+        total_ordered_amount = client_orders.aggregate(
+            total_amount=Sum('orders__quantity')
+        )['total_amount'] or 0
         
         client_orders_details = [
-            (co.order_number, list(co.orders.values_list('model__name', flat=True)))
+            (co.order_number, co.id, list(co.orders.values_list('model__name', flat=True)))
             for co in client_orders
         ]
 
         client_data.append({
+            'id': client.id,
             'client': client.name,
             'client_orders_details': client_orders_details,
             'total_ordered_amount_by_orders': total_ordered_amount_by_orders,

@@ -163,4 +163,5 @@ urlpatterns = [
 
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
 
+    path('api/clients/<int:client_id>/', client_api, name='client_api'),
 ]
