@@ -37,27 +37,33 @@
     <tbody>
       {% for size, data in required_missing.items %}
       <tr>
-          <td>{{ size }}</td>
-          {% for passport in passports %}
-          <td>
-              {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
-              {% if size_data|get_item:size|get_item:passport.id|get_item:"quantity" > 0 %}
-                  <input type="checkbox" 
-                         class="stage-sewing-checkbox" 
-                         data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
-                         {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 1 %} checked {% endif %}
-                         {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" > 1 %} disabled {% endif %}>
-                         ({{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }})
-              {% endif %}
-          </td>
-          {% endfor %}
-          <td>{{ total_per_size|get_item:size|default:"0" }}</td>
-          <td>{{ data.required }}</td>
-          <td>{{ data.missing }}</td>
+        <td>{{ size }}</td>
+        {% for passport in passports %}
+        <td>
+          {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+          {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
+          {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 1 %}
+            <button type="button" class="stage-sewing-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+            </button>
+          {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" > 1 %}
+            <button type="button" class="stage-sewing-button btn back-btn">
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+            </button>
+          {% else %}
+            <button type="button" class="stage-sewing-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+            </button>
+          {%endif%}
+        </td>
+        {% endfor %}
+        <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+        <td>{{ data.required }}</td>
+        <td>{{ data.missing }}</td>
       </tr>
       {% empty %}
       <tr>
-          <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
+        <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -67,64 +73,62 @@
   <div class="passports-list">
     {% if passports %}
       {% for passport in passports %}
-        <p class="passport-item" style="color: {{ passport.is_completed|yesno:'green,red' }};">
-          <a href="{% url 'passport_detail' passport.pk %}" class="passport-link">
-            {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
-          </a>
-        </p>
+      <p class="passport-item" style="color: {{ passport.is_completed|yesno:'green,red' }};">
+        <a href="{% url 'passport_detail' passport.pk %}" class="passport-link">
+          {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
+        </a>
+      </p>
       {% endfor %}
     {% else %}
       <p>{% trans "No associated passports." %}</p>
     {% endif %}
     <div class="create-passport-form">
       <form method="post" action="{% url 'passport_create' order.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-primary">{% trans "Create New Passport" %}</button>
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">{% trans "Create New Passport" %}</button>
       </form>
     </div>
   </div>
 </div>
 
 <script>
-  function confirmDelete() {
-    if (confirm("{% trans 'Are you sure you want to delete this order?' %}")) {
-      document.getElementById('deleteForm').submit();
-    }
-  }
   document.addEventListener('DOMContentLoaded', function() {
-    var checkboxes = document.querySelectorAll('.stage-sewing-checkbox');
-    checkboxes.forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-          var passportSizeId = this.dataset.passportSizeId;
+    var buttons = document.querySelectorAll('.stage-sewing-button');
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function() { // Changed to 'click' event for buttons
+        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
+        if (passportSizeId) {
           fetch(`/production/cutter/orders/mark-as-sewing/${passportSizeId}/`, {
-              method: 'POST',
-              headers: {
-                  'X-CSRFToken': getCookie('csrftoken')
-              },
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            },
           })
           .then(response => response.json())
           .then(data => {
-              if (!data.success) {
-                alert('Не получилось обновить');
-              }
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert('Не получилось обновить');
+            }
           })
           .catch(error => {
-              console.error('Error:', error);
-              this.checked = false;
+            console.error('Error:', error);
           });
-        });
+        }
+      });
     });
     function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
           }
+        }
       }
       return cookieValue;
     }

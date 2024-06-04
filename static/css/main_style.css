@@ -191,6 +191,18 @@ nav form button:hover {
     color: #fff; /* Text color remains white */
 }
 
+.success-btn {
+    background: #28A745; /* Bootstrap grey */
+    border: 1px solid #28A745;
+    color: #fff; /* White text */
+}
+
+.success-btn:hover {
+    background: #28A745; /* Slightly darker grey on hover */
+    border-color: #28A745;
+    color: #fff; /* Text color remains white */
+}
+
 /* DETAIL tempaltes */
 /* DETAIL tempaltes */
 /* DETAIL tempaltes */
