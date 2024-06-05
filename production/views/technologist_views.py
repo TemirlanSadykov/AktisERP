@@ -648,60 +648,40 @@ def operation_upload(request):
     form = UploadFileForm(request.POST, request.FILES)
     if form.is_valid():
         excel_file = request.FILES['excel_file']
-        try:
-            workbook = openpyxl.load_workbook(excel_file)
-            sheet = workbook.active
+        workbook = openpyxl.load_workbook(excel_file)
+        sheet = workbook.active
 
-            node_counters = {}  # Dictionary to keep track of counters for each node
-
+        with transaction.atomic():
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                old_number, operation_name, node_name, node_number, equipment_name, time, price = row
+                number, operation_name, node_name, node_number, equipment_name, time, price = row
 
-                with transaction.atomic():
-                    node, created = Node.objects.get_or_create(
-                        number=node_number,
-                        defaults={'name': node_name}
-                    )
-                    if not created and node.name != node_name:
-                        node.name = node_name
-                        node.save()
-
-                    equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
-
-                    # Initialize or reset the node counter if not already done
-                    if node.number not in node_counters:
-                        # Start counting from 1 for each node regardless of existing data
-                        node_counters[node.number] = 0
-
-                    # Create or find operation based on unique criteria, here based on the old number for backward compatibility
-                    operation, created = Operation.objects.get_or_create(
-                        number=old_number,
-                        defaults={
-                            'name': operation_name,
-                            'node': node,
-                            'equipment': equipment,
-                            'preferred_completion_time': time,
-                            'payment': price
-                        }
-                    )
-
-                    # Update the operation details and assign a new sequential number specific to the node
+                node, created = Node.objects.get_or_create(
+                    number=node_number,
+                    defaults={'name': node_name}
+                )
+                if not created and node.name != node_name:
+                    node.name = node_name
+                    node.save()
+                equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
+                operation, created = Operation.objects.get_or_create(
+                    number=number,
+                    defaults={
+                        'name': operation_name,
+                        'equipment': equipment,
+                        'node': node,
+                        'preferred_completion_time': time,
+                        'payment': price
+                    }
+                )
+                if not created:
                     operation.name = operation_name
-                    operation.node = node
                     operation.equipment = equipment
+                    operation.node = node
                     operation.preferred_completion_time = time
                     operation.payment = price
-                    node_counters[node.number] += 1
-                    operation.number = f"{node.number}N{node_counters[node.number]}O"
                     operation.save()
-                    
-                    print(operation)
-
-            messages.success(request, 'Operations uploaded successfully.')
-            return HttpResponseRedirect(reverse_lazy('operation_list'))
-        except Exception as e:
-            messages.error(request, f'There was an error processing the file: {e}')
-            workbook.close()
+                print(operation)
+        messages.success(request, 'Operations uploaded successfully.')
         return HttpResponseRedirect(reverse_lazy('operation_list'))
     else:
         messages.error(request, 'There was an error with the file upload.')
