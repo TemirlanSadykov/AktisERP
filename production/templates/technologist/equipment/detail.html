@@ -55,8 +55,8 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6 details">
-                   <a href="{% url 'equipment_edit' equipment.pk %}"><img src="{% static 'img/edit.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
-                    <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/delete.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
+                   <a href="{% url 'equipment_edit' equipment.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
+                    <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
                 </div>
                 <form id="deleteForm" action="{% url 'equipment_delete' equipment.pk %}" method="post" style="display:none;">
                   {% csrf_token %}

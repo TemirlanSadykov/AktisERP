@@ -2,14 +2,6 @@
 {% load i18n %}
 {% load static %}
 {% block content %}
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Node Details:" %} {{ node.name }}</h2>
-  <div class="details">
-    <p><strong>{% trans "Number:" %}</strong> {{ node.number }}</p>
-    <p><strong>{% trans "Is common:" %}</strong> {{ node.is_common }}</p>
-    <p><strong>{% trans "Type:" %}</strong> {{ node.get_type_display }}</p>
-
-
 
 
 
@@ -64,10 +56,11 @@
       <div class="card-body">
           <div class="row">
               <div class="col-md-6 details">
+                <p><strong>{% trans "Number:" %}</strong> {{ node.number }}</p>
                 <p><strong>{% trans "Is common:" %}</strong> {{ node.is_common }}</p>
                 <p><strong>{% trans "Type:" %}</strong> {{ node.get_type_display }}</p>
-                 <a href="{% url 'node_edit' node.pk %}"><img src="{% static 'img/edit.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
-                  <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/delete.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
+                 <a href="{% url 'node_edit' node.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" ></a>
+                  <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg" ></a>
               </div>
               <form id="deleteForm" action="{% url 'node_delete' node.pk %}" method="post" style="display:none;">
                 {% csrf_token %}

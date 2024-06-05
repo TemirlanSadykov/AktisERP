@@ -1,15 +1,40 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Edit Client:" %} {{ client.name }}</h2>
-  <form method="post" class="crud-form">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="form-actions">
-      <button type="submit" class="btn edit-btn">{% trans "Update" %}</button>
-      <a href="{% url 'client_detail' client.pk %}" class="btn back-btn">{% trans "Cancel" %}</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323;">{% trans 'Clients Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="form-container" style="padding:20px;">
+                    <h3 class="text-center">{% trans "Edit Client:" %} {{ client.name }}</h3>
+                    <form method="post" class="crud-form">
+                      {% csrf_token %}
+                        <div class="form-group">
+                          {{ form.as_p }}
+                        </div>
+                        <button type="submit" class="btn btn-create btn-block btnset">{% trans "Update" %}</button>
+                        <a href="{% url 'client_detail' client.pk %}" class=" btn btn-back btn-block mt-2 btn back-btn btnback">{% trans "Cancel" %}</a>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </form>
-</div>
 {% endblock %}

@@ -13,6 +13,9 @@ class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
         fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'})
+        }
 
 class UserWithProfileForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
@@ -117,17 +120,18 @@ class DateRangeForm(forms.Form):
 class SalaryListForm(forms.Form):
     start_date = forms.DateField(
         label='Начало',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
         required=False 
     )
     end_date = forms.DateField(
         label='Окончание',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date', 'class': 'form-control'}),
         required=False
     )
     salary_type = forms.ChoiceField(
         label='Тип зарплаты',
         choices=(('non_fixed', 'По факту'), ('fixed', 'Оклад')),
+        widget=forms.Select(attrs={'class': 'form-control'}),
         required=False
     )
 
@@ -239,6 +243,10 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = ['name', 'contact_info']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_info': forms.TextInput(attrs={'class': 'form-control'})
+        }
 
 class ClientOrderForm(forms.ModelForm):
     class Meta:
@@ -333,6 +341,10 @@ class FixedSalaryForm(forms.ModelForm):
     class Meta:
         model = FixedSalary
         fields = ['position', 'salary', 'employees']
+        widgets = {
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'salary': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
         
 class UploadFileForm(forms.Form):
     excel_file = forms.FileField(

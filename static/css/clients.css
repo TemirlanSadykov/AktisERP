@@ -427,7 +427,7 @@
 
 .clients-container {
   background: #fff;
-  padding: 60px;
+  padding: 20px;
 
   width: 100%;
   display: flex;
@@ -642,4 +642,20 @@ padding: 60px;
 .clock-btn:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+
+.deleteimg{
+  width:40px;
+   margin-top: 20px; 
+   background-color: #d60202; 
+   padding:12px; 
+   border-radius: 30px;
+}
+.editimg{
+  width:40px;
+  margin-top: 20px; 
+  background-color: #007bff; 
+  padding:12px; 
+  border-radius: 30px;
 }
