@@ -118,14 +118,12 @@ class Operation(models.Model):
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
     def save(self, *args, **kwargs):
         creating = self._state.adding
-        if creating:
-            super().save(*args, **kwargs)
-            self.number = f"{self.node.number}N{Operation.objects.filter(node=self.node).count() + 1}O"
-        else:
-            original = Operation.objects.get(id=self.id)
-            if original.node != self.node:
-                self.number = f"{self.node.number}N{Operation.objects.filter(node=self.node).count() + 1}O"
         super().save(*args, **kwargs)
+        if creating:
+            current_count = Operation.objects.filter(node=self.node).count()
+            new_operation_number = current_count + 1
+            self.number = f"{self.node.number}N{new_operation_number}O"
+            super().save(update_fields=['number'])
     
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
