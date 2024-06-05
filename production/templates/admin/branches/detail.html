@@ -33,8 +33,8 @@
           <div class="row">
               <div class="col-md-6 details">
                 <p><strong> {% trans "Branch Detailss:" %}</strong> {{ branch.name }}</p>
-                  <a href="{% url 'branch_edit' branch.pk %}"><img src="{% static 'img/edit.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
-                  <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/delete.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
+                  <a href="{% url 'branch_edit' branch.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
+                  <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
               </div>
               <form id="deleteForm" action="{% url 'branch_delete' branch.pk %}" method="post" style="display:none;">
                 {% csrf_token %}

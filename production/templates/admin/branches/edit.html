@@ -32,8 +32,14 @@
                         <div class="form-group">
                           {{ form.as_p }}
                         </div>
-                        <button type="submit" class="btn btn-create btnset">{% trans "Update" %}</button>
-                        <a href="{% url 'branch_detail' branch.pk %}" class=" btn btn-back  btn back-btn btnback text-right">{% trans "Cancel" %}</a>
+                        <div class="row">
+                          <div class="col text-left">
+                            <button type="submit" class="btn btn-create btnset">{% trans "Update" %}</button>
+                          </div>
+                          <div class="col text-right">
+                            <a href="{% url 'branch_detail' branch.pk %}" class=" btn btn-back btnback text-right">{% trans "Cancel" %}</a>
+                          </div>
+                      </div>
                     </form>
                 </div>
             </div>

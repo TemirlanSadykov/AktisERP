@@ -18,17 +18,26 @@ class BranchForm(forms.ModelForm):
         }
 
 class UserWithProfileForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, required=True)
-    last_name = forms.CharField(max_length=30, required=True)
-    employee_id = forms.CharField(max_length=100, required=True)
-    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
-    status = forms.BooleanField(required=False, initial=False)
-    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
+    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    employee_id = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
+    status = forms.BooleanField(required=False, initial=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input','style': 'margin:7px 0px 0px 10px'}))
+    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
-
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        
     def save(self, commit=True):
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
@@ -45,16 +54,46 @@ class UserWithProfileForm(UserCreationForm):
         return user
 
 class UserEditForm(forms.ModelForm):
-    employee_id = forms.CharField(max_length=100, required=True)
-    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
-    status = forms.BooleanField(required=False)
-    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
-    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True, label='Branch')
-    new_password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False, help_text="Leave blank if you do not want to change the password.")
+    employee_id = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    type = forms.ChoiceField(
+        choices=UserProfile.TYPE_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    status = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin:7px 0px 0px 10px'})
+    )
+    station = forms.ChoiceField(
+        choices=UserProfile.STATION_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(),
+        required=True,
+        label='Branch',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    new_password = forms.CharField(
+        label='New Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=False,
+        help_text="Leave blank if you do not want to change the password."
+    )
 
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station', 'branch']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super(UserEditForm, self).__init__(*args, **kwargs)
@@ -253,7 +292,10 @@ class ClientOrderForm(forms.ModelForm):
         model = ClientOrder
         fields = ['order_number', 'client', 'term', 'status']
         widgets = {
-            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
+            'order_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'client': forms.Select(attrs={'class': 'form-control'}),
+            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def clean_term(self):
