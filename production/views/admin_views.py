@@ -49,20 +49,32 @@ def dashboard_page(request):
 
     for client in clients:
         client_orders = ClientOrder.objects.filter(client=client)
-        orders = Order.objects.filter(client_order__in=client_orders)
         
-        total_ordered_amount_by_orders = orders.aggregate(
-            total_amount=Sum(F('quantity') * F('payment'))
-        )['total_amount'] or 0
+        # Compute total amounts and quantities for each client separately
+        total_ordered_amount_by_orders = client_orders.annotate(
+            total_amount=Sum(F('orders__quantity') * F('orders__payment'))
+        ).aggregate(sum=Sum('total_amount'))['sum'] or 0
         
         total_ordered_amount = client_orders.aggregate(
             total_amount=Sum('orders__quantity')
         )['total_amount'] or 0
         
-        client_orders_details = [
-            (co.order_number, co.id, list(co.orders.values_list('model__name', flat=True)))
-            for co in client_orders
-        ]
+        # Collecting order details, income per order, and quantity
+        client_orders_details = []
+        for co in client_orders:
+            order_details = co.orders.aggregate(
+                income=Sum(F('quantity') * F('payment')),
+                total_quantity=Sum('quantity')
+            ) or {'income': 0, 'total_quantity': 0}
+            
+            models = list(co.orders.values_list('model__name', flat=True))
+            client_orders_details.append((
+                co.order_number, 
+                co.id, 
+                models, 
+                order_details['income'], 
+                order_details['total_quantity']
+            ))
 
         client_data.append({
             'id': client.id,

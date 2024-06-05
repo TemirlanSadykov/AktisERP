@@ -65,8 +65,8 @@
                 <thead>
                     <tr>
                         <th>Client</th>
-                        <th>Client Orders (Number - Models)</th>
-                        <th>Total Value of Ordered Amount (сом)</th>
+                        <th>Client Orders (Number - Income)</th>
+                        <th>Total Value</th>
                         <th>Total Ordered Amount</th>
                     </tr>
                 </thead>
@@ -75,11 +75,11 @@
                     <tr>
                         <td><a href="#" data-toggle="modal" data-target="#clientModal" onclick="fetchClientDetails({{ client.id }})">{{ client.client }}</a></td>
                         <td>
-                            {% for order_number, client_order_id, model_list in client.client_orders_details %}
-                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank">{{ order_number }}</a></strong><br>
+                            {% for order_number, client_order_id, model_list, order_income, order_quantity in client.client_orders_details %}
+                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank">{{ order_number }}</a> - {{ order_income }} сом ({{ order_quantity }})</strong><br>
                             {% endfor %}
                         </td>
-                        <td>{{ client.total_ordered_amount_by_orders }}</td>
+                        <td>{{ client.total_ordered_amount_by_orders }} сом</td>
                         <td>{{ client.total_ordered_amount }}</td>
                     </tr>
                     {% endfor %}
@@ -656,9 +656,20 @@
                               beginAtZero: true
                             }
                           },
+                          plugins: {
+                            tooltip: {
+                              callbacks: {
+                                label: function(tooltipItem) {
+                                  const label = tooltipItem.label; // date
+                                  const value = tooltipItem.raw; // spending amount
+                                  const coValue = co[tooltipItem.dataIndex]; // co value for the tooltip
+                                  return `${coValue} - ${value}`;
+                                }
+                              }
+                            }
+                          }
                         }
                     });
-                    spendingChart.update();
                 })
                 .catch(error => console.error('Error loading client details:', error));
         }           
