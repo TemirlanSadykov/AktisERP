@@ -565,16 +565,32 @@ padding: 60px;
 
 
 /* base.html css */
-.list-group-item.active {
+/* .list-group-item.active {
   background-color: #fff; 
   color: #007bff;
   font-weight: bold; 
   border-left: 5px solid #007bff;
+} */
+.list-group-item.active {
+  position: relative;
+  background-color: white; /* Adjust to your background color */
+  color: blue; /* Adjust to your text color */
+}
+.list-group-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px; /* Adjust width to your preference */
+  height: 100%;
+  background-color: blue; /* Adjust to your selected line color */
+  border-top-right-radius: 32px; /* Adjust radius as needed */
+  border-bottom-right-radius: 32px; /* Adjust radius as needed */
 }
 
-.list-group-item.active i {
+/* .list-group-item.active i {
   color: #007bff; 
-}
+} */
 
 .list-group-item {
   color: #6c757d; 
@@ -586,4 +602,44 @@ padding: 60px;
 
 .list-group-item:hover {
   background-color: #e9ecef; 
+}
+
+
+
+/* clock button  */
+.clock-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding:60px;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.clock-heading {
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+  color: #343a40;
+}
+
+.clock-btn {
+  font-size: 1.5rem;
+  padding: 15px 30px;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.clock-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.clock-btn:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }

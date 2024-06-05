@@ -9,6 +9,54 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'css/login_style.css' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <style>
+.login-form {
+    width: 350px;
+    margin: 0 auto; 
+    margin-top: 80px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-group {
+    margin-bottom: 1rem; /* Adjust the margin bottom as needed */
+}
+
+.alert {
+    margin-bottom: 1rem; /* Adjust margin bottom as needed */
+    width: 350px;
+}
+
+.error-message {
+    color: #dc3545; /* Red color */
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 430px) {
+    .illustration img {
+        /* width: 100%;
+        height: 400px; */
+        display: none;
+    }
+    .background-image {
+        /* height: 470px; */
+        display: none;
+    }
+    .background-image1 {
+        /* height: 495px; */
+        display: none;
+    }
+    .loginData{
+        margin-left:-25px;
+    }
+}
+
+
+
+    </style>
 </head>
 <body>
     <div class="container-fluid d-flex justify-content-center align-items-center min-vh-100 login-con">
@@ -20,16 +68,38 @@
                 <div class="background-image"></div>
                 <div class="background-image1"></div>
             </div>
-            <div class="col-md-5">
+
+            <div class="col-md-5 loginData">
                 <div class="login-form p-4">
-                    <h2  class="form-heading headingData">{% trans "Login" %}</h2> 
-                    <form method="post" action="{% url 'login' %}" class="login-form">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary btn-block button-height">{% trans "Login" %}</button>
-                    </form>
+                    <div class="form-wrapper">
+                        <h2 class="form-heading headingData">{% trans "Login" %}</h2> 
+                        <form method="post" action="{% url 'login' %}" class="login-form">
+                            {% csrf_token %}
+                            {% if form.errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <div class="error-message">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="id_username">{% trans "Username" %}</label>
+                                <input type="text" name="username" id="id_username" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_password">{% trans "Password" %}</label>
+                                <input type="password" name="password" id="id_password" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block button-height">{% trans "Login" %}</button>
+                        </form>
+                    </div>
                 </div>
             </div>
+            
+            
+            
         </div>
     </div>
 

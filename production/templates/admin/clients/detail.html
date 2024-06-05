@@ -11,30 +11,24 @@
     <h4 style="color: #232323; ">{% trans "Employee" %}</h4>
     <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-        <li class="nav-item dropdown" style="margin: auto;">
+        <li class="nav-item dropdown" style="margin: 10px;">
           {{ request.user.username }}
         </li>
         <li class="nav-item dropdown">
           <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
-            <a class="dropdown-item">
               <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
-            </a>
           </form>
         </li>
       </ul>
     </div>
   </nav>
 
-    <div class="container maincontr" style="margin-bottom: 12px; margin-top:12px;">
-        <div class="row">
-            <div class="col-md-1">
-               <a href="{% url 'client_edit' client.pk %}" > <img src="{% static 'img/left.png' %}" alt="" class="image-logo" style="width:40px"></a>
-            </div>
-        </div>
-    </div>
+    <div class="container maincontr" style="padding:60px;">
+
+  
     <div class="container">
-        <div class="card">
+        <!-- <div class="card"> -->
             <div class="card-header">
               Client
             </div>
@@ -43,8 +37,8 @@
                     <div class="col-md-6 details">
                       <p><strong> {% trans "Client Details:" %}</strong>{{ client.name }}</p>
                       <p><strong>{% trans "Contact Info:" %}</strong> {{ client.contact_info }}</p>
-                        <a href="{% url 'client_edit' client.pk %}"><img src="{% static 'img/edit.png' %}" alt="" style="width:40px; margin-top: 20px;"></a>
-                        <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/delete.png' %}" alt="" style="width:40px; margin-top: 20px;"></a>
+                        <a href="{% url 'client_edit' client.pk %}"><img src="{% static 'img/edit.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
+                        <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/delete.png' %}" alt="" style="width:30px; margin-top: 20px;"></a>
                     </div>
                     <form id="deleteForm" action="{% url 'client_delete' client.pk %}" method="post" style="display:none;">
                       {% csrf_token %}
@@ -66,9 +60,9 @@
               </div>
           </div>
 
-        </div>
+        <!-- </div> -->
     </div>
-
+  </div>
     <script>
       document.getElementById('deleteBtn').onclick = function() {
           document.getElementById('deleteModal').style.display = 'flex';

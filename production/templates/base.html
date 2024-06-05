@@ -26,35 +26,34 @@
                 </button>
               </div>
               <div id="sidebar" class="list-group list-group-flush">
-                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black " data-id="user_redirect" active>
-                    <i class="fas fa-cubes"></i> {% trans 'Navigation' %}
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black " data-id="user_redirect">
+                    <i class="fas fa-cubes"></i>{% trans 'Navigation' %}
                 </a>
                 <a href="{% url 'dashboard_page' %}" class="list-group-item list-group-item-action text-black" data-id="dashboard">
-                    <i class="fas fa-home"></i> {% trans 'Dashboard' %}
+                    <i class="fas fa-home"></i>{% trans 'Dashboard' %}
                 </a>
                 <a href="{% url 'client_order_list' %}" class="list-group-item list-group-item-action text-black" data-id="orders">
-                    <i class="fas fa-table"></i> {% trans 'Orders' %}
+                    <i class="fas fa-table"></i>{% trans 'Orders' %}
                 </a>
                 <a href="{% url 'employee_list' %}" class="list-group-item list-group-item-action text-black" data-id="employees">
-                    <i class="fas fa-users"></i> {% trans 'Employees' %}
+                    <i class="fas fa-users"></i>{% trans 'Employees' %}
                 </a>
                 <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black" data-id="clients">
-                    <i class="fas fa-user"></i> {% trans 'Clients' %}
+                    <i class="fas fa-user"></i>{% trans 'Clients' %}
                 </a>
                 <a href="{% url 'attendance_list' %}" class="list-group-item list-group-item-action text-black" data-id="attendances">
-                    <i class="fas fa-clipboard-list"></i> {% trans 'Attendances' %}
+                    <i class="fas fa-clipboard-list"></i>{% trans 'Attendances' %}
                 </a>
                 <a href="{% url 'branch_list' %}" class="list-group-item list-group-item-action text-black" data-id="branches">
-                    <i class="fas fa-cogs"></i> {% trans 'Branches' %}
+                    <i class="fas fa-cogs"></i>{% trans 'Branches' %}
                 </a>
                 <a href="{% url 'salary_list' %}" class="list-group-item list-group-item-action text-black" data-id="salaries">
-                    <i class="fas fa-coins"></i> {% trans 'Salaries' %}
+                    <i class="fas fa-coins"></i>{% trans 'Salaries' %}
                 </a>
                 <a href="{% url 'fixed_salary_list' %}" class="list-group-item list-group-item-action text-black" data-id="fixed_salaries">
-                    <i class="fas fa-file-invoice-dollar"></i> {% trans 'Fixed Salaries' %}
+                    <i class="fas fa-file-invoice-dollar"></i>{% trans 'Fixed Salaries' %}
                 </a>
             </div>
-
             </div>
             <div id="page-content-wrapper">
         {% block content %}{% endblock %}

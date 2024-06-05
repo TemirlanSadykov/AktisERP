@@ -142,6 +142,9 @@
     background-color: #6c757d;
 }
 
+.maincontr{
+    padding:60px;
+}
 
 @media (max-width: 600px) {
     .btn {
