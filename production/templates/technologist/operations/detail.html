@@ -19,15 +19,23 @@
       <strong>{% trans "Average Completion Time:" %}</strong> {{ operation.average_completion_time }} {% trans "seconds" %}
       <a href="{% url 'calculate_average' operation.pk %}" class="btn calculate-btn">{% trans "Calculate Average" %}</a>
     </p>
-  {% if operation.employee %}
-    <p><strong>{% trans "Assigned Employee: " %}</strong>{{ operation.employee.employee_id }} - {{ operation.employee.user.get_full_name }} </p>
-  {% endif %}
+    {% if operation.employee %}
+      <p><strong>{% trans "Assigned Employee:" %}</strong> {{ operation.employee.employee_id }} - {{ operation.employee.user.get_full_name }}</p>
+    {% endif %}
+    <p><strong>{% trans "Used in Models:" %}</strong>
+    <ul>
+      {% for model in models %}
+        <li>{{ model.name }}</li>
+      {% empty %}
+        <li>{% trans "This operation is not used in any models." %}</li>
+      {% endfor %}
+    </ul>
   </div>
 
   <div class="form-actions">
     <a href="{% url 'operation_edit' operation.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'operation_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    {% comment %} <a href="{% url 'operation_list' %}" class="btn back-btn">{% trans "Back" %}</a> {% endcomment %}
   </div>
 
   <form id="deleteForm" action="{% url 'operation_delete' operation.pk %}" method="post" style="display:none;">

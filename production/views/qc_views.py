@@ -10,6 +10,11 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from barcode import Code128
+from barcode.writer import ImageWriter
+from django.http import HttpResponse
+from django.shortcuts import render
+from io import BytesIO
 
 from ..decorators import qc_required
 from ..forms import *
@@ -216,3 +221,16 @@ def mark_as_packing(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    
+
+def generate_barcode(request, product_id):
+    barcode = Code128(str(product_id), writer=ImageWriter())
+    buffer = BytesIO()
+    barcode.write(buffer)
+    response = HttpResponse(buffer.getvalue(), content_type='image/png')
+    response['Content-Disposition'] = 'inline; filename="barcode_{}.png"'.format(product_id)
+    return response
+
+def barcode_scan_page(request, product_id):
+    barcode_url = '/production/barcode/{}/'.format(product_id)
+    return render(request, 'barcode_scan.html', {'barcode_url': barcode_url, 'product_id': product_id})

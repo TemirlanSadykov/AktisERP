@@ -582,13 +582,19 @@ class OperationCreateView(CreateView):
     model = Operation
     form_class = OperationForm
     template_name = 'technologist/operations/create.html'
-    success_url = reverse_lazy('operation_list')
+    success_url = reverse_lazy('operation_create')
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationDetailView(DetailView):
     model = Operation
     template_name = 'technologist/operations/detail.html'
     context_object_name = 'operation'
+    def get_context_data(self, **kwargs):
+        context = super(OperationDetailView, self).get_context_data(**kwargs)
+        operation = self.object
+        models = Model.objects.filter(operations=operation)
+        context['models'] = models
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationUpdateView(UpdateView):
@@ -649,39 +655,50 @@ def operation_upload(request):
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
 
-            with transaction.atomic():
-                for row in sheet.iter_rows(min_row=2, values_only=True):
-                    assortment_names, number, operation_name, node_name, equipment_name, time, price = row
+            node_counters = {}  # Dictionary to keep track of counters for each node
 
-                    node, _ = Node.objects.get_or_create(name=node_name)
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                old_number, operation_name, node_name, node_number, equipment_name, time, price = row
+
+                with transaction.atomic():
+                    node, created = Node.objects.get_or_create(
+                        number=node_number,
+                        defaults={'name': node_name}
+                    )
+                    if not created and node.name != node_name:
+                        node.name = node_name
+                        node.save()
+
                     equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
 
+                    # Initialize or reset the node counter if not already done
+                    if node.number not in node_counters:
+                        # Start counting from 1 for each node regardless of existing data
+                        node_counters[node.number] = 0
+
+                    # Create or find operation based on unique criteria, here based on the old number for backward compatibility
                     operation, created = Operation.objects.get_or_create(
-                        number=number,
+                        number=old_number,
                         defaults={
                             'name': operation_name,
-                            'equipment': equipment,
                             'node': node,
+                            'equipment': equipment,
                             'preferred_completion_time': time,
                             'payment': price
                         }
                     )
 
-                    if not created:
-                        operation.name = operation_name
-                        operation.equipment = equipment
-                        operation.node = node
-                        operation.preferred_completion_time = time
-                        operation.payment = price
-                        operation.save()
-
-                    assortment_names_list = [name.strip() for name in assortment_names.split(',')]
-                    for assortment_name in assortment_names_list:
-                        assortment, created = Assortment.objects.get_or_create(
-                            name=assortment_name,
-                            branch=request.user.userprofile.branch
-                        )
-                        assortment.operations.add(operation)
+                    # Update the operation details and assign a new sequential number specific to the node
+                    operation.name = operation_name
+                    operation.node = node
+                    operation.equipment = equipment
+                    operation.preferred_completion_time = time
+                    operation.payment = price
+                    node_counters[node.number] += 1
+                    operation.number = f"{node.number}N{node_counters[node.number]}O"
+                    operation.save()
+                    
+                    print(operation)
 
             messages.success(request, 'Operations uploaded successfully.')
             return HttpResponseRedirect(reverse_lazy('operation_list'))
@@ -692,27 +709,23 @@ def operation_upload(request):
     else:
         messages.error(request, 'There was an error with the file upload.')
         return HttpResponseRedirect(reverse_lazy('operation_upload'))
-
+    
 @login_required
 @technologist_required
 def operation_download(request):
-    # Create an in-memory workbook
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Operations"
 
-    # Add headers to the first row
-    headers = ["Ассортимент", "№ПП", "Тех-процесс", "Узел", "Оборудование", "Время", "Оплата"]
+    headers = ["№ПП (авто генерация)", "Тех-процесс", "Узел", "№ узла", "Оборудование", "Время", "Оплата"]
     sheet.append(headers)
 
-    # Add data rows
     for operation in Operation.objects.all().order_by('number'):
-        assortments = ", ".join(assortment.name for assortment in operation.assortments.all())
         row = [
-            assortments,
             operation.number,
             operation.name,
             operation.node.name if operation.node else "",
+            operation.node.number if operation.node else "",
             operation.equipment.name if operation.equipment else "",
             operation.preferred_completion_time,
             operation.payment,
@@ -776,7 +789,8 @@ class AssortmentCreateView(AssignBranchMixin, CreateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
-    success_url = reverse_lazy('assortment_list')
+    def get_success_url(self):
+        return reverse('model_list', kwargs={'a_id': self.object.id})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDetailView(DetailView):
@@ -796,7 +810,7 @@ class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
     def get_success_url(self):
-        return reverse('model_list', kwargs={'a_id': self.kwargs.get('pk')})
+        return reverse('assortment_detail', kwargs={'pk': self.kwargs.get('pk')})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
@@ -822,29 +836,29 @@ class ModelListView(ListView):
 
 @login_required
 @technologist_required
-def model_create(request, a_id):
+def model_create(request, a_id, pk=None):
     assortment = get_object_or_404(Assortment, pk=a_id)
     copy_id = request.GET.get('copy')
-    
+    original = get_object_or_404(Model, pk=copy_id) if copy_id else None
+
     if request.method == 'POST':
-        form = ModelCustomForm(request.POST, a_id=a_id)
+        form = ModelCustomForm(request.POST, instance=None, a_id=a_id, copy_id=copy_id)
         if form.is_valid():
-            model_instance = form.save(commit=False)
-            model_instance.assortment = assortment
-            model_instance.save()
-            form.save_operations(model_instance)
+            form.save()
             return redirect('model_list', a_id=a_id)
     else:
-        if copy_id:
-            model_to_copy = get_object_or_404(Model, pk=copy_id)
-            form = ModelCustomForm(instance=model_to_copy, a_id=a_id)
-            operations_data = [{"operation_id": op.operation.id, "order": op.order}
-                               for op in model_to_copy.modeloperation_set.all()]
-            form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
-            return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_to_copy})
-        else:
-            form = ModelCustomForm(a_id=a_id)
-            return render(request, 'technologist/models/create.html', {'form': form})
+        form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
+
+    template_name = 'technologist/models/edit.html' if original else 'technologist/models/create.html'
+    context = {
+        'form': form,
+        'assortment': assortment,
+        'is_copying': bool(copy_id),  # Pass whether it's a copy
+        'copy_model': original if copy_id else None  # Pass the model being copied
+    }
+    return render(request, template_name, context)
+
+
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -860,22 +874,17 @@ class ModelDetailView(DetailView):
 
 @login_required
 @technologist_required
-def model_edit(request, pk, a_id):
+def model_edit(request, a_id, pk):
     model_instance = get_object_or_404(Model, pk=pk)
-    assortment = get_object_or_404(Assortment, pk=a_id)
-    
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, instance=model_instance)
         if form.is_valid():
-            updated_model = form.save()
-            return redirect('model_detail', a_id=a_id, pk=pk)
+            form.save()
+            return redirect('model_list', a_id=a_id)
     else:
-        form = ModelCustomForm(instance=model_instance, a_id=a_id)
-        operations_data = [{"operation_id": op.operation.id, "order": op.order}
-                           for op in model_instance.modeloperation_set.all()]
-        form.fields['operations_data'].initial = json.dumps(operations_data, ensure_ascii=False)
+        form = ModelCustomForm(instance=model_instance)
     
-    return render(request, 'technologist/models/edit.html', {'form': form, 'model_instance': model_instance})
+    return render(request, 'technologist/models/edit.html', {'form': form, 'model': model_instance})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDeleteView(DeleteView):
@@ -977,3 +986,15 @@ def mark_as_qc(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    
+@login_required
+@technologist_required
+def update_assortment_name(request, pk):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        assortment = Assortment.objects.get(pk=pk)
+        assortment.name = data['name']
+        assortment.save()
+        return JsonResponse({'status': 'success', 'message': 'Assortment name updated successfully'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

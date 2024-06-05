@@ -52,12 +52,13 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'production.middleware.HandleCSRFMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'production.middleware.HandleCSRFMiddleware',
+    'production.middleware.SessionExpiredMiddleware',
 ]
 
 ROOT_URLCONF = 'aktis.urls'
@@ -158,6 +159,8 @@ STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = 'user_redirect'
+
+LOGIN_URL = 'login'
 
 LANGUAGES = [
     ('en', 'English'),

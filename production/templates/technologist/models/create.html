@@ -79,10 +79,10 @@
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
             {% for operation in form.fields.operations.queryset %}
-                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
+                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
                     <label>
                         <input type="checkbox" name="operations" value="{{ operation.id }}">
-                        {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
+                        {{ operation }}
                     </label>
                 </div>
             {% endfor %}

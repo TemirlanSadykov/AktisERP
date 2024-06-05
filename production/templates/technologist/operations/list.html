@@ -48,58 +48,42 @@
           class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
     </div>
   </div>
-
-
-
-
-<div class="container-fluid main-cont">
-  <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
-          <a href="{% url 'operation_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab" role="tab" aria-controls="all"
-              aria-selected="false">{% trans "All" %}</a>
+  <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
+  <div class="modal" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{% trans "Upload Operations" %}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="excel_file" id="excel_file" required>
+          </form>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer justify-content-between">
+          <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  <ul class="list-group" id="operationsList">
+    {% for operation in operations %}
+      <li class="list-group-item" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
+        <a href="{% url 'operation_detail' operation.pk %}">
+          {{ operation }}
+        </a>
       </li>
-        {% for node in nodes %}
-        <li>
-
-        <a href="?node={{ node.id }}" class="nav-link {% if selected_node|stringformat:"s" == node.id|stringformat:"s" %}active{% endif %}" role="tab" aria-controls="all"
-        aria-selected="false">{% trans node.name %}</a>
-      </li>
-
-        {% endfor %}
+    {% endfor %}
   </ul>
-
-
-  <div class="tab-content" id="myTabContent">
-      <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
-          <div class="row">
-              <div class="col-lg-6 col-md-6 col-sm-4">
-                  <h4 class="font-weight-bold">{% trans "Operations" %}</h4>
-              </div>
-              <div class="col-lg-6 col-md-6 col-sm-2 text-md-right text-sm-right">
-                <a href="{% url 'operation_create' %}" class="btn btn-custom" style="margin-bottom: 6px;">{% trans "Create" %}</a>
-                <button id="upload_button" type="button" class="btn btn-custom" data-toggle="modal" data-target="#uploadModal" style="margin-bottom: 5px;">
-                  {% trans "Upload from Excel" %}
-                </button>
-                <a href="{% url 'operation_download' %}" class="btn btn-custom">{% trans "Download Excel" %}</a>
-              
-              </div>
-          </div>
-          </div>
-          <br>
-          <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
-          <br>
-
-
-          <ul class="list-group custom-list-group" id="operationsList">
-            {% for operation in operations %}
-            <li class="list-group-item custom-list-item"  data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
-                <a href="{% url 'operation_detail' operation.pk %}" class="order-link ">
-                  {{ operation.number }} - {{ operation.node.name }} - {{ operation.equipment }} - {{ operation.name }}
-                </a>
-                <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
-              </li>
-            {% endfor %}
-        </ul>
 
       </div>
       <div class="pagination-container">

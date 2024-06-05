@@ -42,15 +42,21 @@
           <td>{{ size }}</td>
           {% for passport in passports %}
           <td>
-              {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
-              {% if size_data|get_item:size|get_item:passport.id|get_item:"quantity" > 0 %}
-                <input type="checkbox" 
-                      class="stage-packing-checkbox" 
-                      data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}"
-                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" == 3 %} checked {% endif %}
-                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" > 3 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 2 %} disabled {% endif %}>
-                      ({{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }})
-            {% endif %}
+            {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+            {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
+            {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 3 %}
+              <button type="button" class="stage-packing-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+                {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+              </button>
+            {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" > 3 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 2 %}
+              <button type="button" class="stage-packing-button btn back-btn">
+                {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+              </button>
+            {% else %}
+              <button type="button" class="stage-packing-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+                {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+              </button>
+            {%endif%}
           </td>
           {% endfor %}
           <td>{{ total_per_size|get_item:size|default:"0" }}</td>
@@ -85,27 +91,30 @@
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var checkboxes = document.querySelectorAll('.stage-packing-checkbox');
-    checkboxes.forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-          var passportSizeId = this.dataset.passportSizeId;
+    var buttons = document.querySelectorAll('.stage-packing-button');
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function() { // Changed to 'click' event for buttons
+        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
+        if (passportSizeId) {
           fetch(`/production/qc/orders/mark-as-packing/${passportSizeId}/`, {
-              method: 'POST',
-              headers: {
-                  'X-CSRFToken': getCookie('csrftoken')
-              },
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            },
           })
           .then(response => response.json())
           .then(data => {
-              if (!data.success) {
-                alert('Ошибка');
-              }
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert('Не получилось обновить');
+            }
           })
           .catch(error => {
-              console.error('Error:', error);
-              this.checked = false;
+            console.error('Error:', error);
           });
-        });
+        }
+      });
     });
     function getCookie(name) {
       let cookieValue = null;

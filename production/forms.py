@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms import ModelChoiceField
-
+from django.db import transaction
+import json
 from .models import *
 
 
@@ -169,7 +170,7 @@ class PassportSizeForm(forms.ModelForm):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'number', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
+        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
 
 class RollForm(forms.ModelForm):
     class Meta:
@@ -177,59 +178,62 @@ class RollForm(forms.ModelForm):
         fields = ['name', 'color', 'fabrics', 'meters']
 
 class AssortmentForm(forms.ModelForm):
-    operations = forms.ModelMultipleChoiceField(
-        queryset=Operation.objects.all().order_by('number'),
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
-
     class Meta:
         model = Assortment
-        fields = ['name', 'operations']
-
-    def __init__(self, *args, **kwargs):
-        super(AssortmentForm, self).__init__(*args, **kwargs)
-        common_operations = Operation.objects.filter(node__is_common=True)
-        self.fields['operations'].initial = common_operations
+        fields = ['name']
 
 class ModelCustomForm(forms.ModelForm):
-    operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # This stores the JSON order data
+    operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # Stores JSON order data
 
     class Meta:
         model = Model
-        fields = ['name']
+        fields = ['name', 'operations']  # Ensure 'operations' is handled by the form
 
     def __init__(self, *args, **kwargs):
-        assortment_id = kwargs.pop('a_id', None)
+        self.assortment_id = kwargs.pop('a_id', None)
+        copy_id = kwargs.pop('copy_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
-        if assortment_id:
-            queryset = Assortment.objects.get(pk=assortment_id).operations.select_related('node').order_by('number')
-        else:
-            queryset = Operation.objects.select_related('node').order_by('number')
+        queryset = Operation.objects.all().select_related('node').order_by('number')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
             queryset=queryset,
             widget=forms.CheckboxSelectMultiple,
             required=False
         )
+        # Set initial operations based on instance or copy_id
+        if copy_id:
+            original_model = Model.objects.get(pk=copy_id)
+            self.fields['operations'].initial = [op.pk for op in original_model.operations.all()]
+        elif self.instance.pk:
+            self.fields['operations'].initial = [op.pk for op in self.instance.operations.all()]
 
     def save(self, commit=True):
         model_instance = super().save(commit=False)
+        if self.assortment_id:
+            model_instance.assortment = Assortment.objects.get(pk=self.assortment_id)
+        
         if commit:
             model_instance.save()
-            self.save_operations(model_instance)
+            self.save_m2m()
+            if 'operations_data' in self.cleaned_data and self.cleaned_data['operations_data']:
+                operations_data = json.loads(self.cleaned_data['operations_data'])
+                self.update_operations_order(model_instance, operations_data)
         return model_instance
 
-    def save_operations(self, model_instance):
-        import json
-        operations_data = self.cleaned_data.get('operations_data', '[]')
-        operations = json.loads(operations_data)
-        model_instance.modeloperation_set.all().delete()
-        for op_data in operations:
-            ModelOperation.objects.create(
-                model=model_instance,
-                operation_id=op_data['operation_id'],
-                order=op_data['order']
-            )
+    def update_operations_order(self, model_instance, operations_data):
+        with transaction.atomic():
+            # Clear existing operations to reset them with new order
+            ModelOperation.objects.filter(model=model_instance).delete()
+
+            # Re-add operations with the correct order
+            for operation_info in operations_data:
+                operation_id = operation_info['operation_id']
+                order = operation_info['order']
+                operation = Operation.objects.get(pk=operation_id)
+                ModelOperation.objects.create(
+                    model=model_instance,
+                    operation=operation,
+                    order=order
+                )
 
 class ClientForm(forms.ModelForm):
     class Meta:
@@ -281,7 +285,7 @@ class OrderFormTechnologist(forms.ModelForm):
 class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['name', 'is_common', 'type']
+        fields = ['name', 'number', 'is_common', 'type']
 
 class EquipmentForm(forms.ModelForm):
     class Meta:

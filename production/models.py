@@ -88,6 +88,7 @@ class Equipment(models.Model):
     
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
     is_common = models.BooleanField(default=False, verbose_name='Общий')
     SEWING = 0
     CUTTING = 1
@@ -114,7 +115,17 @@ class Operation(models.Model):
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
     def __str__(self):
-        return f"{self.number} - {self.node.name} - {self.name}"
+        return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        if creating:
+            super().save(*args, **kwargs)
+            self.number = f"{self.node.number}N{Operation.objects.filter(node=self.node).count() + 1}O"
+        else:
+            original = Operation.objects.get(id=self.id)
+            if original.node != self.node:
+                self.number = f"{self.node.number}N{Operation.objects.filter(node=self.node).count() + 1}O"
+        super().save(*args, **kwargs)
     
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
@@ -193,7 +204,7 @@ class Passport(models.Model):
     rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports', verbose_name='Рулоны')
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
     def __str__(self):
-        return f"ID: {str(self.id)}"
+        return f"ID {str(self.id)}"
     
 class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')

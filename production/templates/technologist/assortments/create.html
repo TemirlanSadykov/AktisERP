@@ -1,4 +1,21 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load i18n %}
+{% block content %}
+<div class="content-container">
+  <h2 class="form-heading">{% trans "Create New Assortment" %}</h2>
+  <form method="post" class="crud-form" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+      {{ form.as_p }}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
+      <a href="{% url 'assortment_list' %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% comment %} {% extends "base.html" %}
 {% load i18n %}
 
 {% block content %}
@@ -127,7 +144,7 @@
             <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
             <div id="operationsContainer">
                 {% for operation in form.fields.operations.queryset %}
-                    <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
+                    <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
                         <label>
                             <input type="checkbox" name="operations" value="{{ operation.id }}">
                             {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
@@ -159,4 +176,4 @@ document.getElementById('searchOperations').addEventListener('input', function(e
     });
 });
 </script>
-{% endblock %}
+{% endblock %} {% endcomment %}
