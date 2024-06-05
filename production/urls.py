@@ -164,4 +164,8 @@ urlpatterns = [
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
 
     path('api/clients/<int:client_id>/', client_api, name='client_api'),
+
+    path('barcode/<int:product_id>/', generate_barcode, name='generate_barcode'),
+    path('scan/<int:product_id>/', barcode_scan_page, name='barcode_scan_page'),
+
 ]
