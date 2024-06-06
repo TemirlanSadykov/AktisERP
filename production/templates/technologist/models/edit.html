@@ -72,6 +72,7 @@
   {% endif %}    
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
+        <input type="hidden" id="operationsOrder" value="{{ operations_order_json }}">
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
         {{ form.name }}
         {% if form.name.errors %}
@@ -103,52 +104,69 @@
 </div>
 
 <script>
-let selectedOperations = [];
-
-document.getElementById('searchOperations').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const operations = document.querySelectorAll('#operationsContainer .checkbox');
-
-    operations.forEach(op => {
-        const content = op.getAttribute('data-operation-content');
-        const numberPart = content.split('-')[0].trim(); // Assuming the number is always before the first '-'.
-        if (numberPart.includes(searchTerm)) {
-            op.style.display = '';
-        } else {
-            op.style.display = 'none';
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    prepareOperations(); // Load existing sorted operations when the page loads
 });
 
 function prepareOperations() {
-    let checkedBoxes = document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked');
+    let operationsOrder = JSON.parse(document.getElementById('operationsOrder').value);
     let operationsContainer = document.getElementById('selectedOperations');
     operationsContainer.innerHTML = '';
 
-    checkedBoxes.forEach(function(checkbox) {
-        let label = checkbox.nextSibling.textContent.trim();
-        let div = document.createElement('div');
-        div.className = 'sortable-item';
-        div.textContent = label;
-        div.setAttribute('data-id', checkbox.value);
-        operationsContainer.appendChild(div);
+    let checkboxes = {};
+    document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked').forEach(function(checkbox) {
+        checkboxes[checkbox.value] = checkbox;
+    });
+
+    operationsOrder.forEach(function(operationId, index) {
+        if (checkboxes[operationId]) {
+            appendOperationToSortableList(checkboxes[operationId], index + 1);
+            delete checkboxes[operationId];
+        }
+    });
+
+    // Append any remaining checked operations that are not in the sorted list
+    let currentIndex = operationsOrder.length;
+    Object.values(checkboxes).forEach(function(checkbox) {
+        appendOperationToSortableList(checkbox, ++currentIndex);
     });
 
     new Sortable(operationsContainer, {
         animation: 150,
-        ghostClass: 'sortable-ghost'
+        ghostClass: 'sortable-ghost',
+        onUpdate: function(evt) {
+            let items = operationsContainer.getElementsByClassName('sortable-item');
+            Array.from(items).forEach((item, idx) => {
+                item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
+            });
+        }
     });
+}
+
+function appendOperationToSortableList(checkbox, orderNumber) {
+    let label = checkbox.nextSibling.textContent.trim();
+    let div = document.createElement('div');
+    div.className = 'sortable-item';
+    div.setAttribute('data-id', checkbox.value);
+
+    let orderSpan = document.createElement('span');
+    orderSpan.className = 'order-number';
+    orderSpan.textContent = orderNumber + '. ';
+
+    div.appendChild(orderSpan);
+    div.appendChild(document.createTextNode(label));
+    document.getElementById('selectedOperations').appendChild(div);
 }
 
 function submitOperations(event) {
     event.preventDefault(); // Prevent form from submitting traditionally
 
-    selectedOperations = []; // Clear the array before pushing new data
+    let operationsData = [];
     let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
     sortedItems.forEach(function(item, index) {
-        selectedOperations.push({operation_id: item.getAttribute('data-id'), order: index});
+        operationsData.push({operation_id: item.getAttribute('data-id'), order: index});
     });
-    document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
+    document.getElementById('id_operations_data').value = JSON.stringify(operationsData);
     document.getElementById('modelForm').submit(); // Submit the form programmatically
 }
 
