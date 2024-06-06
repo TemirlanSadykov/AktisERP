@@ -214,12 +214,26 @@ class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
         fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+            'payment': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter payment'}),
+            'equipment': forms.Select(attrs={'class': 'form-control'}),
+            'node': forms.Select(attrs={'class': 'form-control'}),
+            'preferred_completion_time': forms.DateTimeInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+        }
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
         fields = ['name', 'color', 'fabrics', 'meters']
-
+        widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+                'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
+                'fabrics': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
+                'meters': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter meters'}),
+            }
+    
 class AssortmentForm(forms.ModelForm):
     class Meta:
         model = Assortment
@@ -336,11 +350,21 @@ class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
         fields = ['name', 'number', 'is_common', 'type']
+        widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+                'number': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter number'}),
+                'is_common': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin: 6px 0px 0px 10px;'}),
+                'type': forms.Select(attrs={'class': 'form-control'}),
+            }
+    
 
 class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment
         fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter equipment name'}),
+        }
 
 class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
