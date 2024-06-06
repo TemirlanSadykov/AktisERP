@@ -826,16 +826,20 @@ def model_create(request, a_id, pk=None):
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
 
+    operations_order_json = ""
+    if copy_id:
+        operations_order = list(ModelOperation.objects.filter(model=original).order_by('order').values_list('operation_id', flat=True))
+        operations_order_json = json.dumps(operations_order)
+
     template_name = 'technologist/models/edit.html' if original else 'technologist/models/create.html'
     context = {
         'form': form,
         'assortment': assortment,
-        'is_copying': bool(copy_id),  # Pass whether it's a copy
-        'copy_model': original if copy_id else None  # Pass the model being copied
+        'is_copying': bool(copy_id),
+        'copy_model': original if copy_id else None,
+        'operations_order_json': operations_order_json
     }
     return render(request, template_name, context)
-
-
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -860,8 +864,15 @@ def model_edit(request, a_id, pk):
             return redirect('model_list', a_id=a_id)
     else:
         form = ModelCustomForm(instance=model_instance)
-    
-    return render(request, 'technologist/models/edit.html', {'form': form, 'model': model_instance})
+        # Fetch and serialize operations order
+        operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
+        operations_order_json = json.dumps(operations_order)
+
+    return render(request, 'technologist/models/edit.html', {
+        'form': form,
+        'model': model_instance,
+        'operations_order_json': operations_order_json
+    })
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDeleteView(DeleteView):

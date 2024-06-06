@@ -12,7 +12,7 @@
       {% for operation in ordered_operations %}
         <li class="list-group-item">
           <a href="{% url 'operation_detail' operation.pk %}">
-            {{ operation }}
+            {{ forloop.counter }}. {{ operation }}
           </a>
         </li>
       {% endfor %}
