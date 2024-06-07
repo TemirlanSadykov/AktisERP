@@ -100,6 +100,24 @@
             </div>
         </div>
 
+  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Models" %}</h3>
+  <div class="orders-list">
+    {% if orders %}
+      {% for order in orders %}
+        <p>
+          <a href="{% url 'order_detail' order.pk %}"
+            class="order-link"
+            style="color: {% if order.status == 2 %}green{% else %}red{% endif %};">
+            {{ order.model.name }} - {{ order.color }} - {{ order.fabrics }} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})
+          </a>
+        </p>
+      {% endfor %}
+    {% else %}
+      <p>{% trans "No associated models." %}</p>
+    {% endif %}
+    <div class="create-passport-form" style="margin-top: 20px;">
+      <a href="{% url 'order_create' client_order.pk %}" class="btn btn-primary">{% trans 'Create New Task' %}</a>
+    </div>
   </div>
 </div>
   <script>

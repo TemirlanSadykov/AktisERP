@@ -79,3 +79,12 @@ def get_stage(key):
         4: 'Готово'
     }
     return stages.get(key, 'default_stage')
+
+@register.filter(name='size_range')
+def size_range(order):
+    size_quantities = order.size_quantities.all().order_by('size')
+    if size_quantities.exists():
+        first_size = size_quantities.first().size
+        last_size = size_quantities.last().size
+        return f"{first_size} - {last_size}"
+    return "No sizes"
