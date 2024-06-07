@@ -46,7 +46,7 @@
           <a href="{% url 'order_detail' order.pk %}"
             class="order-link"
             style="color: {% if order.status == 2 %}green{% else %}red{% endif %};">
-            {{ order.model.name }} - {{ order.color }} - {{ order.fabrics }}
+            {{ order.model.name }} - {{ order.color }} - {{ order.fabrics }} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})
           </a>
         </p>
       {% endfor %}

@@ -114,12 +114,25 @@ class Operation(models.Model):
     average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_values = {}
+        for field in self._meta.fields:
+            try:
+                value = getattr(self, field.name)
+            except AttributeError:
+                value = None
+            self._original_values[field.name] = value
     def __str__(self):
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
+    @property
+    def changed_fields(self):
+        return {field.name for field in self._meta.fields if getattr(self, field.name) != self._original_values[field.name]}
     def save(self, *args, **kwargs):
         creating = self._state.adding
+        node_changed = 'node' in self.changed_fields
         super().save(*args, **kwargs)
-        if creating:
+        if creating or node_changed:
             current_count = Operation.objects.filter(node=self.node).count()
             new_operation_number = current_count + 1
             self.number = f"{self.node.number}N{new_operation_number}O"
