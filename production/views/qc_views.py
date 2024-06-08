@@ -218,16 +218,3 @@ def mark_as_packing(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
-    
-
-def generate_barcode(request, product_id):
-    barcode = Code128(str(product_id), writer=ImageWriter())
-    buffer = BytesIO()
-    barcode.write(buffer)
-    response = HttpResponse(buffer.getvalue(), content_type='image/png')
-    response['Content-Disposition'] = 'inline; filename="barcode_{}.png"'.format(product_id)
-    return response
-
-def barcode_scan_page(request, product_id):
-    barcode_url = '/production/barcode/{}/'.format(product_id)
-    return render(request, 'barcode_scan.html', {'barcode_url': barcode_url, 'product_id': product_id})

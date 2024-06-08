@@ -3,7 +3,10 @@
 
 {% block content %}
 <div class="content-container">
-  <h2 class="form-heading">{% trans "Passport Details" %} №{{ passport.id }}</h2>
+  <div class="header">
+    <h2 class="form-heading" style="margin-bottom: 0;">{% trans "Passport Details" %} №{{ passport.id }}</h2>
+    <a href="{% url 'barcode_passport' passport.id %}" class="btn edit-btn">{% trans "Barcode" %}</a>
+  </div>
 
   <div class="details">
     <p><strong>{% trans "Model" %}:</strong> {{ passport.order.model.name }}</p>
@@ -43,8 +46,13 @@
     </tr>
     {% for size in passport_sizes %}
     <tr>
-      <td>{{ size.size_quantity.size }}</td>
-      <td>{{ size.quantity }}</td>
+      <td>
+        <a href="{% url 'barcode_passport_size' size.id %}">{{ size.size_quantity.size }}</a>
+      </td>
+      <td>
+        <a href="{% url 'barcode_passport_size_per_piece' size.id %}">{{ size.quantity }}</a>
+
+        </td>
     </tr>
     {% empty %}
     <tr>
