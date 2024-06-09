@@ -21,7 +21,7 @@
       </ul>
     </div>
   </nav>
-
+{% comment %}
     <div class=" border-right" id="sidebar-wrapper">
       <div class="d-flex justify-content-between align-items-centero">
         <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
@@ -45,6 +45,7 @@
             class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
       </div>
     </div>
+    {% endcomment %}
     <!-- <div id="page-content-wrapper">
 </div> -->
 <div class="container-fluid main-cont">
@@ -78,12 +79,14 @@
           <br>
           <ul class="list-group custom-list-group">
             {% for order_info in orders_with_days_left %}
-            <li class="list-group-item custom-list-item">
-                <a href="{% url 'order_detail_technologist' order_info.order.pk %}" class="order-link ">
+            <a href="{% url 'order_detail_technologist' order_info.order.pk %}" class="order-link ">
+
+            <li class="list-group-item custom-list-item" style="color:#007bff">
                   {{ order_info.order.model.name }} - {{ order_info.order.color }} - {{ order_info.order.fabrics }}
-                </a>
                 <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
               </li>
+            </a>
+
             {% endfor %}
         </ul>
       </div>

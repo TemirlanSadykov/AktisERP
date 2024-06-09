@@ -7,7 +7,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %} - {% trans "Operations" %}</h4>
+  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -23,7 +23,7 @@
   </div>
 </nav>
 
-
+{% comment %}
   <div class=" border-right" id="sidebar-wrapper">
     <div class="d-flex justify-content-between align-items-centero">
       <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
@@ -48,6 +48,7 @@
           class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
     </div>
   </div>
+{% endcomment %}
 
   <div class="container-fluid main-cont">
     <ul class="nav nav-tabs" role="tablist">
@@ -129,14 +130,18 @@
     {% endfor %}
   </ul>
 {% endcomment %}
+
+
   <ul class="list-group custom-list-group" id="operationsList">
     {% for operation in operations %}
-    <li class="list-group-item custom-list-item"  data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
-        <a href="{% url 'operation_detail' operation.pk %}" class="order-link ">
+    <a href="{% url 'operation_detail' operation.pk %}" class="order-link " >
+
+    <li class="list-group-item custom-list-item"  data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}" style="color:#007bff;">
           {{ operation.number }} - {{ operation.node.name }} - {{ operation.equipment }} - {{ operation.name }}
-        </a>
         <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
       </li>
+    </a>
+
     {% endfor %}
 </ul>
 

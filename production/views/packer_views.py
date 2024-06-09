@@ -22,7 +22,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @packer_required
 def packer_page(request):
-    return render(request, 'packer_page.html')
+    context = {
+        'sidebar_type': 'qc_page'
+        }
+    return render(request, 'packer_page.html' , context)
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class OrderListPackerView(RestrictOrderBranchMixin, ListView):
@@ -61,6 +64,7 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['sidebar_type'] = 'packer'
         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')

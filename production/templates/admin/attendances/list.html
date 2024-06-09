@@ -5,7 +5,7 @@
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
     </button>
-    <h4 style="color: #232323;">{% trans "Attendance List" %}</h4>
+    <h4 style="color: #232323;">{% trans "Admin Dashboard" %}</h4>
     <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
         <li class="nav-item dropdown" style="margin: 10px;">
@@ -25,6 +25,7 @@
             <form method="post" class="date-filter-form">
               {% csrf_token %}
             {{ form.as_p }}
+            
             <button type="submit" class=" btn filter-btn" >{% trans "Filter" %}</button>
             </form>
           </div>

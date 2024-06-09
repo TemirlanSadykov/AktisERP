@@ -73,6 +73,7 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['selected_status'] = self.request.GET.get('status', '')
         context['Order'] = Order
+        context['sidebar_type'] = 'technology'
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -115,7 +116,8 @@ class OrderDetailTechnologistView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'sidebar_type': 'technology'
         })
 
         return context
@@ -575,6 +577,7 @@ class OperationListView(ListView):
         context['nodes'] = nodes
         context['selected_node'] = self.request.GET.get('node', '')
         context['upload_form'] = UploadFileForm()
+        context['sidebar_type'] = 'technology'
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -583,6 +586,11 @@ class OperationCreateView(CreateView):
     form_class = OperationForm
     template_name = 'technologist/operations/create.html'
     success_url = reverse_lazy('operation_create')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationDetailView(DetailView):
@@ -594,6 +602,7 @@ class OperationDetailView(DetailView):
         operation = self.object
         models = Model.objects.filter(operations=operation)
         context['models'] = models
+        context['sidebar_type'] = 'technology'
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -610,11 +619,21 @@ class OperationUpdateView(UpdateView):
         print("Form errors:", form.errors)
         return super().form_invalid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationDeleteView(DeleteView):
     model = Operation
     template_name = 'technologist/operations/delete.html'
     success_url = reverse_lazy('operation_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 @login_required
 @technologist_required
@@ -726,6 +745,11 @@ class RollListView(RestrictBranchMixin, ListView):
     paginate_by = 10
     def get_queryset(self):
         return super().get_queryset().order_by('name')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollCreateView(AssignBranchMixin, CreateView):
@@ -734,11 +758,21 @@ class RollCreateView(AssignBranchMixin, CreateView):
     template_name = 'technologist/rolls/create.html'
     success_url = reverse_lazy('roll_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollDetailView(DetailView):
     model = Roll
     template_name = 'technologist/rolls/detail.html'
     context_object_name = 'roll'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollUpdateView(RestrictBranchMixin, UpdateView):
@@ -747,11 +781,21 @@ class RollUpdateView(RestrictBranchMixin, UpdateView):
     template_name = 'technologist/rolls/edit.html'
     success_url = reverse_lazy('roll_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class RollDeleteView(RestrictBranchMixin, DeleteView):
     model = Roll
     template_name = 'technologist/rolls/delete.html'
     success_url = reverse_lazy('roll_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 
 
@@ -763,6 +807,12 @@ class AssortmentListView(RestrictBranchMixin, ListView):
     paginate_by = 10
     def get_queryset(self):
         return super().get_queryset().order_by('name')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentCreateView(AssignBranchMixin, CreateView):
@@ -771,6 +821,12 @@ class AssortmentCreateView(AssignBranchMixin, CreateView):
     template_name = 'technologist/assortments/create.html'
     def get_success_url(self):
         return reverse('model_list', kwargs={'a_id': self.object.id})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDetailView(DetailView):
@@ -782,6 +838,7 @@ class AssortmentDetailView(DetailView):
         context = super(AssortmentDetailView, self).get_context_data(**kwargs)
         assortment = context['assortment']
         context['operations'] = assortment.operations.all().order_by('number')
+        context['sidebar_type'] = 'technology'
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -792,11 +849,21 @@ class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     def get_success_url(self):
         return reverse('assortment_detail', kwargs={'pk': self.kwargs.get('pk')})
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
     model = Assortment
     template_name = 'technologist/assortments/delete.html'
     success_url = reverse_lazy('assortment_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 
 
@@ -812,6 +879,7 @@ class ModelListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
+        context['sidebar_type'] = 'technology'
         return context
 
 @login_required
@@ -840,7 +908,8 @@ def model_create(request, a_id, pk=None):
         'assortment': assortment,
         'is_copying': bool(copy_id),
         'copy_model': original if copy_id else None,
-        'operations_order_json': operations_order_json
+        'operations_order_json': operations_order_json,
+        'sidebar_type' : 'technology'
     }
     return render(request, template_name, context)
 
@@ -854,6 +923,7 @@ class ModelDetailView(DetailView):
         context = super(ModelDetailView, self).get_context_data(**kwargs)
         model = context['model']
         context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
+        context['sidebar_type'] = 'technology'
         return context
 
 @login_required
@@ -895,6 +965,12 @@ class NodeListVIew(ListView):
     
     def get_queryset(self):
         return Node.objects.all().order_by('name')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class NodeCreateView(CreateView):
@@ -903,11 +979,21 @@ class NodeCreateView(CreateView):
     template_name = 'technologist/nodes/create.html'
     success_url = reverse_lazy('node_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class NodeDetailView(DetailView):
     model = Node
     template_name = 'technologist/nodes/detail.html'
     context_object_name = 'node'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class NodeUpdateView(UpdateView):
@@ -916,12 +1002,21 @@ class NodeUpdateView(UpdateView):
     template_name = 'technologist/nodes/edit.html'
     success_url = reverse_lazy('node_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class NodeDeleteView(DeleteView):
     model = Node
     template_name = 'technologist/nodes/delete.html'
     success_url = reverse_lazy('node_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -934,6 +1029,12 @@ class EquipmentListView(ListView):
     def get_queryset(self):
         return Equipment.objects.all().order_by('name')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentCreateView(CreateView):
     model = Equipment
@@ -941,11 +1042,21 @@ class EquipmentCreateView(CreateView):
     template_name = 'technologist/equipment/create.html'
     success_url = reverse_lazy('equipment_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentDetailView(DetailView):
     model = Equipment
     template_name = 'technologist/equipment/detail.html'
     context_object_name = 'equipment'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentUpdateView(UpdateView):
@@ -954,11 +1065,21 @@ class EquipmentUpdateView(UpdateView):
     template_name = 'technologist/equipment/edit.html'
     success_url = reverse_lazy('equipment_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentDeleteView(DeleteView):
     model = Equipment
     template_name = 'technologist/equipment/delete.html'
     success_url = reverse_lazy('equipment_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
 
 
 @login_required

@@ -28,7 +28,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @cutter_required
 def cutter_page(request):
-    return render(request, 'cutter_page.html')
+    context = {
+            'sidebar_type': 'cutter'
+            }
+    return render(request, 'cutter_page.html', context)
 
 @method_decorator([login_required, cutter_required], name='dispatch')
 class OrderListCutterView(RestrictOrderBranchMixin, ListView):
@@ -68,6 +71,7 @@ class OrderListCutterView(RestrictOrderBranchMixin, ListView):
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['selected_status'] = self.request.GET.get('status', '')
         context['Order'] = Order
+        context['sidebar_type'] = 'cutter'
         return context
 
 @method_decorator([login_required, cutter_required], name='dispatch')

@@ -69,6 +69,7 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['sidebar_type'] = 'qc_page'
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
