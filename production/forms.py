@@ -238,6 +238,9 @@ class AssortmentForm(forms.ModelForm):
     class Meta:
         model = Assortment
         fields = ['name']
+        widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control'})
+            }
 
 class ModelCustomForm(forms.ModelForm):
     operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # Stores JSON order data
@@ -245,7 +248,11 @@ class ModelCustomForm(forms.ModelForm):
     class Meta:
         model = Model
         fields = ['name', 'operations']  # Ensure 'operations' is handled by the form
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'operations': forms.Select(attrs={'class': 'form-control'}),
+        }
+        
     def __init__(self, *args, **kwargs):
         self.assortment_id = kwargs.pop('a_id', None)
         copy_id = kwargs.pop('copy_id', None)
@@ -324,7 +331,15 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ['name', 'model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'status': forms.Select(choices=Order.TYPE_CHOICES), 
+            'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-select'}), 
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'model': forms.TextInput(attrs={'class': 'form-control'}),
+            'assortment': forms.TextInput(attrs={'class': 'form-control'}),
+            'color': forms.TextInput(attrs={'class': 'form-control'}),
+            'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'payment': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):

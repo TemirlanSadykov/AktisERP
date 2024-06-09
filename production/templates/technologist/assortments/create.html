@@ -1,92 +1,13 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% block content %}
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Create New Assortment" %}</h2>
-  <form method="post" class="crud-form" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="form-group">
-      {{ form.as_p }}
-    </div>
-    <div class="form-actions">
-      <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
-      <a href="{% url 'assortment_list' %}" class="btn back-btn">{% trans "Back" %}</a>
-    </div>
-  </form>
-</div>
-{% endblock %}
-{% comment %} {% extends "base.html" %}
-{% load i18n %}
 
-{% block content %}
-<style>
-  .assign-operations-container {
-    padding: 60px;
-    /* background-color: #f7f7f7; */
-    /* border-radius: 8px; */
-    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
-  }
-
-  .form-heading {
-    color: #333;
-    margin-bottom: 20px;
-  }
-
-  .checkbox label {
-    display: block;
-    padding: 10px;
-    margin: 5px 0;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .checkbox input[type="checkbox"] {
-    margin-right: 10px;
-  }
-
-  .sortable-item {
-    padding: 10px;
-    margin-top: 5px;
-    background-color: #e9e9e9;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: grab;
-  }
-
-  .sortable-item:hover {
-    background-color: #dfe3e8;
-  }
-
-  .sortable-ghost {
-    opacity: 0.6;
-    background-color: #c8ccd0;
-  }
-
-  .form-actions {
-    margin-top: 20px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .btn:hover {
-    background-color: #0056b3;
-  }
-</style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %} - {% trans "Assortment" %}</h4>
+  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %} - {% trans "Assortments" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -101,6 +22,8 @@
     </ul>
   </div>
 </nav>
+
+
   <div class=" border-right" id="sidebar-wrapper">
     <div class="d-flex justify-content-between align-items-centero">
       <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
@@ -126,54 +49,38 @@
     </div>
   </div>
 
+  <div class="container maincontr">
+    <div class="row justify-content-center">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+          <div class="card-header">
+            <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Assortment" %}</h2>
+          </div>
+          <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="form-group">
+                {{ form.as_p }}
+              </div>
+              <div class="form-group">
+  
+                <div class="row">
+                  <div class="col text-left">
+                    <button type="submit" class="btn btn-create btnset">{% trans "Create" %}</button>
+                  </div>
+                  <div class="col text-right">
+                    <a href="{% url 'assortment_list' %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
+                  </div>
+              </div>
+  
+  
+              </div>
+            </form>
+          </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
 
-<div class="assign-operations-container">
-    <h2 class="form-heading">{% trans "Create New Assortment" %}</h2>
-    <form method="post" id="modelForm" class="crud-form">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-            {{ form.name }}
-            {% if form.name.errors %}
-                <div class="error">{{ form.name.errors }}</div>
-            {% endif %}
-        </div>
 
-        <div class="form-group">
-            <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
-            <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
-            <div id="operationsContainer">
-                {% for operation in form.fields.operations.queryset %}
-                    <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
-                        <label>
-                            <input type="checkbox" name="operations" value="{{ operation.id }}">
-                            {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
-                        </label>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn btn-create btn-block btnset">{% trans "Create" %}</button>
-        </div>
-    </form>
-</div>
-
-<script>
-document.getElementById('searchOperations').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const operations = document.querySelectorAll('#operationsContainer .checkbox');
-
-    operations.forEach(op => {
-        const content = op.getAttribute('data-operation-content');
-        const numberPart = content.split('-')[0].trim(); // Assuming the number is always before the first '-'.
-        if (numberPart.includes(searchTerm)) {
-            op.style.display = '';
-        } else {
-            op.style.display = 'none';
-        }
-    });
-});
-</script>
-{% endblock %} {% endcomment %}
+{% endblock %}

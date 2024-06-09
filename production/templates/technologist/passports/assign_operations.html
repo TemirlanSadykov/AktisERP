@@ -1,7 +1,183 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load custom_filters %}
+{% load static %}
 {% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; ">{% trans "Models" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="d-flex" id="wrapper">
+  <div class=" border-right" id="sidebar-wrapper">
+    <div class="d-flex justify-content-between align-items-centero">
+      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+    <div id="sidebar" class="list-group list-group-flush">
+      {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
+      <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect">
+        <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
+      <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black" data-nav="models">
+          <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
+      <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-home"></i> {% trans 'Rolls' %}</a>
+      <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
+      <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-users"></i> {% trans 'Operations' %}</a>
+      <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-user"></i> {% trans 'Nodes' %}</a>
+      <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
+          class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
+          {% else %}
+          <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect">
+            <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
+          {% endif %}
+    </div>
+  </div>
+
+</div>
+
+
+<div class="container maincontr">
+  
+  <div class="container">
+    <!-- <div class="card"> -->
+          <div class="card-header">
+            {% trans "Assign Operations for Passport" %} №{{ passport.id }}        
+          </div>
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-md-6 details">
+                        <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
+                        <p><strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }}</p>
+                       <p><strong>{% trans "Client:" %}</strong> {{ passport.order.client_order.client.name }}</p> 
+                        <p><strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }}</p>
+                        <p><strong>{% trans "Roll:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.name }}{% endfor %}</p>
+                        <p><strong>{% trans "Usage:" %}</strong> {% for pr in passport_rolls %} {{ pr.meters }}м{% endfor %}</p>
+                        <p><strong>{% trans "Color:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.color }}{% endfor %}</p>
+                      <p><strong>{% trans "Fabrics:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.fabrics }}{% endfor %}</p>
+                    <p><strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}</p>
+
+
+                  </div>
+
+
+                  <div class="col-md-5 text-center">
+                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+                  </div>
+              </div>
+          </div>
+
+
+
+          <form id="operationAssignmentForm" class="operation-form">
+            {% csrf_token %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width: 500px;">{% trans "Operation \ Size" %}</th>
+                  {% for ps in size_quantities %}
+                    <th>
+                      {{ ps.size_quantity.size }}<br>
+                      ({% trans "Qty:" %} {{ ps.quantity }})
+                    </th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for operation in operations %}
+                    {% if not operation.node.is_common %}
+                    <tr>
+                        <td>{{ operation.name }}</td>
+                        {% for sq in size_quantities %}
+                        <td>
+                            {% get_work work_by_op_and_size operation.id sq.id as works %}
+                            {% if works %}
+                                {% for work in works %}
+                                <div style="display: block;">
+                                    <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
+                                    {% if work.end_time %}
+                                      <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
+                                      <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;">
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>    
+            </table>
+          </form>
+          <div class="form-actions">
+            {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
+              {% csrf_token %}
+              {% if passport.is_completed %}
+                <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">{% trans "Reopen" %}</button>
+              {% else %}
+                <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
+              {% endif %}
+            </form> {% endcomment %}
+            <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
+            <a href="{% url 'order_detail_technologist' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+          </div>
+          <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
+            <div id="reassignPopup" class="reassign-popup" style="display: none;">
+              <div id="reassignedWorksList" class="reassigned-works-list">
+                <!-- Reassigned works will be displayed here as bullet points -->
+              </div>
+              <form id="reassignForm" class="reassign-form">
+                <label for="newEmployeeId">New Employee ID:</label>
+                <input type="text" id="newEmployeeId" name="newEmployeeId">
+            
+                <label for="reassignQuantity">Quantity:</label>
+                <input type="number" id="reassignQuantity" name="reassignQuantity">
+          
+                <label for="reassignReason">Reason:</label>
+                <input type="text" id="reassignReason" name="reassignReason">
+            
+                <input type="hidden" id="reassignWorkId" name="reassignWorkId">
+            
+                <button type="submit">Submit</button>
+                <button type="button" onclick="closePopup()">Cancel</button>
+              </form>
+            </div>  
+          </div>
+
+<!-- </div> -->
+      </div>
+</div>
+
+
+
+
+
+
+{% comment %}
+
 <div class="assign-operations-container">
   <h2 class="list-heading">{% trans "Assign Operations for Passport" %} №{{ passport.id }}</h2>
   <div class="passport-details">
@@ -59,15 +235,9 @@
     </tbody>    
     </table>
   </form>
+
   <div class="form-actions">
-    {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
-      {% csrf_token %}
-      {% if passport.is_completed %}
-        <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">{% trans "Reopen" %}</button>
-      {% else %}
-        <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
-      {% endif %}
-    </form> {% endcomment %}
+
     <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
     <a href="{% url 'order_detail_technologist' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
@@ -94,6 +264,7 @@
     </form>
   </div>  
 </div>
+{% endcomment %}
 <script>
   var passportId = "{{ passport.id }}";
   
@@ -115,7 +286,8 @@
   document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.employee-input').forEach(input => {
       input.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
+        if (event.key === 'EntThe song is a slower emotional heartbreak song and so may not be appropriate for all types of playlist (e.g fast paced bhangra song playlists)
+er') {
           event.preventDefault();
           const value = input.value.trim();
     
@@ -359,4 +531,6 @@
     document.getElementById('reassignPopupOverlay').style.display = 'none';
   }
 </script>
+
+
 {% endblock %}
