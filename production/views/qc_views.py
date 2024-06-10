@@ -15,6 +15,7 @@ from barcode.writer import ImageWriter
 from django.http import HttpResponse
 from django.shortcuts import render
 from io import BytesIO
+from django.views.decorators.http import require_POST
 
 from ..decorators import qc_required
 from ..forms import *
@@ -85,8 +86,8 @@ class OrderDetailQcView(DetailView):
         
         passports = order.passports.all()
 
-        # Initialize size_data as a defaultdict where each passport.id is another defaultdict
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
+        # Extended defaultdict to track checked quantity
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
@@ -95,6 +96,11 @@ class OrderDetailQcView(DetailView):
                 size_data[size][passport.id]['quantity'] += passport_size.quantity
                 size_data[size][passport.id]['passport_size_id'] = passport_size.id
                 size_data[size][passport.id]['stage'] = passport_size.stage
+
+                # Counting checked pieces
+                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.CHECKED).count()
+                size_data[size][passport.id]['checked_quantity'] += checked_pieces
+                
                 total_per_size[size] += passport_size.quantity
 
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
@@ -115,6 +121,83 @@ class OrderDetailQcView(DetailView):
 
         return context
     
+@login_required
+@qc_required
+def get_piece_info(request, barcode):
+    try:
+        # Split the barcode and extract the piece ID
+        parts = barcode.split('-')
+        if len(parts) != 3:
+            return JsonResponse({'error': 'Invalid barcode format'}, status=400)
+
+        piece_id = parts[2]  # Assuming the last part is the piece ID
+        piece = ProductionPiece.objects.get(id=piece_id)  # Fetch the piece using the extracted ID
+
+        data = {
+            'piece_id': piece.id,
+            'passport': piece.passport_size.passport.id,
+            'passport_size': piece.passport_size.id,
+            'size': piece.passport_size.size_quantity.size,
+            'defect': piece.defect_type if piece.defect_type else "--",
+            'stage': piece.get_stage_display(),
+        }
+        return JsonResponse(data)
+    except ProductionPiece.DoesNotExist:
+        return JsonResponse({'error': 'Piece not found'}, status=404)
+
+    except ValueError:
+        return JsonResponse({'error': 'Error processing barcode'}, status=500)
+    
+@require_POST
+@login_required
+@qc_required
+def update_piece_qc(request, piece_id):
+    try:
+        data = json.loads(request.body)
+        status = data.get('status')
+        defect_type = data.get('defectType', None)  # Retrieve defect type if provided
+
+        valid_statuses = {
+            'Checked': ProductionPiece.StageChoices.CHECKED,
+            'Defect': ProductionPiece.StageChoices.DEFECT
+        }
+        
+        if status not in valid_statuses:
+            return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
+
+        piece = ProductionPiece.objects.get(id=piece_id)
+        piece.stage = valid_statuses[status]
+
+        if status == 'Defect' and defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
+            piece.defect_type = defect_type
+            piece.save()
+
+            # Create an Error instance if a defect is reported
+            error = Error.objects.create(
+                error_type=Error.ErrorType.DEFECT,
+                defect_type=defect_type,
+                cost=piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
+                passport=piece.passport_size.passport,
+                size_quantity=piece.passport_size.size_quantity,
+                quantity=1,
+                status=Error.Status.REPORTED,
+                reported_date=timezone.now()
+            )
+            return JsonResponse({'success': True, 'message': f'Piece status updated to {status} with defect type {defect_type}. Error record created.'})
+
+        elif status == 'Defect' and not defect_type:
+            return JsonResponse({'success': False, 'message': 'Defect type required for defect status.'}, status=400)
+        else:
+            piece.save()
+            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}.'})
+        
+    except ProductionPiece.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
+    except KeyError:
+        return JsonResponse({'success': False, 'message': 'Status or defect type not provided in request.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectCreateView(CreateView):
     model = Error

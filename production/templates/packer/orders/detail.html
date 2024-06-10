@@ -5,6 +5,25 @@
 {% block content %}
 <div class="order-detail-cutter-container">
   <h2 class="form-heading">{% trans "Model Details:" %} {{ order.model.name }}</h2>
+  <!-- Error Modal -->
+  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="errorModalLabel">Error</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="errorModalMessage">
+          <!-- Error message will be displayed here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="details">
     <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
@@ -22,7 +41,7 @@
   <div class="form-actions">
     <a href="{% url 'order_list_packer' %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
-
+  <input type="text" id="barcode-input" autofocus style="margin: 10px 0; padding: 8px; width: 100%;"/>
   <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
   <table class="table">
     <thead>
@@ -43,6 +62,7 @@
           {% for passport in passports %}
           <td>
             {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+            ({{ size_data|get_item:size|get_item:passport.id|get_item:"packed_quantity"|default_if_none:"0" }})
             {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
             {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 4 %}
               <button type="button" class="stage-done-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
@@ -131,5 +151,58 @@
         return cookieValue;
       }
   });
-</script>  
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var barcodeInput = document.getElementById('barcode-input');
+
+    barcodeInput.addEventListener('change', function() {
+      var barcode = barcodeInput.value.trim();
+      if (barcode) {
+        let ids = barcode.split('-');
+        let pieceId = ids[ids.length - 1];  // Get the piece ID from barcode
+
+        fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({stage: 'Packed'})
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Piece updated to Packed:', data.message);
+          } else {
+            document.getElementById('errorModalMessage').textContent = data.message;
+            $('#errorModal').modal('show');
+          }
+        })
+        .catch(error => {
+          console.error('Error updating piece:', error);
+          document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
+          $('#errorModal').modal('show');
+        });
+      }
+      barcodeInput.value = ''; // Clear the input
+      barcodeInput.focus();   // Refocus the input
+    });
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  });
+</script> 
 {% endblock %}

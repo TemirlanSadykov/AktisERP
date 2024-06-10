@@ -82,7 +82,6 @@ class BarcodePassportSize(View):
     
 class BarcodePassportSizePerPiece(View):
     def get(self, request, passport_size_id):
-        # Ensure the PassportSize exists
         passport_size = get_object_or_404(PassportSize, pk=passport_size_id)
 
         response = HttpResponse(content_type='application/pdf')
@@ -92,9 +91,12 @@ class BarcodePassportSizePerPiece(View):
         p = canvas.Canvas(response, pagesize=letter)
         width, height = letter
 
-        # Loop through the quantity to generate multiple barcodes, each on a new page
-        for i in range(passport_size.quantity):
-            barcode_data = f"{passport_size.passport.id}-{passport_size.id}-{i+1}"  # Unique barcode for each unit
+        # Retrieve all related ProductionPiece instances
+        pieces = ProductionPiece.objects.filter(passport_size=passport_size)
+
+        # Loop through each ProductionPiece to generate barcodes
+        for piece in pieces:
+            barcode_data = f"{passport_size.passport.id}-{passport_size.id}-{piece.id}"
             barcode_class = barcode.get_barcode_class('code128')
             barcode_obj = barcode_class(barcode_data, writer=ImageWriter())
 
@@ -112,8 +114,7 @@ class BarcodePassportSizePerPiece(View):
             os.remove(temp_file.name)
 
             # Create a new page for the next barcode
-            if i < passport_size.quantity - 1:
-                p.showPage()
+            p.showPage()
 
         p.save()
         return response

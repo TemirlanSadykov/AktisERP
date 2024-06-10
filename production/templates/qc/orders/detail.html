@@ -5,6 +5,43 @@
 {% block content %}
 <div class="order-detail-cutter-container">
   <h2 class="form-heading">{% trans "Model Details:" %} {{ order.model.name }}</h2>
+  <!-- Bootstrap modal for displaying scanned item details -->
+  <div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="scanModalLabel">Scanned Item Details</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Паспорт:</strong> <span id="modal-passport"></span></p>
+          <p><strong>Размер:</strong> <span id="modal-size"></span></p>
+          <p><strong>Статус:</strong> <span id="modal-stage"></span></p>
+          <p><strong>Дефект:</strong> <span id="modal-defect"></span></p>
+          <div id="defectTypeSelect" style="display: none;">
+            <label for="defectType"><strong>Defect Type:</strong></label>
+            <select id="defectType" class="form-control">
+              <option value="STITCHING">Ошибка шитья</option>
+              <option value="CUTTING">Ошибка резки</option>
+              <option value="FABRIC">Дефект ткани</option>
+              <option value="ASSEMBLY">Ошибка сборки</option>
+              <option value="OTHER">Прочие ошибки</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer form-actions" id="initialButtons">
+          <button type="button" class="btn edit-btn" id="checked-button">{% trans "Checked" %}</button>
+          <button type="button" class="btn btn-danger" id="defect-button">{% trans "Defect" %}</button>
+        </div>
+        <div class="modal-footer form-actions" id="saveBackButtons" style="display: none;">
+          <button type="button" class="btn edit-btn" id="save-button">{% trans "Save" %}</button>
+          <button type="button" class="btn back-btn" id="back-button">{% trans "Back" %}</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="details">
     <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
@@ -22,7 +59,7 @@
   <div class="form-actions">
     <a href="{% url 'order_list_qc' %}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
-
+  <input type="text" id="barcode-input" autofocus style="margin: 20px 0; padding: 8px; width: 100%;"/>
   <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
   <table class="table">
     <thead>
@@ -43,6 +80,7 @@
           {% for passport in passports %}
           <td>
             {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+            ({{ size_data|get_item:size|get_item:passport.id|get_item:"checked_quantity"|default_if_none:"0" }})
             {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
             {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 3 %}
               <button type="button" class="stage-packing-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
@@ -85,7 +123,7 @@
       <p>{% trans "No associated defects." %}</p>
     {% endif %}
     <div class="create-defect-form" style="margin-top: 20px;">
-      <a href="{% url 'defect_create' order.pk %}" class="btn btn-primary">{% trans 'Add Defect' %}</a>
+      {% comment %} <a href="{% url 'defect_create' order.pk %}" class="btn btn-primary">{% trans 'Add Defect' %}</a> {% endcomment %}
     </div>
   </div>
 </div>
@@ -131,5 +169,100 @@
       return cookieValue;
     }
   });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var barcodeInput = document.getElementById('barcode-input');
+    var currentPieceId = null;
+
+    function processBarcode() {
+        var barcode = barcodeInput.value.trim();
+        if (barcode) {
+            fetch(`/production/qc/orders/api/get-piece-info/${barcode}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('modal-passport').textContent = data.passport;
+                    document.getElementById('modal-size').textContent = data.size;
+                    document.getElementById('modal-stage').textContent = data.stage;
+                    document.getElementById('modal-defect').textContent = data.defect;
+                    currentPieceId = data.piece_id;
+                    $('#scanModal').modal('show');
+                })
+                .catch(error => console.error('Error fetching item details:', error))
+                .finally(() => {
+                    barcodeInput.value = '';
+                    barcodeInput.focus();
+                });
+        }
+    }
+
+    barcodeInput.addEventListener('change', processBarcode);
+
+    $('#scanModal').on('hidden.bs.modal', function (e) {
+        barcodeInput.focus();
+    });
+
+    document.getElementById('defect-button').addEventListener('click', function() {
+        document.getElementById('initialButtons').style.display = 'none';
+        document.getElementById('saveBackButtons').style.display = 'flex';
+        document.getElementById('defectTypeSelect').style.display = 'block';
+    });
+
+    document.getElementById('back-button').addEventListener('click', function() {
+        document.getElementById('initialButtons').style.display = 'flex';
+        document.getElementById('saveBackButtons').style.display = 'none';
+        document.getElementById('defectTypeSelect').style.display = 'none';
+    });
+
+    document.getElementById('save-button').addEventListener('click', function() {
+        let defectType = document.getElementById('defectType').value;
+        updatePieceStatus('Defect', defectType);
+    });
+
+    document.getElementById('checked-button').addEventListener('click', function() {
+        updatePieceStatus('Checked');
+    });
+
+    function updatePieceStatus(status, defectType = null) {
+        let updateData = { status: status };
+        if (defectType) {
+            updateData.defectType = defectType;
+        }
+
+        fetch(`/production/qc/orders/update-piece-status/${currentPieceId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(`Status updated to ${status}:`, data.message);
+                $('#scanModal').modal('hide');
+            } else {
+                alert(`Failed to update status to ${status}:`, data.message);
+            }
+        })
+        .catch(error => console.error('Error updating status:', error));
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
 </script>
 {% endblock %}

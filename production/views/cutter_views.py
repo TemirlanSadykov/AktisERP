@@ -240,6 +240,14 @@ class PassportSizeCreateView(CreateView):
         passport_size = form.save(commit=False)
         passport_size.passport = passport
         passport_size.save()
+
+        for i in range(1, passport_size.quantity + 1):
+            ProductionPiece.objects.create(
+                passport_size=passport_size,
+                piece_number=i,
+                stage=ProductionPiece.StageChoices.NOT_CHECKED
+            )
+
         return redirect(self.get_success_url())
 
     def get_success_url(self):

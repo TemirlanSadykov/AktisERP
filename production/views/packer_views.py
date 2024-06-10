@@ -10,6 +10,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.decorators.http import require_POST
 
 from ..decorators import packer_required
 from ..forms import *
@@ -80,27 +81,28 @@ class OrderDetailPackerView(DetailView):
             context['errors'] = Error.objects.none()
 
         today = timezone.localdate()
-        if order.client_order.term >= today:
-            days_left = (order.client_order.term - today).days
-        else:
-            days_left = 0
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
         context['days_left'] = days_left
 
         passports = order.passports.all()
 
-        # Initialize size_data as a defaultdict where each passport.id is another defaultdict
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None}))
+        # Initialize data structures to track quantity and packed quantities
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id]['stage'] = passport_size.stage  # Include the stage
+                size_data[size][passport.id]['stage'] = passport_size.stage
                 size_data[size][passport.id]['quantity'] += passport_size.quantity
                 size_data[size][passport.id]['passport_size_id'] = passport_size.id
+
+                # Count packed pieces only
+                packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
+                size_data[size][passport.id]['packed_quantity'] += packed_pieces
+                
                 total_per_size[size] += passport_size.quantity
 
-        # Calculate required and missing quantities
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
                             for sq in order.size_quantities.all().order_by('size')}
 
@@ -109,12 +111,37 @@ class OrderDetailPackerView(DetailView):
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
         context.update({
-            'size_data': {k: {k2: dict(v2) for k2, v2 in v.items()} for k, v in size_data.items()},
+            'size_data': {k: dict(v) for k, v in size_data.items()},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
         })
         return context
+    
+@require_POST
+@login_required
+@packer_required
+def update_piece_packer(request, piece_id):
+    try:
+        piece = ProductionPiece.objects.get(id=piece_id)
+        
+        # Check the current stage of the piece and respond appropriately
+        if piece.stage == ProductionPiece.StageChoices.PACKED:
+            return JsonResponse({'success': False, 'message': 'Piece is already packed.'}, status=409)
+        elif piece.stage == ProductionPiece.StageChoices.DEFECT:
+            return JsonResponse({'success': False, 'message': 'Piece is marked as defect.'}, status=409)
+        elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
+            return JsonResponse({'success': False, 'message': 'Piece is not checked and cannot be packed.'}, status=409)
+
+        # If the piece is checked, update to packed
+        piece.stage = ProductionPiece.StageChoices.PACKED
+        piece.save()
+        return JsonResponse({'success': True, 'message': 'Piece status updated to Packed.'})
+
+    except ProductionPiece.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
 @method_decorator([login_required, packer_required], name='dispatch')
 class DiscrepancyCreateView(CreateView):
