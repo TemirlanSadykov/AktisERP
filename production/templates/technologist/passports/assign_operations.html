@@ -359,4 +359,94 @@
     document.getElementById('reassignPopupOverlay').style.display = 'none';
   }
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.employee-input').forEach(input => {
+      input.addEventListener('input', function(event) {
+        const value = input.value.trim();
+  
+        // Ensure that the change propagates only if the input is the first in its row
+        const row = input.closest('tr');
+        const inputs = row.querySelectorAll('.employee-input');
+        if (inputs[0] === input) { // Ensures this is the first input
+          inputs.forEach((inp, index) => {
+            if (index > 0) { // Apply changes to all other inputs regardless of their current content
+              inp.value = value;
+            }
+          });
+        }
+      });
+    });
+  
+    // Additional existing handlers can be included below
+  });  
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.employee-input').forEach(input => {
+      input.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const row = input.closest('tr');
+          const inputs = row.querySelectorAll('.employee-input');
+          const operations = [];
+  
+          inputs.forEach((inp, index) => {
+            const value = inp.value.trim();
+            if (value) {
+              const operationId = inp.name.split('_')[1];
+              const passportSizeId = inp.name.split('_')[2];
+              operations.push({operationId, passportSizeId, value, inputElement: inp});
+            }
+          });
+  
+          if (operations.length > 0) {
+            operations.forEach((op, index) => {
+              if (index === 0) {
+                // The first input remains as is, only submit its data
+              } else {
+                // For all other inputs, replace them with span after submission
+                assignOperation(op.operationId, op.passportSizeId, op.value, op.inputElement, false);
+              }
+            });
+          } else {
+            alert('Необходимо ввести ID сотрудника');
+          }
+        }
+      });
+    });
+  });
+  
+  function assignOperation(operationId, passportSizeId, value, inputElement, isFirst) {
+    fetch(`/production/technologist/passports/${passportId}/assign_operations/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        operation_id: operationId,
+        passport_size_id: passportSizeId,
+        value: value
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        if (!isFirst) {
+          const newSpan = document.createElement('span');
+          newSpan.className = 'editable'; // Assign any necessary classes
+          newSpan.textContent = value; // Set the text content to "ID (Quantity)"
+          if (inputElement.parentNode) {
+            inputElement.parentNode.replaceChild(newSpan, inputElement);
+          }
+        }
+      } else {
+        console.error('Failed to assign operation', data.message);
+        alert('Не получилось обновить');
+      }
+    });
+  }  
+</script>
 {% endblock %}
