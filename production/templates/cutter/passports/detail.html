@@ -1,74 +1,116 @@
 {% extends 'base.html' %}
 {% load i18n %}
-
+{% load static %}
 {% block content %}
-<div class="content-container">
-  <div class="header">
-    <h2 class="form-heading" style="margin-bottom: 0;">{% trans "Passport Details" %} №{{ passport.id }}</h2>
-    <a href="{% url 'barcode_passport' passport.id %}" class="btn edit-btn">{% trans "Barcode" %}</a>
-  </div>
 
-  <div class="details">
-    <p><strong>{% trans "Model" %}:</strong> {{ passport.order.model.name }}</p>
-    <p><strong>{% trans "Assortment" %}:</strong> {{ passport.order.assortment.name }}</p>
-    <p><strong>{% trans "Date" %}:</strong> {{ passport.date|date:"Y-m-d" }}</p>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323;">{% trans 'Cutter Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
   </div>
+</nav>
 
-  <div class="date-filter-form" style="margin-bottom: 10px;">
-    <h4>{% trans "Rolls Used" %}</h4>
-    <a href="{% url 'create_passport_roll' passport.id %}" class="btn edit-btn">{% trans "Edit" %}</a>
-  </div>
-  <table class="table">
-    <tr>
-      <th>{% trans "Roll Name" %}</th>
-      <th>{% trans "Meters Used" %}</th>
-    </tr>
-    {% for roll in passport_rolls %}
-    <tr>
-      <td>{{ roll.roll.name }}</td>
-      <td>{{ roll.meters }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-      <td colspan="2">{% trans "No rolls available." %}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  
-  <div class="date-filter-form" style="margin-bottom: 10px;">
-    <h4>{% trans "Sizes Used" %}</h4>
-    <a href="{% url 'create_passport_size' passport.id %}" class="btn edit-btn">{% trans "Edit" %}</a>
-  </div>
-  <table class="table">
-    <tr>
-      <th>{% trans "Size" %}</th>
-      <th>{% trans "Quantity" %}</th>
-    </tr>
-    {% for size in passport_sizes %}
-    <tr>
-      <td>
-        <a href="{% url 'barcode_passport_size' size.id %}">{{ size.size_quantity.size }}</a>
-      </td>
-      <td>
-        <a href="{% url 'barcode_passport_size_per_piece' size.id %}">{{ size.quantity }}</a>
 
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-      <td colspan="2">{% trans "No sizes available." %}</td>
-    </tr>
-    {% endfor %}
-  </table>
+<div class="container maincontr">  
+  <div class="container">
+    <div class="card">
+          <div class="card-header">
+            {% trans "Passport Details" %} №{{ passport.id }}
+          </div>
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-md-6 details">
+                    <p><strong>{% trans "Model" %}:</strong> {{ passport.order.model.name }}</p>
+                    <p><strong>{% trans "Assortment" %}:</strong> {{ passport.order.assortment.name }}</p>
+                    <p><strong>{% trans "Date" %}:</strong> {{ passport.date|date:"Y-m-d" }}</p>
 
-  <div class="form-actions secondary">
-    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'order_detail_cutter' passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
-  </div>
+                  </div>
 
-  <form id="deleteForm" action="{% url 'passport_delete' passport_id=passport.id %}" method="post" style="display:none;">
-    {% csrf_token %}
-  </form>
+
+                  <div class="col-md-5 text-center">
+                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+                  </div>
+              </div>
+          </div>
+          <div class="container-fluid bottomContainer">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- <h3>{% trans "Rolls Used" %}</h3> -->
+            </div>
+            <div class="col-md-6 text-center">
+              <a href="{% url 'barcode_passport' passport.id %}" class="btn btn-primary btn edit-btn">{% trans "Barcode" %}</a>
+            </div>
+            </div><br>
+            <div class="date-filter-form" style="margin-bottom: 10px;">
+              <h4>{% trans "Rolls Used" %}</h4>
+              <a href="{% url 'create_passport_roll' passport.id %}" class="btn edit-btn">{% trans "Edit" %}</a>
+            </div>
+            <table class="table">
+              <tr>
+                <th>{% trans "Roll Name" %}</th>
+                <th>{% trans "Meters Used" %}</th>
+              </tr>
+              {% for roll in passport_rolls %}
+              <tr>
+                <td>{{ roll.roll.name }}</td>
+                <td>{{ roll.meters }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2">{% trans "No rolls available." %}</td>
+              </tr>
+              {% endfor %}
+            </table>
+            <div class="date-filter-form" style="margin-bottom: 10px;">
+              <h4>{% trans "Sizes Used" %}</h4>
+              <a href="{% url 'create_passport_size' passport.id %}" class="btn edit-btn">{% trans "Edit" %}</a>
+            </div>
+            <table class="table">
+              <tr>
+                <th>{% trans "Size" %}</th>
+                <th>{% trans "Quantity" %}</th>
+              </tr>
+              {% for size in passport_sizes %}
+              <tr>
+                <td>
+                  <a href="{% url 'barcode_passport_size' size.id %}">{{ size.size_quantity.size }}</a>
+                </td>
+                <td>
+                  <a href="{% url 'barcode_passport_size_per_piece' size.id %}">{{ size.quantity }}</a>
+          
+                  </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2">{% trans "No sizes available." %}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          
+            <div class="form-actions secondary">
+              <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
+              <a href="{% url 'order_detail_cutter' passport.order.id %}" class="btn back-btn">{% trans "Back" %}</a>
+            </div>
+          
+            <form id="deleteForm" action="{% url 'passport_delete' passport_id=passport.id %}" method="post" style="display:none;">
+              {% csrf_token %}
+            </form>
+          </div>
+</div>
+      </div>
 </div>
 
 <script>

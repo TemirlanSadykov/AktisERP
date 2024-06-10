@@ -140,6 +140,10 @@ class SizeQuantityForm(forms.ModelForm):
     class Meta:
         model = SizeQuantity
         fields = ['size', 'quantity']
+        widgets = {
+            'size': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Size'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+        }
 
 class DateForm(forms.Form):
     date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date'}))
@@ -181,8 +185,8 @@ class PassportRollForm(forms.ModelForm):
         model = PassportRoll
         fields = ['roll', 'meters']
         widgets = {
-            'roll': forms.Select(),
-            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'})
+            'roll': forms.Select(attrs={'class': 'form-control'}),
+            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'})
         }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -199,7 +203,8 @@ class PassportSizeForm(forms.ModelForm):
         model = PassportSize
         fields = ['size_quantity', 'quantity']
         widgets = {
-            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0'})
+            'size_quantity': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -391,6 +396,12 @@ class ErrorForm(forms.ModelForm):
     class Meta:
         model = Error
         fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
+        widgets = {
+            'passport': forms.TextInput(attrs={'class': 'form-control'}),
+            'size_quantity': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'defect_type': forms.Select(attrs={'class': 'form-control'}),
+        }
     
     def __init__(self, *args, **kwargs):
         order_pk = kwargs.pop('order_pk', None)

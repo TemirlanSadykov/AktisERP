@@ -243,7 +243,8 @@ def assign_operations(request, passport_id):
         'passport_rolls': passport_rolls,
         'operations': operations,
         'size_quantities': size_quantities,
-        'work_by_op_and_size': work_by_op_and_size
+        'work_by_op_and_size': work_by_op_and_size,
+        'sidebar_type': 'technology'
     })
 
 @login_required

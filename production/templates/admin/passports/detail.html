@@ -2,61 +2,99 @@
 {% load i18n %}
 {% load custom_filters %}
 {% block content %}
-<div class="assign-operations-container">
-  <h2 class="list-heading">{% trans "Passport Details" %} №{{ passport.id }}</h2>
-  <div class="passport-details">
-    <p>
-      <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
-      <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
-      <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
-      <strong>{% trans "Roll:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.name }}{% endfor %},
-      <strong>{% trans "Usage:" %}</strong> {% for pr in passport_rolls %} {{ pr.meters }}м{% endfor %},
-      <strong>{% trans "Color:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.color }}{% endfor %},
-      <strong>{% trans "Fabrics:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.fabrics }}{% endfor %},
-      <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
-    </p>
-  </div>
 
-  <form id="operationAssignmentForm" class="operation-form">
-    {% csrf_token %}
-    <table class="table">
-      <thead>
-        <tr>
-          <th style="width: 500px;">{% trans "Operation \ Size" %}</th>
-          {% for ps in size_quantities %}
-            <th>
-              {{ ps.size_quantity.size }}<br>
-              ({% trans "Qty:" %} {{ ps.quantity }})
-            </th>
-          {% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for operation in operations %}
-            <tr>
-                <td>{{ operation.name }}</td>
-                {% for sq in size_quantities %}
-                <td>
-                    {% get_work work_by_op_and_size operation.id sq.id as works %}
-                    {% if works %}
-                        {% for work in works %}
-                        <div style="display: block;">
-                            <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        ---
-                    {% endif %}
-                </td>
-                {% endfor %}
-            </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </form>
-  <div class="form-actions">
-    <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
-    <a href="{% url 'order_detail' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; ">{% trans "Admin Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
   </div>
+</nav>
+
+
+<div class="container maincontr">
+  <div class="card-header">
+    {% trans "Passport Details" %} №{{ passport.id }}       
+  </div>
+  <div class="container">
+    <!-- <div class="card"> -->
+
+          <div class="card-body">
+              <!-- <div class="row"> -->
+                  <!-- <div class="col-md-12 details"> -->
+                    <p>
+                      <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
+                      <strong>{% trans "Client:" %}</strong> {{ passport.order.client.name }},
+                      <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
+                      <strong>{% trans "Roll:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.name }}{% endfor %},
+                      <strong>{% trans "Usage:" %}</strong> {% for pr in passport_rolls %} {{ pr.meters }}м{% endfor %},
+                      <strong>{% trans "Color:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.color }}{% endfor %},
+                      <strong>{% trans "Fabrics:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.fabrics }}{% endfor %},
+                      <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
+                    </p>
+                  <!-- </div> -->
+
+
+
+              <!-- </div> -->
+          </div>
+
+
+          <form id="operationAssignmentForm" class="operation-form">
+            {% csrf_token %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width: 500px;">{% trans "Operation \ Size" %}</th>
+                  {% for ps in size_quantities %}
+                    <th>
+                      {{ ps.size_quantity.size }}<br>
+                      ({% trans "Qty:" %} {{ ps.quantity }})
+                    </th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for operation in operations %}
+                    <tr>
+                        <td>{{ operation.name }}</td>
+                        {% for sq in size_quantities %}
+                        <td>
+                            {% get_work work_by_op_and_size operation.id sq.id as works %}
+                            {% if works %}
+                                {% for work in works %}
+                                <div style="display: block;">
+                                    <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                ---
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </form>
+          <div class="form-actions">
+            <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
+            <a href="{% url 'order_detail' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+          </div>
+
+<!-- </div> -->
+      </div>
 </div>
 {% endblock %}

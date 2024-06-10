@@ -72,8 +72,8 @@
             {% for order in orders %}
             <div class="list-group" >
                 <a href="{% url 'order_detail' order.pk %}"
-                  class="order-link"
-                  style="color: {% if order.status == 2 %}green{% else %}red{% endif %};">
+                  class="list-group-item list-group-item-action"
+                  style="color: {% if order.status == 2 %}green{% else %}red{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
                   {{ order.model.name }} - {{ order.color }} - {{ order.fabrics }} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})
                 </a>
             </div>

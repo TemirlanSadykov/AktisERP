@@ -114,7 +114,8 @@ class OrderDetailQcView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'sidebar_type' : 'qc_page'
         })
 
         return context
@@ -149,6 +150,7 @@ class DefectCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         order_pk = self.kwargs['order_pk']
         context['order'] = get_object_or_404(Order, pk=order_pk)
+        context['sidebar_type'] = 'qc_page'
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
@@ -178,6 +180,7 @@ class DefectUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         error_pk = self.kwargs['pk']
         context['error'] = get_object_or_404(Error, pk=error_pk)
+        context['sidebar_type'] = 'qc_page'
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')

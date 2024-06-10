@@ -21,21 +21,6 @@
     </div>
   </nav>
 
-  {% comment %}
-    <div class=" border-right" id="sidebar-wrapper">
-      <div class="d-flex justify-content-between align-items-centero">
-        <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-          <i class="fas fa-bars"></i>
-        </button>
-      </div>
-      <div class="list-group list-group-flush">
-        <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
-            <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
-          <a href="{% url 'order_list_cutter' %}" class="list-group-item list-group-item-action text-black">
-              <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
-      </div>
-    </div>
-    {% endcomment %}
 <div class="container-fluid main-cont">
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
@@ -66,12 +51,12 @@
           <br>
         <ul class="list-group custom-list-group">
             {% for order_info in orders_with_days_left %}
-            <li class="list-group-item custom-list-item">
-                <a href="{% url 'order_detail_cutter' order_info.order.pk %}" class="order-link ">
+            <a href="{% url 'order_detail_cutter' order_info.order.pk %}" class="order-link ">
+            <li class="list-group-item custom-list-item" style="color:#007bff;">
                   {{ order_info.order.model.name }} - {{ order_info.order.color }} - {{ order_info.order.fabrics }}
-                </a>
                 <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
               </li>
+            </a>
             {% endfor %}
         </ul>
       </div>
