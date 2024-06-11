@@ -776,12 +776,6 @@ class AssortmentDetailView(DetailView):
     template_name = 'technologist/assortments/detail.html'
     context_object_name = 'assortment'
 
-    def get_context_data(self, **kwargs):
-        context = super(AssortmentDetailView, self).get_context_data(**kwargs)
-        assortment = context['assortment']
-        context['operations'] = assortment.operations.all().order_by('number')
-        return context
-
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     model = Assortment
