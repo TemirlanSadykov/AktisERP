@@ -6,20 +6,6 @@
 
 <div class="order-detail-cutter-container">
   <h2 class="form-heading">{% trans "Assortment Details:" %} {{ assortment.name }}</h2>
-  <p><strong>{% trans "Operations:" %}</strong></p>
-  {% if operations %}
-    <ul class="list-group" id="operationsList">
-      {% for operation in operations %}
-        <li class="list-group-item">
-          <a href="{% url 'operation_detail' operation.pk %}">
-            {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>{% trans "No operations associated with this assortment." %}</p>
-  {% endif %}
   <div class="form-actions">
     <a href="{% url 'assortment_edit' assortment.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
     <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>

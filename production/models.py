@@ -187,7 +187,6 @@ class ClientOrder(models.Model):
 
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
-    name = models.CharField(max_length=100, verbose_name='Название')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
     color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
@@ -206,7 +205,7 @@ class Order(models.Model):
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
     def __str__(self):
-        return f"{self.name} - {self.model}"
+        return f"{self.model}"
     
 class Passport(models.Model):
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
@@ -236,6 +235,27 @@ class PassportSize(models.Model):
     stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"
+
+class ProductionPiece(models.Model):
+    class StageChoices(models.TextChoices):
+        NOT_CHECKED = 'NOT_CHECKED', 'Непроверено'
+        CHECKED = 'CHECKED', 'Проверено'
+        PACKED = 'PACKED', 'Упаковано'
+        DEFECT = 'DEFECT', 'Брак'
+
+    class DefectType(models.TextChoices):
+        STITCHING = 'STITCHING', 'Ошибка шитья'
+        CUTTING = 'CUTTING', 'Ошибка резки'
+        FABRIC = 'FABRIC', 'Дефект ткани'
+        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
+        OTHER = 'OTHER', 'Прочие ошибки'
+
+    passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='pieces')
+    piece_number = models.IntegerField(verbose_name='Piece Number')
+    stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
+    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
+    def __str__(self):
+        return f"Passport Size ID: {self.passport_size.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
 class PassportRoll(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')

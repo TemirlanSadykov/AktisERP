@@ -85,13 +85,13 @@ class OrderDetailTechnologistView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        if passport:
-            context['errors'] = Error.objects.filter(passport=passport).order_by('error_type')
-        else:
-            context['errors'] = Error.objects.none()
 
+        # Fetch all passports related to the order
         passports = order.passports.all()
+
+        # Aggregating errors across all passports associated with the order
+        errors = Error.objects.filter(passport__in=passports).order_by('error_type')
+
         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
         total_per_size = defaultdict(int)
 
@@ -112,6 +112,7 @@ class OrderDetailTechnologistView(DetailView):
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
         context.update({
+            'errors': errors,
             'size_data': {k: dict(v) for k, v in size_data.items()},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
@@ -834,13 +835,6 @@ class AssortmentDetailView(DetailView):
     model = Assortment
     template_name = 'technologist/assortments/detail.html'
     context_object_name = 'assortment'
-
-    def get_context_data(self, **kwargs):
-        context = super(AssortmentDetailView, self).get_context_data(**kwargs)
-        assortment = context['assortment']
-        context['operations'] = assortment.operations.all().order_by('number')
-        context['sidebar_type'] = 'technology'
-        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentUpdateView(RestrictBranchMixin, UpdateView):

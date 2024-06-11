@@ -334,7 +334,7 @@ class ClientOrderForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['name', 'model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
+        fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-select'}), 
             'name': forms.TextInput(attrs={'class': 'form-control'}),
