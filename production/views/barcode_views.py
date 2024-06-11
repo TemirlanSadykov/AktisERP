@@ -9,22 +9,47 @@ import os
 from django.shortcuts import get_object_or_404
 from ..models import *
 from barcode import Code128
-from barcode.writer import ImageWriter
+from reportlab.lib.fonts import addMapping
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from django.http import HttpResponse
 from django.shortcuts import render
 from io import BytesIO
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
+pdfmetrics.registerFont(TTFont('DejaVuSans', 'static/fonts/DejaVuSans.ttf'))
+
+@method_decorator([login_required], name='dispatch')
 class BarcodePassport(View):
     def get(self, request, passport_id):
         passport = get_object_or_404(Passport, pk=passport_id)
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="passport_{passport.id}_barcode.pdf"'
 
-        # Set up PDF
-        p = canvas.Canvas(response, pagesize=letter)
-        width, height = letter
+        # Custom page size with a 30:70 ratio, dimensions in points
+        width, height = 252, 588  # Approximately 3.5 inches by 8.167 inches
 
-        # Generate and save barcode image
+        # Set up PDF with custom size
+        p = canvas.Canvas(response, pagesize=(width, height))
+        p.setFont("DejaVuSans", 10)
+
+        # Top margin and initial text position
+        top_margin = 15 * 2.83464567
+        text_start_height = height - top_margin
+
+        # Additional Passport data
+        model_name = passport.order.model.name  # Assuming model relation exists
+        color = passport.order.color
+        assortment = passport.order.assortment
+        passport_number = passport.id
+
+        p.drawString(10, text_start_height, f"Модель: {model_name}")
+        p.drawString(10, text_start_height - 20, f"Цвет: {color}")
+        p.drawString(10, text_start_height - 40, f"Ассортимент: {assortment}")
+        p.drawString(10, text_start_height - 60, f"Паспорт: №{passport_number}")
+
+        # Generate and position barcode
         barcode_data = f"{passport.id}"
         barcode_class = barcode.get_barcode_class('code128')
         barcode_obj = barcode_class(barcode_data, writer=ImageWriter())
@@ -32,12 +57,12 @@ class BarcodePassport(View):
         barcode_obj.write(temp_file)
         temp_file.close()
 
-        # Calculate center alignment
-        x_center = (width - 400) / 2
-        y_center = (height - 200) / 2
+        barcode_y_position = text_start_height - 220
 
-        # Draw the barcode image centered on the PDF
-        p.drawImage(temp_file.name, x_center, y_center, width=400, height=200, mask='auto')
+        # Draw the barcode image on the PDF
+        barcode_height = 100
+        barcode_width = 200
+        p.drawImage(temp_file.name, (width - barcode_width) / 2, barcode_y_position, width=barcode_width, height=barcode_height, mask='auto')
 
         p.showPage()
         p.save()
@@ -47,17 +72,38 @@ class BarcodePassport(View):
 
         return response
     
+@method_decorator([login_required], name='dispatch')
 class BarcodePassportSize(View):
     def get(self, request, passport_size_id):
         passport_size = get_object_or_404(PassportSize, pk=passport_size_id)
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="passport_{passport_size.passport.id}-size_{passport_size.id}_barcode.pdf"'
 
-        # Set up PDF
-        p = canvas.Canvas(response, pagesize=letter)
-        width, height = letter
+        # Custom page size with a 30:70 ratio, dimensions in points
+        width, height = 252, 588  # Approximately 3.5 inches by 8.167 inches
 
-        # Generate and save barcode image
+        # Set up PDF with custom size
+        p = canvas.Canvas(response, pagesize=(width, height))
+        p.setFont("DejaVuSans", 10)
+
+        # Top margin and initial text position
+        top_margin = 15 * 2.83464567
+        text_start_height = height - top_margin
+
+        # Additional Passport Size data
+        model_name = passport_size.passport.order.model.name
+        color = passport_size.passport.order.color
+        assortment = passport_size.passport.order.assortment
+        passport_number = passport_size.passport.id
+        size = passport_size.size_quantity.size
+
+        p.drawString(10, text_start_height, f"Модель: {model_name}")
+        p.drawString(10, text_start_height - 20, f"Цвет: {color}")
+        p.drawString(10, text_start_height - 40, f"Ассортимент: {assortment}")
+        p.drawString(10, text_start_height - 60, f"Паспорт: №{passport_number}")
+        p.drawString(10, text_start_height - 80, f"Размер: {size}")
+
+        # Generate and position barcode
         barcode_data = f"{passport_size.passport.id}-{passport_size.id}"
         barcode_class = barcode.get_barcode_class('code128')
         barcode_obj = barcode_class(barcode_data, writer=ImageWriter())
@@ -65,12 +111,12 @@ class BarcodePassportSize(View):
         barcode_obj.write(temp_file)
         temp_file.close()
 
-        # Calculate center alignment
-        x_center = (width - 400) / 2
-        y_center = (height - 200) / 2
+        barcode_y_position = text_start_height - 220
 
-        # Draw the barcode image centered on the PDF
-        p.drawImage(temp_file.name, x_center, y_center, width=400, height=200, mask='auto')
+        # Draw the barcode image on the PDF
+        barcode_height = 100
+        barcode_width = 200
+        p.drawImage(temp_file.name, (width - barcode_width) / 2, barcode_y_position, width=barcode_width, height=barcode_height, mask='auto')
 
         p.showPage()
         p.save()
@@ -80,6 +126,7 @@ class BarcodePassportSize(View):
 
         return response
     
+@method_decorator([login_required], name='dispatch')
 class BarcodePassportSizePerPiece(View):
     def get(self, request, passport_size_id):
         passport_size = get_object_or_404(PassportSize, pk=passport_size_id)
@@ -87,16 +134,37 @@ class BarcodePassportSizePerPiece(View):
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="passport_{passport_size.passport.id}-size_{passport_size.id}_barcodes.pdf"'
 
-        # Set up PDF
-        p = canvas.Canvas(response, pagesize=letter)
-        width, height = letter
+        # Custom page size with a 30:70 ratio, dimensions in points (1 inch = 72 points)
+        width, height = 252, 588  # Approximately 3.5 inches by 8.167 inches
+
+        # Set up PDF with custom size
+        p = canvas.Canvas(response, pagesize=(width, height))
 
         # Retrieve all related ProductionPiece instances
         pieces = ProductionPiece.objects.filter(passport_size=passport_size)
 
-        # Loop through each ProductionPiece to generate barcodes
+        # Loop through each ProductionPiece to generate barcodes and add additional information
+        top_margin = 15 * 2.83464567  # Convert mm to points (1 mm = 2.83464567 points)
+        text_start_height = height - top_margin
+
         for piece in pieces:
-            barcode_data = f"{passport_size.passport.id}-{passport_size.id}-{piece.id}"
+            # Draw additional data about the piece
+            model_name = passport_size.passport.order.model.name
+            color = passport_size.passport.order.color
+            assortment = passport_size.passport.order.assortment
+            passport_number = passport_size.passport.id
+            size = passport_size.size_quantity.size
+
+            p.setFont("DejaVuSans", 10)
+            p.drawString(10, text_start_height, f"Модель: {model_name}")
+            p.drawString(10, text_start_height - 20, f"Цвет: {color}")
+            p.drawString(10, text_start_height - 40, f"Ассортимент: {assortment}")
+            p.drawString(10, text_start_height - 60, f"Паспорт: №{passport_number}")
+            p.drawString(10, text_start_height - 80, f"Размер: {size}")
+            p.drawString(10, text_start_height - 100, f"ID Единицы: {piece.id}")
+
+            # Generate barcode
+            barcode_data = f"{passport_number}-{passport_size.id}-{piece.id}"
             barcode_class = barcode.get_barcode_class('code128')
             barcode_obj = barcode_class(barcode_data, writer=ImageWriter())
 
@@ -105,28 +173,18 @@ class BarcodePassportSizePerPiece(View):
             barcode_obj.write(temp_file)
             temp_file.close()
 
+            barcode_y_position = text_start_height - 220
+
             # Draw the barcode image on the PDF
-            barcode_height = 200
-            barcode_width = 400
-            p.drawImage(temp_file.name, (width - barcode_width) / 2, (height - barcode_height) / 2, width=barcode_width, height=barcode_height, mask='auto')
+            barcode_height = 100
+            barcode_width = 200
+            p.drawImage(temp_file.name, (width - barcode_width) / 2, barcode_y_position, width=barcode_width, height=barcode_height, mask='auto')
             
             # Clean up the temporary file
             os.remove(temp_file.name)
 
-            # Create a new page for the next barcode
+            # Create a new page for the next barcode and data set
             p.showPage()
 
         p.save()
         return response
-
-def generate_barcode(request, product_id):
-    barcode = Code128(str(product_id), writer=ImageWriter())
-    buffer = BytesIO()
-    barcode.write(buffer)
-    response = HttpResponse(buffer.getvalue(), content_type='image/png')
-    response['Content-Disposition'] = 'inline; filename="barcode_{}.png"'.format(product_id)
-    return response
-
-def barcode_scan_page(request, product_id):
-    barcode_url = '/production/barcode/{}/'.format(product_id)
-    return render(request, 'barcode_scan.html', {'barcode_url': barcode_url, 'product_id': product_id})

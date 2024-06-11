@@ -170,11 +170,9 @@ urlpatterns = [
     # For dashboard APIs
     path('api/clients/<int:client_id>/', client_api, name='client_api'),
 
-    # For barcode testing
+    # For barcode creation
     path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
     path('barcode/api/passport_size/<int:passport_size_id>/', BarcodePassportSize.as_view(), name='barcode_passport_size'),
     path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
-    path('barcode/<int:product_id>/', generate_barcode, name='generate_barcode'),
-    path('scan/<int:product_id>/', barcode_scan_page, name='barcode_scan_page'),
 
 ]

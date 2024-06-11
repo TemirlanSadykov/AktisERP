@@ -187,7 +187,6 @@ class ClientOrder(models.Model):
 
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
-    name = models.CharField(max_length=100, verbose_name='Название')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
     color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
@@ -206,7 +205,7 @@ class Order(models.Model):
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
     def __str__(self):
-        return f"{self.name} - {self.model}"
+        return f"{self.model}"
     
 class Passport(models.Model):
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
