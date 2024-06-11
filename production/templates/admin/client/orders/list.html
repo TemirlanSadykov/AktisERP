@@ -21,7 +21,7 @@
     </ul>
   </div>
 </nav>
-<div class="container-fluid main-cont">
+<div class="container maincontr">
   <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item">
           <a href="{% url 'client_order_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'client_order_list' %}" role="tab" aria-controls="all"
@@ -43,19 +43,34 @@
   <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
           <div class="row">
-              <div class="col-lg-6 col-md-6 col-sm-4">
+              <div class="col-lg-10 col-md-8 col-sm-4">
                   <h4 class="font-weight-bold">{% trans "Client Orders" %}</h4>
               </div>
-              <div class="col-lg-6 col-md-6 col-sm-2 text-md-right text-sm-right">
-                <a href="{% url 'client_order_create' %}" class="btn btn-custom">{% trans "Create" %}</a>
+              <div class="col-lg-2 col-md-4 col-sm-2 text-md-right text-sm-right">
+                <a href="{% url 'client_order_create' %}" class="btn btn-primary">{% trans "Create" %}</a>
               </div>
           </div>
           <br>
           <div class="form-row align-items-center">
                 <form method="get" class="date-filter-form">
-                  {{ form.as_p }}
-                  <button type="submit" class="btn btn-custom">{% trans "Filter" %}</button>
-                </form>
+                  <div class="form-row align-items-center mb-3">
+                    <div class="col-auto">
+                        {{ form.start_date.label_tag }}
+                    </div>
+                    <div class="col">
+                        {{ form.start_date }}
+                    </div>
+                    <div class="col-auto">
+                        {{ form.end_date.label_tag }}
+                    </div>
+                    <div class="col">
+                        {{ form.end_date }}
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+                    </div>
+                </div>
+                    </form>
               </div>
           </div>
           <br><br>

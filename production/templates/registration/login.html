@@ -75,22 +75,30 @@
                         <h2 class="form-heading headingData">{% trans "Login" %}</h2> 
                         <form method="post" action="{% url 'login' %}" class="login-form">
                             {% csrf_token %}
-                            {% if form.errors %}
-                                <div class="alert alert-danger" role="alert">
-                                    {% for field, errors in form.errors.items %}
-                                        {% for error in errors %}
-                                            <div class="error-message">{{ error }}</div>
-                                        {% endfor %}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                             <div class="form-group">
                                 <label for="id_username">{% trans "Username" %}</label>
                                 <input type="text" name="username" id="id_username" class="form-control">
+                                {% if form.errors.username %}
+                                {% for error in form.errors.username %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
                             </div>
                             <div class="form-group">
                                 <label for="id_password">{% trans "Password" %}</label>
                                 <input type="password" name="password" id="id_password" class="form-control">
+                                {% if form.errors.password %}
+                                {% for error in form.errors.password %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
                             </div>
                             <button type="submit" class="btn btn-primary btn-block button-height">{% trans "Login" %}</button>
                         </form>

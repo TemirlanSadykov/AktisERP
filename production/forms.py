@@ -146,17 +146,17 @@ class SizeQuantityForm(forms.ModelForm):
         }
 
 class DateForm(forms.Form):
-    date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date'}))
+    date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}))
 
 class DateRangeForm(forms.Form):
     start_date = forms.DateField(
         label='Начало',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
         required=False 
     )
     end_date = forms.DateField(
         label='Окончание',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
         required=False
     )
 
@@ -318,7 +318,7 @@ class ClientOrderForm(forms.ModelForm):
         model = ClientOrder
         fields = ['order_number', 'client', 'term', 'status']
         widgets = {
-            'order_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'order_number': forms.TextInput(attrs={'class': 'form-control','placeholder':'Order number'}),
             'client': forms.Select(attrs={'class': 'form-control'}),
             'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
@@ -336,15 +336,14 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-select'}), 
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'model': forms.TextInput(attrs={'class': 'form-control'}),
-            'assortment': forms.TextInput(attrs={'class': 'form-control'}),
-            'color': forms.TextInput(attrs={'class': 'form-control'}),
-            'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'payment': forms.TextInput(attrs={'class': 'form-control'}),
+            'model': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Models'}),
+            'assortment': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Range'}),
+            'color': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Color'}),
+            'fabrics': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Fabrics'}),
+            'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
+            'quantity': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Quantity'}),
+            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Completed Quantity'}),
+            'payment': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Payment'}),
         }
 
     def __init__(self, *args, **kwargs):

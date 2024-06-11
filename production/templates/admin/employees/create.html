@@ -35,6 +35,79 @@
           <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New User" %}</h2>
         </div>
         <div class="card-body">
+          <form method="post" onsubmit="return validateForm();">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="id_username">{% trans "Username" %}:</label>
+              {{ form.username }}
+              <small id="usernameError" class="text-danger"></small>
+
+            </div>
+            <div class="form-group">
+              <label for="id_first_name">{% trans "First Name" %}:</label>
+              {{ form.first_name }}
+            </div>
+            <div class="form-group">
+              <label for="id_last_name">{% trans "Last Name" %}:</label>
+              {{ form.last_name }}
+            </div>
+            <div class="form-group">
+              <label for="id_password1">{% trans "Password" %}:</label>
+              {{ form.password1 }}
+              <small id="passwordError" class="text-danger"></small>
+
+            </div>
+            <div class="form-group">
+              <label for="id_password2">{% trans "Confirm Password" %}:</label>
+              {{ form.password2 }}
+              <small id="passwordVerifyError" class="text-danger"></small>
+
+            </div>
+            <div class="form-group">
+              <label for="id_employee_id">{% trans "Employee ID" %}:</label>
+              {{ form.employee_id }}
+            </div>
+            <div class="form-group">
+              <label for="id_type">{% trans "Type" %}:</label>
+              {{ form.type }}
+            </div>
+            <div class="form-group">
+              <label for="id_status">{% trans "Status" %}:</label>
+              <div class="custom-control custom-switch">
+                <input class="custom-control-input" type="checkbox" id="id_status" name="status" {% if form.status.value %}checked{% endif %}>
+                <label class="custom-control-label" for="id_status"></label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="id_station">{% trans "Station" %}:</label>
+              {{ form.station }}
+            </div>
+            <div class="form-group">
+              <div class="row">
+                <div class="col text-left">
+                  <button type="submit" class="btn btn-create btnset">{% trans "Create" %}</button>
+                </div>
+                <div class="col text-right">
+                  <a href="{% url 'employee_list' %}" class="btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      <!-- </div> -->
+    </div>
+  </div>
+</div>
+
+{% comment %}
+<div class="container maincontr">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <!-- <div class="card"> -->
+        <div class="card-header">
+          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New User" %}</h2>
+        </div>
+        <div class="card-body">
           <form method="post">
             {% csrf_token %}
             <div class="form-group">
@@ -59,6 +132,42 @@
     </div>
   </div>
 </div>
+{% endcomment %}
+
+<script>
+  function validateForm() {
+      var username = document.getElementById('id_username').value;
+      var password1 = document.getElementById('id_password1').value;
+      var password2 = document.getElementById('id_password2').value;
+      var usernameError = document.getElementById('usernameError');
+      var passwordError = document.getElementById('passwordError');
+      var passwordVerifyError = document.getElementById('passwordVerifyError');
+      var isValid = true;
+  
+      usernameError.innerText = '';
+      passwordError.innerText = '';
+      passwordVerifyError.innerText = '';
+  
+      if (username.length < 5 || username.length > 150) {
+          usernameError.innerText = 'Username must be between 5 and 150 characters long.';
+          isValid = false;
+      }
+  
+      if (password1.length < 8) {
+          passwordError.innerText = 'Password must be at least 8 characters long.';
+          isValid = false;
+      }
+  
+      if (password1 !== password2) {
+          passwordVerifyError.innerText = 'The two password fields didn’t match.';
+          isValid = false;
+      }
+  
+      return isValid;
+  }
+  </script>
+  
+  
 {% endblock %}
 
 

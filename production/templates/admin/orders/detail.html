@@ -125,7 +125,7 @@
         <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
         <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{sq.quantity }}</span></span>
         <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
-        <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
+        <button class="delete-btn" id="deleteBtn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
       </li>
       {% endfor %}
     </ul>

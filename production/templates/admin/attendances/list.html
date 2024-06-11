@@ -20,23 +20,40 @@
       </ul>
     </div>
   </nav>
+
+  
     <div class="unique-container">
-        <div class="unique-filter-section">
-            <form method="post" class="date-filter-form">
-              {% csrf_token %}
-            {{ form.as_p }}
-            
-            <button type="submit" class=" btn filter-btn" >{% trans "Filter" %}</button>
+        <div class="container">
+          <div class="row">
+            <div class="col-md-6">
+              <h2>{% trans "Attendance Records:" %}</h2>
+            </div>
+            <div class="col-md-6">
+              <form method="post" class="date-filter-form">
+                {% csrf_token %}
+
+              <div class="form-row align-items-center mb-3">
+                <div class="col-auto">
+                    {{ form.date.label_tag }}
+                </div>
+                <div class="col">
+                    {{ form.date }}
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">{% trans "Filter" %}</button>
+                </div>
+            </div>
             </form>
+            </div>
+          </div>
           </div>
 
         <div class="unique-records-section">
           {% if attendances %}
-            <h2 class="unique-subheader">{% trans "Attendance Records:" %}</h2>
-            <ul id="attendance-records" class="unique-list list-group">
+            <ul id="attendance-records" class="list-group custom-list-group">
               {% for attendance in attendances %}
 
-                <li class="unique-list-item list-group-item">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
+                <li class="list-group-item custom-list-item" style="color:#007bff">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
                 {% endfor %}
               </ul>
               {% else %}
