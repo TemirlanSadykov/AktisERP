@@ -187,7 +187,6 @@ class ClientOrder(models.Model):
 
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
-    name = models.CharField(max_length=100, verbose_name='Название')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
     color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
