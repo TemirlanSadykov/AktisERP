@@ -336,8 +336,8 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'model': forms.TextInput(attrs={'class': 'form-control'}),
-            'assortment': forms.TextInput(attrs={'class': 'form-control'}),
+            'model': forms.Select(attrs={'class': 'form-control'}),
+            'assortment': forms.Select(attrs={'class': 'form-control'}),
             'color': forms.TextInput(attrs={'class': 'form-control'}),
             'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
@@ -372,7 +372,7 @@ class NodeForm(forms.ModelForm):
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
                 'number': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter number'}),
-                'is_common': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin: 6px 0px 0px 10px;'}),
+                'is_common': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
                 'type': forms.Select(attrs={'class': 'form-control'}),
             }
     
@@ -456,3 +456,4 @@ class ErrorResponsibilityForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['employee'].queryset = UserProfile.objects.all().order_by('employee_id')
+

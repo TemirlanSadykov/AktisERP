@@ -69,7 +69,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %} - {% trans "Model" %}</h4>
+  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -84,6 +84,7 @@
     </ul>
   </div>
 </nav>
+{% comment %}
   <div class=" border-right" id="sidebar-wrapper">
     <div class="d-flex justify-content-between align-items-centero">
       <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
@@ -108,15 +109,16 @@
           class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
     </div>
   </div>
-
+{% endcomment %}
 
 
 
 <div class="container maincontr">
+  <div class="card-header">
+    <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Model" %}</h2>
+  </div>    
   <div class="col-md-12">
-            <div class="card-header">
-              <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Model" %}</h2>
-            </div>        
+    
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>

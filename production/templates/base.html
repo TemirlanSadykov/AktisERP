@@ -45,7 +45,7 @@
                 <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black" data-id="Nodes"><i
                     class="fas fa-user fa-fw"></i>{% trans 'Nodes' %}</a>
                 <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black" data-id="Equipment"><i
-                    class="fas fa-clipboard-list"></i>{% trans 'Equipment' %}</a>
+                    class="fas fa-clipboard-list fa-fw"></i>{% trans 'Equipment' %}</a>
                     {% else %}
                     <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect" >
                       <i class="fas fa-cubes fa-fw"></i>{% trans 'Navigation' %}</a>
@@ -181,7 +181,5 @@
         }
     });
     </script>
-
-    
 </body>
 </html>

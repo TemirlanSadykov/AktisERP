@@ -82,21 +82,29 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                            <div class="form-group">
-                                <label for="id_username">{% trans "Username" %}</label>
-                                <input type="text" name="username" id="id_username" class="form-control">
-                                {% if form.errors.username %}
+                        <div class="form-group">
+                            <label for="id_username">{% trans "Username" %}</label>
+                            <input type="text" name="username" id="id_username" class="form-control">
+                            {% if form.errors.username %}
                                 {% for error in form.errors.username %}
-                                    <div class="error-message">{{ error }}</div>
+                                    {% if error == 'This field is required.' %}
+                                        <div class="error-message">Username is required.</div>
+                                    {% else %}
+                                        <div class="error-message">{{ error }}</div>
+                                    {% endif %}
                                 {% endfor %}
                             {% endif %}
-                            </div>
+                        </div>
                             <div class="form-group">
                                 <label for="id_password">{% trans "Password" %}</label>
                                 <input type="password" name="password" id="id_password" class="form-control">
                                 {% if form.errors.password %}
                                 {% for error in form.errors.password %}
-                                    <div class="error-message">{{ error }}</div>
+                                    {% if error == 'This field is required.' %}
+                                        <div class="error-message">Password is required.</div>
+                                    {% else %}
+                                        <div class="error-message">{{ error }}</div>
+                                    {% endif %}
                                 {% endfor %}
                             {% endif %}
                             </div>
