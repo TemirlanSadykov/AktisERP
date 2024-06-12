@@ -336,14 +336,14 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'model': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Models'}),
-            'assortment': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Range'}),
-            'color': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Color'}),
-            'fabrics': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Fabrics'}),
+            'model': forms.TextInput(attrs={'class': 'form-control'}),
+            'assortment': forms.TextInput(attrs={'class': 'form-control'}),
+            'color': forms.TextInput(attrs={'class': 'form-control'}),
+            'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
-            'quantity': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Quantity'}),
-            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Completed Quantity'}),
-            'payment': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Payment'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'payment': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
