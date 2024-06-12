@@ -57,11 +57,11 @@ class BarcodePassport(View):
         barcode_obj.write(temp_file)
         temp_file.close()
 
-        barcode_y_position = text_start_height - 220
+        barcode_y_position = text_start_height - 250
 
         # Draw the barcode image on the PDF
-        barcode_height = 100
-        barcode_width = 200
+        barcode_height = 140
+        barcode_width = 280
         p.drawImage(temp_file.name, (width - barcode_width) / 2, barcode_y_position, width=barcode_width, height=barcode_height, mask='auto')
 
         p.showPage()
@@ -111,11 +111,11 @@ class BarcodePassportSize(View):
         barcode_obj.write(temp_file)
         temp_file.close()
 
-        barcode_y_position = text_start_height - 220
+        barcode_y_position = text_start_height - 250
 
         # Draw the barcode image on the PDF
-        barcode_height = 100
-        barcode_width = 200
+        barcode_height = 140
+        barcode_width = 280
         p.drawImage(temp_file.name, (width - barcode_width) / 2, barcode_y_position, width=barcode_width, height=barcode_height, mask='auto')
 
         p.showPage()
@@ -173,11 +173,11 @@ class BarcodePassportSizePerPiece(View):
             barcode_obj.write(temp_file)
             temp_file.close()
 
-            barcode_y_position = text_start_height - 220
+            barcode_y_position = text_start_height - 250
 
             # Draw the barcode image on the PDF
-            barcode_height = 100
-            barcode_width = 200
+            barcode_height = 140
+            barcode_width = 280
             p.drawImage(temp_file.name, (width - barcode_width) / 2, barcode_y_position, width=barcode_width, height=barcode_height, mask='auto')
             
             # Clean up the temporary file
