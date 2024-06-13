@@ -58,7 +58,7 @@
       <ul class="clients-list">
         {% for assortment in assortments %}
         <a href="{% url 'model_list' assortment.pk %}">
-          <li class="list-group-item">
+          <li class="list-group-item listequal">
             {{ assortment.name }}
           </li>
         </a>

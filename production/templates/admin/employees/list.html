@@ -86,44 +86,14 @@
         <ul class="list-group" >
           {% for employee in employees %}
           <a href="{% url 'employee_detail' employee.pk %}">
-            <li class="list-group-item d-flex align-items-center" style="border: 1px solid rgba(0, 0, 0, .125) !important; color:#007bff;">
+            <li class="list-group-item d-flex align-items-center" style="border: 1px solid rgba(0, 0, 0, .125) !important; color:#007bff; padding:18px;">
               <span class="status-dot bg-success"></span>
                 <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
                 {{ employee.employee_id }} - {{ employee.user.get_full_name }} - {{ employee.get_station_display }}
             </li></a>
             {% endfor %}
         </ul>
-        {% comment %}
-        <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-              <div class="modal-content">
-                  <div class="modal-header">
-                      <h5 class="modal-title" id="uploadModalLabel">{% trans "Upload Employees" %}</h5>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                      </button>
-                  </div>
-                  <div class="modal-body">
-                      <form id="upload_form" action="{% url 'employee_upload' %}" method="post" enctype="multipart/form-data">
-                        {% csrf_token %}  
-                        <div class="form-group">
-                              <label for="excelFile">Choose Excel file</label>
-                              <input type="file" class="form-control-file" id="excel_file" name="excel_file" accept=".xlsx, .xls" required>
-                            </div>
-                      </form>
-                        <div class="modal-footer">
-                            <button type="submit" form="upload_form" class="btn btn-primary">{% trans "Submit" %}</button>
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
-                        </div>
-                  </div>
-                  <div class="modal-footer justify-content-between">
-                    <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
-                  </div>
-              </div>
-          </div>
-      </div>
-{% endcomment %}
+
 <div class="custom-popup" id="uploadCustomPopup">
   <div class="custom-popup-header">
       <h5 id="uploadPopupLabel">{% trans "Upload Employees" %}</h5>

@@ -72,32 +72,6 @@
   </div>
 </nav>
 
-{% comment %}
-  <div class=" border-right" id="sidebar-wrapper">
-    <div class="d-flex justify-content-between align-items-centero">
-      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <!-- <div class="sidebar-heading sidebar-navi">Navigation</div> -->
-    <div class="list-group list-group-flush">
-      <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
-        <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
-      <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
-          <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
-      <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-home"></i> {% trans 'Rolls' %}</a>
-      <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
-      <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-users"></i> {% trans 'Operations' %}</a>
-      <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-user"></i> {% trans 'Nodes' %}</a>
-      <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
-    </div>
-  </div>
-{% endcomment %}
 
   <div class="container-fluid main-cont">
     <ul class="nav nav-tabs" role="tablist">
@@ -162,56 +136,14 @@
             </div>
 
 
-  {% comment %}
-  <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
-  <div class="modal" id="uploadModal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h4 class="modal-title">{% trans "Upload Operations" %}</h4>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        
-        <!-- Modal Body -->
-        <div class="modal-body">
-          <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="excel_file" id="excel_file" required>
-          </form>
-        </div>
-        
-        <!-- Modal Footer -->
-        <div class="modal-footer justify-content-between">
-          <button type="submit" form="upload_form" class="btn create-btn">{% trans "Submit" %}</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal">{% trans "Close" %}</button>
-        </div>
-        
-      </div>
-    </div>
-  </div>
-{% endcomment %}
 
-
-
-  {% comment %}
-  <ul class="list-group" id="operationsList">
-    {% for operation in operations %}
-      <li class="list-group-item" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
-        <a href="{% url 'operation_detail' operation.pk %}">
-          {{ operation }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-{% endcomment %}
 
 
   <ul class="list-group custom-list-group" id="operationsList">
     {% for operation in operations %}
     <a href="{% url 'operation_detail' operation.pk %}" class="order-link " >
 
-    <li class="list-group-item custom-list-item"  data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}" style="color:#007bff;">
+    <li class="list-group-item custom-list-item listequal"  data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}" style="color:#007bff;">
           {{ operation.number }} - {{ operation.node.name }} - {{ operation.equipment }} - {{ operation.name }}
       </li>
     </a>

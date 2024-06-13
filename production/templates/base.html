@@ -47,7 +47,7 @@
                 <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black" data-id="Equipment"><i
                     class="fas fa-clipboard-list fa-fw"></i>{% trans 'Equipment' %}</a>
                     {% else %}
-                    <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect" >
+                    <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-id="user_redirect" >
                       <i class="fas fa-cubes fa-fw"></i>{% trans 'Navigation' %}</a>
                     {% endif %}
               </div>
@@ -55,9 +55,9 @@
             {% elif sidebar_type == 'cutter' %}
             <div id="sidebar" class="list-group list-group-flush">
                 {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect">
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-id="user_redirect">
                   <i class="fas fa-cubes fa-fw"></i>{% trans 'Navigation' %}</a>
-                <a href="{% url 'order_list_cutter' %}" class="list-group-item list-group-item-action text-black" data-nav="Models">
+                <a href="{% url 'order_list_cutter' %}" class="list-group-item list-group-item-action text-black" data-id="Models">
                     <i class="fas fa-window-restore fa-fw"></i>{% trans 'Models' %}</a>
                     {% else %}
                     <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
@@ -67,9 +67,9 @@
 
               <div id="sidebar" class="list-group list-group-flush">
                 {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect">
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-id="user_redirect">
                   <i class="fas fa-cubes fa-fw"></i>{% trans 'Navigation' %}</a>
-                <a href="{% url 'order_list_qc' %}" class="list-group-item list-group-item-action text-black" data-nav="Models">
+                <a href="{% url 'order_list_qc' %}" class="list-group-item list-group-item-action text-black" data-id="Models">
                     <i class="fas fa-window-restore fa-fw"></i>{% trans 'Models' %}</a>
                     {% else  %}
                     <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
@@ -80,9 +80,9 @@
 
               <div id="sidebar" class="list-group list-group-flush">
                 {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-nav="user_redirect">
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-id="user_redirect">
                   <i class="fas fa-cubes fa-fw"></i>{% trans 'Navigation' %}</a>
-                <a href="{% url 'order_list_packer' %}" class="list-group-item list-group-item-action text-black" data-nav="Models">
+                <a href="{% url 'order_list_packer' %}" class="list-group-item list-group-item-action text-black" data-id="Models">
                     <i class="fas fa-window-restore fa-fw"></i>{% trans 'Models' %}</a>
                     {% else %}
                     <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
@@ -92,18 +92,6 @@
         {% else %}
 
         <div id="sidebar" class="list-group list-group-flush">
-            <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
-                {% csrf_token %}
-                <div class="form-group">
-                  <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
-                    {% for branch in branches %}
-                      <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
-                        {{ branch.name }}
-                      </option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </form>
             <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black " data-id="user_redirect">
                 <i class="fas fa-cubes fa-fw"></i>{% trans 'Navigation' %}
             </a>

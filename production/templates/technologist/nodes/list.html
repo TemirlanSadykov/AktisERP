@@ -57,7 +57,7 @@
       <ul class="clients-list">
         {% for node in nodes %}
         <a href="{% url 'node_detail' node.pk %}">
-          <li class="list-group-item">
+          <li class="list-group-item listequal">
             {{ node.name }}
           </li>
         </a>

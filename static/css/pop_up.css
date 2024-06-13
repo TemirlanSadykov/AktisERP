@@ -155,4 +155,13 @@
     .modal-content {
         width: 80%;
     }
+    .maincontr{
+        padding:10px;
+    }
+    .unique-container{
+        padding:10px;
+    }
+    .salaryConta{
+        padding:10px;
+    }
 }

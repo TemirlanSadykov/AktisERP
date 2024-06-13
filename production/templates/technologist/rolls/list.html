@@ -23,31 +23,6 @@
   </div>
 </nav>
 
-{% comment %}
-  <div class=" border-right" id="sidebar-wrapper">
-    <div class="d-flex justify-content-between align-items-centero">
-      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <div class="list-group list-group-flush">
-      <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
-        <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
-      <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
-          <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
-      <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-home"></i> {% trans 'Rolls' %}</a>
-      <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
-      <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-users"></i> {% trans 'Operations' %}</a>
-      <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-user"></i> {% trans 'Nodes' %}</a>
-      <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
-    </div>
-  </div>
-{% endcomment %}
 <div class="clients-wrapper maincontr">
   <div class="clients-container">
       <div class="clients-header">
@@ -58,7 +33,7 @@
       <ul class="clients-list">
         {% for roll in rolls %}
         <a href="{% url 'roll_detail' roll.pk %}">
-          <li class="list-group-item">
+          <li class="list-group-item listequal">
             {{ roll.name }} - {{ roll.color }} - {{ roll.fabrics }}
           </li>
         </a>
@@ -66,26 +41,26 @@
       </ul>
   </div>
 
-  {% if is_paginated %}
-      <ul class="pagination-list">
+  <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
+    {% if is_paginated %}
+      <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-          <li><a href="?page=1">&laquo; first</a></li>
-          <li><a href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
-        {% endif %}
-  
-        {% for num in paginator.page_range %}
-          {% if page_obj.number == num %}
-            <li class="active"><a href="?page={{ num }}">{{ num }}</a></li>
-          {% else %}
-            <li><a href="?page={{ num }}">{{ num }}</a></li>
+          <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
           {% endif %}
-        {% endfor %}
-  
-        {% if page_obj.has_next %}
-          <li><a href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
-          <li><a href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
-        {% endif %}
+          {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item"><a class="page-link active" href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+          {% endif %}
       </ul>
-    {% endif %}
+      {% endif %}
+  </nav>
 </div>
 {% endblock %}

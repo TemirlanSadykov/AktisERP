@@ -197,7 +197,7 @@ class SizeQuantityChoiceField(ModelChoiceField):
         return obj.size
 
 class PassportSizeForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------") 
+    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}) ) 
 
     class Meta:
         model = PassportSize
@@ -390,14 +390,13 @@ class SizeQuantityChoiceField(forms.ModelChoiceField):
         return obj.size
 
 class ErrorForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none(),widget=forms.Select(attrs={'class': 'form-control'}))
 
     class Meta:
         model = Error
         fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
         widgets = {
             'passport': forms.TextInput(attrs={'class': 'form-control'}),
-            'size_quantity': forms.Select(attrs={'class': 'form-control'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'defect_type': forms.Select(attrs={'class': 'form-control'}),
         }

@@ -53,7 +53,7 @@
             <ul id="attendance-records" class="list-group custom-list-group">
               {% for attendance in attendances %}
 
-                <li class="list-group-item custom-list-item" style="color:#007bff">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
+                <li class="list-group-item custom-list-item" style="color:#007bff; padding:18px;">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
                 {% endfor %}
               </ul>
               {% else %}
