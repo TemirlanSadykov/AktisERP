@@ -2,8 +2,6 @@
 {% load i18n %}
 {% load static %}
 {% block content %}
-
-
   <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
@@ -23,12 +21,9 @@
       </ul>
     </div>
   </nav>
-
     <div class="container maincontr" style="padding:60px;">
-
-  
     <div class="container">
-        <div class="card">
+        <!-- <div class="card"> -->
             <div class="card-header">
               Client
             </div>
@@ -48,7 +43,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="modal" id="deleteModal">
               <div class="modal-content">
                   <span class="close" id="closeBtn">&times;</span>
@@ -59,8 +53,7 @@
                   </div>
               </div>
           </div>
-
-        </div>
+        <!-- </div> -->
     </div>
   </div>
     <script>
@@ -80,5 +73,4 @@
           document.getElementById('deleteForm').submit();
       };
   </script>
-
 {% endblock %}

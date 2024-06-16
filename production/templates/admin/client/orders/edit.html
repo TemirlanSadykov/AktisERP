@@ -35,17 +35,14 @@
               {{ form.as_p }}
             </div>
             <div class="form-group">
-
               <div class="row">
                 <div class="col text-left">
-                  <button type="submit" class="btn btn-create btnset" style="color:white">{% trans "Update" %}</button>
+                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
                 </div>
                 <div class="col text-right">
                   <a href="{% url 'client_order_detail' clientorder.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
                 </div>
             </div>
-
-
             </div>
           </form>
         </div>
@@ -53,7 +50,4 @@
     </div>
   </div>
 </div>
-
-
-
 {% endblock %}

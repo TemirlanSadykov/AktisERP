@@ -43,12 +43,28 @@
       display: none;
       position: fixed;
       z-index: 999;
-      left: 0;
-      top: 0;
+      left: 10;
+      top: 15;
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
   }
+
+  .custom-nav-tabs-scrollable {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; 
+    white-space: nowrap; 
+}
+
+.custom-nav {
+    flex-wrap: nowrap;
+}
+
+/* .custom-nav .nav-item {
+    display: inline-block; 
+    white-space: nowrap; 
+} */
+
 </style>
 
 
@@ -73,7 +89,26 @@
 </nav>
 
 
-  <div class="container-fluid main-cont">
+  <div class="container maincontr">
+    <!-- <div class="container">
+    <div class="row">
+      <div class="col-12"> -->
+          <div class="custom-nav-tabs-scrollable">
+              <ul class="custom-nav nav nav-tabs" role="tablist">
+                  <li class="nav-item">
+                      <a href="{% url 'operation_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab" role="tab" aria-controls="all" aria-selected="false">{% trans "All" %}</a>
+                  </li>
+                  {% for node in nodes %}
+                  <li class="nav-item">
+                      <a href="?node={{ node.id }}" class="nav-link {% if selected_node|stringformat:"s" == node.id|stringformat:"s" %}active{% endif %}" role="tab" aria-controls="all" aria-selected="false">{% trans node.name %}</a>
+                  </li>
+                  {% endfor %}
+              </ul>
+          </div>
+      <!-- </div>
+  </div>
+  </div> -->
+    {% comment %}
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
             <a href="{% url 'operation_list' %}" class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab" role="tab" aria-controls="all"
@@ -88,6 +123,7 @@
   
           {% endfor %}
     </ul>
+    {% endcomment%}
   
   
     <div class="tab-content" id="myTabContent">
@@ -97,15 +133,9 @@
                     <h4 class="font-weight-bold">{% trans "Operations" %}</h4>
                 </div>
                 <div class="col-lg-6 col-md-6 col-sm-2 text-md-right text-sm-right">
-                  <a href="{% url 'operation_create' %}" class="btn btn-custom" style="margin-bottom: 6px;">{% trans "Create" %}</a>
-                  {% comment %}
-                  <button id="upload_button" type="button" class="btn btn-custom" data-toggle="modal" data-target="#uploadModal" style="margin-bottom: 5px;">
-                    {% trans "Upload from Excel" %}
-                  </button>
-                  {% endcomment %}
-                  <button type="button" data-toggle="modal"  data-target="#uploadModal" class="btn create-btn" id="openUploadPopup">{% trans "Upload from Excel" %}</button>
-
-                  <a href="{% url 'operation_download' %}" class="btn btn-custom">{% trans "Download Excel" %}</a>
+                  <a href="{% url 'operation_create' %}" class="btn btn-create buttonsetting" >{% trans "Create" %}</a>
+                  <button type="button" data-toggle="modal"  data-target="#uploadModal" class="btn btn-create buttonsetting" id="openUploadPopup">{% trans "Upload from Excel" %}</button>
+                  <a href="{% url 'operation_download' %}" class="btn btn-create buttonsetting">{% trans "Download Excel" %}</a>
                 
                 </div>
             </div>
@@ -117,9 +147,9 @@
 
             <div class="custom-popup" id="uploadCustomPopup">
               <div class="custom-popup-header">
-                  <h5 id="uploadPopupLabel">{% trans "Upload Employees" %}</h5>
+                  <h5 id="uploadPopupLabel" class="mb-2">{% trans "Upload Employees" %}</h5>
                   <button type="button" class="close" id="closeCustomPopupButton">&times;</button>
-              </div>
+              </div><br>
               <div class="custom-popup-body">
                   <form id="upload_form" action="{% url 'operation_upload' %}" method="post" enctype="multipart/form-data">
                       {% csrf_token %}

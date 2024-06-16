@@ -20,18 +20,15 @@
       </ul>
     </div>
   </nav>
-
-  
-    <div class="unique-container">
+    <div class="container unique-container maincontr">
         <div class="container">
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-6" style="margin-top:10px;">
               <h2>{% trans "Attendance Records:" %}</h2>
             </div>
             <div class="col-md-6">
               <form method="post" class="date-filter-form">
                 {% csrf_token %}
-
               <div class="form-row align-items-center mb-3">
                 <div class="col-auto">
                     {{ form.date.label_tag }}
@@ -47,7 +44,6 @@
             </div>
           </div>
           </div>
-
         <div class="unique-records-section">
           {% if attendances %}
             <ul id="attendance-records" class="list-group custom-list-group">

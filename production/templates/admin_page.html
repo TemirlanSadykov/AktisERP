@@ -23,25 +23,25 @@
     </ul>
   </div>
 </nav>
-
-<div class="container-fluid" style="margin-top: 20px;">
-  <!-- <div class="row"> -->
-    <div class="col-md-4">
-      <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
-        {% csrf_token %}
-        <div class="form-group">
-          <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
-            {% for branch in branches %}
-              <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
-                {{ branch.name }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-      </form>
+<div class="col-md-4 mt-4">
+  <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
+    {% csrf_token %}
+    <div class="form-group">
+      <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
+        {% for branch in branches %}
+          <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
+            {{ branch.name }}
+          </option>
+        {% endfor %}
+      </select>
     </div>
-  <!-- </div> -->
+  </form>
 </div>
+<!-- <div class="container-fluid" style="margin-top: 20px;"> -->
+  <!-- <div class="row"> -->
+
+  <!-- </div> -->
+<!-- </div> -->
 
     <div class="container-fluid ">
       <div class="row mt-4">

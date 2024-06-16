@@ -52,14 +52,15 @@
               <!-- </div> -->
           </div>
 
-
+<!-- </div> -->
 
           <form id="operationAssignmentForm" class="operation-form">
             {% csrf_token %}
-            <table class="table">
+            <div class="table-responsive">
+            <table class="table table-striped">
               <thead>
                 <tr>
-                  <th style="width: 500px;">{% trans "Operation \ Size" %}</th>
+                  <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
                   {% for ps in size_quantities %}
                     <th>
                       {{ ps.size_quantity.size }}<br>
@@ -79,7 +80,7 @@
                             {% if works %}
                                 {% for work in works %}
                                 <div style="display: block;">
-                                    <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span>
+                                    <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
                                     {% if work.end_time %}
                                       <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
                                       <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
@@ -96,6 +97,7 @@
                 {% endfor %}
             </tbody>    
             </table>
+          </div>
           </form>
           <div class="form-actions">
             {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
@@ -125,17 +127,18 @@
                 <input type="text" id="reassignReason" name="reassignReason">
             
                 <input type="hidden" id="reassignWorkId" name="reassignWorkId">
-            
-                <button type="submit">Submit</button>
+                <div class="modal-buttons">
+
+                <button type="submit" class="buttonsetting" style="background-color: #007bff !important;">Submit</button>
                 <button type="button" onclick="closePopup()">Cancel</button>
+                </div>
               </form>
             </div>  
           </div>
 
-<!-- </div> -->
-      </div>
 </div>
-
+      <!-- </div> -->
+</div>
 
 
 
@@ -161,18 +164,11 @@
   document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.employee-input').forEach(input => {
       input.addEventListener('keypress', function(event) {
-        if (event.key === 'EntThe song is a slower emotional heartbreak song and so may not be appropriate for all types of playlist (e.g fast paced bhangra song playlists)
-er') {
+        if (event.key === 'Enter') {
           event.preventDefault();
-          const value = input.value.trim();
-    
-          if (!value) {
-            alert('Необходимо ввести ID сотрудника');
-            return;
-          }
-    
           const operationId = input.name.split('_')[1];
           const passport_size_id = input.name.split('_')[2];
+          const value = input.value;
           assignOperation(operationId, passport_size_id, value, input);
         }
       });
@@ -405,95 +401,5 @@ er') {
     document.getElementById('reassignPopup').style.display = 'none';
     document.getElementById('reassignPopupOverlay').style.display = 'none';
   }
-</script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll('.employee-input').forEach(input => {
-      input.addEventListener('input', function(event) {
-        const value = input.value.trim();
-  
-        // Ensure that the change propagates only if the input is the first in its row
-        const row = input.closest('tr');
-        const inputs = row.querySelectorAll('.employee-input');
-        if (inputs[0] === input) { // Ensures this is the first input
-          inputs.forEach((inp, index) => {
-            if (index > 0) { // Apply changes to all other inputs regardless of their current content
-              inp.value = value;
-            }
-          });
-        }
-      });
-    });
-  
-    // Additional existing handlers can be included below
-  });  
-</script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    document.querySelectorAll('.employee-input').forEach(input => {
-      input.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          const row = input.closest('tr');
-          const inputs = row.querySelectorAll('.employee-input');
-          const operations = [];
-  
-          inputs.forEach((inp, index) => {
-            const value = inp.value.trim();
-            if (value) {
-              const operationId = inp.name.split('_')[1];
-              const passportSizeId = inp.name.split('_')[2];
-              operations.push({operationId, passportSizeId, value, inputElement: inp});
-            }
-          });
-  
-          if (operations.length > 0) {
-            operations.forEach((op, index) => {
-              if (index === 0) {
-                // The first input remains as is, only submit its data
-              } else {
-                // For all other inputs, replace them with span after submission
-                assignOperation(op.operationId, op.passportSizeId, op.value, op.inputElement, false);
-              }
-            });
-          } else {
-            alert('Необходимо ввести ID сотрудника');
-          }
-        }
-      });
-    });
-  });
-  
-  function assignOperation(operationId, passportSizeId, value, inputElement, isFirst) {
-    fetch(`/production/technologist/passports/${passportId}/assign_operations/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken'),
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({
-        operation_id: operationId,
-        passport_size_id: passportSizeId,
-        value: value
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === 'success') {
-        if (!isFirst) {
-          const newSpan = document.createElement('span');
-          newSpan.className = 'editable'; // Assign any necessary classes
-          newSpan.textContent = value; // Set the text content to "ID (Quantity)"
-          if (inputElement.parentNode) {
-            inputElement.parentNode.replaceChild(newSpan, inputElement);
-          }
-        }
-      } else {
-        console.error('Failed to assign operation', data.message);
-        alert('Не получилось обновить');
-      }
-    });
-  }  
 </script>
 {% endblock %}

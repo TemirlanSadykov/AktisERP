@@ -21,24 +21,36 @@
     </div>
   </nav>
     <div class="container salaryConta">
-            <form method="get" class="date-filter-form formCenter">
-              <div class="form-row">
-              {{ form.as_p }}
-              </div>
-              <button type="submit" class=" btn btn-primary btn filter-btn btnWidth ml-auto">{% trans "Filter" %}</button>
-              
-            </form>
-            <form method="post" action="{% url 'process_payments' %}" class="payment-form formCenter">
-              {% csrf_token %}
-              <input type="hidden" name="start_date " class="form-control" value="{{ request.GET.start_date }}">
-              <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
-              <input type="hidden" name="salary_type" calss="form-control" value="{{ request.GET.salary_type }}">
-              <button type="submit" class="btn filter-btn btn btn-success btnWidth">{% trans "Pay" %}</button>
-            </form>
-            <a class="btn btn-info btnWidth formCenter" href="{% url 'export_salaries' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn filter-btn">
-              {% trans "Download Excel" %}
-            </a>
-
+      <div class="form-row align-items-end">
+        <div class="col-12 col-md-2 mb-3">
+          {{ form.start_date.label_tag }} {{ form.start_date }}
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+          {{ form.end_date.label_tag }} {{ form.end_date }}
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+          {{ form.salary_type.label_tag }} {{ form.salary_type }}
+        </div>
+        <div class="col-12 col-md-2 mb-3">
+          <form method="get" class="d-inline">
+            <button type="submit" class="btn btn-primary btnWidth w-100" style="font-size:13px !important;">{% trans "Filter" %}</button>
+          </form>
+        </div>
+        <div class="col-12 col-md-2" style="margin-bottom:6px !important;">
+          <form method="post" action="{% url 'process_payments' %}" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+            <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+            <input type="hidden" name="salary_type" value="{{ request.GET.salary_type }}">
+            <button type="submit" class="btn btn-success btnWidth w-100" style="font-size:13px !important;">{% trans "Pay" %}</button>
+          </form>
+        </div>
+        <div class="col-12 col-md-2" style="margin-bottom:6px !important;">
+          <a class="btn btn-info btnWidth w-100" href="{% url 'export_salaries' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" style="font-size:13px !important;">
+            {% trans "Download" %}
+          </a>
+        </div>
+      </div>
         <table class="table table-bordered table-striped tableChange">
           <thead>
             <tr>

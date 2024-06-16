@@ -8,7 +8,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; ">{% trans "Technologist Dashboard" %}</h4>
+  <h4 style="color: #232323; ">{% trans "Admin Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -30,8 +30,8 @@
   <div class="container">
     <!-- <div class="card"> -->
 
-    <div class="progress" style="margin-bottom: 20px;">
-      <div class="progress-bar" role="progressbar"
+    <div class="progress" style="margin-bottom: 20px; height:1.25rem">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
         style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:" 0" }}%;"
         aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
         {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
@@ -116,10 +116,10 @@
         <label>{% trans "Quantity:" %}</label>
         {{ size_quantity_form.quantity }}
       </div>
-      <button type="submit" class="btn edit-btn" style="margin-top: 35px;">{% trans "Add" %}</button>
+      <button type="submit" class="btn edit-btn" style="margin-top: 35px; width:100px;">{% trans "Add" %}</button>
     </form>
-  
-    <ul id="sizeQuantityList" class="size-quantity-list">
+  <br>
+    <div id="sizeQuantityList" class="size-quantity-list">
       {% for sq in size_quantities %}
       <li id="sq-{{ sq.id }}" class="size-quantity-item">
         <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
@@ -128,9 +128,9 @@
         <button class="delete-btn" id="deleteBtn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
       </li>
       {% endfor %}
-    </ul>
+    </div>
   </div>
-
+<br>
     <div class="container-fluid bottomContainer">
       <div class="row">
         <div class="col-md-6">
@@ -175,29 +175,6 @@
   };
   </script>
   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

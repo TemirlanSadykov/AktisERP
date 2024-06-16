@@ -7,7 +7,7 @@
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
     </button>
-    <h4 style="color: #232323;">{% trans 'Cutter Dashboard' %} - {% trans "Models" %}</h4>
+    <h4 style="color: #232323;">{% trans 'Cutter Dashboard' %}</h4>
     <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
         <li class="nav-item dropdown" style="margin: 10px;">
@@ -22,6 +22,7 @@
       </ul>
     </div>
   </nav>
+  
 
 
 <div class="container maincontr">
@@ -32,28 +33,28 @@
             <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Add Roll and Meters for Passport:" %} #{{ passport.order.id }}</h2>
           </div>
           <div class="card-body">
-            <form method="post">
-              {% csrf_token %}
-              <div class="form-group">
-                <label>{% trans "Roll:" %}</label>
-                {{ form.roll }}
-            </div>
-            <div class="form-group">
-                <label>{% trans "Meters:" %}</label>
-                {{ form.meters }}
-            </div>
-            <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
+            <form id="rollMetersForm" method="post" class="date-filter-form" style="align-items: flex-end;">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>{% trans "Roll:" %}</label>
+                    {{ form.roll }}
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Meters:" %}</label>
+                    {{ form.meters }}
+                </div>
+                <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
             </form><br>
-            <ul id="rollMetersList" class="roll-meters-list">
+            <div id="rollMetersList" class="roll-meters-list">
                 {% for pr in passport_rolls %}
-                <li id="rm-{{ pr.id }}" class="roll-meters-item">
+                <li id="rm-{{ pr.id }}" class="roll-meters-item" style="padding:15px; border-radius:0px; margin-bottom: 0px;">
                     <span class="detail"><strong>{% trans "Roll:" %}</strong> <span class="roll" data-pr-id="{{ pr.id }}" contenteditable="false">{{ pr.roll.name }}</span></span>
                     <span class="detail"><strong>{% trans "Meters:" %}</strong> <span class="meters" data-pr-id="{{ pr.id }}" contenteditable="false">{{ pr.meters }}</span></span>
                     <button class="edit-btn" data-rm-id="{{ pr.id }}">{% trans "Edit" %}</button>
                     <button class="delete-btn" data-rm-id="{{ pr.id }}">{% trans "Delete" %}</button>
                 </li>
                 {% endfor %}
-            </ul>
+            </div>
             <div class="form-actions">
                 <a href="{% url 'create_passport_size' passport.id %}" class="btn create-btn">{% trans "Save" %}</a>
                 <a href="{% url 'passport_detail' passport.pk %}" class="btn back-btn">{% trans "Back" %}</a>

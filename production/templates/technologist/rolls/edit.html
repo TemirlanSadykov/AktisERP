@@ -7,7 +7,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %} - {% trans "Rolls" %}</h4>
+  <h4 style="color: #232323;">{% trans 'Technologist Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -23,32 +23,6 @@
   </div>
 </nav>
 
-{% comment %}
-  <div class=" border-right" id="sidebar-wrapper">
-    <div class="d-flex justify-content-between align-items-centero">
-      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <!-- <div class="sidebar-heading sidebar-navi">Navigation</div> -->
-    <div class="list-group list-group-flush">
-      <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
-        <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
-      <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
-          <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
-      <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-home"></i> {% trans 'Rolls' %}</a>
-      <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
-      <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-users"></i> {% trans 'Operations' %}</a>
-      <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-user"></i> {% trans 'Nodes' %}</a>
-      <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
-    </div>
-  </div>
-{% endcomment%}
   <div class="container maincontr">
     <div class="row justify-content-center">
       <div class="col-md-12">
@@ -66,7 +40,7 @@
   
                 <div class="row">
                   <div class="col text-left">
-                    <button type="submit" class="btn btn-create btnset">{% trans "Update" %}</button>
+                    <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
                   </div>
                   <div class="col text-right">
                     <a href="{% url 'roll_detail' roll.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>

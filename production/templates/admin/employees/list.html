@@ -72,16 +72,7 @@
         <div class="d-flex justify-content-end mb-3 ">
           <span class="operation-text">{% trans "Employees" %}</span>
             <a href="{% url 'employee_create' %}" class=" btn create-btn mr-2 " >{% trans "Create" %}</a>
-            
-            {% comment %}
-            <button id="upload_button" type="button" class="btn create-btn " data-toggle="modal"  data-target="#uploadModal">
-              {% trans "Upload from Excel" %}
-            </button>
-            {% endcomment %}
-
-            <button type="button" data-toggle="modal"  data-target="#uploadModal" class="btn create-btn" id="openUploadPopup">{% trans "Upload from Excel" %}</button>
-
-
+            <button type="button" data-toggle="modal"  data-target="#uploadModal" class="btn create-btn" id="openUploadPopup">{% trans "Upload" %}</button>
         </div><hr>
         <ul class="list-group" >
           {% for employee in employees %}
@@ -93,13 +84,12 @@
             </li></a>
             {% endfor %}
         </ul>
-
 <div class="custom-popup" id="uploadCustomPopup">
   <div class="custom-popup-header">
-      <h5 id="uploadPopupLabel">{% trans "Upload Employees" %}</h5>
+      <h5 id="uploadPopupLabel" style="margin-bottom: 10px;">{% trans "Upload Employees" %}</h5>
       <button type="button" class="close" id="closeCustomPopupButton">&times;</button>
   </div>
-  <div class="custom-popup-body">
+  <div class="custom-popup-body" style="margin-top: 20px;">
       <form id="upload_form" action="{% url 'employee_upload' %}" method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="form-group">
@@ -134,10 +124,7 @@
             </ul>
             {% endif %}
         </nav>
-
-
         <div class="custom-popup-overlay" id="customPopupOverlay"></div>
-
     </div>
     <script>
       document.getElementById('openUploadPopup').addEventListener('click', function() {

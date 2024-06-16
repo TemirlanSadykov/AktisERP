@@ -836,6 +836,11 @@ class AssortmentDetailView(DetailView):
     template_name = 'technologist/assortments/detail.html'
     context_object_name = 'assortment'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
     model = Assortment
@@ -904,7 +909,7 @@ def model_create(request, a_id, pk=None):
         'is_copying': bool(copy_id),
         'copy_model': original if copy_id else None,
         'operations_order_json': operations_order_json,
-        'sidebar_type' : 'technology'
+        'sidebar_type' : 'technology',
     }
     return render(request, template_name, context)
 

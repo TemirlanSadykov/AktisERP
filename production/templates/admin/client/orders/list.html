@@ -77,13 +77,11 @@
           <ul class="list-group custom-list-group">
             {% for order_info in orders_with_days_left %}
             <a href="{% url 'client_order_detail' order_info.order.pk %}" class="order-link ">
-
               <li class="list-group-item custom-list-item" style="color:#007bff; padding:18px;">
                   {{ order_info.order.order_number }}
                 <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
               </li>
             </a>
-
             {% endfor %}
         </ul>
       </div>

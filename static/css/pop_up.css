@@ -120,8 +120,8 @@
 .close {
     color: #aaa;
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 18px;
+    right: 20px;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
@@ -137,9 +137,17 @@
 .confirm {
     background-color: #dc3545;
 }
+.confirm:hover {
+    background-color: #bd2c3b;
+    color: white;
+}
 
 .cancel {
     background-color: #6c757d;
+}
+.cancel:hover {
+    background-color: #50575c;
+    color:white;
 }
 
 .maincontr{

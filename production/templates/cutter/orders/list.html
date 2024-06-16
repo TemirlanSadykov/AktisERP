@@ -5,7 +5,7 @@
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
       <i class="fas fa-bars"></i>
     </button>
-    <h4 style="color: #232323;">{% trans 'Cutter Dashboard' %} - {% trans "Models" %}</h4>
+    <h4 style="color: #232323;">{% trans 'Cutter Dashboard' %}</h4>
     <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
         <li class="nav-item dropdown" style="margin: 10px;">
@@ -21,7 +21,7 @@
     </div>
   </nav>
 
-<div class="container-fluid main-cont">
+<div class="container maincontr">
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
             <a class="nav-link {% if not selected_status %}active{% endif %}" id="all-tab"  href="{% url 'order_list_cutter' %}" role="tab" aria-controls="all"

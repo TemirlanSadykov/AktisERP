@@ -28,15 +28,22 @@
   <div class="container">
     <!-- <div class="card"> -->
           <div class="card-header">
+          <div class="row">
+            <div class="col-md-9" style="margin:auto">
             {% trans "Passport Details" %} №{{ passport.id }}
+            </div>
+            <div class="col-md-3" >
+            <!-- <div class="col-md-6 text-center"> -->
+              <a href="{% url 'barcode_passport' passport.id %}" class="btn btn-primary btn edit-btn" style="background-color: white; color: #007bff;">{% trans "Barcode" %}</a>
+            </div>
           </div>
+        </div>
           <div class="card-body">
               <div class="row">
                   <div class="col-md-6 details">
                     <p><strong>{% trans "Model" %}:</strong> {{ passport.order.model.name }}</p>
                     <p><strong>{% trans "Assortment" %}:</strong> {{ passport.order.assortment.name }}</p>
                     <p><strong>{% trans "Date" %}:</strong> {{ passport.date|date:"Y-m-d" }}</p>
-                    <a href=""><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
                     <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
 
                   </div>
@@ -53,9 +60,7 @@
                 <div class="col-md-6">
                     <!-- <h3>{% trans "Rolls Used" %}</h3> -->
             </div>
-            <div class="col-md-6 text-center">
-              <a href="{% url 'barcode_passport' passport.id %}" class="btn btn-primary btn edit-btn">{% trans "Barcode" %}</a>
-            </div>
+
             </div><br>
             <div class="date-filter-form" style="margin-bottom: 10px;">
               <h4>{% trans "Rolls Used" %}</h4>
