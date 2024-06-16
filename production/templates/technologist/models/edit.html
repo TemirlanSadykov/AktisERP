@@ -87,9 +87,6 @@
   </div>
 </nav>
 
-
-
-
 <div class="container maincontr">
   <div class="card-header">
     {% if is_copying %}
@@ -99,8 +96,6 @@
     {% endif %}  
   </div>        
   <div class="col-md-12">
-
-
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
@@ -108,7 +103,6 @@
         {% if form.name.errors %}
             <div class="error">{{ form.name.errors }}</div>
         {% endif %}
-        
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
@@ -119,14 +113,7 @@
                         {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
                         {{ operation }}
                     </label>
-                </div>Edit Model
-                Название
-                ￼
-                Operations
-                ￼
-                ￼ > 10N10O - Рукав - пр - Притачать нижний рукав к нижнему срезу верхней части рукава ш ш 1 см. проложив между ними верхний волан
-                ￼ > 10N2O - Рукав - пр - Обтачать срезы паты, высечь в углах, вывернуть. Проложить отделочную строчку по краям паты шириной шва 0,1 см.
-                
+                </div>
             {% endfor %}
         </div>
         

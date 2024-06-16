@@ -85,15 +85,11 @@
   </div>
 </nav>
 
-
-
-
 <div class="container maincontr">
   <div class="card-header">
     <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Model" %}</h2>
   </div>    
   <div class="col-md-12">
-    
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
@@ -101,7 +97,6 @@
         {% if form.name.errors %}
             <div class="error">{{ form.name.errors }}</div>
         {% endif %}
-        
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
@@ -114,9 +109,7 @@
                 </div>
             {% endfor %}
         </div>
-        
         {{ form.operations_data }}
-        
         <div class="form-actions">
             <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
             <div id="selectedOperations" class="selected-operations"></div>

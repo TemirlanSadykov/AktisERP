@@ -29,7 +29,6 @@
   </div>
   <div class="container">
     <!-- <div class="card"> -->
-
     <div class="progress" style="margin-bottom: 20px; height:1.25rem">
       <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
         style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:" 0" }}%;"
@@ -88,9 +87,6 @@
         <div class="col-md-5 text-center">
           <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
         </div>
-
-        
-
       </div>
     </div>
     <div class="modal" id="deleteModal">
@@ -103,8 +99,6 @@
           </div>
       </div>
   </div>
-
-
     <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
     <form id="sizeQuantityForm" method="post" class="date-filter-form">
       {% csrf_token %}

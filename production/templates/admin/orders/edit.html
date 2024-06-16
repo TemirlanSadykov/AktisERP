@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
-
-
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
@@ -38,7 +35,6 @@
               {{ form.as_p }}
             </div>
             <div class="form-group">
-
               <div class="row">
                 <div class="col text-left">
                   <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
@@ -47,8 +43,6 @@
                   <a href="{% url 'order_detail' order.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
                 </div>
             </div>
-
-
             </div>
           </form>
         </div>
@@ -56,6 +50,4 @@
     </div>
   </div>
 </div>
-
-
 {% endblock %}

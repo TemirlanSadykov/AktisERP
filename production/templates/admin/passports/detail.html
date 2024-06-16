@@ -23,14 +23,12 @@
   </div>
 </nav>
 
-
 <div class="container maincontr">
   <div class="card-header">
     {% trans "Passport Details" %} №{{ passport.id }}       
   </div>
   <div class="container">
     <!-- <div class="card"> -->
-
           <div class="card-body">
               <!-- <div class="row"> -->
                   <!-- <div class="col-md-12 details"> -->
@@ -45,13 +43,8 @@
                       <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
                     </p>
                   <!-- </div> -->
-
-
-
               <!-- </div> -->
           </div>
-
-
           <form id="operationAssignmentForm" class="operation-form">
             {% csrf_token %}
             <table class="table">
@@ -93,7 +86,6 @@
             <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
             <a href="{% url 'order_detail' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
           </div>
-
 <!-- </div> -->
       </div>
 </div>

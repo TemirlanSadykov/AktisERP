@@ -22,13 +22,10 @@
     </ul>
   </div>
 </nav>
-
-
 <div class="container clients-wrapper maincontr">
   <div class="clients-container">
       <div class="clients-header">
         <span class="operation-text">{% trans "Assortments" %}</span>
-
           <a href="{% url 'assortment_create' %}" class="btn create-btn">{% trans "Create" %}</a>
       </div>
       <ul class="clients-list">
@@ -41,9 +38,6 @@
         {% endfor %}
       </ul>
   </div>
-
-
-
     <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
       {% if is_paginated %}
         <ul class="pagination justify-content-center">

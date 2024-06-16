@@ -83,11 +83,9 @@
       {% endfor %}
     </tbody>
   </table>
-
   <div class="total-salary">
     <h3>{% trans "Total Salary (after errors):" %} {{ total_salary|floatformat:2 }} {% trans "Som" %}</h3>
   </div>
-
   <div class="navigation-link">
     <a href="{% url 'salary_list' %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}" class="btn back-btn">{% trans "Back" %}</a>
   </div>
