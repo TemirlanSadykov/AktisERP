@@ -220,11 +220,11 @@ class OperationForm(forms.ModelForm):
         model = Operation
         fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
-            'payment': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter payment'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'payment': forms.NumberInput(attrs={'class': 'form-control'}),
             'equipment': forms.Select(attrs={'class': 'form-control'}),
             'node': forms.Select(attrs={'class': 'form-control'}),
-            'preferred_completion_time': forms.DateTimeInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD HH:MM:SS'}),
+            'preferred_completion_time': forms.DateTimeInput(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
             'employee': forms.Select(attrs={'class': 'form-control'}),
         }
