@@ -762,3 +762,21 @@ ul.breadcrumb li a:hover {
 
 
 
+.btn-outline-custom {
+    border-color: #007bff;
+    color: #007bff;
+    padding: 6px 43px;
+    height: 38px;
+
+}
+
+.btn-outline-custom:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-outline-custom:active {
+    background-color: #0056b3; 
+    border-color: #0056b3; 
+    color: white;
+}
