@@ -45,7 +45,7 @@
               {% if client_order.status != client_order.COMPLETED %}
               <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form ">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success completebutton" style="">{% trans "Complete" %}</button>
+                <button type="submit" class="btn btn-success completebutton" >{% trans "Complete" %}</button>
               </form>
             {% endif %}
           </div>
