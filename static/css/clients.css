@@ -758,5 +758,12 @@ ul.breadcrumb li a:hover {
   transform: translateX(calc(1.5rem - 0.25rem));
 } 
 
+  .completebutton {
+  margin:auto; background-color:white; border-color: #007bff; color: #007bff;
+}
+          .completebutton:hover {
+    background-color: #007bff;
+    color: white;
+}
 
 
