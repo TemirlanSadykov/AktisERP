@@ -18,7 +18,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @employee_required
 def employee_page(request):
-    return render(request, 'employee_page.html')
+    context = {
+            'sidebar_type': 'emp'
+            }
+    return render(request, 'employee_page.html', context)
 
 @login_required
 @employee_required
