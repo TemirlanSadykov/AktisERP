@@ -57,9 +57,14 @@
                   <form id="deleteForm" action="{% url 'operation_delete' operation.pk %}" method="post" style="display:none;">
                     {% csrf_token %}
                   </form>
-
-                  <div class="col-md-5 text-center">
+            <div class="col-md-5 text-center">
+            {% if operation.photo %}
+            <div class="operation-photo">
+              <img src="{{ operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+            </div>
+          {% else %}
                       <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+              {% endif %}
                   </div>
               </div>
           </div>
