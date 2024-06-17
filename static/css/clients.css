@@ -766,7 +766,7 @@ ul.breadcrumb li a:hover {
 }
           .completebutton:hover {
     background-color: #007bff;
-    color: white;
+    color: white !important;
 }
 
 
