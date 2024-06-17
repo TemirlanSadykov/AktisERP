@@ -45,7 +45,7 @@
                     <p><strong>{% trans "Equipment:" %}</strong> {{ operation.equipment }}</p>
                     <p><strong>{% trans "Node:" %}</strong> {{ operation.node }}</p>
                     <p><strong>{% trans "Preferred Completion Time:" %}</strong> {{ operation.preferred_completion_time }} {% trans "seconds" %}</p>
-                    <p>      <strong>{% trans "Average Completion Time:" %}</strong> {{ operation.average_completion_time }} {% trans "seconds" %}                    </p>
+                    <p><strong>{% trans "Average Completion Time:" %}</strong> {{ operation.average_completion_time }} {% trans "seconds" %}</p>
                     <p><a href="{% url 'calculate_average' operation.pk %}" class="btn btn-primary">{% trans "Calculate Average" %}</a></p>
                     {% if operation.employee %}
                       <p><strong>{% trans "Assigned Employee:" %}</strong> {{ operation.employee.employee_id }} - {{ operation.employee.user.get_full_name }}</p>
