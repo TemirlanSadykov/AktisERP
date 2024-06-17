@@ -3,6 +3,16 @@
 {% load i18n %}
 {% load static %}
 {% block content %}
+
+<style>
+  .completebutton {
+  margin:auto; background-color:white; border-color: #007bff; color: #007bff;
+}
+          .completebutton:hover {
+    background-color: #007bff;
+    color: white;
+}
+</style>
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
@@ -35,7 +45,7 @@
               {% if client_order.status != client_order.COMPLETED %}
               <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form ">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success btn-outline-custom" style="margin:auto;">{% trans "Complete" %}</button>
+                <button type="submit" class="btn btn-success completebutton" style="">{% trans "Complete" %}</button>
               </form>
             {% endif %}
           </div>
