@@ -151,7 +151,7 @@ input {
 }
 @media (max-width: 759px) {
     .headingData{
-        margin: 0px 0px;
+        margin: 0px 0px 0px 50px;
 
     }
 }

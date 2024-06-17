@@ -155,6 +155,8 @@
             {% elif sidebar_type == 'emp' %}
             <div id="sidebar" class="list-group list-group-flush">
                 {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black" data-id="user_redirect">
+                    <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
                 <a href="{% url 'done_works_list' %}" class="list-group-item list-group-item-action text-black" data-id="work">
                     <i class="fas fa-check fa-fw"></i><span class="sidetext">{% trans 'Done Work' %}</span></a>
                 <a href="{% url 'pending_works_list' %}" class="list-group-item list-group-item-action text-black" data-id="Pending">
