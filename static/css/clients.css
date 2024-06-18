@@ -769,4 +769,13 @@ ul.breadcrumb li a:hover {
     color: white !important;
 }
 
-
+/* responsive navbar */
+  @media screen and (max-width: 667px) {
+  .navres {
+        justify-content: space-between;
+  }
+    .navfont{
+          font-size: large;
+          padding: 0px 32px 0px 0px;
+    }
+}
