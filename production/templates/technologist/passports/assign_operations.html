@@ -88,7 +88,7 @@
                                 </div>
                                 {% endfor %}
                             {% else %}
-                                <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;">
+                                <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;" enterkeyhint="done">
                             {% endif %}
                         </td>
                         {% endfor %}
@@ -164,7 +164,7 @@
   document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.employee-input').forEach(input => {
       input.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter' || event.key === 'Tab') {
+        if (event.key === 'Enter') {
           event.preventDefault();
           const operationId = input.name.split('_')[1];
           const passport_size_id = input.name.split('_')[2];
@@ -204,7 +204,7 @@
         input.addEventListener('blur', () => revertToSpan(input.value));
   
         input.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter' || e.key === 'Tab') {
+          if (e.key === 'Enter') {
             e.preventDefault();
             const workId = input.getAttribute('data-work');
             updateWork(workId, input.value, revertToSpan);
@@ -428,7 +428,7 @@
   document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.employee-input').forEach(input => {
       input.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter' || event.key === 'Tab') {
+        if (event.key === 'Enter') {
           event.preventDefault();
           const row = input.closest('tr');
           const inputs = row.querySelectorAll('.employee-input');
