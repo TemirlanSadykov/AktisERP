@@ -120,9 +120,9 @@
                 <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="user_redirect">
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span>
                 </a>
-                <a href="{% url 'dashboard_page' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="dashboard">
+                {% comment %} <a href="{% url 'dashboard_page' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="dashboard">
                     <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Dashboard' %}</span>
-                </a>
+                </a> {% endcomment %}
                 <a href="{% url 'client_order_list' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="orders">
                     <i class="fas fa-table  fa-fw"></i><span class="sidetext">{% trans 'Orders' %}</span>
                 </a>
