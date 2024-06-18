@@ -38,6 +38,7 @@ def admin_page(request):
     branches = Branch.objects.all()
     context = {
         'branches': branches,
+        'sidebar_type': 'admin',
     }
     return render(request, 'admin_page.html', context)
 

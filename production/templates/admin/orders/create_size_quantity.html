@@ -1,43 +1,65 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
-<div class="content-container">
-  
 
-  <div class="filter-header">
-    <h2 class="list-heading">{% trans "Add Size and Quantity for Order:" %} {{ order.id }}</h2>
-    <form id="sizeQuantityForm" method="post" class="date-filter-form">
-      {% csrf_token %}
-      <div class="form-group">
-        <label>{% trans "Size:" %}</label>
-        {{ form.size }}
-      </div>
-      <div class="form-group">
-        <label>{% trans "Quantity:" %}</label>
-        {{ form.quantity }}
-      </div>
-      <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
-    </form>
-  </div>
-  
-
-  <ul id="sizeQuantityList" class="size-quantity-list">
-    {% for sq in size_quantities %}
-      <li id="sq-{{ sq.id }}" class="size-quantity-item">
-        <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
-        <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span></span>
-        <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
-        <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
       </li>
-    {% endfor %}
-  </ul>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
 
-  <div class="form-actions">
-    <a href="{% url 'client_order_detail' order.client_order.pk %}" class="btn create-btn">{% trans "Finish" %}</a>
+<div class="container maincontr">
+  <div class="row justify-content-center" >
+    <div class="col-md-12">
+      <!-- <div class="card"> -->
+        <div class="card-header">
+          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Add Size and Quantity for Order:" %} {{ order.id }}</h2>
+        </div>
+        <div class="card-body">
+          <form id="sizeQuantityForm" method="post" class="date-filter-form" style="align-items: flex-end;">
+            {% csrf_token %}
+            <div class="form-group">
+              <label>{% trans "Size:" %}</label>
+              {{ form.size }}
+            </div>
+            <div class="form-group">
+              <label>{% trans "Quantity:" %}</label>
+              {{ form.quantity }}
+            </div>
+            <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
+          </form><br>
+          <div id="sizeQuantityList" class="size-quantity-list">
+            {% for sq in size_quantities %}
+              <li id="sq-{{ sq.id }}" class="size-quantity-item">
+                <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
+                <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span></span>
+                <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
+                <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
+              </li>
+            {% endfor %}
+            </div>
+          <div class="form-actions">
+            <a href="{% url 'client_order_detail' order.client_order.pk %}" class="btn create-btn">{% trans "Finish" %}</a>
+          </div>
+        </div>
+      <!-- </div> -->
+    </div>
   </div>
 </div>
-
 
 <script>
   var orderId = "{{ order.id }}";

@@ -18,7 +18,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @employee_required
 def employee_page(request):
-    return render(request, 'employee_page.html')
+    context = {
+            'sidebar_type': 'emp'
+            }
+    return render(request, 'employee_page.html', context)
 
 @login_required
 @employee_required
@@ -31,14 +34,19 @@ def done_works_list(request):
         assigned_works = assigned_works.filter(end_time__date__gte=datetime.strptime(start_date, '%Y-%m-%d').date())
     if end_date:
         assigned_works = assigned_works.filter(end_time__date__lte=datetime.strptime(end_date, '%Y-%m-%d').date())
-    return render(request, 'employee/works/done_list.html', {'assigned_works': assigned_works, 'start_date': start_date, 'end_date': end_date})
+
+    sidebar_type = 'emp'
+    return render(request, 'employee/works/done_list.html', {'assigned_works': assigned_works, 'start_date': start_date, 'end_date': end_date, 'sidebar_type':sidebar_type})
+
+    
 
 @login_required
 @employee_required
 def pending_works_list(request):
     user_profile = request.user.userprofile
     assigned_works = AssignedWork.objects.filter(employee=user_profile, end_time__isnull=True).select_related('work', 'work__operation', 'work__passport_size')
-    return render(request, 'employee/works/pending_list.html', {'assigned_works': assigned_works})
+    sidebar_type = 'emp'
+    return render(request, 'employee/works/pending_list.html', {'assigned_works': assigned_works, 'sidebar_type' : sidebar_type})
 
 @login_required
 @employee_required
@@ -58,8 +66,8 @@ def reassigned_works_list(request):
         new_employee=user_profile, 
         is_completed=False
     ).select_related('original_assigned_work__work', 'original_assigned_work__work__operation')
-
-    return render(request, 'employee/works/reassigned_list.html', {'reassigned_works': reassigned_works})
+    sidebar_type = 'emp'
+    return render(request, 'employee/works/reassigned_list.html', {'reassigned_works': reassigned_works, 'sidebar_type':sidebar_type})
 
 @login_required
 @employee_required

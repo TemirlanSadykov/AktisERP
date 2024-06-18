@@ -28,7 +28,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @qc_required
 def qc_page(request):
-    return render(request, 'qc_page.html')
+    context = {
+            'sidebar_type': 'qc_page'
+            }
+    return render(request, 'qc_page.html', context)
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class OrderListQcView(RestrictOrderBranchMixin, ListView):
@@ -67,6 +70,7 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['sidebar_type'] = 'qc_page'
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
@@ -116,7 +120,8 @@ class OrderDetailQcView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'sidebar_type' : 'qc_page'
         })
 
         return context
@@ -228,6 +233,7 @@ class DefectCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         order_pk = self.kwargs['order_pk']
         context['order'] = get_object_or_404(Order, pk=order_pk)
+        context['sidebar_type'] = 'qc_page'
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
@@ -257,6 +263,7 @@ class DefectUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         error_pk = self.kwargs['pk']
         context['error'] = get_object_or_404(Error, pk=error_pk)
+        context['sidebar_type'] = 'qc_page'
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')

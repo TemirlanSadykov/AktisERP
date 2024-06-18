@@ -28,7 +28,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @cutter_required
 def cutter_page(request):
-    return render(request, 'cutter_page.html')
+    context = {
+            'sidebar_type': 'cutter'
+            }
+    return render(request, 'cutter_page.html', context)
 
 @method_decorator([login_required, cutter_required], name='dispatch')
 class OrderListCutterView(RestrictOrderBranchMixin, ListView):
@@ -68,6 +71,7 @@ class OrderListCutterView(RestrictOrderBranchMixin, ListView):
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['selected_status'] = self.request.GET.get('status', '')
         context['Order'] = Order
+        context['sidebar_type'] = 'cutter'
         return context
 
 @method_decorator([login_required, cutter_required], name='dispatch')
@@ -106,7 +110,8 @@ class OrderDetailCutterView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'sidebar_type' : 'cutter'
         })
 
         return context
@@ -142,6 +147,7 @@ class PassportRollCreateView(CreateView):
         passport = get_object_or_404(Passport, pk=passport_id)
         context['passport'] = passport
         context['passport_rolls'] = PassportRoll.objects.filter(passport=passport)
+        context['sidebar_type'] = 'cutter'
         return context
 
     def form_valid(self, form):
@@ -226,6 +232,7 @@ class PassportSizeCreateView(CreateView):
         passport = get_object_or_404(Passport, pk=passport_id)
         context['passport'] = passport
         context['passport_sizes'] = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
+        context['sidebar_type'] = 'cutter'
         return context
 
     def get_form_kwargs(self):
@@ -297,6 +304,7 @@ class PassportDetailView(DetailView):
         passport = context['passport']
         context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
         context['passport_rolls'] = passport.passport_rolls.all()
+        context['sidebar_type'] = 'cutter'
         return context
 
 @login_required

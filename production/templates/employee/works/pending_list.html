@@ -2,79 +2,114 @@
 {% load i18n %}
 
 {% block content %}
-<div class="employee-pending-work-container">
-  <div class="employee-header">
-    <h1 class="employee-list-heading">{% trans "My Works" %}</h1>
-  </div>
 
-  {% if assigned_works %}
-    <div class="employee-cards-container">
-      {% for assigned_work in assigned_works %}
-      <div class="employee-card">
-        <div class="employee-operation-name">{{ assigned_work.work.operation.number }} - {{ assigned_work.work.operation.name }}</div>
-        <div class="employee-operation-photo">
-          {% if assigned_work.work.operation.photo %}
-            <img src="{{ assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
-          {% else %}
-            {% trans "No photo" %}
-          {% endif %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323;  margin:auto;" class="navfont" >{% trans "Employee Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+<div class="container clients-wrapper maincontr">
+  <div class="clients-container">
+
+
+      <div class="clients-header">
+        <span class="operation-text">        {% trans "My Works" %}
+        </span>
         </div>
-        <div class="employee-details">
-          <div class="employee-passport">
-            {% trans "Passport:" %}
-            {% if assigned_work.work.passport %}
-              <strong>{{ assigned_work.work.passport }} - {{ assigned_work.work.passport.order.model.name }}</strong>
-            {% else %}
-              --
-            {% endif %}
+
+        {% if assigned_works %}
+        <div class="employee-cards-container">
+          {% for assigned_work in assigned_works %}
+          <div class="employee-card">
+            <div class="employee-operation-name">{{ assigned_work.work.operation.number }} - {{ assigned_work.work.operation.name }}</div>
+            <div class="employee-operation-photo">
+              {% if assigned_work.work.operation.photo %}
+                <img src="{{ assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+              {% else %}
+                {% trans "No photo" %}
+              {% endif %}
+            </div>
+            <div class="employee-details">
+              <div class="employee-passport">
+                {% trans "Passport:" %}
+                {% if assigned_work.work.passport %}
+                  <strong>{{ assigned_work.work.passport }} - {{ assigned_work.work.passport.order.model.name }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-size">
+                {% trans "Size:" %}
+                {% if assigned_work.work.passport_size.size_quantity %}
+                  <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-quantity">
+                {% trans "Assigned Quantity:" %} <strong>{{ assigned_work.quantity }}</strong>
+              </div>
+              <div class="employee-start-time">
+                {% trans "Start:" %}
+                {% if assigned_work.start_time %}
+                  <strong>{{ assigned_work.start_time|date:"H:i:s" }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-end-time">
+                {% trans "End:" %}
+                {% if assigned_work.end_time %}
+                  <strong>{{ assigned_work.end_time|date:"H:i:s" }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-actions">
+                {% if not assigned_work.start_time %}
+                  <form action="{% url 'start_work' assigned_work.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">{% trans "Start" %}</button>
+                  </form>
+                {% endif %}
+                {% if assigned_work.start_time and not assigned_work.end_time %}
+                  <form action="{% url 'finish_work' assigned_work.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">{% trans "Finish" %}</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
           </div>
-          <div class="employee-size">
-            {% trans "Size:" %}
-            {% if assigned_work.work.passport_size.size_quantity %}
-              <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
-            {% else %}
-              --
-            {% endif %}
-          </div>
-          <div class="employee-quantity">
-            {% trans "Assigned Quantity:" %} <strong>{{ assigned_work.quantity }}</strong>
-          </div>
-          <div class="employee-start-time">
-            {% trans "Start:" %}
-            {% if assigned_work.start_time %}
-              <strong>{{ assigned_work.start_time|date:"H:i:s" }}</strong>
-            {% else %}
-              --
-            {% endif %}
-          </div>
-          <div class="employee-end-time">
-            {% trans "End:" %}
-            {% if assigned_work.end_time %}
-              <strong>{{ assigned_work.end_time|date:"H:i:s" }}</strong>
-            {% else %}
-              --
-            {% endif %}
-          </div>
-          <div class="employee-actions">
-            {% if not assigned_work.start_time %}
-              <form action="{% url 'start_work' assigned_work.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit">{% trans "Start" %}</button>
-              </form>
-            {% endif %}
-            {% if assigned_work.start_time and not assigned_work.end_time %}
-              <form action="{% url 'finish_work' assigned_work.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit">{% trans "Finish" %}</button>
-              </form>
-            {% endif %}
-          </div>
+          {% endfor %}
         </div>
-      </div>
-      {% endfor %}
+      {% else %}
+
+      <div class="list-group" >
+        <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da; border-radius: 0px;">
+          {% trans "No works found." %}
+          </a>
     </div>
-  {% else %}
-    <p>{% trans "No works found." %}</p>
-  {% endif %}
+        {% endif %}
+        </div>
+
 </div>
+
 {% endblock %}

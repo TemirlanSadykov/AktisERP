@@ -4,10 +4,10 @@
 {% block content %}
 <style>
   .assign-operations-container {
-    padding: 20px;
-    background-color: #f7f7f7;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 60px;
+    /* background-color: #f7f7f7; */
+    /* border-radius: 8px; */
+    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
   }
 
   .form-heading {
@@ -18,10 +18,10 @@
   .checkbox label {
     display: block;
     padding: 10px;
-    margin: 5px 0;
+    margin: 0px 0;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    /* border-radius: 4px; */
     cursor: pointer;
   }
 
@@ -64,9 +64,32 @@
     background-color: #0056b3;
   }
 </style>
-<div class="assign-operations-container">
-    <h2 class="form-heading">{% trans "Create New Model" %}</h2>
-        
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="card-header">
+    <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Model" %}</h2>
+  </div>    
+  <div class="col-md-12">
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
@@ -74,7 +97,6 @@
         {% if form.name.errors %}
             <div class="error">{{ form.name.errors }}</div>
         {% endif %}
-        
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
@@ -87,15 +109,14 @@
                 </div>
             {% endfor %}
         </div>
-        
         {{ form.operations_data }}
-        
         <div class="form-actions">
             <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
             <div id="selectedOperations" class="selected-operations"></div>
             <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
         </div>
     </form>
+    </div>
 </div>
 
 <script>

@@ -13,19 +13,31 @@ class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
         fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'})
+        }
 
 class UserWithProfileForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, required=True)
-    last_name = forms.CharField(max_length=30, required=True)
-    employee_id = forms.CharField(max_length=100, required=True)
-    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
-    status = forms.BooleanField(required=False, initial=False)
-    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
+    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    employee_id = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
+    status = forms.BooleanField(required=False, initial=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input','style': 'margin:7px 0px 0px 10px'}))
+    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
-
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        
     def save(self, commit=True):
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
@@ -42,16 +54,46 @@ class UserWithProfileForm(UserCreationForm):
         return user
 
 class UserEditForm(forms.ModelForm):
-    employee_id = forms.CharField(max_length=100, required=True)
-    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True)
-    status = forms.BooleanField(required=False)
-    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True)
-    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True, label='Branch')
-    new_password = forms.CharField(label='New Password', widget=forms.PasswordInput, required=False, help_text="Leave blank if you do not want to change the password.")
+    employee_id = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    type = forms.ChoiceField(
+        choices=UserProfile.TYPE_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    status = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin:7px 0px 0px 10px'})
+    )
+    station = forms.ChoiceField(
+        choices=UserProfile.STATION_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(),
+        required=True,
+        label='Branch',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    new_password = forms.CharField(
+        label='New Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=False,
+        help_text="Leave blank if you do not want to change the password."
+    )
 
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station', 'branch']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super(UserEditForm, self).__init__(*args, **kwargs)
@@ -98,36 +140,41 @@ class SizeQuantityForm(forms.ModelForm):
     class Meta:
         model = SizeQuantity
         fields = ['size', 'quantity']
+        widgets = {
+            'size': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Size'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+        }
 
 class DateForm(forms.Form):
-    date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date'}))
+    date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}))
 
 class DateRangeForm(forms.Form):
     start_date = forms.DateField(
         label='Начало',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
         required=False 
     )
     end_date = forms.DateField(
         label='Окончание',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
         required=False
     )
 
 class SalaryListForm(forms.Form):
     start_date = forms.DateField(
         label='Начало',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
         required=False 
     )
     end_date = forms.DateField(
         label='Окончание',
-        widget=forms.TextInput(attrs={'type': 'date'}),
+        widget=forms.TextInput(attrs={'type': 'date', 'class': 'form-control'}),
         required=False
     )
     salary_type = forms.ChoiceField(
         label='Тип зарплаты',
         choices=(('non_fixed', 'По факту'), ('fixed', 'Оклад')),
+        widget=forms.Select(attrs={'class': 'form-control'}),
         required=False
     )
 
@@ -138,8 +185,8 @@ class PassportRollForm(forms.ModelForm):
         model = PassportRoll
         fields = ['roll', 'meters']
         widgets = {
-            'roll': forms.Select(),
-            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'})
+            'roll': forms.Select(attrs={'class': 'form-control'}),
+            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'})
         }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,13 +197,14 @@ class SizeQuantityChoiceField(ModelChoiceField):
         return obj.size
 
 class PassportSizeForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------") 
+    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}) ) 
 
     class Meta:
         model = PassportSize
         fields = ['size_quantity', 'quantity']
         widgets = {
-            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0'})
+            'size_quantity': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -171,16 +219,33 @@ class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
         fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'payment': forms.NumberInput(attrs={'class': 'form-control'}),
+            'equipment': forms.Select(attrs={'class': 'form-control'}),
+            'node': forms.Select(attrs={'class': 'form-control'}),
+            'preferred_completion_time': forms.DateTimeInput(attrs={'class': 'form-control'}),
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+        }
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
         fields = ['name', 'color', 'fabrics', 'meters']
-
+        widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+                'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
+                'fabrics': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
+                'meters': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter meters'}),
+            }
+    
 class AssortmentForm(forms.ModelForm):
     class Meta:
         model = Assortment
         fields = ['name']
+        widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control'})
+            }
 
 class ModelCustomForm(forms.ModelForm):
     operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # Stores JSON order data
@@ -188,7 +253,11 @@ class ModelCustomForm(forms.ModelForm):
     class Meta:
         model = Model
         fields = ['name', 'operations']  # Ensure 'operations' is handled by the form
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'operations': forms.Select(attrs={'class': 'form-control'}),
+        }
+        
     def __init__(self, *args, **kwargs):
         self.assortment_id = kwargs.pop('a_id', None)
         copy_id = kwargs.pop('copy_id', None)
@@ -239,13 +308,20 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = ['name', 'contact_info']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_info': forms.TextInput(attrs={'class': 'form-control'})
+        }
 
 class ClientOrderForm(forms.ModelForm):
     class Meta:
         model = ClientOrder
         fields = ['order_number', 'client', 'term', 'status']
         widgets = {
-            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date'}),
+            'order_number': forms.TextInput(attrs={'class': 'form-control','placeholder':'Order number'}),
+            'client': forms.Select(attrs={'class': 'form-control'}),
+            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def clean_term(self):
@@ -260,7 +336,14 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
-            'status': forms.Select(choices=Order.TYPE_CHOICES), 
+            'model': forms.Select(attrs={'class': 'form-control'}),
+            'assortment': forms.Select(attrs={'class': 'form-control'}),
+            'color': forms.TextInput(attrs={'class': 'form-control'}),
+            'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
+            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'payment': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -286,22 +369,37 @@ class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
         fields = ['name', 'number', 'is_common', 'type']
+        widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+                'number': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter number'}),
+                'is_common': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+                'type': forms.Select(attrs={'class': 'form-control'}),
+            }
+    
 
 class EquipmentForm(forms.ModelForm):
     class Meta:
         model = Equipment
         fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter equipment name'}),
+        }
 
 class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
 
 class ErrorForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none())
+    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none(),widget=forms.Select(attrs={'class': 'form-control'}))
 
     class Meta:
         model = Error
         fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
+        widgets = {
+            'passport': forms.TextInput(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'defect_type': forms.Select(attrs={'class': 'form-control'}),
+        }
     
     def __init__(self, *args, **kwargs):
         order_pk = kwargs.pop('order_pk', None)
@@ -333,6 +431,10 @@ class FixedSalaryForm(forms.ModelForm):
     class Meta:
         model = FixedSalary
         fields = ['position', 'salary', 'employees']
+        widgets = {
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'salary': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
         
 class UploadFileForm(forms.Form):
     excel_file = forms.FileField(
@@ -353,3 +455,4 @@ class ErrorResponsibilityForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['employee'].queryset = UserProfile.objects.all().order_by('employee_id')
+

@@ -23,7 +23,10 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @packer_required
 def packer_page(request):
-    return render(request, 'packer_page.html')
+    context = {
+        'sidebar_type': 'packer'
+        }
+    return render(request, 'packer_page.html' , context)
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class OrderListPackerView(RestrictOrderBranchMixin, ListView):
@@ -62,6 +65,7 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
+        context['sidebar_type'] = 'packer'
         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
@@ -115,6 +119,7 @@ class OrderDetailPackerView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
+            'sidebar_type' : 'packer',
         })
         return context
     
@@ -173,6 +178,7 @@ class DiscrepancyCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         order_pk = self.kwargs['order_pk']
         context['order'] = get_object_or_404(Order, pk=order_pk)
+        context['sidebar_type'] = 'packer'
         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
@@ -202,6 +208,7 @@ class DiscrepancyUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         error_pk = self.kwargs['pk']
         context['error'] = get_object_or_404(Error, pk=error_pk)
+        context['sidebar_type'] = 'packer'
         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')

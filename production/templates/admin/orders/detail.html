@@ -1,25 +1,50 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 {% load i18n %}
-
+{% load static %}
 {% block content %}
-<div class="content-container">
-  <h2 class="form-heading">{% trans "Model Details:" %} {{ order.model.name }}</h2>
 
-  <div class="progress" style="margin-bottom: 20px;">
-    <div class="progress-bar" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"0" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
-      {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
-    </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Admin Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
   </div>
-
-  {% if errors %}
+</nav>
+<div class="container maincontr">
+  <div class="card-header">
+    {% trans "Model Details:" %} {{ order.model.name }}
+  </div>
+  <div class="container">
+    <!-- <div class="card"> -->
+    <div class="progress" style="margin-bottom: 20px; height:1.25rem">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+        style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:" 0" }}%;"
+        aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
+        {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
+      </div>
+    </div>
+    {% if errors %}
     <div class="errors-list">
       {% for error in errors %}
-        <p class="error-item">
-          <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
-            {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans "Discrepancy" %} {% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
-          </a>
-        </p>
+      <p class="error-item">
+        <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
+          {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans
+          "Discrepancy" %} {% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
+        </a>
+      </p>
       {% endfor %}
     </div>
     <div id="errorDetailsPopupOverlay" class="popup-overlay" style="display: none;">
@@ -36,73 +61,116 @@
             <button type="button" onclick="closeErrorPopup()" class="btn back-btn">{% trans "Close" %}</button>
           </div>
         </form>
-      </div>  
+      </div>
     </div>
-  {% endif %}
-
-  <div class="details">
-    <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client }}</p>
-    <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
-    <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
-    <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
-    <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
-    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
-    <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
-    <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
-    <p><strong>{% trans "Payment:" %}</strong> {{ order.payment }}</p>
-    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
-    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+    {% endif %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client }}</p>
+          <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+          <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
+          <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
+          <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
+          <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
+          <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+          <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+          <p><strong>{% trans "Payment:" %}</strong> {{ order.payment }}</p>
+          <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+          <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+          <a href="{% url 'order_edit' order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
+          <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+        </div>
+        <form id="deleteForm" action="{% url 'order_delete' order.pk %}" method="post" style="display:none;">
+          {% csrf_token %}
+        </form>
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="deleteModal">
+      <div class="modal-content">
+          <span class="close" id="closeBtn">&times;</span>
+          <p>Are you sure you want to delete this branch?</p>
+          <div class="modal-buttons">
+              <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+              <button class="btn cancel" id="cancelBtn">Cancel</button>
+          </div>
+      </div>
   </div>
-
-  <div class="form-actions">
-    <a href="{% url 'order_edit' order.pk %}" class="btn edit-btn">{% trans "Edit" %}</a>
-    <a href="javascript:;" onclick="confirmDelete()" class="btn delete-btn">{% trans "Delete" %}</a>
-    <a href="{% url 'client_order_detail' order.client_order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
-  </div>
-
-  <form id="deleteForm" action="{% url 'order_delete' order.pk %}" method="post" style="display:none;">
-    {% csrf_token %}
-  </form>
-
-  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
-  <form id="sizeQuantityForm" method="post" class="date-filter-form">
-    {% csrf_token %}
-    <div class="form-group">
-      <label>{% trans "Size:" %}</label>
-      {{ size_quantity_form.size }}
-    </div>
-    <div class="form-group">
-      <label>{% trans "Quantity:" %}</label>
-      {{ size_quantity_form.quantity }}
-    </div>
-    <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
-  </form>
-  <ul id="sizeQuantityList" class="size-quantity-list">
-    {% for sq in size_quantities %}
+    <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
+    <form id="sizeQuantityForm" method="post" class="date-filter-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>{% trans "Size:" %}</label>
+        {{ size_quantity_form.size }}
+      </div>
+      <div class="form-group">
+        <label>{% trans "Quantity:" %}</label>
+        {{ size_quantity_form.quantity }}
+      </div>
+      <button type="submit" class="btn edit-btn" style="margin-top: 35px; width:100px;">{% trans "Add" %}</button>
+    </form>
+  <br>
+    <div id="sizeQuantityList" class="size-quantity-list">
+      {% for sq in size_quantities %}
       <li id="sq-{{ sq.id }}" class="size-quantity-item">
         <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
-        <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span></span>
+        <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{sq.quantity }}</span></span>
         <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
-        <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
+        <button class="delete-btn" id="deleteBtn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
       </li>
-    {% endfor %}
-  </ul>
-
-  <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Associated Passports" %}</h3>
-  <div class="passports-list">
-    {% if passports %}
-      {% for passport in passports %}
-        <p class="passport-item" style="color: {{ passport.is_completed|yesno:'green,red' }};">
-          <a href="{% url 'passport_detail_admin' passport.pk %}" class="passport-link">
-            {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
-          </a>
-        </p>
       {% endfor %}
-    {% else %}
-      <p>{% trans "No associated passports." %}</p>
-    {% endif %}
+    </div>
   </div>
+<br>
+    <div class="container-fluid bottomContainer">
+      <div class="row">
+        <div class="col-md-6">
+          <h3>{% trans "Associated Models" %}</h3>
+        </div>
+      </div><br>
+      {% if passports %}
+      {% for passport in passports %}
+      <div class="list-group">
+        <a href="{% url 'passport_detail_admin' passport.pk %}" class="list-group-item list-group-item-action"
+          style="color: {{ passport.is_completed|yesno:'green,red' }}; border: 1px solid #ced4da; border-radius:0px;">
+          {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {{ passport.is_completed|yesno:'Yes,No' }}
+        </a>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+          {% trans "No associated passports." %}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    <!-- </div> -->
 </div>
+
+<script>
+  document.getElementById('deleteBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'flex';
+  };
+  
+  document.getElementById('closeBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+  };
+  
+  document.getElementById('cancelBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+  };
+  
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+      document.getElementById('deleteForm').submit();
+  };
+  </script>
+  
+
+
 
 <script>
   function confirmDelete() {
@@ -123,172 +191,172 @@
 
 {% verbatim %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  const form = document.getElementById('sizeQuantityForm');
-  
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const actionUrl = `/production/admin/orders/${orderId}/create_size_quantity/`;  
-    
-    fetch(actionUrl, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        updateSizeQuantityList(data.sizeQuantities);
-        form.reset();  // Clear the form inputs after successful submission
-      } else {
-        console.error('Submission failed', data.errors);
-        alert('Отправка не удалась');
-      }
-    })
-    .catch(error => console.error('There has been a problem with your fetch operation:', error));
-  });
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById('sizeQuantityForm');
 
-  document.getElementById('sizeQuantityList').addEventListener('click', function(e) {
-    if (e.target.classList.contains('edit-btn')) {
-      handleEdit(e.target);
-    } else if (e.target.classList.contains('delete-btn')) {
-      handleDelete(e.target);
-    }
-  });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const actionUrl = `/production/admin/orders/${orderId}/create_size_quantity/`;
 
-  function handleEdit(button) {
-    let sqId = button.getAttribute("data-sq-id");
-    let parentLi = document.querySelector(`#sq-${sqId}`);
-    let sizeSpan = parentLi.querySelector(".size");
-    let quantitySpan = parentLi.querySelector(".quantity");
+      fetch(actionUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updateSizeQuantityList(data.sizeQuantities);
+            form.reset();  // Clear the form inputs after successful submission
+          } else {
+            console.error('Submission failed', data.errors);
+            alert('Отправка не удалась');
+          }
+        })
+        .catch(error => console.error('There has been a problem with your fetch operation:', error));
+    });
 
-    if (!sizeSpan.isContentEditable) {
-      sizeSpan.contentEditable = "true";
-      quantitySpan.contentEditable = "true";
-      sizeSpan.focus();
-      button.textContent = saveText;
-    } else {
-      sizeSpan.contentEditable = "false";
-      quantitySpan.contentEditable = "false";
-      button.textContent = editText;
-      let updatedSize = sizeSpan.textContent;
-      let updatedQuantity = quantitySpan.textContent;
-      updateSizeQuantity(sqId, updatedSize, updatedQuantity);
-    }
-  }
-
-  function handleDelete(button) {
-    let sqId = button.getAttribute("data-sq-id");
-    if (confirm(confirmDeleteText)) {
-      deleteSizeQuantity(sqId);
-    }
-  }
-
-  function updateSizeQuantity(sqId, size, quantity) {
-    fetch(`/production/admin/orders/edit-size-quantity/${sqId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ size: size, quantity: quantity })
-    })
-    .then(response => {
-      if (response.ok) {
-        let sizeSpan = document.querySelector(`.size[data-sq-id="${sqId}"]`);
-        let quantitySpan = document.querySelector(`.quantity[data-sq-id="${sqId}"]`);
-        sizeSpan.textContent = size;
-        quantitySpan.textContent = quantity;
-      } else {
-        alert('Не получилось обновить');
+    document.getElementById('sizeQuantityList').addEventListener('click', function (e) {
+      if (e.target.classList.contains('edit-btn')) {
+        handleEdit(e.target);
+      } else if (e.target.classList.contains('delete-btn')) {
+        handleDelete(e.target);
       }
     });
-  }
-  
-  function deleteSizeQuantity(sqId) {
-    fetch(`/production/admin/orders/delete-size-quantity/${sqId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
+
+    function handleEdit(button) {
+      let sqId = button.getAttribute("data-sq-id");
+      let parentLi = document.querySelector(`#sq-${sqId}`);
+      let sizeSpan = parentLi.querySelector(".size");
+      let quantitySpan = parentLi.querySelector(".quantity");
+
+      if (!sizeSpan.isContentEditable) {
+        sizeSpan.contentEditable = "true";
+        quantitySpan.contentEditable = "true";
+        sizeSpan.focus();
+        button.textContent = saveText;
+      } else {
+        sizeSpan.contentEditable = "false";
+        quantitySpan.contentEditable = "false";
+        button.textContent = editText;
+        let updatedSize = sizeSpan.textContent;
+        let updatedQuantity = quantitySpan.textContent;
+        updateSizeQuantity(sqId, updatedSize, updatedQuantity);
       }
-    })
-    .then(response => {
-      if (response.ok) {
-        // Remove the size and quantity element without reloading
-        let parentLi = document.querySelector(`#sq-${sqId}`);
-        if (parentLi) {
-          parentLi.remove();
+    }
+
+    function handleDelete(button) {
+      let sqId = button.getAttribute("data-sq-id");
+      if (confirm(confirmDeleteText)) {
+        deleteSizeQuantity(sqId);
+      }
+    }
+
+    function updateSizeQuantity(sqId, size, quantity) {
+      fetch(`/production/admin/orders/edit-size-quantity/${sqId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ size: size, quantity: quantity })
+      })
+        .then(response => {
+          if (response.ok) {
+            let sizeSpan = document.querySelector(`.size[data-sq-id="${sqId}"]`);
+            let quantitySpan = document.querySelector(`.quantity[data-sq-id="${sqId}"]`);
+            sizeSpan.textContent = size;
+            quantitySpan.textContent = quantity;
+          } else {
+            alert('Не получилось обновить');
+          }
+        });
+    }
+
+    function deleteSizeQuantity(sqId) {
+      fetch(`/production/admin/orders/delete-size-quantity/${sqId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
         }
-      } else {
-        alert('Не получилось удалить');
-      }
-    });
-  }
+      })
+        .then(response => {
+          if (response.ok) {
+            // Remove the size and quantity element without reloading
+            let parentLi = document.querySelector(`#sq-${sqId}`);
+            if (parentLi) {
+              parentLi.remove();
+            }
+          } else {
+            alert('Не получилось удалить');
+          }
+        });
+    }
 
-  function updateSizeQuantityList(sizeQuantities) {
-    const list = document.getElementById('sizeQuantityList');
-    list.innerHTML = ''; // Clear existing list
-    sizeQuantities.forEach(sq => {
-      const li = document.createElement('li');
-      li.setAttribute('id', 'sq-' + sq.id);
-      li.classList.add('size-quantity-item');
-  
-      const sizeSpan = document.createElement('span');
-      sizeSpan.classList.add('size');
-      sizeSpan.setAttribute('data-sq-id', sq.id);
-      sizeSpan.textContent = sq.size;
-  
-      const quantitySpan = document.createElement('span');
-      quantitySpan.classList.add('quantity');
-      quantitySpan.setAttribute('data-sq-id', sq.id);
-      quantitySpan.textContent = sq.quantity;
-  
-      const editBtn = document.createElement('button');
-      editBtn.classList.add('edit-btn');
-      editBtn.setAttribute('data-sq-id', sq.id);
-      editBtn.textContent = editText;
-  
-      const deleteBtn = document.createElement('button');
-      deleteBtn.classList.add('delete-btn');
-      deleteBtn.setAttribute('data-sq-id', sq.id);
-      deleteBtn.textContent = deleteText;
+    function updateSizeQuantityList(sizeQuantities) {
+      const list = document.getElementById('sizeQuantityList');
+      list.innerHTML = ''; // Clear existing list
+      sizeQuantities.forEach(sq => {
+        const li = document.createElement('li');
+        li.setAttribute('id', 'sq-' + sq.id);
+        li.classList.add('size-quantity-item');
 
-      const sizeTextEl = document.createElement('strong');
-      sizeTextEl.textContent = sizeText;
-  
-      const quantityTextEl = document.createElement('strong');
-      quantityTextEl.textContent = quantityText;
-  
-      li.appendChild(sizeTextEl);
-      li.appendChild(sizeSpan);
-      li.appendChild(quantityTextEl);
-      li.appendChild(quantitySpan);
-      li.appendChild(editBtn);
-      li.appendChild(deleteBtn);
-  
-      list.appendChild(li);
-    });
-  }
+        const sizeSpan = document.createElement('span');
+        sizeSpan.classList.add('size');
+        sizeSpan.setAttribute('data-sq-id', sq.id);
+        sizeSpan.textContent = sq.size;
 
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+        const quantitySpan = document.createElement('span');
+        quantitySpan.classList.add('quantity');
+        quantitySpan.setAttribute('data-sq-id', sq.id);
+        quantitySpan.textContent = sq.quantity;
+
+        const editBtn = document.createElement('button');
+        editBtn.classList.add('edit-btn');
+        editBtn.setAttribute('data-sq-id', sq.id);
+        editBtn.textContent = editText;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.setAttribute('data-sq-id', sq.id);
+        deleteBtn.textContent = deleteText;
+
+        const sizeTextEl = document.createElement('strong');
+        sizeTextEl.textContent = sizeText;
+
+        const quantityTextEl = document.createElement('strong');
+        quantityTextEl.textContent = quantityText;
+
+        li.appendChild(sizeTextEl);
+        li.appendChild(sizeSpan);
+        li.appendChild(quantityTextEl);
+        li.appendChild(quantitySpan);
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+
+        list.appendChild(li);
+      });
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
+      return cookieValue;
     }
-    return cookieValue;
-  }
-});
+  });
 </script>
 <script>
   function getCookie(name) {
@@ -307,14 +375,14 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function goErrorDetails() {
-    window.location.href = '/production/admin/orders/errors/'+document.getElementById('errorIdInput').value+'/'
+    window.location.href = '/production/admin/orders/errors/' + document.getElementById('errorIdInput').value + '/'
   }
 
   function showErrorPopup() {
     document.getElementById('errorDetailsPopup').style.display = 'block';
     document.getElementById('errorDetailsPopupOverlay').style.display = 'flex';
   }
-  
+
   function closeErrorPopup() {
     document.getElementById('errorDetailsPopup').style.display = 'none';
     document.getElementById('errorDetailsPopupOverlay').style.display = 'none';
@@ -324,10 +392,10 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('errorStatusInput').value = status;
   }
 
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", function () {
 
     document.querySelectorAll('.error-link').forEach(link => {
-      link.addEventListener('click', function(e) {
+      link.addEventListener('click', function (e) {
         e.preventDefault();
         const errorId = this.getAttribute('data-error-id');
         document.getElementById('errorIdInput').value = errorId; // Store errorId in hidden input
@@ -337,20 +405,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const errorForm = document.getElementById('errorStatusForm');
     if (errorForm) {
-      errorForm.addEventListener('submit', function(event) {
+      errorForm.addEventListener('submit', function (event) {
         event.preventDefault();
-    
+
         const errorId = document.getElementById('errorIdInput').value;
         const status = document.getElementById('errorStatusInput').value;
         const data = { status: status };
-    
+
         const xhr = new XMLHttpRequest();
         const url = `/production/technologist/orders/error/${errorId}/update-status/`;
         xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-    
-        xhr.onload = function() {
+
+        xhr.onload = function () {
           const response = JSON.parse(xhr.responseText);
           if (xhr.status === 200) {
             alert('Успешное обновление');
@@ -359,23 +427,23 @@ document.addEventListener("DOMContentLoaded", function() {
             alert('Не получилось обновить');
           }
         };
-    
+
         xhr.send(JSON.stringify(data));
       });
     }
-  
+
     function fetchErrorDetails(errorId) {
       fetch(`/production/technologist/orders/error/${errorId}/`, {
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
         }
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          const errorDetails = document.getElementById('errorDetails');
-          errorDetails.innerHTML = 
-           `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            const errorDetails = document.getElementById('errorDetails');
+            errorDetails.innerHTML =
+              `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
             <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
             <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
             <p><strong>Количество:</strong> ${data.error.quantity}</p>
@@ -383,14 +451,14 @@ document.addEventListener("DOMContentLoaded", function() {
             <p><strong>Статус:</strong> ${data.error.status}</p>
             <p><strong>Дата Сообщения:</strong> ${data.error.reported_date}</p>
             <p><strong>Дата Разрешения:</strong> ${data.error.resolved_date || 'N/A'}</p>`;
-          showErrorPopup();
-        } else {
-          alert('Ничего не найдено');
-        }
-      })
-      .catch(error => {
-        alert('Ошибка при загрузке');
-      });
+            showErrorPopup();
+          } else {
+            alert('Ничего не найдено');
+          }
+        })
+        .catch(error => {
+          alert('Ошибка при загрузке');
+        });
     }
   });
 </script>

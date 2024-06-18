@@ -8,7 +8,7 @@ nav {
     display: flex;
     justify-content: space-between; /* Positions the nav items on opposite ends */
     align-items: center; /* Vertically centers nav items */
-    padding: 0 15px; /* Adds some horizontal padding */
+    /* padding: 0 15px;  */
 }
 
 nav a {
@@ -489,8 +489,9 @@ nav form button:hover {
 .date-filter-form {
     display: flex;
     flex-wrap: wrap; /* Allow the items to wrap as needed */
-    gap: 10px; /* Space between form items */
+    gap: 20px; /* Space between form items */
     align-items: center; /* Align items in the middle of the container */
+    justify-content: flex-end;
 }
 
 .date-filter-form label,
@@ -512,10 +513,10 @@ nav form button:hover {
     display: flex;
     align-items: center; /* Align items vertically in the center */
     justify-content: space-between; /* Distribute space between the details and the buttons */
-    padding: 8px;
+    padding: 15px;
     border: 1px solid #ddd; /* Optional border for each item */
-    border-radius: 5px; /* Rounded corners for each item */
-    margin-bottom: 10px; /* Space between each item */
+    border-radius: 0px; /* Rounded corners for each item */
+    margin-bottom: 0px; /* Space between each item */
     background-color: #f9f9f9; /* Light background color for each item */
 }
 
