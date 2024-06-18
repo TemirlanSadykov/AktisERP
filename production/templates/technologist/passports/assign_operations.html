@@ -117,20 +117,20 @@
                 <!-- Reassigned works will be displayed here as bullet points -->
               </div>
               <form id="reassignForm" class="reassign-form">
-                <label for="newEmployeeId">New Employee ID:</label>
+                <label for="newEmployeeId">{% trans "New Employee ID" %}:</label>
                 <input type="text" id="newEmployeeId" name="newEmployeeId">
             
-                <label for="reassignQuantity">Quantity:</label>
+                <label for="reassignQuantity">{% trans "Quantity" %}:</label>
                 <input type="number" id="reassignQuantity" name="reassignQuantity">
           
-                <label for="reassignReason">Reason:</label>
+                <label for="reassignReason">{% trans "Reason" %}:</label>
                 <input type="text" id="reassignReason" name="reassignReason">
             
                 <input type="hidden" id="reassignWorkId" name="reassignWorkId">
                 <div class="modal-buttons">
 
-                <button type="submit" class="buttonsetting" style="background-color: #007bff !important;">Submit</button>
-                <button type="button" onclick="closePopup()">Cancel</button>
+                <button type="submit" class="buttonsetting" style="background-color: #007bff !important;">{% trans "Submit" %}</button>
+                <button type="button" onclick="closePopup()">{% trans "Cancel" %}</button>
                 </div>
               </form>
             </div>  
@@ -183,6 +183,7 @@
         input.value = originalText;
         input.className = 'edit-input';
         input.style.width = '80px';
+        input.enterKeyHint = 'done';
         input.setAttribute('data-work', span.getAttribute('data-work'));
         span.parentNode.replaceChild(input, span);
         input.focus();
