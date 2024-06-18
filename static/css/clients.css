@@ -769,4 +769,83 @@ ul.breadcrumb li a:hover {
     color: white !important;
 }
 
+/* responsive navbar */
+  @media screen and (max-width: 667px) {
+  .navres {
+        justify-content: space-between;
+  }
+    .navfont{
+          font-size: large;
+          padding: 0px 32px 0px 0px;
+    }
+}
 
+
+
+
+/* base.html css */
+        /* #wrapper {
+            display: flex;
+            width: 100%;
+        } */
+        #sidebar-wrapper {
+            width: 222px;
+            transition: width 0.3s;
+        }
+        #sidebar-wrapper.collapsed {
+            width: 62px;
+        }
+        #sidebar-wrapper.collapsed .list-group-item .sidetext{
+            display: none;
+        }
+        #sidebar-wrapper .list-group-item .text {
+            display: inline-block;
+            transition: opacity 0.3s;
+        }
+        #sidebar-wrapper.collapsed .list-group-item .text {
+            opacity: 0;
+            width: 0;
+            
+        }
+        #sidebar-wrapper .list-group-item .icon {
+            width: 30px;
+            display: inline-block;
+            text-align: center;
+        }
+        #page-content-wrapper {
+            flex: 1;
+            /* padding: 20px; */
+            transition: margin-left 0.3s;
+        }
+        #sidebar-wrapper.collapsed + #page-content-wrapper {
+            margin-left: 62px;
+        }
+        #sidebar-wrapper + #page-content-wrapper {
+            margin-left: 222px;
+        }
+        .list-group-item.active {
+            /* background-color: #007bff; */
+            color:  #007bff;
+        }
+        @media (max-width: 767px) {
+            #sidebar-wrapper + #page-content-wrapper {
+            margin-left: 0px;
+        }
+        #sidebar-wrapper.collapsed .list-group-item .sidetext{
+            display:contents;
+        }
+        #sidebar-wrapper.collapsed + #page-content-wrapper {
+            margin-left: 0px;
+        }
+        #sidebar-wrapper.collapsed {
+            width: 60%;
+            
+        }
+        .sideicon{
+            display: none;
+        }
+            .sidenavres{
+                margin-top: 35px;
+            }
+
+  }

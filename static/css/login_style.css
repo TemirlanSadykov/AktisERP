@@ -80,6 +80,9 @@ input {
         width: 100%;
         height: 553.5px;
     }
+    .login-con {
+margin-top:-150px ;
+}
 }
 .login-form {
     display: flex;
