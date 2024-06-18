@@ -2,6 +2,42 @@
 {% load i18n %}
 
 {% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Employee Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="clock-container">
+  {% if request.user.userprofile.type != 0 %}
+  <h1 class="clock-heading">{% trans 'Clock In/Out' %}</h1>
+<form action="{% url 'clock_in_out' %}" method="post">
+  {% csrf_token %}
+  <button type="submit" class="clock-btn">
+    {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
+  </button>
+</form>
+{% endif %}
+</div>
+
+
+
+
+{% comment %}
 <div class="dashboard-container">
   <h1>{% trans 'Employee Dashboard' %}</h1>
   <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Employee." %}</p>
@@ -42,4 +78,5 @@
   </div>
   
 </div>
+{% endcomment %}
 {% endblock %}

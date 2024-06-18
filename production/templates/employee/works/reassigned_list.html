@@ -2,51 +2,93 @@
 {% load i18n %}
 
 {% block content %}
-<div class="employee-reassigned-work-container">
-  <div class="employee-header">
-    <h1 class="employee-list-heading">{% trans "My Reassigned Works" %}</h1>
-  </div>
 
-  {% if reassigned_works %}
-    <div class="employee-cards-container">
-        {% for reassigned_work in reassigned_works %}
-        <div class="employee-card">
-            <div class="employee-operation-name">{{ reassigned_work.original_assigned_work.work.operation.name }} ({{ reassigned_work.original_assigned_work.work.operation.number }})</div>
-            <div class="employee-operation-photo">
-            {% if reassigned_work.original_assigned_work.work.operation.photo %}
-                <img src="{{ reassigned_work.original_assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
-            {% else %}
-                {% trans "No photo" %}
-            {% endif %}
-            </div>
-            <div class="employee-details">
-                <div class="employee-size">
-                    {% trans "Size:" %}
-                    {% if reassigned_work.original_assigned_work.work.passport_size.size_quantity %}
-                      {{ reassigned_work.original_assigned_work.work.passport_size.size_quantity.size }}
-                    {% else %}
-                    --
-                    {% endif %}
-                </div>
-                <div class="employee-quantity">
-                    {% trans "Reassigned Quantity:" %} {{ reassigned_work.reassigned_quantity }}
-                </div>
-                <div class="employee-reason">
-                    {% trans "Reason:" %} {{ reassigned_work.reason|default:"--" }}
-                </div>
-                <div class="employee-actions">
-                    <form action="{% url 'reassigned_works_list' %}" method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="reassigned_work_id" value="{{ reassigned_work.id }}">
-                        <button type="submit">{% trans "Complete" %}</button>
-                    </form>
-                </div>
-            </div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Employee Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+<div class="container clients-wrapper maincontr">
+  <div class="clients-container">
+
+
+      <div class="clients-header">
+        <span class="operation-text"> {% trans "My Reassigned Works" %}
+        </span>
         </div>
-      {% endfor %}
+
+        {% if reassigned_works %}
+        <div class="employee-cards-container">
+            {% for reassigned_work in reassigned_works %}
+            <div class="employee-card">
+                <div class="employee-operation-name">{{ reassigned_work.original_assigned_work.work.operation.number }} - {{ reassigned_work.original_assigned_work.work.operation.name }}</div>
+                <div class="employee-operation-photo">
+                {% if reassigned_work.original_assigned_work.work.operation.photo %}
+                    <img src="{{ reassigned_work.original_assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+                {% else %}
+                    {% trans "No photo" %}
+                {% endif %}
+                </div>
+                <div class="employee-details">
+                    <div class="employee-passport">
+                      {% trans "Passport:" %}
+                      {% if reassigned_work.original_assigned_work.work.passport %}
+                        <strong>{{ reassigned_work.original_assigned_work.work.passport }} - {{ reassigned_work.original_assigned_work.work.passport.order.model.name }}</strong>
+                      {% else %}
+                        --
+                      {% endif %}
+                    </div>
+                    <div class="employee-size">
+                        {% trans "Size:" %}
+                        {% if reassigned_work.original_assigned_work.work.passport_size.size_quantity %}
+                          <strong>{{ reassigned_work.original_assigned_work.work.passport_size.size_quantity.size }}</strong>
+                        {% else %}
+                        --
+                        {% endif %}
+                    </div>
+                    <div class="employee-quantity">
+                        {% trans "Reassigned Quantity:" %} <strong>{{ reassigned_work.reassigned_quantity }}</strong>
+                    </div>
+                    <div class="employee-reason">
+                        {% trans "Reason:" %} <strong>{{ reassigned_work.reason|default:"--" }}</strong>
+                    </div>
+                    <div class="employee-actions">
+                        <form action="{% url 'reassigned_works_list' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="reassigned_work_id" value="{{ reassigned_work.id }}">
+                            <button type="submit">{% trans "Complete" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+
+      <div class="list-group" >
+        <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da; border-radius: 0px;">
+          {% trans "No reassigned works found." %}
+          </a>
     </div>
-  {% else %}
-    <p>{% trans "No reassigned works found." %}</p>
-  {% endif %}
+        {% endif %}
+        </div>
 </div>
 {% endblock %}

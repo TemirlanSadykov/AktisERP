@@ -2,38 +2,65 @@
 {% load i18n %}
 
 {% block content %}
-<div class="content-container">
-    <div class="filter-header">
-        <h2 class="list-heading">{% trans "Add Size and Quantity for Passport:" %} #{{ passport.order.id }}</h2>
-        <form id="sizeQuantityForm" method="post" class="date-filter-form">
-            {% csrf_token %}
-            <div class="form-group">
-                <label>{% trans "Size:" %}</label>
-                {{ form.size_quantity }}
-            </div>
-            <div class="form-group">
-                <label>{% trans "Quantity:" %}</label>
-                {{ form.quantity }}
-            </div>
-            <button type="submit" class="btn edit-btn">{% trans "Add" %}</button>
-        </form>
-    </div>
-    <!-- Display of existing passport sizes -->
-    <ul id="sizeQuantityList" class="size-quantity-list">
-        {% for ps in passport_sizes %}
-        <li id="sq-{{ ps.id }}" class="size-quantity-item">
-            <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}</span></span>
-            <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.quantity }}</span></span>
-            <button class="edit-btn" data-sq-id="{{ ps.id }}">{% trans "Edit" %}</button>
-            <button class="delete-btn" data-sq-id="{{ ps.id }}">{% trans "Delete" %}</button>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Cutter Dashboard' %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+        <li class="nav-item dropdown" style="margin: 10px;">
+          {{ request.user.username }}
         </li>
-        {% endfor %}
-    </ul>
-    <div class="form-actions">
-        <a href="{% url 'passport_detail' passport.id %}" class="btn create-btn">{% trans "Save" %}</a>
-        <a href="{% url 'create_passport_roll' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+              <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          </form>
+        </li>
+      </ul>
     </div>
-</div>
+  </nav>
+<div class="container maincontr">
+    <div class="row justify-content-center">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+          <div class="card-header">
+            <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Add Size and Quantity for Passport:" %} #{{ passport.order.id }}</h2>
+          </div>
+          <div class="card-body">
+            <form id="sizeQuantityForm" method="post" class="date-filter-form" style="align-items: flex-end;">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>{% trans "Size:" %}</label>
+                    {{ form.size_quantity }}
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Quantity:" %}</label>
+                    {{ form.quantity }}
+                </div>
+                <button type="submit" class="btn edit-btn mb-2" style="width:70px;">{% trans "Add" %}</button>
+            </form><br>
+            <div id="sizeQuantityList" class="size-quantity-list">
+                {% for ps in passport_sizes %}
+                <li id="sq-{{ ps.id }}" class="size-quantity-item">
+                    <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}</span></span>
+                    <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.quantity }}</span></span>
+                    <button class="edit-btn" data-sq-id="{{ ps.id }}">{% trans "Edit" %}</button>
+                    <button class="delete-btn" data-sq-id="{{ ps.id }}">{% trans "Delete" %}</button>
+                </li>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <a href="{% url 'passport_detail' passport.id %}" class="btn create-btn">{% trans "Save" %}</a>
+                <a href="{% url 'create_passport_roll' passport.id %}" class="btn back-btn">{% trans "Back" %}</a>
+            </div>
+          </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const sizeQuantityList = document.getElementById('sizeQuantityList');

@@ -2,12 +2,14 @@
 {% load i18n %}
 
 {% block content %}
+
+
 <style>
   .assign-operations-container {
-    padding: 20px;
-    background-color: #f7f7f7;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 60px;
+    /* background-color: #f7f7f7; */
+    /* border-radius: 8px; */
+    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
   }
 
   .form-heading {
@@ -18,10 +20,10 @@
   .checkbox label {
     display: block;
     padding: 10px;
-    margin: 5px 0;
+    margin: 0px 0;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    /* border-radius: 4px; */
     cursor: pointer;
   }
 
@@ -64,9 +66,36 @@
     background-color: #0056b3;
   }
 </style>
-<div class="assign-operations-container">
-    <h2 class="form-heading">{% trans "Edit Model" %}</h2>
-    
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="card-header">
+    {% if is_copying %}
+    <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Copying Model:" %} {{ copy_model.name }}</h2>
+    {% else %}
+    <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Model" %}</h2>
+    {% endif %}  
+  </div>        
+  <div class="col-md-12">
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
@@ -74,15 +103,15 @@
         {% if form.name.errors %}
             <div class="error">{{ form.name.errors }}</div>
         {% endif %}
-        
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
-        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: calc(100% - 16px);">
+        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
             {% for operation in form.fields.operations.queryset %}
-                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name|lower }}">
+                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
                     <label>
-                        <input type="checkbox" name="operations" value="{{ operation.id }}" {% if operation in model_instance.operations.all %}checked{% endif %}>
-                        {{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}
+                        <input type="checkbox" name="operations" value="{{ operation.id }}">
+                        {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
+                        {{ operation }}
                     </label>
                 </div>
             {% endfor %}
@@ -96,59 +125,84 @@
             <button type="submit" class="btn create-btn">{% trans "Save" %}</button>
         </div>
     </form>
+    </div>
 </div>
 
+
+
+
+
+
+
+
+
 <script>
-let selectedOperations = [];
-
-document.getElementById('searchOperations').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const operations = document.querySelectorAll('#operationsContainer .checkbox');
-
-    operations.forEach(op => {
-        const content = op.getAttribute('data-operation-content');
-        const numberPart = content.split('-')[0].trim(); // Assuming the number is always before the first '-'.
-        if (numberPart.includes(searchTerm)) {
-            op.style.display = '';
-        } else {
-            op.style.display = 'none';
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    prepareOperations(); // Load existing sorted operations when the page loads
 });
 
 function prepareOperations() {
-    let checkedBoxes = document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked');
+    let operationsOrder = JSON.parse(document.getElementById('operationsOrder').value);
     let operationsContainer = document.getElementById('selectedOperations');
     operationsContainer.innerHTML = '';
 
-    checkedBoxes.forEach(function(checkbox) {
-        let label = checkbox.nextSibling.textContent.trim();
-        let div = document.createElement('div');
-        div.className = 'sortable-item';
-        div.textContent = label;
-        div.setAttribute('data-id', checkbox.value);
-        operationsContainer.appendChild(div);
+    let checkboxes = {};
+    document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked').forEach(function(checkbox) {
+        checkboxes[checkbox.value] = checkbox;
+    });
+
+    operationsOrder.forEach(function(operationId, index) {
+        if (checkboxes[operationId]) {
+            appendOperationToSortableList(checkboxes[operationId], index + 1);
+            delete checkboxes[operationId];
+        }
+    });
+
+    // Append any remaining checked operations that are not in the sorted list
+    let currentIndex = operationsOrder.length;
+    Object.values(checkboxes).forEach(function(checkbox) {
+        appendOperationToSortableList(checkbox, ++currentIndex);
     });
 
     new Sortable(operationsContainer, {
         animation: 150,
-        ghostClass: 'sortable-ghost'
+        ghostClass: 'sortable-ghost',
+        onUpdate: function(evt) {
+            let items = operationsContainer.getElementsByClassName('sortable-item');
+            Array.from(items).forEach((item, idx) => {
+                item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
+            });
+        }
     });
+}
+
+function appendOperationToSortableList(checkbox, orderNumber) {
+    let label = checkbox.nextSibling.textContent.trim();
+    let div = document.createElement('div');
+    div.className = 'sortable-item';
+    div.setAttribute('data-id', checkbox.value);
+
+    let orderSpan = document.createElement('span');
+    orderSpan.className = 'order-number';
+    orderSpan.textContent = orderNumber + '. ';
+
+    div.appendChild(orderSpan);
+    div.appendChild(document.createTextNode(label));
+    document.getElementById('selectedOperations').appendChild(div);
 }
 
 function submitOperations(event) {
     event.preventDefault(); // Prevent form from submitting traditionally
 
-    selectedOperations = []; // Clear the array before pushing new data
+    let operationsData = [];
     let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
     sortedItems.forEach(function(item, index) {
-        selectedOperations.push({operation_id: item.getAttribute('data-id'), order: index});
+        operationsData.push({operation_id: item.getAttribute('data-id'), order: index});
     });
-    document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
+    document.getElementById('id_operations_data').value = JSON.stringify(operationsData);
     document.getElementById('modelForm').submit(); // Submit the form programmatically
 }
 
 document.getElementById('modelForm').addEventListener('submit', submitOperations);
 </script>
-
 {% endblock %}

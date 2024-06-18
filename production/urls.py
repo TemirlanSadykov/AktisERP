@@ -1,5 +1,5 @@
-from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.urls import path
 from .views import *
 
 urlpatterns = [
@@ -148,6 +148,8 @@ urlpatterns = [
     path('qc/orders/<int:order_pk>/defects/<int:pk>/', DefectDetailView.as_view(), name='defect_detail'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
+    path('qc/orders/api/get-piece-info/<str:barcode>/', get_piece_info, name='get_piece_info'),
+    path('qc/orders/update-piece-status/<int:piece_id>/', update_piece_qc, name='update_piece_qc'),
     
     path('packer/orders/', OrderListPackerView.as_view(), name='order_list_packer'),
     path('packer/orders/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
@@ -155,10 +157,22 @@ urlpatterns = [
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/', DiscrepancyDetailView.as_view(), name='discrepancy_detail'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
+    path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
     path('technologist/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
     path('qc/orders/mark-as-packing/<int:passport_size_id>/', mark_as_packing, name='mark-as-packing'),
+
+    # For name changes
+    path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
+
+    # For dashboard APIs
+    path('api/clients/<int:client_id>/', client_api, name='client_api'),
+
+    # For barcode creation
+    path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
+    path('barcode/api/passport_size/<int:passport_size_id>/', BarcodePassportSize.as_view(), name='barcode_passport_size'),
+    path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
 
 ]

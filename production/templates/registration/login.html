@@ -9,27 +9,124 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'css/login_style.css' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <style>
+.login-form {
+    width: 350px;
+    margin: 0 auto; 
+    margin-top: 80px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-group {
+    margin-bottom: 1rem; 
+}
+
+.alert {
+    margin-bottom: 1rem; 
+    width: 350px;
+}
+
+.error-message {
+    color: #dc3545; 
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 430px) {
+    .illustration img {
+        /* width: 100%;
+        height: 400px; */
+        display: none;
+    }
+    .background-image {
+        /* height: 470px; */
+        display: none;
+    }
+    .background-image1 {
+        /* height: 495px; */
+        display: none;
+    }
+    .loginData{
+        margin-left:-25px;
+    }
+}
+@media (max-width: 430px) {
+
+.login-form {
+    width: 350px;
+    margin: 0 auto; 
+    margin-top: 0px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+}
+    </style>
 </head>
 <body>
-
-<div class="container">
-    <div class="login-container">
-        <h2 class="form-heading">{% trans "Login" %}</h2> 
-        <form method="post" action="{% url 'login' %}" class="login-form">  
-            {% csrf_token %}  
-            {{ form.as_p }} 
-
-            <button type="submit" class="btn btn-primary">{% trans "Login" %}</button> 
-        </form>
-
-        {% if form.errors %}  
-            <p class="error-message">{% trans "Your username and password didn't match. Please try again." %}</p> 
-        {% endif %}
+    <div class="container-fluid d-flex justify-content-center align-items-center min-vh-100 login-con">
+        <div class="row">
+            <div class="col-md-6 d-flex justify-content-center align-items-center ">
+                <div class="illustration text-center">
+                    <img src="{% static 'img/loginLogo.png' %}" alt="Illustration" class="img-fluid">
+                </div>
+                <div class="background-image"></div>
+                <div class="background-image1"></div>
+            </div>
+            <div class="col-md-5 loginData">
+                <div class="login-form p-4">
+                    <div class="form-wrapper">
+                        <h2 class="form-heading headingData">{% trans "Login" %}</h2> 
+                        <form method="post" action="{% url 'login' %}" class="login-form">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label for="id_username">{% trans "Username" %}</label>
+                            <input type="text" name="username" id="id_username" class="form-control">
+                            {% if form.errors.username %}
+                                {% for error in form.errors.username %}
+                                    {% if error == 'This field is required.' %}
+                                        <div class="error-message">Username is required.</div>
+                                    {% else %}
+                                        <div class="error-message">{{ error }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                            <div class="form-group">
+                                <label for="id_password">{% trans "Password" %}</label>
+                                <input type="password" name="password" id="id_password" class="form-control">
+                                {% if form.errors.password %}
+                                {% for error in form.errors.password %}
+                                    {% if error == 'This field is required.' %}
+                                        <div class="error-message">Password is required.</div>
+                                    {% else %}
+                                        <div class="error-message">{{ error }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block button-height">{% trans "Login" %}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js"></script>
 </body>
 </html>

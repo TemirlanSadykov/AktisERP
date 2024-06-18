@@ -1,50 +1,117 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load static %}
 {% block content %}
-<div class="dashboard-container">
-  <h1>{% trans 'Admin Dashboard' %}</h1>
-  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Admin." %}</p>
 
-  <div class="row">
-    <div class="col-md-6 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">{% trans 'Navigation' %}</h5>
-          <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
-            {% csrf_token %}
-            <div class="form-group">
-              <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
-                {% for branch in branches %}
-                  <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
-                    {{ branch.name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          </form>
-          <a href="{% url 'cutter_page' %}" class="btn btn-primary mb-3">{% trans 'Cutter' %}</a>
-          <a href="{% url 'technologist_page' %}" class="btn btn-primary mb-3">{% trans 'Technologist' %}</a>
-          <a href="{% url 'qc_page' %}" class="btn btn-primary mb-3">{% trans 'QC' %}</a>
-          <a href="{% url 'packer_page' %}" class="btn btn-primary mb-3">{% trans 'Packer' %}</a>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">{% trans 'Resources' %}</h5>
-          <a href="{% url 'dashboard_page' %}" class="btn btn-primary mb-3">{% trans 'Dashboard' %}</a>
-          <a href="{% url 'client_order_list' %}" class="btn btn-secondary">{% trans 'Orders' %}</a>
-          <a href="{% url 'employee_list' %}" class="btn btn-secondary">{% trans 'Employees' %}</a>
-          <a href="{% url 'salary_list' %}" class="btn btn-secondary">{% trans 'Salaries' %}</a>
-          <a href="{% url 'fixed_salary_list' %}" class="btn btn-secondary">{% trans 'Fixed Salaries' %}</a>
-          <a href="{% url 'attendance_list' %}" class="btn btn-secondary">{% trans 'Attendances' %}</a>
-          <a href="{% url 'client_list' %}" class="btn btn-secondary">{% trans 'Clients' %}</a>
-          <a href="{% url 'branch_list' %}" class="btn btn-secondary">{% trans 'Branches' %}</a>
-        </div>
-      </div>
-    </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}
+  </h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
   </div>
-</div>
+</nav>
+<!-- <div class="container-fluid" style="margin-top: 20px;"> -->
+  <!-- <div class="row"> -->
+
+  <!-- </div> -->
+<!-- </div> -->
+
+    <div class="container-fluid ">
+      <div class="row mt-4">
+        <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'technologist_page' %}" style="text-decoration: none;">
+          <div class="card text-black h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title">{% trans 'Technologist' %}</h5>
+                </div>
+                <div class="icon">
+                  <img src="{% static 'img/tech.png' %}" alt="" style="width: 100px;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+        </div>
+        <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'cutter_page' %}" style="text-decoration: none;">
+          <div class="card text-black h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title">{% trans 'Cutter' %}</h5>
+                </div>
+                <div class="icon">
+                  <img src="{% static 'img/cutter.png' %}" alt="" style="width: 100px;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+        </div>
+      </div>
+      <div class="row mt-4">
+        <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'qc_page' %}" style="text-decoration: none;">
+          <div class="card text-black h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title">{% trans 'QC' %}</h5>
+                </div>
+                <div class="icon">
+                  <img src="{% static 'img/qc.png' %}" alt="" style="width: 100px;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+        </div>
+        <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'packer_page' %}" style="text-decoration: none;">
+          <div class="card text-black h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title">{% trans 'Packer' %}</h5>
+                </div>
+                <div class="icon">
+                  <img src="{% static 'img/packer.png' %}" alt="" style="width: 100px;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mt-4">
+      <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
+        {% csrf_token %}
+        <div class="form-group d-flex align-items-center">
+          <h4 class="mb-0 mr-3">Branch:</h4>
+          <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
+            {% for branch in branches %}
+              <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
+                {{ branch.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+    </div>
 {% endblock %}

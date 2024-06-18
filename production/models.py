@@ -1,7 +1,9 @@
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
 import datetime
+
+from django.contrib.auth.models import User
+from django.db import models
+from django.utils import timezone
+
 
 class Branch(models.Model):
     name = models.CharField(max_length=100) 
@@ -86,6 +88,7 @@ class Equipment(models.Model):
     
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
     is_common = models.BooleanField(default=False, verbose_name='Общий')
     SEWING = 0
     CUTTING = 1
@@ -111,8 +114,29 @@ class Operation(models.Model):
     average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_values = {}
+        for field in self._meta.fields:
+            try:
+                value = getattr(self, field.name)
+            except AttributeError:
+                value = None
+            self._original_values[field.name] = value
     def __str__(self):
-        return f"{self.number} - {self.node.name} - {self.name}"
+        return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
+    @property
+    def changed_fields(self):
+        return {field.name for field in self._meta.fields if getattr(self, field.name) != self._original_values[field.name]}
+    def save(self, *args, **kwargs):
+        creating = self._state.adding
+        node_changed = 'node' in self.changed_fields
+        super().save(*args, **kwargs)
+        if creating or node_changed:
+            current_count = Operation.objects.filter(node=self.node).count()
+            new_operation_number = current_count + 1
+            self.number = f"{self.node.number}N{new_operation_number}O"
+            super().save(update_fields=['number'])
     
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
@@ -163,7 +187,6 @@ class ClientOrder(models.Model):
 
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
-    name = models.CharField(max_length=100, verbose_name='Название')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
     color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
@@ -182,7 +205,7 @@ class Order(models.Model):
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
     def __str__(self):
-        return f"{self.name} - {self.model}"
+        return f"{self.model}"
     
 class Passport(models.Model):
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
@@ -191,7 +214,7 @@ class Passport(models.Model):
     rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports', verbose_name='Рулоны')
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
     def __str__(self):
-        return f"ID: {str(self.id)}"
+        return f"ID {str(self.id)}"
     
 class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')
@@ -212,6 +235,27 @@ class PassportSize(models.Model):
     stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"
+
+class ProductionPiece(models.Model):
+    class StageChoices(models.TextChoices):
+        NOT_CHECKED = 'NOT_CHECKED', 'Непроверено'
+        CHECKED = 'CHECKED', 'Проверено'
+        PACKED = 'PACKED', 'Упаковано'
+        DEFECT = 'DEFECT', 'Брак'
+
+    class DefectType(models.TextChoices):
+        STITCHING = 'STITCHING', 'Ошибка шитья'
+        CUTTING = 'CUTTING', 'Ошибка резки'
+        FABRIC = 'FABRIC', 'Дефект ткани'
+        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
+        OTHER = 'OTHER', 'Прочие ошибки'
+
+    passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='pieces')
+    piece_number = models.IntegerField(verbose_name='Piece Number')
+    stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
+    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
+    def __str__(self):
+        return f"Passport Size ID: {self.passport_size.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
 class PassportRoll(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
