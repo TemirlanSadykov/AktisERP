@@ -789,7 +789,7 @@ ul.breadcrumb li a:hover {
             width: 100%;
         } */
         #sidebar-wrapper {
-            width: 220px;
+            width: 222px;
             transition: width 0.3s;
         }
         #sidebar-wrapper.collapsed {
@@ -821,7 +821,7 @@ ul.breadcrumb li a:hover {
             margin-left: 62px;
         }
         #sidebar-wrapper + #page-content-wrapper {
-            margin-left: 220px;
+            margin-left: 222px;
         }
         .list-group-item.active {
             /* background-color: #007bff; */
