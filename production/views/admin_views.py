@@ -45,13 +45,21 @@ def admin_page(request):
 @login_required
 @admin_required
 def dashboard_page(request):
+    client_data = get_client_data()
+    employee_data = get_employee_data()
+    
+    context = {
+        'client_data': client_data,
+        'employee_data': employee_data
+    }
+    return render(request, 'dashboard.html', context)
+
+def get_client_data():
     clients = Client.objects.all()
     client_data = []
-
     for client in clients:
         client_orders = ClientOrder.objects.filter(client=client)
-        
-        # Compute total amounts and quantities for each client separately
+        # Compute total amounts and quantities for each client
         total_ordered_amount_by_orders = client_orders.annotate(
             total_amount=Sum(F('orders__quantity') * F('orders__payment'))
         ).aggregate(sum=Sum('total_amount'))['sum'] or 0
@@ -85,9 +93,51 @@ def dashboard_page(request):
             'total_ordered_amount': total_ordered_amount
         })
 
-    client_data = sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
+    return sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
 
-    return render(request, 'dashboard.html', {'client_data': client_data})
+import itertools
+def get_employee_data():
+    # Fetch all employees first to ensure everyone is included
+    all_employees = UserProfile.objects.all().values(
+        'id', 'user__username', 'user__first_name', 'user__last_name'
+    )
+
+    # Aggregating units produced by each employee from AssignedWork
+    employee_units = AssignedWork.objects.filter(is_success=True).values('employee__id').annotate(
+        total_units=Sum('quantity')
+    ).order_by('-total_units')
+    units_dict = {eu['employee__id']: eu['total_units'] for eu in employee_units}
+
+    # Calculating hours worked from EmployeeAttendance
+    employee_hours = {}
+    attendances = EmployeeAttendance.objects.filter(is_clock_in=True).values('employee__id', 'timestamp').order_by('employee__id', 'timestamp')
+    for emp_id, group in itertools.groupby(attendances, key=lambda x: x['employee__id']):
+        timestamps = list(group)
+        total_hours = sum(
+            (timestamps[i+1]['timestamp'] - timestamps[i]['timestamp']).total_seconds() / 3600
+            for i in range(0, len(timestamps) - 1, 2)
+        ) if len(timestamps) % 2 == 0 else 0
+        employee_hours[emp_id] = total_hours
+
+    # Combining data and ensuring all employees are included
+    employee_data = []
+    for employee in all_employees:
+        employee_id = employee['id']
+        units_produced = units_dict.get(employee_id, 0)
+        hours_worked = employee_hours.get(employee_id, 0)
+        full_name = f"{employee['user__first_name']} {employee['user__last_name']}".strip()
+        employee_data.append({
+            'id': employee_id,
+            'name': employee['user__username'],
+            'full_name': full_name,
+            'units_produced': units_produced,
+            'hours_worked': hours_worked
+        })
+
+    # Sorting the final list of employee data by units produced in descending order
+    employee_data = sorted(employee_data, key=lambda x: x['units_produced'], reverse=True)
+
+    return employee_data
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
@@ -562,9 +612,9 @@ def calculate_errors(employee, start_date, end_date):
 
     error_details = [{
         'type': 'Дефект' if resp.error.error_type == Error.ErrorType.DEFECT else 'Несоответствие',
-        'passport': resp.error.passport.id,
-        'size': resp.error.size_quantity.size,
-        'quantity': resp.error.quantity,
+        'passport': resp.error.piece.passport_size.passport.id,
+        'size': resp.error.piece.passport_size.size_quantity.size,
+        'quantity': resp.error.piece.passport_size.quantity,
         'reported_date': resp.error.reported_date,
         'cost': resp.error.cost * (resp.percentage / 100)
     } for resp in error_responsibilities]
@@ -694,9 +744,9 @@ def export_salaries_to_excel(request):
 
             for responsibility in error_responsibilities:
                 errors_data.append([
-                    responsibility.error.passport.order.model.name,
-                    responsibility.error.passport.id,
-                    responsibility.error.size_quantity.size,
+                    responsibility.error.piece.passport_size.passport.order.model.name,
+                    responsibility.error.piece.passport_size.passport.id,
+                    responsibility.error.piece.passport_size.size_quantity.size,
                     employee.user.get_full_name(),
                     employee.employee_id,
                     'Defect' if responsibility.error.error_type == Error.ErrorType.DEFECT else 'Discrepancy',
@@ -926,7 +976,7 @@ class OrderDetailView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['errors'] = Error.objects.filter(passport=passport).order_by('error_type')
+            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport).order_by('error_type')
         else:
             context['errors'] = Error.objects.none()
         context['passports'] = order.passports.all()

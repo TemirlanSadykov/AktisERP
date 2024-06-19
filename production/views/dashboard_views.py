@@ -47,3 +47,45 @@ def client_api(request, client_id):
 
     except Client.DoesNotExist:
         return JsonResponse({'error': 'Client not found'}, status=404)
+    
+@login_required
+@admin_required
+def employee_api(request, employee_id):
+    print(employee_id)
+    try:
+        employee = UserProfile.objects.get(pk=employee_id)
+
+        # Assuming you have some way to track earnings, here's a placeholder
+        earnings = 0  # This should be replaced with actual earnings calculation logic
+
+        # Placeholder for efficiency calculation
+        efficiency = 0  # Replace with your actual efficiency calculation logic
+
+        # Assuming you have a way to track operations and their details
+        # operations_worked_on = AssignedWork.objects.filter(employee=employee, is_success=True)
+        operations_details = 0
+        # for work in operations_worked_on:
+        #     operations_details.append({
+        #         'operation': work.work.operation.name,
+        #         'quantity': work.quantity,
+        #         'date': DateFormat(work.start_time).format('Y-m-d') if work.start_time else None
+        #     })
+
+        # Placeholder for defects and discrepancies
+        defects_discrepancies = 0  # Implement actual logic to calculate defects and discrepancies
+
+        response_data = {
+            'id': employee.id,
+            'full_name': f"{employee.user.first_name} {employee.user.last_name}",
+            'username': employee.user.username,
+            'earnings': earnings,
+            'efficiency': efficiency,
+            'operations': operations_details,
+            'defects_discrepancies': defects_discrepancies
+        }
+        print(response_data)
+
+        return JsonResponse(response_data)
+
+    except UserProfile.DoesNotExist:
+        return JsonResponse({'error': 'Employee not found'}, status=404)
