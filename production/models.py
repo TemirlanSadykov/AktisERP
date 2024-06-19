@@ -60,7 +60,7 @@ class EmployeeAttendance(models.Model):
     is_clock_in = models.BooleanField(default=False)
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
-        return f"{self.employee.username} - {event_type} at {self.timestamp}"
+        return f"{self.employee} - {event_type} at {self.timestamp}"
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
