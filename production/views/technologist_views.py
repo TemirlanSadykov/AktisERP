@@ -90,7 +90,7 @@ class OrderDetailTechnologistView(DetailView):
         passports = order.passports.all()
 
         # Aggregating errors across all passports associated with the order
-        errors = Error.objects.filter(passport__in=passports).order_by('error_type')
+        errors = Error.objects.filter(piece__passport_size__passport__in=passports).order_by('error_type')
 
         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
         total_per_size = defaultdict(int)
@@ -128,8 +128,8 @@ class OrderDetailTechnologistView(DetailView):
 def error_detail(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         error = Error.objects.filter(pk=pk).values(
-            'pk', 'passport__id', 'size_quantity__size', 'size_quantity__id',
-            'quantity', 'error_type', 'defect_type', 'cost', 'status',
+            'pk', 'piece__passport_size__passport__id', 'piece__passport_size__size_quantity__size', 'piece__id', 'piece__passport_size__size_quantity__id',
+            'error_type', 'piece__defect_type', 'cost', 'status',
             'reported_date', 'resolved_date'
         ).first()
 
@@ -137,13 +137,11 @@ def error_detail(request, pk):
             error['reported_date'] = error['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
             error['resolved_date'] = error['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if error['resolved_date'] else None
             error['status'] = Error.Status(error['status']).label
-            if 'defect_type' in error and error['defect_type']:
-                error['defect_type'] = Error.DefectType(error['defect_type']).label
 
             if error['error_type'] == 'DEFECT':
                 works = AssignedWork.objects.filter(
-                    work__passport_id=error['passport__id'],
-                    work__passport_size__size_quantity_id=error['size_quantity__id']
+                    work__passport_id=error['piece__passport_size__passport__id'],
+                    work__passport_size__size_quantity_id=error['piece__passport_size__size_quantity__id']
                 ).select_related('employee')
                 employee_ids = [work.employee.employee_id for work in works]
                 error['responsible_employees'] = employee_ids

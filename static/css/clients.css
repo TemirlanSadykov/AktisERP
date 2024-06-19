@@ -203,6 +203,12 @@
     z-index: 1000;
     overflow-y: auto;
     transition: all 0.3s;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;
+  }
+
+  #sidebar-wrapper::-webkit-scrollbar {
+    display: none;
   }
 
   #page-content-wrapper {

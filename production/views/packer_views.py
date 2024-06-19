@@ -80,7 +80,7 @@ class OrderDetailPackerView(DetailView):
         passport = Passport.objects.filter(order=order).first()
         
         if passport:
-            context['errors'] = Error.objects.filter(passport=passport, error_type=Error.ErrorType.DISCREPANCY)
+            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DISCREPANCY)
         else:
             context['errors'] = Error.objects.none()
 
@@ -148,38 +148,38 @@ def update_piece_packer(request, piece_id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyCreateView(CreateView):
-    model = Error
-    form_class = ErrorForm
-    template_name = 'packer/discrepancies/create.html'
+# @method_decorator([login_required, packer_required], name='dispatch')
+# class DiscrepancyCreateView(CreateView):
+#     model = Error
+#     form_class = ErrorForm
+#     template_name = 'packer/discrepancies/create.html'
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        order_pk = self.kwargs.get('order_pk')
-        kwargs['order_pk'] = order_pk
-        kwargs['error_type'] = 'DISCREPANCY'
-        return kwargs
+#     def get_form_kwargs(self):
+#         kwargs = super().get_form_kwargs()
+#         order_pk = self.kwargs.get('order_pk')
+#         kwargs['order_pk'] = order_pk
+#         kwargs['error_type'] = 'DISCREPANCY'
+#         return kwargs
 
-    def form_valid(self, form):
-        order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
-        form.instance.order = order
-        unit_price = getattr(order, 'payment', None)
-        quantity = getattr(form.instance, 'quantity', None)
-        if unit_price is not None and quantity is not None:
-            form.instance.cost = unit_price * abs(quantity) 
-        return super().form_valid(form)
+#     def form_valid(self, form):
+#         order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
+#         form.instance.order = order
+#         unit_price = getattr(order, 'payment', None)
+#         quantity = getattr(form.instance, 'quantity', None)
+#         if unit_price is not None and quantity is not None:
+#             form.instance.cost = unit_price * abs(quantity) 
+#         return super().form_valid(form)
 
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
+#     def get_success_url(self):
+#         order_pk = self.kwargs['order_pk']
+#         return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        order_pk = self.kwargs['order_pk']
-        context['order'] = get_object_or_404(Order, pk=order_pk)
-        context['sidebar_type'] = 'packer'
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         order_pk = self.kwargs['order_pk']
+#         context['order'] = get_object_or_404(Order, pk=order_pk)
+#         context['sidebar_type'] = 'packer'
+#         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class DiscrepancyDetailView(DetailView):
@@ -187,29 +187,29 @@ class DiscrepancyDetailView(DetailView):
     template_name = 'packer/discrepancies/detail.html'
     context_object_name = 'error'
 
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyUpdateView(UpdateView):
-    model = Error
-    form_class = ErrorForm
-    template_name = 'packer/discrepancies/edit.html'
+# @method_decorator([login_required, packer_required], name='dispatch')
+# class DiscrepancyUpdateView(UpdateView):
+#     model = Error
+#     form_class = ErrorForm
+#     template_name = 'packer/discrepancies/edit.html'
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        order_pk = self.kwargs.get('order_pk')
-        kwargs['order_pk'] = order_pk
-        kwargs['error_type'] = 'DISCREPANCY'
-        return kwargs
+#     def get_form_kwargs(self):
+#         kwargs = super().get_form_kwargs()
+#         order_pk = self.kwargs.get('order_pk')
+#         kwargs['order_pk'] = order_pk
+#         kwargs['error_type'] = 'DISCREPANCY'
+#         return kwargs
 
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
+#     def get_success_url(self):
+#         order_pk = self.kwargs['order_pk']
+#         return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        error_pk = self.kwargs['pk']
-        context['error'] = get_object_or_404(Error, pk=error_pk)
-        context['sidebar_type'] = 'packer'
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         error_pk = self.kwargs['pk']
+#         context['error'] = get_object_or_404(Error, pk=error_pk)
+#         context['sidebar_type'] = 'packer'
+#         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class DiscrepancyDeleteView(DeleteView):
