@@ -137,8 +137,7 @@
             {% if errors %}
             {% for error in errors %}
             <div class="list-group" >
-                <a href="#"
-                  class="list-group-item list-group-item-action"
+                <a class="list-group-item list-group-item-action"
                   style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
                   {% trans "Discrepancy" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
                 </a>
