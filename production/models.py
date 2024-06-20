@@ -60,7 +60,7 @@ class EmployeeAttendance(models.Model):
     is_clock_in = models.BooleanField(default=False)
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
-        return f"{self.employee.username} - {event_type} at {self.timestamp}"
+        return f"{self.employee} - {event_type} at {self.timestamp}"
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
@@ -301,13 +301,6 @@ class Error(models.Model):
     class ErrorType(models.TextChoices):
         DEFECT = 'DEFECT', 'Дефект'
         DISCREPANCY = 'DISCREPANCY', 'Расхождение'
-    
-    class DefectType(models.TextChoices):
-        STITCHING = 'STITCHING', 'Ошибка шитья'
-        CUTTING = 'CUTTING', 'Ошибка резки'
-        FABRIC = 'FABRIC', 'Дефект ткани'
-        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
-        OTHER = 'OTHER', 'Прочие ошибки'
 
     class Status(models.TextChoices):
         REPORTED = 'REPORTED', 'Сообщено'
@@ -315,23 +308,16 @@ class Error(models.Model):
         RESOLVED = 'RESOLVED', 'Разрешено'
     
     error_type = models.CharField(max_length=20, choices=ErrorType.choices, verbose_name='Тип ошибки')
-    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Тип дефекта')
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Стоимость')
     responsible_employees = models.ManyToManyField(UserProfile, through='ErrorResponsibility', verbose_name='Ответственные сотрудники')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='errors', verbose_name='Паспорт')
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='errors', verbose_name='Размер и количество')
-    quantity = models.IntegerField(verbose_name='Количество')
+    piece = models.ForeignKey(ProductionPiece, on_delete=models.CASCADE, related_name='errors', null=True, blank=True, verbose_name='Единица')
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED, verbose_name='Статус')
     reported_date = models.DateTimeField(default=timezone.now, verbose_name='Дата сообщения')
     resolved_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата решения')
 
     def __str__(self):
-        if self.error_type == self.ErrorType.DEFECT:
-            return f"Дефект: {self.defect_type} - Степень: {self.severity}"
-        else:
-            discrepancy_type = "Надостаток" if self.quantity < 0 else "Избыток"
-            return f"Несоответствие: {discrepancy_type} на {abs(self.quantity)}"
-
+        return f"{self.error_type}: - {self.piece.id}"
+    
 class ErrorResponsibility(models.Model):
     error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Ошибка')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Сотрудник')

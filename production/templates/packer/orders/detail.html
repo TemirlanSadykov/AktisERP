@@ -8,9 +8,9 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; ">{% trans "Packer Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Packer Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
         {{ request.user.username }}
       </li>
@@ -30,7 +30,7 @@
     </div>
   <div class="container">
     <!-- <div class="card"> -->
-      <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+      <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true" data-backdrop="false">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
@@ -66,8 +66,9 @@
 
                   <div class="col-md-5 text-center">
                       <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid"><br>
-                      <a href="{% url 'discrepancy_create' order.pk %}" class="btn btn-primary">{% trans 'Add Discrepancy' %}</a>
-
+                      <button id="calculate-discrepancies" class="btn btn-primary" data-order-id="{{ order.pk }}">
+                        {% trans 'Calculate Discrepancies' %}
+                      </button>
                   </div>
               </div>
           </div>
@@ -136,10 +137,9 @@
             {% if errors %}
             {% for error in errors %}
             <div class="list-group" >
-                <a href="{% url 'discrepancy_detail' order_pk=order.pk pk=error.pk %}"
-                  class="list-group-item list-group-item-action"
-                  style="color: {% if order.status == 2 %}green{% else %}red{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
-                  {% trans "Discrepancy" %} {{ error.passport.id }} - {{ error.size_quantity.size }}
+                <a class="list-group-item list-group-item-action"
+                  style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
+                  {% trans "Discrepancy" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
                 </a>
             </div>
             {% endfor %}
@@ -250,6 +250,44 @@
     }
   });
 </script> 
+<script>
+  document.getElementById('calculate-discrepancies').addEventListener('click', function() {
+    const orderId = this.getAttribute('data-order-id');  // Assuming you have the order ID stored, or you can embed it in the button as a data attribute
+  
+    fetch(`/production/packer/orders/calculate-discrepancies/${orderId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'), 
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.reload();  
+      } else {
+        alert('Error: ' + data.message);
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  });
+  
+  // Function to get CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
 {% endblock %}
 
 

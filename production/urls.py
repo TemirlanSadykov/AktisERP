@@ -144,20 +144,21 @@ urlpatterns = [
 
     path('qc/orders/', OrderListQcView.as_view(), name='order_list_qc'),
     path('qc/orders/<int:pk>/', OrderDetailQcView.as_view(), name='order_detail_qc'),
-    path('qc/orders/<int:order_pk>/defects/create/', DefectCreateView.as_view(), name='defect_create'),
+    # path('qc/orders/<int:order_pk>/defects/create/', DefectCreateView.as_view(), name='defect_create'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/', DefectDetailView.as_view(), name='defect_detail'),
-    path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
+    # path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
     path('qc/orders/api/get-piece-info/<str:barcode>/', get_piece_info, name='get_piece_info'),
     path('qc/orders/update-piece-status/<int:piece_id>/', update_piece_qc, name='update_piece_qc'),
     
     path('packer/orders/', OrderListPackerView.as_view(), name='order_list_packer'),
     path('packer/orders/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
-    path('packer/orders/<int:order_pk>/discrepancy/create/', DiscrepancyCreateView.as_view(), name='discrepancy_create'),
+    # path('packer/orders/<int:order_pk>/discrepancy/create/', DiscrepancyCreateView.as_view(), name='discrepancy_create'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/', DiscrepancyDetailView.as_view(), name='discrepancy_detail'),
-    path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
+    # path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
     path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
+    path('packer/orders/calculate-discrepancies/<int:order_pk>/', calculate_discrepancies, name='calculate_discrepancies'),
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
@@ -169,6 +170,7 @@ urlpatterns = [
 
     # For dashboard APIs
     path('api/clients/<int:client_id>/', client_api, name='client_api'),
+    path('api/employees/<int:employee_id>/', employee_api, name='employee_api'),
 
     # For barcode creation
     path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),

@@ -9,9 +9,9 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; ">{% trans "QC Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "QC Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
         {{ request.user.username }}
       </li>
@@ -32,7 +32,7 @@
   <div class="container">
     <!-- <div class="card"> -->
 
-          <div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true">
+          <div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true" data-backdrop="false">
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
@@ -155,10 +155,9 @@
             {% if errors %}
             {% for error in errors %}
             <div class="list-group" >
-                <a href="{% url 'defect_detail' order_pk=order.pk pk=error.pk %}"
-                  class="list-group-item list-group-item-action"
-                  style="color: {% if order.status == 2 %}green{% else %}red{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
-                  {% trans "Defect" %} {{ error.passport.id }} - {{ error.size_quantity.size }}
+                <a class="list-group-item list-group-item-action"
+                  style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
+                  {% trans "Defect" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
                 </a>
             </div>
             {% endfor %}

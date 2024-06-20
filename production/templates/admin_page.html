@@ -7,10 +7,10 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323;">{% trans 'Admin Dashboard' %}
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}
   </h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
         {{ request.user.username }}
       </li>
@@ -23,20 +23,6 @@
     </ul>
   </div>
 </nav>
-<div class="col-md-4 mt-4">
-  <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
-    {% csrf_token %}
-    <div class="form-group">
-      <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
-        {% for branch in branches %}
-          <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
-            {{ branch.name }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-  </form>
-</div>
 <!-- <div class="container-fluid" style="margin-top: 20px;"> -->
   <!-- <div class="row"> -->
 
@@ -112,5 +98,20 @@
         </a>
         </div>
       </div>
+    </div>
+    <div class="col-md-4 mt-4">
+      <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
+        {% csrf_token %}
+        <div class="form-group d-flex align-items-center">
+          <h4 class="mb-0 mr-3">Branch:</h4>
+          <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
+            {% for branch in branches %}
+              <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
+                {{ branch.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
     </div>
 {% endblock %}

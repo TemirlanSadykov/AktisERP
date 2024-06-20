@@ -84,7 +84,7 @@ class OrderDetailQcView(DetailView):
         order = context['order']
         passport = Passport.objects.filter(order=order).first()
         if passport:
-            context['errors'] = Error.objects.filter(passport=passport, error_type=Error.ErrorType.DEFECT)
+            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DEFECT)
         else:
             context['errors'] = Error.objects.none()
         
@@ -160,7 +160,7 @@ def update_piece_qc(request, piece_id):
     try:
         data = json.loads(request.body)
         status = data.get('status')
-        defect_type = data.get('defectType', None)  # Retrieve defect type if provided
+        defect_type = data.get('defectType', None)
 
         valid_statuses = {
             'Checked': ProductionPiece.StageChoices.CHECKED,
@@ -173,28 +173,32 @@ def update_piece_qc(request, piece_id):
         piece = ProductionPiece.objects.get(id=piece_id)
         piece.stage = valid_statuses[status]
 
-        if status == 'Defect' and defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
-            piece.defect_type = defect_type
-            piece.save()
+        if status == 'Defect':
+            if defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
+                piece.defect_type = defect_type
+                piece.save()
 
-            # Create an Error instance if a defect is reported
-            error = Error.objects.create(
-                error_type=Error.ErrorType.DEFECT,
-                defect_type=defect_type,
-                cost=piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
-                passport=piece.passport_size.passport,
-                size_quantity=piece.passport_size.size_quantity,
-                quantity=1,
-                status=Error.Status.REPORTED,
-                reported_date=timezone.now()
-            )
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status} with defect type {defect_type}. Error record created.'})
+                error, created = Error.objects.update_or_create(
+                    piece=piece,
+                    error_type=Error.ErrorType.DEFECT,
+                    defaults={
+                        'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
+                        'status': Error.Status.REPORTED,
+                        'reported_date': timezone.now()
+                    }
+                )
 
-        elif status == 'Defect' and not defect_type:
-            return JsonResponse({'success': False, 'message': 'Defect type required for defect status.'}, status=400)
+                message = f'Piece status updated to {status} with defect type {defect_type}. {"Error record created." if created else "Error record updated."}'
+                return JsonResponse({'success': True, 'message': message})
+
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
+        
         else:
+            piece.defect_type = None
             piece.save()
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}.'})
+            Error.objects.filter(piece=piece, error_type=Error.ErrorType.DEFECT).delete()
+            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}. Any related error records have been removed.'})
         
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
@@ -204,67 +208,10 @@ def update_piece_qc(request, piece_id):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 @method_decorator([login_required, qc_required], name='dispatch')
-class DefectCreateView(CreateView):
-    model = Error
-    form_class = ErrorForm
-    template_name = 'qc/defects/create.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        order_pk = self.kwargs.get('order_pk')
-        kwargs['order_pk'] = order_pk
-        kwargs['error_type'] = 'DEFECT'
-        return kwargs
-
-    def form_valid(self, form):
-        order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
-        form.instance.order = order
-        unit_price = getattr(order, 'payment', None)
-        quantity = getattr(form.instance, 'quantity', None)
-        if unit_price is not None and quantity is not None:
-            form.instance.cost = unit_price * quantity
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        order_pk = self.kwargs['order_pk']
-        context['order'] = get_object_or_404(Order, pk=order_pk)
-        context['sidebar_type'] = 'qc_page'
-        return context
-
-@method_decorator([login_required, qc_required], name='dispatch')
 class DefectDetailView(DetailView):
     model = Error 
     template_name = 'qc/defects/detail.html'  
     context_object_name = 'error'
-
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectUpdateView(UpdateView):
-    model = Error 
-    form_class = ErrorForm
-    template_name = 'qc/defects/edit.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        order_pk = self.kwargs.get('order_pk')
-        kwargs['order_pk'] = order_pk
-        kwargs['error_type'] = 'DEFECT'
-        return kwargs
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        error_pk = self.kwargs['pk']
-        context['error'] = get_object_or_404(Error, pk=error_pk)
-        context['sidebar_type'] = 'qc_page'
-        return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDeleteView(DeleteView):

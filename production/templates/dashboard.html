@@ -451,37 +451,44 @@
                 </table>
             </div>
         </div>
-        <div id="Employees" class="tabcontent">
-            <h2>Employees</h2>
-            <ul class="employee-list">
-                <li><a href="#" onclick="showEmployeeModal('Employee 1')">Employee 1</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 2')">Employee 2</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 3')">Employee 3</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 4')">Employee 4</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 5')">Employee 5</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <h4 id="employeeName"></h4>
-                    <p id="employeeEarnings"></p>
-                    <p id="employeeEfficiency"></p>
-                    <canvas id="employeeChart"></canvas>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <div id="Employees" class="tabcontent" style="display: none;">
+            <h2>Employee Rankings</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Full Name</th>
+                        <th>Units Produced</th>
+                        <th>Hours Worked</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employee_data %}
+                    <tr>
+                        <td>{{ employee.name }}</td>
+                        <td><a href="#" data-toggle="modal" data-target="#employeeModal" onclick="fetchEmployeeDetails({{ employee.id }})">{{ employee.full_name }}</a></td>
+                        <td>{{ employee.units_produced }}</td>
+                        <td>{{ employee.hours_worked }} hrs</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Employee details will be filled here by JavaScript -->
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </div>        
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -674,5 +681,53 @@
                 .catch(error => console.error('Error loading client details:', error));
         }           
     </script>
+    <script>
+        function fetchEmployeeDetails(employeeId) {
+            console.log(employeeId)
+            fetch(`/production/api/employees/${employeeId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#employeeModal .modal-body');
+                    console.log(modalBody)
+                    // Set up the basic employee info
+                    modalBody.innerHTML = `
+                        <p>Name: ${data.full_name}</p>
+                        <p>Username: ${data.username}</p>
+                        <p>Earnings: ${data.earnings} сом</p>
+                        <p>Efficiency: ${data.efficiency}%</p>
+                        <p>Operations Worked On: ${data.operations}</p>
+                        <p>Defects/Discrepancies: ${data.defects}</p>
+                        <canvas id="productionChart" width="400" height="400"></canvas>
+                    `; // Ensure there is a canvas element for the chart
+        
+                    // Prepare the data for the chart
+                    const labels = data.units_over_time.map(item => item.date);
+                    const unitsProduced = data.units_over_time.map(item => item.units);
+                    // Render the chart using Chart.js
+                    var ctx = document.getElementById('productionChart').getContext('2d');
+                    var productionChart = new Chart(ctx, {
+                        type: 'line', // or 'bar' if you prefer
+                        data: {
+                            labels: labels,  // Use original labels for X-axis
+                            datasets: [{
+                                label: "Units Produced Over Time",
+                                data: unitsProduced,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading employee details:', error));
+        }           
+    </script>    
 </body>
 </html>

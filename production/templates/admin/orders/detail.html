@@ -8,9 +8,9 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; ">{% trans "Admin Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Admin Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-    <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
         {{ request.user.username }}
       </li>
@@ -41,8 +41,7 @@
       {% for error in errors %}
       <p class="error-item">
         <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
-          {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans
-          "Discrepancy" %} {% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
+          {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans "Discrepancy" %} {% endif %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
         </a>
       </p>
       {% endfor %}
@@ -443,11 +442,11 @@
           if (data.error) {
             const errorDetails = document.getElementById('errorDetails');
             errorDetails.innerHTML =
-              `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
-            <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
-            <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
-            <p><strong>Количество:</strong> ${data.error.quantity}</p>
-            ${data.error.error_type === 'DEFECT' ? `<p><strong>Тип Дефекта:</strong> ${data.error.defect_type}</p>` : ``}
+            `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
+            <p><strong>Паспорт:</strong> ${data.error.piece__passport_size__passport__id}</p>
+            <p><strong>Размер:</strong> ${data.error.piece__passport_size__size_quantity__size}</p>
+            <p><strong>Единица:</strong> ${data.error.piece__id}</p>
+            ${data.error.error_type === 'DEFECT' ? `<p><strong>Тип Дефекта:</strong> ${data.error.piece__defect_type}</p>` : ``}
             <p><strong>Статус:</strong> ${data.error.status}</p>
             <p><strong>Дата Сообщения:</strong> ${data.error.reported_date}</p>
             <p><strong>Дата Разрешения:</strong> ${data.error.resolved_date || 'N/A'}</p>`;
