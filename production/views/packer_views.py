@@ -130,7 +130,6 @@ def update_piece_packer(request, piece_id):
     try:
         piece = ProductionPiece.objects.get(id=piece_id)
         
-        # Check the current stage of the piece and respond appropriately
         if piece.stage == ProductionPiece.StageChoices.PACKED:
             return JsonResponse({'success': False, 'message': 'Piece is already packed.'}, status=409)
         elif piece.stage == ProductionPiece.StageChoices.DEFECT:
@@ -138,9 +137,11 @@ def update_piece_packer(request, piece_id):
         elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
             return JsonResponse({'success': False, 'message': 'Piece is not checked and cannot be packed.'}, status=409)
 
-        # If the piece is checked, update to packed
         piece.stage = ProductionPiece.StageChoices.PACKED
         piece.save()
+
+        Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
+
         return JsonResponse({'success': True, 'message': 'Piece status updated to Packed.'})
 
     except ProductionPiece.DoesNotExist:
@@ -258,3 +259,34 @@ def mark_as_done(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    
+@login_required
+@packer_required
+@require_POST
+def calculate_discrepancies(request, order_pk):
+    try:
+        order = Order.objects.get(pk=order_pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order does not exist'}, status=404)
+
+    pieces = ProductionPiece.objects.filter(
+        passport_size__passport__order=order,
+        stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.NOT_CHECKED]
+    )
+
+    discrepancies_created = 0
+
+    for piece in pieces:
+        error, created = Error.objects.get_or_create(
+            piece=piece,
+            error_type=Error.ErrorType.DISCREPANCY,
+            defaults={
+                'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
+                'status': Error.Status.REPORTED,
+                'reported_date': timezone.now()
+            }
+        )
+        if created:
+            discrepancies_created += 1
+
+    return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})

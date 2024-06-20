@@ -187,20 +187,18 @@ def update_piece_qc(request, piece_id):
                         'reported_date': timezone.now()
                     }
                 )
-                
-                if created:
-                    message = f'Piece status updated to {status} with defect type {defect_type}. Error record created.'
-                else:
-                    message = f'Piece status updated to {status} with defect type {defect_type}. Error record updated.'
-                
+
+                message = f'Piece status updated to {status} with defect type {defect_type}. {"Error record created." if created else "Error record updated."}'
                 return JsonResponse({'success': True, 'message': message})
 
             else:
                 return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
         
         else:
+            piece.defect_type = None
             piece.save()
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}.'})
+            Error.objects.filter(piece=piece, error_type=Error.ErrorType.DEFECT).delete()
+            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}. Any related error records have been removed.'})
         
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
