@@ -99,53 +99,6 @@
 </div>
 
 
-
-
-
-
-
-
-<div class="content-container">
-    <h2 class="form-heading">{% if error.error_type == 'DEFECT' %}{% trans "Defect Details" %}{% else %}{% trans "Discrepancy Details" %}{% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}</h2>
-
-    <div class="details">
-        <p><strong>{% trans "Model" %}:</strong> {{ error.piece.passport_size.passport.order.model.name }}</p>
-        <p><strong>{% trans "Passport" %}:</strong> {{ error.piece.passport_size.passport.id }}</p>
-        <p><strong>{% trans "Size" %}:</strong> {{ error.piece.passport_size.size_quantity.size }}</p>
-        <p><strong>{% trans "Piece" %}:</strong> {{ error.piece.id }}</p>
-        <p><strong>{% trans "Cost" %}:</strong> <i class="cost">{{ error.cost }}</i></p>
-        <p><strong>{% trans "Status" %}:</strong> {{ error.get_status_display }}</p>
-        <p><strong>{% trans "Reported Date" %}:</strong> {{ error.reported_date|date:"Y-m-d" }}</p>
-        <p><strong>{% trans "Resolved Date" %}:</strong> {{ error.resolved_date|date:"Y-m-d" }}</p>
-    </div>
-
-    <h3 class="sub-heading">{% trans "Assign Responsibility" %}</h3>
-    <form id="responsibilityErrorForm" method="post" class="date-filter-form">
-        {% csrf_token %}
-        <div class="form-group">
-            <label>{% trans "Employee ID:" %}</label>
-            {{ form.employee }}
-        </div>
-        <div class="form-group">
-            <label>{% trans "Percentage:" %}</label>
-            {{ form.percentage }}
-        </div>
-        <button type="submit" class="btn edit-btn">{% trans "Assign" %}</button>
-    </form>
-    <ul id="responsibilityErrorList" class="responsibility-error-list">
-        {% for rd in responsibility_errors %}
-        <li id="rd-{{ rd.id }}" class="responsibility-error-item">
-            <span class="detail"><strong>{% trans "Employee:" %}</strong> <span class="employee" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.employee }}</span></span>
-            <span class="detail"><strong>{% trans "Percentage:" %}</strong> <span class="percentage" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.percentage }}</span></span>
-            <button class="edit-btn" data-rd-id="{{ rd.id }}">{% trans "Edit" %}</button>
-            <button class="delete-btn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
-        </li>
-        {% endfor %}
-    </ul>
-    <div class="form-actions">
-        <a href="{% url 'order_detail' error.piece.passport_size.passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
-    </div>
-</div>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const responsibilityErrorList = document.getElementById('responsibilityErrorList');
