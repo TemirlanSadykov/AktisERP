@@ -2,6 +2,143 @@
 {% load i18n static %}
 
 {% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Admin Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container maincontr">
+  <div class="card-header">
+    {% if error.error_type == 'DEFECT' %}{% trans "Defect Details" %}{% else %}{% trans "Discrepancy Details" %}{% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
+  </div>
+  <div class="container">
+    <!-- <div class="card"> -->
+    <div class="progress" style="margin-bottom: 20px; height:1.25rem">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+        style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:" 0" }}%;"
+        aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
+        {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
+      </div>
+    </div>
+    {% if errors %}
+    <div class="errors-list">
+      {% for error in errors %}
+      <p class="error-item">
+        <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
+          {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans "Discrepancy" %} {% endif %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
+        </a>
+      </p>
+      {% endfor %}
+    </div>
+    <div id="errorDetailsPopupOverlay" class="popup-overlay" style="display: none;">
+      <div id="errorDetailsPopup" class="popup-content">
+        <div id="errorDetails" class="error-details">
+          <!-- Error details will be dynamically inserted here -->
+        </div>
+        <form id="errorStatusForm">
+          <div class="form-actions">
+            {% csrf_token %}
+            <input type="hidden" name="errorStatus" id="errorStatusInput">
+            <input type="hidden" name="errorId" id="errorIdInput">
+            <button type="button" onclick="goErrorDetails()" class="btn create-btn">{% trans "Details" %}</button>
+            <button type="button" onclick="closeErrorPopup()" class="btn back-btn">{% trans "Close" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+        <p><strong>{% trans "Model" %}:</strong> {{ error.piece.passport_size.passport.order.model.name }}</p>
+        <p><strong>{% trans "Passport" %}:</strong> {{ error.piece.passport_size.passport.id }}</p>
+        <p><strong>{% trans "Size" %}:</strong> {{ error.piece.passport_size.size_quantity.size }}</p>
+        <p><strong>{% trans "Piece" %}:</strong> {{ error.piece.id }}</p>
+        <p><strong>{% trans "Cost" %}:</strong> <i class="cost">{{ error.cost }}</i></p>
+        <p><strong>{% trans "Status" %}:</strong> {{ error.get_status_display }}</p>
+        <p><strong>{% trans "Reported Date" %}:</strong> {{ error.reported_date|date:"Y-m-d" }}</p>
+        <p><strong>{% trans "Resolved Date" %}:</strong> {{ error.resolved_date|date:"Y-m-d" }}</p>
+        </div>
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Assign Responsibility" %}</h3>
+    <form id="responsibilityErrorForm" method="post" class="date-filter-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>{% trans "Employee ID:" %}</label>
+            {{ form.employee }}
+        </div>
+        <div class="form-group">
+            <label>{% trans "Percentage:" %}</label>
+            {{ form.percentage }}
+        </div>
+        <button type="submit" class="btn edit-btn">{% trans "Assign" %}</button>
+    </form>
+  <br>
+    <div id="responsibilityErrorList" class="responsibility-error-list">
+        {% for rd in responsibility_errors %}
+        <li id="rd-{{ rd.id }}" class="responsibility-error-item">
+            <span class="detail"><strong>{% trans "Employee:" %}</strong> <span class="employee" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.employee }}</span></span>
+            <span class="detail"><strong>{% trans "Percentage:" %}</strong> <span class="percentage" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.percentage }}</span></span>
+            <button class="edit-btn" data-rd-id="{{ rd.id }}">{% trans "Edit" %}</button>
+            <button class="delete-btn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
+        </li>
+        {% endfor %}
+    </div>
+  </div>
+<br>
+    <div class="container-fluid bottomContainer">
+      <div class="row">
+        <div class="col-md-6">
+          <h3>{% trans "Associated Models" %}</h3>
+        </div>
+      </div><br>
+      {% if passports %}
+      {% for passport in passports %}
+      <div class="list-group">
+        <a href="{% url 'passport_detail_admin' passport.pk %}" class="list-group-item list-group-item-action"
+          style="color: {{ passport.is_completed|yesno:'green,red' }}; border: 1px solid #ced4da; border-radius:0px;">
+          {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {{ passport.is_completed|yesno:'Yes,No' }}
+        </a>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+          {% trans "No associated passports." %}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    <!-- </div> -->
+</div>
+
+
+
+
+
+
+
+
 <div class="content-container">
     <h2 class="form-heading">{% if error.error_type == 'DEFECT' %}{% trans "Defect Details" %}{% else %}{% trans "Discrepancy Details" %}{% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}</h2>
 
