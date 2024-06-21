@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
-from django.db.models import F, Window, Sum, Count
+from django.db.models import F, Window, Sum, Count, Q
 from django.db.models.functions import Lead
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
@@ -48,13 +48,25 @@ def dashboard_page(request):
     client_data = get_client_data()
     employee_data = get_employee_data()
     production_data = get_production_data()
+    orders_data = get_orders_data()
 
     context = {
         'client_data': client_data,
         'employee_data': employee_data,
-        'production_data': production_data
+        'production_data': production_data,
+        'orders_data': orders_data
     }
     return render(request, 'dashboard.html', context)
+
+def get_orders_data():
+    orders_data = Order.objects.select_related('model').annotate(
+        model_name=F('model__name'),
+        assortment_name=F('assortment__name'),
+        total_price=F('quantity') * F('payment'),
+    ).values(
+        'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'color', 'fabrics'
+    )
+    return list(orders_data)
 
 def get_production_data():
     today = timezone.now()

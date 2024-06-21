@@ -120,98 +120,52 @@
                 </div>
             </div>
         </div>        
-        <div id="Production" class="tabcontent">
+        <div id="Production" class="tabcontent" style="display: none;">
             <h2>Production Overview</h2>
-            <div class="branch-switch">
-                <label for="branchSelect">Select Branch: </label>
-                <select id="branchSelect" onchange="switchBranch()">
-                    <option value="branch1">Branch 1</option>
-                    <option value="branch2">Branch 2</option>
-                </select>
-            </div>
-            <div id="branch1" class="branch">
-                <h3>Branch 1</h3>
-                <div class="grid">
-                    <div class="card">
-                        <h4>Employees</h4>
-                        <ul>
-                            <li>Employee 1</li>
-                            <li>Employee 2</li>
-                            <li>Employee 3</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Units Produced</h4>
-                        <p>2500 units</p>
-                    </div>
-                    <div class="card">
-                        <h4>Models Produced</h4>
-                        <ul>
-                            <li>Model A</li>
-                            <li>Model B</li>
-                            <li>Model C</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Defects</h4>
-                        <ul>
-                            <li>Defect 1</li>
-                            <li>Defect 2</li>
-                            <li>Defect 3</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Discrepancies</h4>
-                        <ul>
-                            <li>Discrepancy 1</li>
-                            <li>Discrepancy 2</li>
-                            <li>Discrepancy 3</li>
-                        </ul>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Quantity</th>
+                        <th>Price (Total)</th>
+                        <th>Status</th>
+                        <th>Assortment</th>
+                        <th>Color</th>
+                        <th>Fabrics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders_data %}
+                    <tr>
+                        <td><a href="#" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
+                        <td>{{ order.quantity }}</td>
+                        <td>{{ order.total_price }}</td>
+                        <td>{{ order.status }}</td>
+                        <td>{{ order.assortment_name }}</td>
+                        <td>{{ order.color }}</td>
+                        <td>{{ order.fabrics }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        
+            <!-- Order Details Modal -->
+            <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Order details will be filled here by JavaScript -->
+                        </div>
                     </div>
                 </div>
             </div>
-            <div id="branch2" class="branch" style="display: none;">
-                <h3>Branch 2</h3>
-                <div class="grid">
-                    <div class="card">
-                        <h4>Employees</h4>
-                        <ul>
-                            <li>Employee 4</li>
-                            <li>Employee 5</li>
-                            <li>Employee 6</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Units Produced</h4>
-                        <p>2500 units</p>
-                    </div>
-                    <div class="card">
-                        <h4>Models Produced</h4>
-                        <ul>
-                            <li>Model D</li>
-                            <li>Model E</li>
-                            <li>Model F</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Defects</h4>
-                        <ul>
-                            <li>Defect 4</li>
-                            <li>Defect 5</li>
-                            <li>Defect 6</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Discrepancies</h4>
-                        <ul>
-                            <li>Discrepancy 4</li>
-                            <li>Discrepancy 5</li>
-                            <li>Discrepancy 6</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </div>      
         <div id="Inventory" class="tabcontent">
             <h2>Inventory</h2>
             <h3>Rolls (Fabrics)</h3>
@@ -748,5 +702,39 @@
                 .catch(error => console.error('Error loading employee details:', error));
         }           
     </script>    
+    <script>
+        function fetchOrderDetails(orderId) {
+            fetch(`/production/api/orders/${orderId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#orderModal .modal-body');
+                    let passportsHtml = data.passports.map(passport => `
+                        <div>
+                            <a href="/production/admin/passports/${passport.passport_id}/" style="text-decoration: none; color: inherit;" target="_blank">
+                                <p>
+                                    <strong>Passport ID:</strong> ${passport.passport_id}, 
+                                    <strong>Size Range:</strong> ${passport.size_range},
+                                    ${passport.rolls.map(roll => `
+                                        <span>${roll.roll_name}: ${roll.meters} meters</span>
+                                    `).join(', ')}
+                                </p>
+                            </a>
+                        </div>
+                    `).join('');
+    
+                    modalBody.innerHTML = `
+                        <p><strong>Model Name:</strong> ${data.model_name}</p>
+                        <p><strong>Quantity:</strong> ${data.quantity}</p>
+                        <p><strong>Price Per Piece:</strong> ${data.price_per_piece}</p>
+                        <p><strong>Production Cost Per Piece:</strong> ${data.production_cost_per_piece}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Assortment:</strong> ${data.assortment}</p>
+                        <p><strong>Color:</strong> ${data.color}</p>
+                        ${passportsHtml}
+                    `;
+                })
+                .catch(error => console.error('Error loading order details:', error));
+        }
+    </script>
 </body>
 </html>
