@@ -67,7 +67,7 @@
             <span class="detail"><strong>{% trans "Percentage:" %}</strong> <span class="percentage" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.percentage }}</span></span>
             <button class="edit-btn" data-rd-id="{{ rd.id }}">{% trans "Edit" %}</button>
             <button class="delete-btn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
-            <a href="javascript:void(0);" id="deleteBtn" data-rd-id="{{ rd.id }}" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+            <a href="javascript:void(0);" id="deleteBtn"><button class="delete-btn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button></a>
         </li>
         {% endfor %}
     </div>
