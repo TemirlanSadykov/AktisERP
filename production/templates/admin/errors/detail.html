@@ -28,40 +28,6 @@
   </div>
   <div class="container">
     <!-- <div class="card"> -->
-    <div class="progress" style="margin-bottom: 20px; height:1.25rem">
-      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
-        style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:" 0" }}%;"
-        aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
-        {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
-      </div>
-    </div>
-    {% if errors %}
-    <div class="errors-list">
-      {% for error in errors %}
-      <p class="error-item">
-        <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
-          {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans "Discrepancy" %} {% endif %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
-        </a>
-      </p>
-      {% endfor %}
-    </div>
-    <div id="errorDetailsPopupOverlay" class="popup-overlay" style="display: none;">
-      <div id="errorDetailsPopup" class="popup-content">
-        <div id="errorDetails" class="error-details">
-          <!-- Error details will be dynamically inserted here -->
-        </div>
-        <form id="errorStatusForm">
-          <div class="form-actions">
-            {% csrf_token %}
-            <input type="hidden" name="errorStatus" id="errorStatusInput">
-            <input type="hidden" name="errorId" id="errorIdInput">
-            <button type="button" onclick="goErrorDetails()" class="btn create-btn">{% trans "Details" %}</button>
-            <button type="button" onclick="closeErrorPopup()" class="btn back-btn">{% trans "Close" %}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    {% endif %}
     <div class="card-body">
       <div class="row">
         <div class="col-md-6 details">
