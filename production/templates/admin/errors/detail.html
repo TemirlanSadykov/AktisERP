@@ -67,43 +67,78 @@
             <span class="detail"><strong>{% trans "Percentage:" %}</strong> <span class="percentage" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.percentage }}</span></span>
             <button class="edit-btn" data-rd-id="{{ rd.id }}">{% trans "Edit" %}</button>
             <button class="delete-btn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
-            <a href="javascript:void(0);" ><button type="button" id="deleteBtn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button></a>
+<a href="javascript:void(0);" >
+    <button type="button" class="deleteBtn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
+</a>
+
         </li>
         {% endfor %}
     </div>
 
-  <div class="modal" id="deleteModal">
-      <div class="modal-content">
-          <span class="close" id="closeBtn">&times;</span>
-          <p>Are you sure you want to delete this branch?</p>
-          <div class="modal-buttons">
-              <button class="btn confirm " id="confirmDeleteBtn">Confirm</button>
-              <button class="btn cancel" id="cancelBtn">Cancel</button>
-          </div>
-      </div>
-  </div>
+<div class="modal" id="deleteModal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" id="closeBtn">&times;</span>
+        <p>Are you sure you want to delete this branch?</p>
+        <div class="modal-buttons">
+            <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+            <button class="btn cancel" id="cancelBtn">Cancel</button>
+        </div>
+    </div>
+</div>
   </div>
 <br>
 
     <!-- </div> -->
 </div>
-<script>
-  document.getElementById('deleteBtn').onclick = function() {
-      document.getElementById('deleteModal').style.display = 'flex';
-  };
-  
-  document.getElementById('closeBtn').onclick = function() {
-      document.getElementById('deleteModal').style.display = 'none';
-  };
-  
-  document.getElementById('cancelBtn').onclick = function() {
-      document.getElementById('deleteModal').style.display = 'none';
-  };
-  
-  document.getElementById('confirmDeleteBtn').onclick = function() {
-      document.getElementById('deleteForm').submit();
-  };
-  </script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.deleteBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    let currentRdId;
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            currentRdId = this.getAttribute('data-rd-id');
+            deleteModal.style.display = 'flex';
+        });
+    });
+
+    document.getElementById('closeBtn').onclick = function() {
+        deleteModal.style.display = 'none';
+    };
+
+    document.getElementById('cancelBtn').onclick = function() {
+        deleteModal.style.display = 'none';
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        // Assuming you want to send currentRdId to the server
+        // You can add the logic to delete the branch using AJAX or form submission
+        console.log('Delete confirmed for ID:', currentRdId);
+        // Example: using AJAX to send the ID to the server
+        fetch('/delete-endpoint', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ rd_id: currentRdId }),
+        }).then(response => {
+            if (response.ok) {
+                deleteModal.style.display = 'none';
+                // Optionally refresh the page or remove the item from the UI
+            }
+        }).catch(error => {
+            console.error('Error deleting the branch:', error);
+        });
+    };
+
+    // Close the modal if the user clicks outside of the modal content
+    window.onclick = function(event) {
+        if (event.target == deleteModal) {
+            deleteModal.style.display = 'none';
+        }
+    };
+});
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
