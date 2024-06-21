@@ -31,33 +31,52 @@
         <div id="Overview" class="tabcontent">
             <div class="header">
                 <h1>Dashboard</h1>
+                <h4>Per last 30 days</h4>
             </div>
             <div class="cards">
                 <div class="card">
                     <h3>Total Production</h3>
-                    <p>5000 units</p>
+                    <p>{{ production_data.total_amount }} units</p>
                 </div>
                 <div class="card">
-                    <h3>Inventory Levels</h3>
-                    <p>15000 items</p>
+                    <h3>Completed Units</h3>
+                    <p>{{ production_data.completed_amount }} units</p>
                 </div>
                 <div class="card">
-                    <h3>Open Orders</h3>
-                    <p>45</p>
+                    <h3>Orders in Progress</h3>
+                    <p>{{ production_data.orders_in_progress }} orders</p>
                 </div>
                 <div class="card">
-                    <h3>Pending Maintenance</h3>
-                    <p>3 tasks</p>
+                    <h3>Models in Progress</h3>
+                    <p>{{ production_data.in_progress_orders_count }} models</p>
                 </div>
             </div>
-            <div class="charts">
+            <div class="cards">
+                <div class="card">
+                    <h3>Errors</h3>
+                    <p>{{ production_data.total_errors }} units</p>
+                </div>
+                <div class="card">
+                    <h3>Rolls</h3>
+                    <p>{{ production_data.total_rolls_used }} meters</p>
+                </div>
+                <div class="card">
+                    <h3>Salary</h3>
+                    <p>{{ production_data.total_salary }} сом</p>
+                </div>
+                <div class="card">
+                    <h3>Total Revenue</h3>
+                    <p>{{ production_data.total_revenue }} сом</p>
+                </div>
+            </div>
+            {% comment %} <div class="charts">
                 <div class="chart" id="productionChartContainer">
                     <canvas id="productionChart"></canvas>
                 </div>
                 <div class="chart" id="inventoryChartContainer">
                     <canvas id="inventoryChart"></canvas>
                 </div>
-            </div>
+            </div> {% endcomment %}
         </div>
         <div id="Clients" class="tabcontent" style="display: none;">
             <h2>Client Rankings</h2>
