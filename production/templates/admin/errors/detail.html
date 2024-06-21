@@ -72,29 +72,7 @@
     </div>
   </div>
 <br>
-    <div class="container-fluid bottomContainer">
-      <div class="row">
-        <div class="col-md-6">
-          <h3>{% trans "Associated Models" %}</h3>
-        </div>
-      </div><br>
-      {% if passports %}
-      {% for passport in passports %}
-      <div class="list-group">
-        <a href="{% url 'passport_detail_admin' passport.pk %}" class="list-group-item list-group-item-action"
-          style="color: {{ passport.is_completed|yesno:'green,red' }}; border: 1px solid #ced4da; border-radius:0px;">
-          {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {{ passport.is_completed|yesno:'Yes,No' }}
-        </a>
-      </div>
-      {% endfor %}
-      {% else %}
-      <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-          {% trans "No associated passports." %}
-        </a>
-      </div>
-      {% endif %}
-    </div>
+
     <!-- </div> -->
 </div>
 
