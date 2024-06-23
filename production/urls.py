@@ -158,6 +158,7 @@ urlpatterns = [
     # path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
     path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
+    path('packer/orders/calculate-discrepancies/<int:order_pk>/', calculate_discrepancies, name='calculate_discrepancies'),
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
@@ -170,6 +171,7 @@ urlpatterns = [
     # For dashboard APIs
     path('api/clients/<int:client_id>/', client_api, name='client_api'),
     path('api/employees/<int:employee_id>/', employee_api, name='employee_api'),
+    path('api/orders/<int:order_id>/', order_api, name='order_api'),
 
     # For barcode creation
     path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),

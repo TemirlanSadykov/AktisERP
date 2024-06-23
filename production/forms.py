@@ -389,38 +389,6 @@ class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
 
-# class ErrorForm(forms.ModelForm):
-#     size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none(),widget=forms.Select(attrs={'class': 'form-control'}))
-
-#     class Meta:
-#         model = Error
-#         fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
-#         widgets = {
-#             'passport': forms.TextInput(attrs={'class': 'form-control'}),
-#             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-#             'defect_type': forms.Select(attrs={'class': 'form-control'}),
-#         }
-    
-#     def __init__(self, *args, **kwargs):
-#         order_pk = kwargs.pop('order_pk', None)
-#         self.error_type = kwargs.pop('error_type', None)
-#         super().__init__(*args, **kwargs)
-
-#         if order_pk:
-#             order = Order.objects.get(pk=order_pk)
-#             self.fields['passport'].queryset = Passport.objects.filter(order=order)
-#             self.fields['size_quantity'].queryset = order.size_quantities.all()
-
-#         if self.error_type != 'DEFECT':
-#             if 'defect_type' in self.fields:
-#                 del self.fields['defect_type']
-#         else:
-#             self.fields['defect_type'].required = True
-
-#     def save(self, commit=True):
-#         self.instance.error_type = self.error_type
-#         return super().save(commit=commit)
-
 class FixedSalaryForm(forms.ModelForm):
     employees = forms.ModelMultipleChoiceField(
         queryset=UserProfile.objects.all().order_by('employee_id'),
@@ -448,8 +416,8 @@ class ErrorResponsibilityForm(forms.ModelForm):
         model = ErrorResponsibility
         fields = ['employee', 'percentage']
         widgets = {
-            'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):

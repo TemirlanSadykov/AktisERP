@@ -187,20 +187,18 @@ def update_piece_qc(request, piece_id):
                         'reported_date': timezone.now()
                     }
                 )
-                
-                if created:
-                    message = f'Piece status updated to {status} with defect type {defect_type}. Error record created.'
-                else:
-                    message = f'Piece status updated to {status} with defect type {defect_type}. Error record updated.'
-                
+
+                message = f'Piece status updated to {status} with defect type {defect_type}. {"Error record created." if created else "Error record updated."}'
                 return JsonResponse({'success': True, 'message': message})
 
             else:
                 return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
         
         else:
+            piece.defect_type = None
             piece.save()
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}.'})
+            Error.objects.filter(piece=piece, error_type=Error.ErrorType.DEFECT).delete()
+            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}. Any related error records have been removed.'})
         
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
@@ -209,68 +207,11 @@ def update_piece_qc(request, piece_id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
-# @method_decorator([login_required, qc_required], name='dispatch')
-# class DefectCreateView(CreateView):
-#     model = Error
-#     form_class = ErrorForm
-#     template_name = 'qc/defects/create.html'
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         order_pk = self.kwargs.get('order_pk')
-#         kwargs['order_pk'] = order_pk
-#         kwargs['error_type'] = 'DEFECT'
-#         return kwargs
-
-#     def form_valid(self, form):
-#         order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
-#         form.instance.order = order
-#         unit_price = getattr(order, 'payment', None)
-#         quantity = getattr(form.instance, 'quantity', None)
-#         if unit_price is not None and quantity is not None:
-#             form.instance.cost = unit_price * quantity
-#         return super().form_valid(form)
-
-#     def get_success_url(self):
-#         order_pk = self.kwargs['order_pk']
-#         return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         order_pk = self.kwargs['order_pk']
-#         context['order'] = get_object_or_404(Order, pk=order_pk)
-#         context['sidebar_type'] = 'qc_page'
-#         return context
-
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDetailView(DetailView):
     model = Error 
     template_name = 'qc/defects/detail.html'  
     context_object_name = 'error'
-
-# @method_decorator([login_required, qc_required], name='dispatch')
-# class DefectUpdateView(UpdateView):
-#     model = Error 
-#     form_class = ErrorForm
-#     template_name = 'qc/defects/edit.html'
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         order_pk = self.kwargs.get('order_pk')
-#         kwargs['order_pk'] = order_pk
-#         kwargs['error_type'] = 'DEFECT'
-#         return kwargs
-
-#     def get_success_url(self):
-#         order_pk = self.kwargs['order_pk']
-#         return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
-    
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         error_pk = self.kwargs['pk']
-#         context['error'] = get_object_or_404(Error, pk=error_pk)
-#         context['sidebar_type'] = 'qc_page'
-#         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDeleteView(DeleteView):

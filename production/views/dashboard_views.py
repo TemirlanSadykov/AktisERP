@@ -89,3 +89,41 @@ def employee_api(request, employee_id):
 
     except UserProfile.DoesNotExist:
         return JsonResponse({'error': 'Employee not found'}, status=404)
+    
+@login_required
+@admin_required
+def order_api(request, order_id):
+    try:
+        order = Order.objects.get(pk=order_id)
+        # Calculate the production cost per piece
+        production_cost_per_piece = order.model.operations.aggregate(
+            total_cost=Sum('payment')
+        )['total_cost'] or 0
+
+        passports_data = [
+            {
+                'passport_id': passport.id,
+                'size_range': f"{passport.passport_sizes.first().size_quantity.size} - {passport.passport_sizes.last().size_quantity.size}",
+                'rolls': [
+                    {
+                        'roll_name': pr.roll.name,
+                        'meters': pr.meters
+                    } for pr in passport.passport_rolls.all()
+                ]
+            } for passport in order.passports.all()
+        ]
+        response_data = {
+            'model_name': order.model.name,
+            'quantity': order.quantity,
+            'price_per_piece': float(order.payment),
+            'production_cost_per_piece': float(production_cost_per_piece),
+            'status': order.get_status_display(),
+            'assortment': order.assortment.name if order.assortment else 'N/A',
+            'color': order.color,
+            'passports': passports_data
+        }
+
+        return JsonResponse(response_data)
+
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)

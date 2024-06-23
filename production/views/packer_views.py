@@ -130,7 +130,6 @@ def update_piece_packer(request, piece_id):
     try:
         piece = ProductionPiece.objects.get(id=piece_id)
         
-        # Check the current stage of the piece and respond appropriately
         if piece.stage == ProductionPiece.StageChoices.PACKED:
             return JsonResponse({'success': False, 'message': 'Piece is already packed.'}, status=409)
         elif piece.stage == ProductionPiece.StageChoices.DEFECT:
@@ -138,78 +137,23 @@ def update_piece_packer(request, piece_id):
         elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
             return JsonResponse({'success': False, 'message': 'Piece is not checked and cannot be packed.'}, status=409)
 
-        # If the piece is checked, update to packed
         piece.stage = ProductionPiece.StageChoices.PACKED
         piece.save()
+
+        Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
+
         return JsonResponse({'success': True, 'message': 'Piece status updated to Packed.'})
 
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-# @method_decorator([login_required, packer_required], name='dispatch')
-# class DiscrepancyCreateView(CreateView):
-#     model = Error
-#     form_class = ErrorForm
-#     template_name = 'packer/discrepancies/create.html'
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         order_pk = self.kwargs.get('order_pk')
-#         kwargs['order_pk'] = order_pk
-#         kwargs['error_type'] = 'DISCREPANCY'
-#         return kwargs
-
-#     def form_valid(self, form):
-#         order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
-#         form.instance.order = order
-#         unit_price = getattr(order, 'payment', None)
-#         quantity = getattr(form.instance, 'quantity', None)
-#         if unit_price is not None and quantity is not None:
-#             form.instance.cost = unit_price * abs(quantity) 
-#         return super().form_valid(form)
-
-#     def get_success_url(self):
-#         order_pk = self.kwargs['order_pk']
-#         return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         order_pk = self.kwargs['order_pk']
-#         context['order'] = get_object_or_404(Order, pk=order_pk)
-#         context['sidebar_type'] = 'packer'
-#         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class DiscrepancyDetailView(DetailView):
     model = Error
     template_name = 'packer/discrepancies/detail.html'
     context_object_name = 'error'
-
-# @method_decorator([login_required, packer_required], name='dispatch')
-# class DiscrepancyUpdateView(UpdateView):
-#     model = Error
-#     form_class = ErrorForm
-#     template_name = 'packer/discrepancies/edit.html'
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         order_pk = self.kwargs.get('order_pk')
-#         kwargs['order_pk'] = order_pk
-#         kwargs['error_type'] = 'DISCREPANCY'
-#         return kwargs
-
-#     def get_success_url(self):
-#         order_pk = self.kwargs['order_pk']
-#         return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
-    
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         error_pk = self.kwargs['pk']
-#         context['error'] = get_object_or_404(Error, pk=error_pk)
-#         context['sidebar_type'] = 'packer'
-#         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class DiscrepancyDeleteView(DeleteView):
@@ -258,3 +202,34 @@ def mark_as_done(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    
+@login_required
+@packer_required
+@require_POST
+def calculate_discrepancies(request, order_pk):
+    try:
+        order = Order.objects.get(pk=order_pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order does not exist'}, status=404)
+
+    pieces = ProductionPiece.objects.filter(
+        passport_size__passport__order=order,
+        stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.NOT_CHECKED]
+    )
+
+    discrepancies_created = 0
+
+    for piece in pieces:
+        error, created = Error.objects.get_or_create(
+            piece=piece,
+            error_type=Error.ErrorType.DISCREPANCY,
+            defaults={
+                'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
+                'status': Error.Status.REPORTED,
+                'reported_date': timezone.now()
+            }
+        )
+        if created:
+            discrepancies_created += 1
+
+    return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})
