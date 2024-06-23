@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
-from django.db.models import F, Window, Sum
+from django.db.models import F, Window, Sum, Count, Q
 from django.db.models.functions import Lead
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
@@ -47,12 +47,79 @@ def admin_page(request):
 def dashboard_page(request):
     client_data = get_client_data()
     employee_data = get_employee_data()
-    
+    production_data = get_production_data()
+    orders_data = get_orders_data()
+
     context = {
         'client_data': client_data,
-        'employee_data': employee_data
+        'employee_data': employee_data,
+        'production_data': production_data,
+        'orders_data': orders_data
     }
     return render(request, 'dashboard.html', context)
+
+def get_orders_data():
+    orders_data = Order.objects.select_related('model').annotate(
+        model_name=F('model__name'),
+        assortment_name=F('assortment__name'),
+        total_price=F('quantity') * F('payment'),
+    ).values(
+        'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'color', 'fabrics'
+    )
+    return list(orders_data)
+
+def get_production_data():
+    today = timezone.now()
+    thirty_days_ago = today - timedelta(days=30)
+
+    # Filter Orders based on the creation date of the associated ClientOrder in the last 30 days
+    recent_orders = Order.objects.filter(client_order__created_at__range=[thirty_days_ago, today])
+
+    in_progress_orders_count = recent_orders.filter(status=Order.IN_PROGRESS).count()
+
+    # Aggregates total units ordered in the last 30 days
+    total_amount = recent_orders.aggregate(total=Sum('quantity'))['total'] or 0
+
+    # Aggregates revenue (payment * quantity) in the last 30 days
+    total_revenue = recent_orders.aggregate(
+        total=Sum(F('quantity') * F('payment'))
+    )['total'] or 0
+
+    # Aggregates total units completed in the last 30 days
+    completed_amount = recent_orders.aggregate(total=Sum('completed_quantity'))['total'] or 0
+
+    # Counts the number of client orders in progress that were created in the last 30 days
+    orders_in_progress = ClientOrder.objects.filter(
+        status=ClientOrder.IN_PROGRESS,
+        created_at__range=[thirty_days_ago, today]
+    ).count()
+
+    # Aggregates total salary paid based on assigned works completed in the last 30 days
+    total_salary = AssignedWork.objects.filter(
+        end_time__range=[thirty_days_ago, today],
+        is_success=True  # Ensuring we only count completed and successful tasks
+    ).aggregate(total=Sum(F('quantity') * F('work__operation__payment')))['total'] or 0
+
+    # Count total errors reported in the last 30 days
+    total_errors = Error.objects.filter(
+        reported_date__range=[thirty_days_ago, today]
+    ).count()
+
+    total_rolls_used = PassportRoll.objects.filter(
+        passport__order__client_order__created_at__range=[thirty_days_ago, today]
+    ).aggregate(total_meters=Sum('meters'))['total_meters'] or 0
+
+
+    return {
+        'total_amount': total_amount,
+        'total_revenue': total_revenue,
+        'completed_amount': completed_amount,
+        'orders_in_progress': orders_in_progress,
+        'in_progress_orders_count': in_progress_orders_count,
+        'total_salary': total_salary,
+        'total_errors': total_errors,
+        'total_rolls_used': total_rolls_used
+    }
 
 def get_client_data():
     clients = Client.objects.all()

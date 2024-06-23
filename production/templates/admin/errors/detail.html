@@ -2,10 +2,35 @@
 {% load i18n static %}
 
 {% block content %}
-<div class="content-container">
-    <h2 class="form-heading">{% if error.error_type == 'DEFECT' %}{% trans "Defect Details" %}{% else %}{% trans "Discrepancy Details" %}{% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}</h2>
 
-    <div class="details">
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Admin Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container maincontr">
+  <div class="card-header">
+    {% if error.error_type == 'DEFECT' %}{% trans "Defect Details" %}{% else %}{% trans "Discrepancy Details" %}{% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
+  </div>
+  <div class="container">
+    <!-- <div class="card"> -->
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
         <p><strong>{% trans "Model" %}:</strong> {{ error.piece.passport_size.passport.order.model.name }}</p>
         <p><strong>{% trans "Passport" %}:</strong> {{ error.piece.passport_size.passport.id }}</p>
         <p><strong>{% trans "Size" %}:</strong> {{ error.piece.passport_size.size_quantity.size }}</p>
@@ -14,9 +39,14 @@
         <p><strong>{% trans "Status" %}:</strong> {{ error.get_status_display }}</p>
         <p><strong>{% trans "Reported Date" %}:</strong> {{ error.reported_date|date:"Y-m-d" }}</p>
         <p><strong>{% trans "Resolved Date" %}:</strong> {{ error.resolved_date|date:"Y-m-d" }}</p>
+        </div>
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+        </div>
+      </div>
     </div>
 
-    <h3 class="sub-heading">{% trans "Assign Responsibility" %}</h3>
+    <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Assign Responsibility" %}</h3>
     <form id="responsibilityErrorForm" method="post" class="date-filter-form">
         {% csrf_token %}
         <div class="form-group">
@@ -27,22 +57,91 @@
             <label>{% trans "Percentage:" %}</label>
             {{ form.percentage }}
         </div>
-        <button type="submit" class="btn edit-btn">{% trans "Assign" %}</button>
+        <button type="submit" class="btn edit-btn" style="margin-top: 35px; width:100px;">{% trans "Assign" %}</button>
     </form>
-    <ul id="responsibilityErrorList" class="responsibility-error-list">
+  <br>
+    <div id="responsibilityErrorList" class="responsibility-error-list">
         {% for rd in responsibility_errors %}
         <li id="rd-{{ rd.id }}" class="responsibility-error-item">
             <span class="detail"><strong>{% trans "Employee:" %}</strong> <span class="employee" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.employee }}</span></span>
             <span class="detail"><strong>{% trans "Percentage:" %}</strong> <span class="percentage" data-rd-id="{{ rd.id }}" contenteditable="false">{{ rd.percentage }}</span></span>
             <button class="edit-btn" data-rd-id="{{ rd.id }}">{% trans "Edit" %}</button>
             <button class="delete-btn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
+<a href="javascript:void(0);" >
+    <button type="button" class="deleteBtn" data-rd-id="{{ rd.id }}">{% trans "Delete" %}</button>
+</a>
+
         </li>
         {% endfor %}
-    </ul>
-    <div class="form-actions">
-        <a href="{% url 'order_detail' error.piece.passport_size.passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+    </div>
+
+<div class="modal" id="deleteModal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" id="closeBtn">&times;</span>
+        <p>Are you sure you want to delete this branch?</p>
+        <div class="modal-buttons">
+            <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+            <button class="btn cancel" id="cancelBtn">Cancel</button>
+        </div>
     </div>
 </div>
+  </div>
+<br>
+
+    <!-- </div> -->
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.deleteBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    let currentRdId;
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            currentRdId = this.getAttribute('data-rd-id');
+            deleteModal.style.display = 'flex';
+        });
+    });
+
+    document.getElementById('closeBtn').onclick = function() {
+        deleteModal.style.display = 'none';
+    };
+
+    document.getElementById('cancelBtn').onclick = function() {
+        deleteModal.style.display = 'none';
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        // Assuming you want to send currentRdId to the server
+        // You can add the logic to delete the branch using AJAX or form submission
+        console.log('Delete confirmed for ID:', currentRdId);
+        // Example: using AJAX to send the ID to the server
+        fetch('/delete-endpoint', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ rd_id: currentRdId }),
+        }).then(response => {
+            if (response.ok) {
+                deleteModal.style.display = 'none';
+                // Optionally refresh the page or remove the item from the UI
+            }
+        }).catch(error => {
+            console.error('Error deleting the branch:', error);
+        });
+    };
+
+    // Close the modal if the user clicks outside of the modal content
+    window.onclick = function(event) {
+        if (event.target == deleteModal) {
+            deleteModal.style.display = 'none';
+        }
+    };
+});
+
+</script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const responsibilityErrorList = document.getElementById('responsibilityErrorList');

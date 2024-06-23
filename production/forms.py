@@ -416,8 +416,8 @@ class ErrorResponsibilityForm(forms.ModelForm):
         model = ErrorResponsibility
         fields = ['employee', 'percentage']
         widgets = {
-            'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
