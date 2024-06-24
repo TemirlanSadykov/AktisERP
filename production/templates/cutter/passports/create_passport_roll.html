@@ -241,7 +241,7 @@
         confirmDeleteBtn.addEventListener('click', function() {
             if (prIdToDelete) {
                 confirmDeleteBtn.disabled = true;
-                fetch(`/production/admin/orders/errors/${prIdToDelete}/delete_percentage/`, {
+                fetch(`/production/cutter/orders/passport/${prId}/delete_passport_roll/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
