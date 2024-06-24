@@ -194,7 +194,7 @@
         });
     
         function handleEdit(button) {
-            let prId = button.getAttribute("data-rd-id");
+            let prId = button.getAttribute("data-rm-id");
             let parentLi = document.querySelector(`#rd-${prId}`);
             let percentageSpan = parentLi.querySelector(".percentage");
             if (!percentageSpan.isContentEditable) {
@@ -234,7 +234,7 @@
         }
     
         function handleDelete(button) {
-            prIdToDelete = button.getAttribute("data-rd-id");
+            prIdToDelete = button.getAttribute("data-rm-id");
             modal.style.display = 'flex';
         }
     
