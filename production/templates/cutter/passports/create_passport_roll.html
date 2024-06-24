@@ -167,7 +167,7 @@
     });
 </script> -->
 
-<script>
+<!-- <script>
     document.addEventListener("DOMContentLoaded", function() {
         const responsibilityErrorList = document.getElementById('rollMetersList');
         const modal = document.getElementById('deleteModal');
@@ -314,5 +314,139 @@
         }
     });
     </script>
+ -->
+
+document.addEventListener("DOMContentLoaded", function() {
+    const responsibilityErrorList = document.getElementById('rollMetersList');
+    const modal = document.getElementById('deleteModal');
+    const closeModal = document.getElementById('closeBtn');
+
+    const messageModal = document.getElementById('messageModal');
+    const messageModalContent = document.getElementById('messageModalContent');
+    const closeMessageModal = document.getElementById('closeMessageBtn');
+
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    let prIdToDelete = null;
+
+    responsibilityErrorList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-btn')) {
+            handleEdit(e.target);
+        } else if (e.target.classList.contains('delete-btn')) {
+            handleDelete(e.target);
+        }
+    });
+
+    function handleEdit(button) {
+        let prId = button.getAttribute("data-rm-id");
+        let parentLi = document.querySelector(`#rm-${prId}`);
+        let metersSpan = parentLi.querySelector(".meters");
+        if (!metersSpan.isContentEditable) {
+            metersSpan.contentEditable = "true";
+            metersSpan.focus();
+            button.textContent = '{% trans "Save" %}';
+        } else {
+            metersSpan.contentEditable = "false";
+            button.textContent = '{% trans "Edit" %}';
+            const meters = metersSpan.textContent;
+            updateMeters(prId, meters);
+        }
+    }
+
+    function updateMeters(prId, meters) {
+        fetch(`/production/admin/orders/errors/${prId}/edit_meters/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ meters: meters })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showMessageModal('Успешное обновление');
+            } else {
+                showMessageModal('Не получилось обновить');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function handleDelete(button) {
+        prIdToDelete = button.getAttribute("data-rm-id");
+        modal.style.display = 'flex';
+    }
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (prIdToDelete) {
+            confirmDeleteBtn.disabled = true;
+            fetch(`/production/cutter/orders/passport/${prIdToDelete}/delete_passport_roll/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    const parentLi = document.getElementById(`rm-${prIdToDelete}`);
+                    if (parentLi) {
+                        parentLi.remove();
+                    }
+                    showMessageModal('Успешное удаление');
+                } else {
+                    showMessageModal('Не получилось удалить');
+                }
+                modal.style.display = 'none';
+                confirmDeleteBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modal.style.display = 'none';
+                confirmDeleteBtn.disabled = false;
+            });
+        }
+    });
+
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    closeModal.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    closeMessageModal.addEventListener('click', function() {
+        messageModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        } else if (event.target == messageModal) {
+            messageModal.style.display = 'none';
+        }
+    });
+
+    function showMessageModal(message) {
+        messageModalContent.textContent = message;
+        messageModal.style.display = 'flex';
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
 
 {% endblock %}
