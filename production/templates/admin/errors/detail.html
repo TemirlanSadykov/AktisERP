@@ -249,9 +249,13 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert('Успешное обновление');
+                                  showMessageModal('Успешное обновление');
+
+                    // alert('Успешное обновление');
                 } else {
-                    alert('Не получилось обновить');
+                    // alert('Не получилось обновить');
+                                  showMessageModal('Не получилось обновить');
+
                 }
             })
             .catch(error => console.error('Error:', error));
