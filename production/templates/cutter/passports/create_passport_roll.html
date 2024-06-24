@@ -195,7 +195,7 @@
     
         function handleEdit(button) {
             let prId = button.getAttribute("data-rm-id");
-            let parentLi = document.querySelector(`#rd-${prId}`);
+            let parentLi = document.querySelector(`#rm-${prId}`);
             let percentageSpan = parentLi.querySelector(".percentage");
             if (!percentageSpan.isContentEditable) {
                 percentageSpan.contentEditable = "true";
@@ -249,7 +249,7 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        const parentLi = document.getElementById(`rd-${prIdToDelete}`);
+                        const parentLi = document.getElementById(`rm-${prIdToDelete}`);
                         if (parentLi) {
                             parentLi.remove();
                         }
