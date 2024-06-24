@@ -181,7 +181,7 @@
       
         const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
         const cancelBtn = document.getElementById('cancelBtn');
-        let rdIdToDelete = null;
+        let prIdToDelete = null;
 
 
     
@@ -194,8 +194,8 @@
         });
     
         function handleEdit(button) {
-            let rdId = button.getAttribute("data-rd-id");
-            let parentLi = document.querySelector(`#rd-${rdId}`);
+            let prId = button.getAttribute("data-rd-id");
+            let parentLi = document.querySelector(`#rd-${prId}`);
             let percentageSpan = parentLi.querySelector(".percentage");
             if (!percentageSpan.isContentEditable) {
                 percentageSpan.contentEditable = "true";
@@ -205,12 +205,12 @@
                 percentageSpan.contentEditable = "false";
                 button.textContent = '{% trans "Edit" %}';
                 const percentage = percentageSpan.textContent;
-                updatePercentage(rdId, percentage);
+                updatePercentage(prId, percentage);
             }
         }
     
-        function updatePercentage(rdId, percentage) {
-            fetch(`/production/admin/orders/errors/${rdId}/edit_percentage/`, {
+        function updatePercentage(prId, percentage) {
+            fetch(`/production/admin/orders/errors/${prId}/edit_percentage/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
@@ -234,14 +234,14 @@
         }
     
         function handleDelete(button) {
-            rdIdToDelete = button.getAttribute("data-rd-id");
+            prIdToDelete = button.getAttribute("data-rd-id");
             modal.style.display = 'flex';
         }
     
         confirmDeleteBtn.addEventListener('click', function() {
-            if (rdIdToDelete) {
+            if (prIdToDelete) {
                 confirmDeleteBtn.disabled = true;
-                fetch(`/production/admin/orders/errors/${rdIdToDelete}/delete_percentage/`, {
+                fetch(`/production/admin/orders/errors/${prIdToDelete}/delete_percentage/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
@@ -249,7 +249,7 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        const parentLi = document.getElementById(`rd-${rdIdToDelete}`);
+                        const parentLi = document.getElementById(`rd-${prIdToDelete}`);
                         if (parentLi) {
                             parentLi.remove();
                         }
