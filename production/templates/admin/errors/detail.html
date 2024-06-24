@@ -193,9 +193,18 @@
         const responsibilityErrorList = document.getElementById('responsibilityErrorList');
         const modal = document.getElementById('deleteModal');
         const closeModal = document.getElementById('closeBtn');
+
+    // const deleteModal = document.getElementById('deleteModal');
+    const messageModal = document.getElementById('messageModal');
+    const messageModalContent = document.getElementById('messageModalContent');
+    const closeMessageModal = document.getElementById('closeMessageBtn');
+
+      
         const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         let rdIdToDelete = null;
+
+
     
         responsibilityErrorList.addEventListener('click', function(e) {
             if (e.target.classList.contains('edit-btn')) {
@@ -261,9 +270,13 @@
                         if (parentLi) {
                             parentLi.remove();
                         }
-                        alert('Успешное удаление');
+                        // alert('Успешное удаление');
+                                      showMessageModal('Успешное обновление');
+
                     } else {
-                        alert('Не получилось удалить');
+                        // alert('Не получилось удалить');
+                                      showMessageModal('Не получилось обновить');
+
                     }
                     modal.style.display = 'none';
                     confirmDeleteBtn.disabled = false;
