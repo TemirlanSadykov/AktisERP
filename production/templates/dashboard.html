@@ -166,79 +166,50 @@
                 </div>
             </div>
         </div>      
-        <div id="Inventory" class="tabcontent">
-            <h2>Inventory</h2>
-            <h3>Rolls (Fabrics)</h3>
+        <div id="Inventory" class="tabcontent" style="display: none;">
+            <h2>Inventory Overview</h2>
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Fabric</th>
+                        <th>Name</th>
                         <th>Color</th>
-                        <th>Number</th>
-                        <th>Amount Left</th>
-                        <th>Being Used</th>
+                        <th>Fabrics</th>
+                        <th>Total Meters</th>
+                        <th>Used Meters</th>
+                        <th>Available Meters</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Cotton</td>
-                        <td>Red</td>
-                        <td>200</td>
-                        <td>150</td>
-                        <td>50</td>
+                    {% for roll in inventory_data %}
+                    <tr onclick="fetchRollDetails({{ roll.id }});" style="cursor: pointer;">
+                        <td>{{ roll.name }}</td>
+                        <td>{{ roll.color }}</td>
+                        <td>{{ roll.fabrics }}</td>
+                        <td>{{ roll.meters }}</td>
+                        <td>{{ roll.used_meters }}</td>
+                        <td>{{ roll.available_meters }}</td>
                     </tr>
-                    <tr>
-                        <td>Polyester</td>
-                        <td>Blue</td>
-                        <td>150</td>
-                        <td>100</td>
-                        <td>50</td>
-                    </tr>
-                    <tr>
-                        <td>Wool</td>
-                        <td>Green</td>
-                        <td>100</td>
-                        <td>80</td>
-                        <td>20</td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-            <h3>Accessories</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Accessory</th>
-                        <th>Type</th>
-                        <th>Quantity</th>
-                        <th>Amount Left</th>
-                        <th>Being Used</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Buttons</td>
-                        <td>Plastic</td>
-                        <td>5000</td>
-                        <td>4000</td>
-                        <td>1000</td>
-                    </tr>
-                    <tr>
-                        <td>Zippers</td>
-                        <td>Metal</td>
-                        <td>3000</td>
-                        <td>2500</td>
-                        <td>500</td>
-                    </tr>
-                    <tr>
-                        <td>Threads</td>
-                        <td>Cotton</td>
-                        <td>7000</td>
-                        <td>6500</td>
-                        <td>500</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        
+            <!-- Roll Details Modal -->
+            <div class="modal fade" id="rollModal" tabindex="-1" role="dialog" aria-labelledby="rollModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rollModalLabel">Roll Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Roll details will be filled here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>        
         <div id="Orders" class="tabcontent">
             <h2>Orders</h2>
             <table class="table">
@@ -484,20 +455,6 @@
             evt.currentTarget.className += " active";
         }
 
-        function switchBranch() {
-            var branchSelect = document.getElementById("branchSelect");
-            var branch1 = document.getElementById("branch1");
-            var branch2 = document.getElementById("branch2");
-
-            if (branchSelect.value === "branch1") {
-                branch1.style.display = "block";
-                branch2.style.display = "none";
-            } else {
-                branch1.style.display = "none";
-                branch2.style.display = "block";
-            }
-        }
-
         function switchEquipment() {
             var equipmentSelect = document.getElementById("equipmentSelect");
             var equipments = document.getElementsByClassName("equipment");
@@ -512,90 +469,6 @@
             }
         }
 
-        function showEmployeeModal(employeeName) {
-            var earnings = {
-                "Employee 1": "$5000",
-                "Employee 2": "$4800",
-                "Employee 3": "$4700",
-                "Employee 4": "$4900",
-                "Employee 5": "$5100"
-            };
-
-            var efficiency = {
-                "Employee 1": { defects: 2, discrepancies: 1, completedOnTime: 50, completedOffTime: 5 },
-                "Employee 2": { defects: 3, discrepancies: 2, completedOnTime: 48, completedOffTime: 7 },
-                "Employee 3": { defects: 1, discrepancies: 1, completedOnTime: 49, completedOffTime: 6 },
-                "Employee 4": { defects: 4, discrepancies: 3, completedOnTime: 45, completedOffTime: 8 },
-                "Employee 5": { defects: 2, discrepancies: 2, completedOnTime: 52, completedOffTime: 4 }
-            };
-
-            document.getElementById('employeeName').innerText = employeeName;
-            document.getElementById('employeeEarnings').innerText = "Earnings: " + earnings[employeeName];
-            var eff = efficiency[employeeName];
-            document.getElementById('employeeEfficiency').innerText = `Efficiency: Defects: ${eff.defects}, Discrepancies: ${eff.discrepancies}, Completed On Time: ${eff.completedOnTime}, Completed Off Time: ${eff.completedOffTime}`;
-
-            if (employeeChartInstance) {
-                employeeChartInstance.destroy();
-            }
-
-            var ctx = document.getElementById('employeeChart').getContext('2d');
-            employeeChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Efficiency',
-                        data: [80, 85, 88, 90, 87, 85], // Sample data
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            $('#employeeModal').modal('show');
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            var productionData = [500, 600, 700, 800, 900, 1000];
-            var inventoryData = [1000, 950, 900, 850, 800, 750];
-
-            var createChart = function(id, data, title) {
-                var ctx = document.getElementById(id).getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                        datasets: [{
-                            label: title,
-                            data: data,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                            fill: false
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-
-            createChart('productionChart', productionData, 'Monthly Production');
-            createChart('inventoryChart', inventoryData, 'Inventory Levels');
-
-            document.querySelector(".tablink").click();
-        });
     </script>
     <script>
         function fetchClientDetails(clientId) {
@@ -736,5 +609,23 @@
                 .catch(error => console.error('Error loading order details:', error));
         }
     </script>
+    <script>
+        function fetchRollDetails(rollId) {
+            fetch(`/production/api/rolls/${rollId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#rollModal .modal-body');
+                    modalBody.innerHTML = `
+                        <p>Name: ${data.name}</p>
+                        <p>Color: ${data.color}</p>
+                        <p>Fabrics: ${data.fabrics}</p>
+                        <p>Total Meters: ${data.meters}</p>
+                        <p>Used Meters: ${data.used_meters}</p>
+                        <p>Available Meters: ${data.available_meters}</p>
+                    `;
+                })
+                .catch(error => console.error('Error loading roll details:', error));
+        }
+        </script>        
 </body>
 </html>

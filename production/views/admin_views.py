@@ -49,14 +49,24 @@ def dashboard_page(request):
     employee_data = get_employee_data()
     production_data = get_production_data()
     orders_data = get_orders_data()
+    inventory_data = get_inventory_data()
 
     context = {
         'client_data': client_data,
         'employee_data': employee_data,
         'production_data': production_data,
-        'orders_data': orders_data
+        'orders_data': orders_data,
+        'inventory_data': inventory_data
     }
     return render(request, 'dashboard.html', context)
+
+def get_inventory_data():
+    rolls_data = Roll.objects.annotate(
+        available_meters=F('meters') - F('used_meters')
+    ).values(
+        'id', 'name', 'color', 'fabrics', 'meters', 'used_meters', 'available_meters'
+    )
+    return list(rolls_data)
 
 def get_orders_data():
     orders_data = Order.objects.select_related('model').annotate(

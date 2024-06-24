@@ -127,3 +127,20 @@ def order_api(request, order_id):
 
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
+    
+@login_required
+@admin_required
+def roll_api(request, roll_id):
+    try:
+        roll = Roll.objects.get(pk=roll_id)
+        data = {
+            'name': roll.name,
+            'color': roll.color,
+            'fabrics': roll.fabrics,
+            'meters': float(roll.meters),
+            'used_meters': float(roll.used_meters),
+            'available_meters': float(roll.available_meters)
+        }
+        return JsonResponse(data)
+    except Roll.DoesNotExist:
+        return JsonResponse({'error': 'Roll not found'}, status=404)
