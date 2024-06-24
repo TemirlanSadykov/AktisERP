@@ -309,6 +309,12 @@
                 modal.style.display = 'none';
             }
         });
+
+          function showMessageModal(message) {
+        messageModalContent.textContent = message;
+        messageModal.style.display = 'flex';
+    }
+
     
         function getCookie(name) {
             let cookieValue = null;
