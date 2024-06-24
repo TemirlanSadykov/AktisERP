@@ -181,8 +181,7 @@
                 </thead>
                 <tbody>
                     {% for roll in inventory_data %}
-                    <tr onclick="fetchRollDetails({{ roll.id }});" style="cursor: pointer;">
-                        <td>{{ roll.name }}</td>
+                        <td><a href="#" data-toggle="modal" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
                         <td>{{ roll.color }}</td>
                         <td>{{ roll.fabrics }}</td>
                         <td>{{ roll.meters }}</td>
@@ -615,17 +614,30 @@
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#rollModal .modal-body');
+                    let passportsHtml = data.passports_used.map(passport => `
+                        <div>
+                            <a href="/production/admin/passports/${passport.passport_id}/" style="text-decoration: none; color: inherit;" target="_blank">
+                                <p>
+                                    <strong>Passport ID:</strong> ${passport.passport_id}, 
+                                    <strong>Meters Used:</strong> ${passport.meters_used},
+                                    <strong>Model:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
+                                </p>
+                            </a>
+                        </div>
+                    `).join('');
+    
                     modalBody.innerHTML = `
-                        <p>Name: ${data.name}</p>
-                        <p>Color: ${data.color}</p>
-                        <p>Fabrics: ${data.fabrics}</p>
-                        <p>Total Meters: ${data.meters}</p>
-                        <p>Used Meters: ${data.used_meters}</p>
-                        <p>Available Meters: ${data.available_meters}</p>
+                        <p><strong>Name:</strong> ${data.name}</p>
+                        <p><strong>Color:</strong> ${data.color}</p>
+                        <p><strong>Fabrics:</strong> ${data.fabrics}</p>
+                        <p><strong>Total Meters:</strong> ${data.meters}</p>
+                        <p><strong>Used Meters:</strong> ${data.used_meters}</p>
+                        <p><strong>Available Meters:</strong> ${data.available_meters}</p>
+                        ${passportsHtml}
                     `;
                 })
                 .catch(error => console.error('Error loading roll details:', error));
         }
-        </script>        
+    </script>
 </body>
 </html>
