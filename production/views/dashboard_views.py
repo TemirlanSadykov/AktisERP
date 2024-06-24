@@ -127,3 +127,35 @@ def order_api(request, order_id):
 
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
+    
+@login_required
+@admin_required
+def roll_api(request, roll_id):
+    try:
+        roll = Roll.objects.get(pk=roll_id)
+        passport_rolls_data = [
+            {
+                'passport_id': passport_roll.passport.id,
+                'meters_used': float(passport_roll.meters),
+                'passport_details': {
+                    'date': passport_roll.passport.date,
+                    'is_completed': passport_roll.passport.is_completed,
+                    'order': passport_roll.passport.order.model.name if passport_roll.passport.order else None
+                }
+            } for passport_roll in roll.passport_rolls.all()
+        ]
+        
+        data = {
+            'name': roll.name,
+            'color': roll.color,
+            'fabrics': roll.fabrics,
+            'meters': float(roll.meters),
+            'used_meters': float(roll.used_meters),
+            'available_meters': float(roll.available_meters),
+            'passports_used': passport_rolls_data
+        }
+        
+        return JsonResponse(data)
+
+    except Roll.DoesNotExist:
+        return JsonResponse({'error': 'Roll not found'}, status=404)

@@ -172,6 +172,7 @@ urlpatterns = [
     path('api/clients/<int:client_id>/', client_api, name='client_api'),
     path('api/employees/<int:employee_id>/', employee_api, name='employee_api'),
     path('api/orders/<int:order_id>/', order_api, name='order_api'),
+    path('api/rolls/<int:roll_id>/', roll_api, name='roll_api'),
 
     # For barcode creation
     path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
