@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const cancelBtn = document.getElementById('cancelBtn');
-    let psIdToDelete = null;
+    let sqIdToDelete = null;
 
     sizeQuantityList.addEventListener('click', function(e) {
         if (e.target.classList.contains('edit-btn')) {
@@ -190,34 +190,30 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function handleEdit(button) {
-        let psId = button.getAttribute("data-sq-id");
-        let parentLi = document.querySelector(`#sq-${psId}`);
-        let sizeSpan = parentLi.querySelector(".size");
+        let sqId = button.getAttribute("data-sq-id");
+        let parentLi = document.querySelector(`#sq-${sqId}`);
         let quantitySpan = parentLi.querySelector(".quantity");
-        
-        if (!sizeSpan.isContentEditable && !quantitySpan.isContentEditable) {
-            sizeSpan.contentEditable = "true";
+
+        if (!quantitySpan.isContentEditable) {
             quantitySpan.contentEditable = "true";
-            sizeSpan.focus();
+            quantitySpan.focus();
             button.textContent = '{% trans "Save" %}';
         } else {
-            sizeSpan.contentEditable = "false";
             quantitySpan.contentEditable = "false";
             button.textContent = '{% trans "Edit" %}';
-            const size = sizeSpan.textContent;
-            const quantity = quantitySpan.textContent;
-            updateSizeQuantity(psId, size, quantity);
+            const updatedQuantity = quantitySpan.textContent;
+            updateSizeQuantity(sqId, updatedQuantity);
         }
     }
 
-    function updateSizeQuantity(psId, size, quantity) {
-        fetch(`/production/admin/orders/sizes/${psId}/edit_size_quantity/`, {
+    function updateSizeQuantity(sqId, quantity) {
+        fetch(`/production/cutter/orders/passport/${sqId}/edit_size_quantity/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken'),
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ size: size, quantity: quantity })
+            body: JSON.stringify({ quantity: quantity })
         })
         .then(response => response.json())
         .then(data => {
@@ -231,14 +227,14 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function handleDelete(button) {
-        psIdToDelete = button.getAttribute("data-sq-id");
+        sqIdToDelete = button.getAttribute("data-sq-id");
         modal.style.display = 'flex';
     }
 
     confirmDeleteBtn.addEventListener('click', function() {
-        if (psIdToDelete) {
+        if (sqIdToDelete) {
             confirmDeleteBtn.disabled = true;
-            fetch(`/production/cutter/orders/sizes/${psIdToDelete}/delete_size_quantity/`, {
+            fetch(`/production/cutter/orders/passport/${sqIdToDelete}/delete_size_quantity/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
@@ -246,7 +242,7 @@ document.addEventListener("DOMContentLoaded", function() {
             })
             .then(response => {
                 if (response.ok) {
-                    const parentLi = document.getElementById(`sq-${psIdToDelete}`);
+                    const parentLi = document.getElementById(`sq-${sqIdToDelete}`);
                     if (parentLi) {
                         parentLi.remove();
                     }
@@ -305,5 +301,6 @@ document.addEventListener("DOMContentLoaded", function() {
         return cookieValue;
     }
 });
+
 </script>
 {% endblock %}
