@@ -61,7 +61,7 @@
       </div>
     </div>
   </div>
-<script>
+<!-- <script>
     document.addEventListener("DOMContentLoaded", function() {
         const sizeQuantityList = document.getElementById('sizeQuantityList');
         sizeQuantityList.addEventListener('click', function(e) {
@@ -149,5 +149,144 @@
             return cookieValue;
         }
     });
+</script> -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const sizeQuantityList = document.getElementById('sizeQuantityList');
+    const modal = document.getElementById('deleteModal');
+    const closeModal = document.getElementById('closeBtn');
+
+    const messageModal = document.getElementById('messageModal');
+    const messageModalContent = document.getElementById('messageModalContent');
+    const closeMessageModal = document.getElementById('closeMessageBtn');
+
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    let psIdToDelete = null;
+
+    sizeQuantityList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-btn')) {
+            handleEdit(e.target);
+        } else if (e.target.classList.contains('delete-btn')) {
+            handleDelete(e.target);
+        }
+    });
+
+    function handleEdit(button) {
+        let psId = button.getAttribute("data-sq-id");
+        let parentLi = document.querySelector(`#sq-${psId}`);
+        let sizeSpan = parentLi.querySelector(".size");
+        let quantitySpan = parentLi.querySelector(".quantity");
+        
+        if (!sizeSpan.isContentEditable && !quantitySpan.isContentEditable) {
+            sizeSpan.contentEditable = "true";
+            quantitySpan.contentEditable = "true";
+            sizeSpan.focus();
+            button.textContent = '{% trans "Save" %}';
+        } else {
+            sizeSpan.contentEditable = "false";
+            quantitySpan.contentEditable = "false";
+            button.textContent = '{% trans "Edit" %}';
+            const size = sizeSpan.textContent;
+            const quantity = quantitySpan.textContent;
+            updateSizeQuantity(psId, size, quantity);
+        }
+    }
+
+    function updateSizeQuantity(psId, size, quantity) {
+        fetch(`/production/admin/orders/sizes/${psId}/edit_size_quantity/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ size: size, quantity: quantity })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showMessageModal('Успешное обновление');
+            } else {
+                showMessageModal('Не получилось обновить');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function handleDelete(button) {
+        psIdToDelete = button.getAttribute("data-sq-id");
+        modal.style.display = 'flex';
+    }
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (psIdToDelete) {
+            confirmDeleteBtn.disabled = true;
+            fetch(`/production/cutter/orders/sizes/${psIdToDelete}/delete_size_quantity/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    const parentLi = document.getElementById(`sq-${psIdToDelete}`);
+                    if (parentLi) {
+                        parentLi.remove();
+                    }
+                    showMessageModal('Успешное удаление');
+                } else {
+                    showMessageModal('Не получилось удалить');
+                }
+                modal.style.display = 'none';
+                confirmDeleteBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modal.style.display = 'none';
+                confirmDeleteBtn.disabled = false;
+            });
+        }
+    });
+
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    closeModal.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    closeMessageModal.addEventListener('click', function() {
+        messageModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        } else if (event.target == messageModal) {
+            messageModal.style.display = 'none';
+        }
+    });
+
+    function showMessageModal(message) {
+        messageModalContent.textContent = message;
+        messageModal.style.display = 'flex';
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
 </script>
 {% endblock %}
