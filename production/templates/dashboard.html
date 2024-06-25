@@ -21,7 +21,6 @@
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Production')">Production</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Inventory')">Inventory</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Orders')">Orders</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Maintenance')">Maintenance</a></li>
                 <li><a href="#" class="tablink" onclick="openTab(event, 'Employees')">Employees</a></li>
                 <li><a href="{% url 'user_redirect' %}">{% trans 'Home' %}</a></li>
             </ul>
@@ -209,191 +208,46 @@
                 </div>
             </div>
         </div>        
-        <div id="Orders" class="tabcontent">
-            <h2>Orders</h2>
+        <div id="Orders" class="tabcontent" style="display: none;">
+            <h2>Orders Overview</h2>
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Order ID</th>
+                        <th>Order Name</th>
                         <th>Client</th>
                         <th>Status</th>
-                        <th>Quantity</th>
                         <th>Due Date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>#1001</td>
-                        <td>Client A</td>
-                        <td><span class="status pending">Pending</span></td>
-                        <td>1000</td>
-                        <td>2024-05-20</td>
-                    </tr>
-                    <tr>
-                        <td>#1002</td>
-                        <td>Client B</td>
-                        <td><span class="status in-progress">In Progress</span></td>
-                        <td>500</td>
-                        <td>2024-05-22</td>
-                    </tr>
-                    <tr>
-                        <td>#1003</td>
-                        <td>Client C</td>
-                        <td><span class="status completed">Completed</span></td>
-                        <td>2000</td>
-                        <td>2024-05-18</td>
-                    </tr>
+                    {% for order in client_orders_data %}
+                        <tr>
+                            <td><a href="#" data-toggle="modal" data-target="#clientOrderModal" onclick="fetchClientOrderDetails({{ order.id }})">{{ order.order_number }}</a></td>
+                            <td>{{ order.client__name }}</td>
+                            <td>{{ order.status }}</td>
+                            <td>{{ order.term }}</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-        </div>
-        <div id="Maintenance" class="tabcontent">
-            <h2>Maintenance</h2>
-            <div class="equipment-switch">
-                <label for="equipmentSelect">Select Equipment: </label>
-                <select id="equipmentSelect" onchange="switchEquipment()">
-                    <option value="machineA">Machine A</option>
-                    <option value="machineB">Machine B</option>
-                    <option value="machineC">Machine C</option>
-                    <option value="machineD">Machine D</option>
-                    <option value="machineE">Machine E</option>
-                </select>
+        
+            <!-- Order Details Modal -->
+            <div class="modal fade" id="clientOrderModal" tabindex="-1" role="dialog" aria-labelledby="clientOrderModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="clientOrderModalLabel">Order Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Order details will be filled here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div id="machineA" class="equipment">
-                <h3>Machine A</h3>
-                <p>Details about Machine A operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Cutting</td>
-                            <td>10</td>
-                            <td>15</td>
-                        </tr>
-                        <tr>
-                            <td>Cutting Patterns</td>
-                            <td>10</td>
-                            <td>15</td>
-                        </tr>
-                        <tr>
-                            <td>Cutting Layers</td>
-                            <td>10</td>
-                            <td>15</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineB" class="equipment" style="display: none;">
-                <h3>Machine B</h3>
-                <p>Details about Machine B operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Sewing Pocket</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Crew</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Sleeve</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Front</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Back</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineC" class="equipment" style="display: none;">
-                <h3>Machine C</h3>
-                <p>Details about Machine C operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Assembling</td>
-                            <td>12</td>
-                            <td>10</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineD" class="equipment" style="display: none;">
-                <h3>Machine D</h3>
-                <p>Details about Machine D operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Painting</td>
-                            <td>6</td>
-                            <td>25</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineE" class="equipment" style="display: none;">
-                <h3>Machine E</h3>
-                <p>Details about Machine E operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Packaging 1</td>
-                            <td>15</td>
-                            <td>5</td>
-                        </tr>
-                        <tr>
-                            <td>Packaging 2</td>
-                            <td>15</td>
-                            <td>5</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        </div>   
         <div id="Employees" class="tabcontent" style="display: none;">
             <h2>Employee Rankings</h2>
             <table class="table">
@@ -452,20 +306,6 @@
             }
             document.getElementById(tabName).style.display = "block";
             evt.currentTarget.className += " active";
-        }
-
-        function switchEquipment() {
-            var equipmentSelect = document.getElementById("equipmentSelect");
-            var equipments = document.getElementsByClassName("equipment");
-
-            for (var i = 0; i < equipments.length; i++) {
-                equipments[i].style.display = "none";
-            }
-
-            var selectedEquipment = document.getElementById(equipmentSelect.value);
-            if (selectedEquipment) {
-                selectedEquipment.style.display = "block";
-            }
         }
 
     </script>
@@ -641,5 +481,34 @@
                 .catch(error => console.error('Error loading roll details:', error));
         }
     </script>
+    <script>
+        function fetchClientOrderDetails(clientOrderId) {
+            fetch(`/production/api/client-orders/${clientOrderId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#clientOrderModal .modal-body');
+                    let ordersHtml = data.orders.map(order => `
+                        <div>
+                            <a href="/production/admin/orders/${order.order_id}/" style="text-decoration: none; color: inherit;" target="_blank">
+                                <p>
+                                    <strong>Model Name:</strong> ${order.model_name}, 
+                                    <strong>Assortment:</strong> ${order.assortment}, 
+                                    <strong>Completed Percentage:</strong> ${order.completed_percentage.toFixed(2)}%
+                                </p>
+                            </a>
+                        </div>
+                    `).join('');
+    
+                    modalBody.innerHTML = `
+                        <p><strong>Order Name:</strong> ${data.order_number}</p>
+                        <p><strong>Client:</strong> ${data.client}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Due Date:</strong> ${data.term}</p>
+                        ${ordersHtml}
+                    `;
+                })
+                .catch(error => console.error('Error loading order details:', error));
+        }
+    </script>      
 </body>
 </html>

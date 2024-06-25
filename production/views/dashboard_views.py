@@ -194,3 +194,29 @@ def roll_api(request, roll_id):
 
     except Roll.DoesNotExist:
         return JsonResponse({'error': 'Roll not found'}, status=404)
+
+@login_required
+@admin_required
+def client_order_api(request, client_order_id):
+    try:
+        order = ClientOrder.objects.get(pk=client_order_id)
+        orders = order.orders.all().select_related('model', 'assortment')
+        orders_list = [{
+            'order_id': ord.id,
+            'model_name': ord.model.name,
+            'assortment': ord.assortment.name,
+            'completed_percentage': (ord.completed_quantity / ord.quantity) * 100 if ord.quantity else 0
+        } for ord in orders]
+
+        response_data = {
+            'order_number': order.order_number,
+            'client': order.client.name,
+            'status': order.get_status_display(),
+            'term': order.term,
+            'orders': orders_list,
+        }
+
+        return JsonResponse(response_data)
+
+    except ClientOrder.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)

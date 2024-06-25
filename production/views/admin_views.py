@@ -50,15 +50,23 @@ def dashboard_page(request):
     production_data = get_production_data()
     orders_data = get_orders_data()
     inventory_data = get_inventory_data()
+    client_orders_data = get_client_orders_data()
 
     context = {
         'client_data': client_data,
         'employee_data': employee_data,
         'production_data': production_data,
         'orders_data': orders_data,
-        'inventory_data': inventory_data
+        'inventory_data': inventory_data,
+        'client_orders_data': client_orders_data
     }
     return render(request, 'dashboard.html', context)
+
+def get_client_orders_data():
+    client_orders_data = ClientOrder.objects.select_related('client').values(
+        'id', 'order_number', 'client__name', 'status', 'term'
+    )
+    return list(client_orders_data)
 
 def get_inventory_data():
     rolls_data = Roll.objects.annotate(
