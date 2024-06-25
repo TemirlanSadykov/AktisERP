@@ -528,32 +528,34 @@
     </script>
     <script>
         function fetchEmployeeDetails(employeeId) {
-            console.log(employeeId)
             fetch(`/production/api/employees/${employeeId}/`)
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#employeeModal .modal-body');
-                    console.log(modalBody)
+                    const operationsList = data.operations.map(op => `<li>${op.operation}: ${op.quantity}, Average Time Per Unit: ${op.average_time_per_unit.toFixed(2)} seconds (Preferred: ${op.preferred_completion_time} seconds)</li>`).join('');
+    
                     // Set up the basic employee info
                     modalBody.innerHTML = `
                         <p>Name: ${data.full_name}</p>
                         <p>Username: ${data.username}</p>
                         <p>Earnings: ${data.earnings} сом</p>
-                        <p>Efficiency: ${data.efficiency}%</p>
-                        <p>Operations Worked On: ${data.operations}</p>
-                        <p>Defects/Discrepancies: ${data.defects}</p>
+                        <p>Efficiency: ${data.efficiency.toFixed(2)}%</p>
+                        <p>Operations Worked On:</p>
+                        <ul>${operationsList}</ul>
+                        <p>Total Defects: ${data.total_defects}</p>
                         <canvas id="productionChart" width="400" height="400"></canvas>
                     `; // Ensure there is a canvas element for the chart
-        
+    
                     // Prepare the data for the chart
                     const labels = data.units_over_time.map(item => item.date);
                     const unitsProduced = data.units_over_time.map(item => item.units);
+    
                     // Render the chart using Chart.js
                     var ctx = document.getElementById('productionChart').getContext('2d');
                     var productionChart = new Chart(ctx, {
                         type: 'line', // or 'bar' if you prefer
                         data: {
-                            labels: labels,  // Use original labels for X-axis
+                            labels: labels,
                             datasets: [{
                                 label: "Units Produced Over Time",
                                 data: unitsProduced,
@@ -572,7 +574,7 @@
                     });
                 })
                 .catch(error => console.error('Error loading employee details:', error));
-        }           
+        }
     </script>    
     <script>
         function fetchOrderDetails(orderId) {
