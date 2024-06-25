@@ -87,12 +87,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'XVEQsudWuJwpGaJUisuZRSfqPXpJOJXt',
-        'HOST': 'monorail.proxy.rlwy.net',
-        'PORT': '32670',
+        'ENGINE': config('AKTIS_DB_ENGINE'),
+        'NAME': config('AKTIS_DB_NAME'),
+        'USER': config('AKTIS_DB_USER'),
+        'PASSWORD': config('AKTIS_DB_PASSWORD'),
+        'HOST': config('AKTIS_DB_HOST'),
+        'PORT': config('AKTIS_DB_PORT'),
     }
 }
 
