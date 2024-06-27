@@ -217,6 +217,7 @@ class Passport(models.Model):
         return f"ID {str(self.id)}"
     
 class PassportSize(models.Model):
+    extra = models.CharField(max_length=5, blank=True, null=True)
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
     quantity = models.IntegerField(verbose_name='Количество')

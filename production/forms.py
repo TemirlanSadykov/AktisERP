@@ -211,7 +211,7 @@ class PassportSizeForm(forms.ModelForm):
         passport_id = kwargs.pop('passport_id', None)
         super().__init__(*args, **kwargs)
         
-        if passport_id:
+        if (passport_id):
             passport = Passport.objects.get(pk=passport_id)
             self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
 

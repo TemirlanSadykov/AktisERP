@@ -92,15 +92,17 @@ class OrderDetailTechnologistView(DetailView):
         # Aggregating errors across all passports associated with the order
         errors = Error.objects.filter(piece__passport_size__passport__in=passports).order_by('error_type')
 
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
-                size_data[size][passport.id]['stage'] = passport_size.stage
+                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport.id]['stage'] = passport_size.stage
+                size_data[extra_key][passport.id]['extra'] = passport_size.extra
                 total_per_size[size] += passport_size.quantity
 
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
@@ -111,9 +113,19 @@ class OrderDetailTechnologistView(DetailView):
             if size not in required_missing:
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
+        # Sorting size_data keys
+        def sort_key(x):
+            parts = x.split('-')
+            try:
+                return int(parts[0]), x
+            except ValueError:
+                return float('inf'), x
+
+        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
         context.update({
             'errors': errors,
-            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,

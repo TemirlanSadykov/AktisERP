@@ -4,12 +4,11 @@
 {% load static %}
 {% block content %}
 
-
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "QC Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "QC Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -25,152 +24,142 @@
   </div>
 </nav>
 
-  <div class="container maincontr">
-    <div class="card-header">
-      {% trans "Model Details:" %} {{ order.model.name }}
-    </div>
+<div class="container maincontr">
+  <div class="card-header">
+    {% trans "Model Details:" %} {{ order.model.name }}
+  </div>
   <div class="container">
-    <!-- <div class="card"> -->
-
-          <div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true" data-backdrop="false">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="scanModalLabel">Scanned Item Details</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <p><strong>Паспорт:</strong> <span id="modal-passport"></span></p>
-                  <p><strong>Размер:</strong> <span id="modal-size"></span></p>
-                  <p><strong>Статус:</strong> <span id="modal-stage"></span></p>
-                  <p><strong>Дефект:</strong> <span id="modal-defect"></span></p>
-                  <div id="defectTypeSelect" style="display: none;">
-                    <label for="defectType"><strong>Defect Type:</strong></label>
-                    <select id="defectType" class="form-control">
-                      <option value="STITCHING">Ошибка шитья</option>
-                      <option value="CUTTING">Ошибка резки</option>
-                      <option value="FABRIC">Дефект ткани</option>
-                      <option value="ASSEMBLY">Ошибка сборки</option>
-                      <option value="OTHER">Прочие ошибки</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="modal-footer form-actions" id="initialButtons">
-                  <button type="button" class="btn edit-btn" id="checked-button">{% trans "Checked" %}</button>
-                  <button type="button" class="btn btn-danger" id="defect-button">{% trans "Defect" %}</button>
-                </div>
-                <div class="modal-footer form-actions" id="saveBackButtons" style="display: none;">
-                  <button type="button" class="btn edit-btn" id="save-button">{% trans "Save" %}</button>
-                  <button type="button" class="btn back-btn" id="back-button">{% trans "Back" %}</button>
-                </div>
-              </div>
+    <div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true" data-backdrop="false">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="scanModalLabel">Scanned Item Details</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Паспорт:</strong> <span id="modal-passport"></span></p>
+            <p><strong>Размер:</strong> <span id="modal-size"></span></p>
+            <p><strong>Статус:</strong> <span id="modal-stage"></span></p>
+            <p><strong>Дефект:</strong> <span id="modal-defect"></span></p>
+            <div id="defectTypeSelect" style="display: none;">
+              <label for="defectType"><strong>Defect Type:</strong></label>
+              <select id="defectType" class="form-control">
+                <option value="STITCHING">Ошибка шитья</option>
+                <option value="CUTTING">Ошибка резки</option>
+                <option value="FABRIC">Дефект ткани</option>
+                <option value="ASSEMBLY">Ошибка сборки</option>
+                <option value="OTHER">Прочие ошибки</option>
+              </select>
             </div>
           </div>
-          <div class="card-body">
-              <div class="row">
-                  <div class="col-md-6 details">
-                    <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
-                    <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
-                    <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
-                    <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
-                    <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
-                    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
-                    <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
-                    <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
-                    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
-                    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
-                  </div>
-
-                  <div class="col-md-5 text-center">
-                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
-                  </div>
-              </div>
+          <div class="modal-footer form-actions" id="initialButtons">
+            <button type="button" class="btn edit-btn" id="checked-button">{% trans "Checked" %}</button>
+            <button type="button" class="btn btn-danger" id="defect-button">{% trans "Defect" %}</button>
           </div>
-
-          <input type="text" id="barcode-input" autofocus style="margin: 20px 0; padding: 8px; width: 100%;"/>
-          <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
-          <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>{% trans "Size\Passport" %}</th>
-                {% for passport in passports %}
-                <th>№{{ passport.id }}</th>
-                {% endfor %}
-                <th>{% trans "Sum" %}</th>
-                <th>{% trans "Required" %}</th>
-                <th>{% trans "Missing" %}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for size, data in required_missing.items %}
-              <tr>
-                  <td>{{ size }}</td>
-                  {% for passport in passports %}
-                  <td>
-                    {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
-                    ({{ size_data|get_item:size|get_item:passport.id|get_item:"checked_quantity"|default_if_none:"0" }})
-                    {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
-                    {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 3 %}
-                      <button type="button" class="stage-packing-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                        {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                      </button>
-                    {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" > 3 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 2 %}
-                      <button type="button" class="stage-packing-button btn back-btn">
-                        {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                      </button>
-                    {% else %}
-                      <button type="button" class="stage-packing-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                        {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                      </button>
-                    {%endif%}
-                  </td>
-                  {% endfor %}
-                  <td>{{ total_per_size|get_item:size|default:"0" }}</td>
-                  <td>{{ data.required }}</td>
-                  <td>{{ data.missing }}</td>
-              </tr>
-              {% empty %}
-              <tr>
-                  <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <div class="modal-footer form-actions" id="saveBackButtons" style="display: none;">
+            <button type="button" class="btn edit-btn" id="save-button">{% trans "Save" %}</button>
+            <button type="button" class="btn back-btn" id="back-button">{% trans "Back" %}</button>
           </div>
-
-          <div class="container-fluid bottomContainer">
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>{% trans "Associated Defects" %}</h3>
-            </div>
-            {% comment%}
-            <div class="col-md-6 text-center">
-                <a href="{% url 'defect_create' order.pk %}" class="btn btn-primary">{% trans 'Add Defect' %}</a>
-            </div>
-            {%endcomment%}
-            </div><br>
-            {% if errors %}
-            {% for error in errors %}
-            <div class="list-group" >
-                <a class="list-group-item list-group-item-action"
-                  style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
-                  {% trans "Defect" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
-                </a>
-            </div>
-            {% endfor %}
-            {% else %}
-            <div class="list-group" >
-                <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-                  {% trans "No associated defects." %}
-                </a>
-            </div>
-            {% endif %}
         </div>
-<!-- </div> -->
       </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
+          <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+          <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
+          <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
+          <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
+          <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
+          <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+          <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+          <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+          <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+        </div>
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+        </div>
+      </div>
+    </div>
+
+    <input type="text" id="barcode-input" autofocus style="margin: 20px 0; padding: 8px; width: 100%;" />
+    <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Size\Passport" %}</th>
+            {% for passport in passports %}
+            <th>№{{ passport.id }}</th>
+            {% endfor %}
+            <th>{% trans "Sum" %}</th>
+            <th>{% trans "Required" %}</th>
+            <th>{% trans "Missing" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for size, data in size_data.items %}
+          <tr>
+            <td>{{ size }}</td>
+            {% for passport in passports %}
+            <td>
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+              ({{ size_data|get_item:size|get_item:passport.id|get_item:"checked_quantity"|default_if_none:"0" }})
+              {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
+              {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 3 %}
+                <button type="button" class="stage-packing-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+                  {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+                </button>
+              {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" > 3 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 2 %}
+                <button type="button" class="stage-packing-button btn back-btn">
+                  {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+                </button>
+              {% else %}
+                <button type="button" class="stage-packing-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+                  {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+                </button>
+              {%endif%}
+            </td>
+            {% endfor %}
+            <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+            <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
+            <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="container-fluid bottomContainer">
+      <div class="row">
+        <div class="col-md-6">
+          <h3>{% trans "Associated Defects" %}</h3>
+        </div>
+      </div><br>
+      {% if errors %}
+      {% for error in errors %}
+      <div class="list-group">
+        <a class="list-group-item list-group-item-action"
+           style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
+          {% trans "Defect" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
+        </a>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="list-group">
+        <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+          {% trans "No associated defects." %}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 <script>
