@@ -86,15 +86,17 @@ class OrderDetailCutterView(DetailView):
         passports = order.passports.all()
 
         # Initialize size_data as a defaultdict where each passport.id is another defaultdict
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
-                size_data[size][passport.id]['stage'] = passport_size.stage
+                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport.id]['stage'] = passport_size.stage
+                size_data[extra_key][passport.id]['extra'] = passport_size.extra
                 total_per_size[size] += passport_size.quantity
 
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
@@ -105,13 +107,16 @@ class OrderDetailCutterView(DetailView):
             if size not in required_missing:
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
+        # Sorting size_data keys
+        sorted_size_data_keys = sorted(size_data.keys(), key=lambda x: (int(x.split('-')[0]), x))
+
         context.update({
-            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'sidebar_type' : 'cutter'
+            'sidebar_type': 'cutter'
         })
 
         return context
@@ -246,6 +251,16 @@ class PassportSizeCreateView(CreateView):
         passport = get_object_or_404(Passport, pk=passport_id)
         passport_size = form.save(commit=False)
         passport_size.passport = passport
+
+        # Check if the size_quantity already exists
+        print(passport, passport_size.size_quantity)
+        existing_sizes = PassportSize.objects.filter(passport=passport, size_quantity=passport_size.size_quantity)
+        if existing_sizes.exists():
+            # Generate an 'extra' letter (A-Z)
+            used_extras = [ps.extra for ps in existing_sizes if ps.extra]
+            new_extra = self.generate_new_extra(used_extras)
+            passport_size.extra = new_extra
+
         passport_size.save()
 
         for i in range(1, passport_size.quantity + 1):
@@ -256,6 +271,13 @@ class PassportSizeCreateView(CreateView):
             )
 
         return redirect(self.get_success_url())
+
+    def generate_new_extra(self, used_extras):
+        available_extras = [chr(i) for i in range(65, 91)]  # A-Z
+        for extra in available_extras:
+            if extra not in used_extras:
+                return extra
+        raise ValueError("All extra letters (A-Z) are used for this size_quantity.")
 
     def get_success_url(self):
         return reverse('create_passport_size', kwargs={'passport_id': self.kwargs['passport_id']})

@@ -45,7 +45,7 @@
             <div id="sizeQuantityList" class="size-quantity-list">
                 {% for ps in passport_sizes %}
                 <li id="sq-{{ ps.id }}" class="size-quantity-item">
-                    <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}</span></span>
+                    <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}{% if ps.extra %}-{{ ps.extra }}{% endif %}</span></span>
                     <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.quantity }}</span></span>
                     <button class="edit-btn" data-sq-id="{{ ps.id }}">{% trans "Edit" %}</button>
                     <button class="delete-btn" data-sq-id="{{ ps.id }}">{% trans "Delete" %}</button>

@@ -91,19 +91,21 @@ class OrderDetailPackerView(DetailView):
         passports = order.passports.all()
 
         # Initialize data structures to track quantity and packed quantities
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0, 'extra': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id]['stage'] = passport_size.stage
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                size_data[extra_key][passport.id]['stage'] = passport_size.stage
+                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport.id]['extra'] = passport_size.extra
 
                 # Count packed pieces only
                 packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
-                size_data[size][passport.id]['packed_quantity'] += packed_pieces
+                size_data[extra_key][passport.id]['packed_quantity'] += packed_pieces
                 
                 total_per_size[size] += passport_size.quantity
 
@@ -114,8 +116,11 @@ class OrderDetailPackerView(DetailView):
             if size not in required_missing:
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
+        # Sorting size_data keys
+        sorted_size_data_keys = sorted(size_data.keys(), key=lambda x: (int(x.split('-')[0]), x))
+
         context.update({
-            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
