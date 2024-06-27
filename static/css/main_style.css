@@ -720,8 +720,8 @@ nav form button:hover {
 }
 
 .reassign-form button[type="button"] {
-  background-color: #f44336; /* Red background */
-  color: white; /* White text */
+  /* background-color: #f44336;  */
+  color: white; 
 }
 
 /* Overlay covering the entire screen */

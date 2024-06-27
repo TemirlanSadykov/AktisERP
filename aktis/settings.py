@@ -85,14 +85,27 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': config('AKTIS_DB_ENGINE'),
+#         'NAME': config('AKTIS_DB_NAME'),
+#         'USER': config('AKTIS_DB_USER'),
+#         'PASSWORD': config('AKTIS_DB_PASSWORD'),
+#         'HOST': config('AKTIS_DB_HOST'),
+#         'PORT': config('AKTIS_DB_PORT'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': config('AKTIS_DB_ENGINE'),
-        'NAME': config('AKTIS_DB_NAME'),
-        'USER': config('AKTIS_DB_USER'),
-        'PASSWORD': config('AKTIS_DB_PASSWORD'),
-        'HOST': config('AKTIS_DB_HOST'),
-        'PORT': config('AKTIS_DB_PORT'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'railway',
+        'USER': 'postgres',
+        'PASSWORD': 'XVEQsudWuJwpGaJUisuZRSfqPXpJOJXt',
+        'HOST': 'monorail.proxy.rlwy.net',
+        'PORT': '32670',
     }
 }
 
