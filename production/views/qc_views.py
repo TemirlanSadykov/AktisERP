@@ -118,7 +118,14 @@ class OrderDetailQcView(DetailView):
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
         # Sorting size_data keys
-        sorted_size_data_keys = sorted(size_data.keys(), key=lambda x: (int(x.split('-')[0]), x))
+        def sort_key(x):
+            parts = x.split('-')
+            try:
+                return int(parts[0]), x
+            except ValueError:
+                return float('inf'), x
+
+        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
 
         context.update({
             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
