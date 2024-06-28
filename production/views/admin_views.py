@@ -65,7 +65,7 @@ def dashboard_page(request):
 def get_client_orders_data():
     client_orders_data = ClientOrder.objects.select_related('client').values(
         'id', 'order_number', 'client__name', 'status', 'term'
-    )
+    ).order_by('status')
     return list(client_orders_data)
 
 def get_inventory_data():
@@ -83,7 +83,8 @@ def get_orders_data():
         total_price=F('quantity') * F('payment'),
     ).values(
         'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'color', 'fabrics'
-    )
+    ).order_by('assortment_name')
+
     return list(orders_data)
 
 def get_production_data():

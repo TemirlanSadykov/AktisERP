@@ -234,6 +234,9 @@
                 <a href="#" onclick="openTab(event, 'Overview')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">Overview</span>
                 </a>
+                <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
+                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">Orders</span>
+                </a>
                  <a href="#" onclick="openTab(event, 'Clients')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="dashboard">
                     <i class="fas fa-user  fa-fw"></i><span class="sidetext">Clients</span>
                 </a> 
@@ -242,9 +245,6 @@
                 </a>
                 <a href="#" onclick="openTab(event, 'Inventory')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="employees">
                     <i class="fas fa-clipboard-list  fa-fw"> </i><span class="sidetext">Inventory</span>
-                </a>
-                <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
-                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">Orders</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Employees')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="attendances">
                     <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">Employees</span>
@@ -428,6 +428,79 @@
                 </div>
             </div> {% endcomment %}
         </div>
+        <div id="Orders" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Orders Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
+            <table class="table rounded-table">
+                <thead>
+                    <tr>
+                        <th>Order Name</th>
+                        <th>Client</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in client_orders_data %}
+                        <tr>
+                            <td><a href="#" data-toggle="modal" class="linkset" data-target="#clientOrderModal" onclick="fetchClientOrderDetails({{ order.id }})">{{ order.order_number }}</a></td>
+                            <td>{{ order.client__name }}</td>
+                            <td>
+                                {% if order.status == 0 %}
+                                    New
+                                {% elif order.status == 1 %}
+                                    In Progress
+                                {% elif order.status == 2 %}
+                                    Completed
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+                            <td>{{ order.term }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="modal fade" id="clientOrderModal" tabindex="-1" role="dialog" aria-labelledby="clientOrderModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="clientOrderModalLabel">Order Details</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Order details will be filled here by JavaScript -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            </div>
+        </div> 
         <div id="Clients" class="tabcontent" style="display: none;">
             <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
                 <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
@@ -523,7 +596,6 @@
                         <th>Model Name</th>
                         <th>Quantity</th>
                         <th>Price</th>
-                        <th>Status</th>
                         <th>Assortment</th>
                         <th>Color</th>
                         <th>Fabrics</th>
@@ -535,7 +607,6 @@
                         <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
                         <td>{{ order.quantity }}</td>
                         <td>{{ order.total_price }}</td>
-                        <td>{{ order.status }}</td>
                         <td>{{ order.assortment_name }}</td>
                         <td>{{ order.color }}</td>
                         <td>{{ order.fabrics }}</td>
@@ -631,71 +702,7 @@
                 
         </div>
         </div> 
-
-
-        <div id="Orders" class="tabcontent" style="display: none;">
-            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
-                  <i class="fas fa-bars"></i>
-                </button>
-                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Orders Overview' %}</h4>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
-                    <li class="nav-item dropdown" style="margin: 10px;">
-                      {{ request.user.username }}
-                    </li>
-                    <li class="nav-item dropdown">
-                      <form action="{% url 'logout' %}" method="post">
-                        {% csrf_token %}
-                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
-                      </form>
-                    </li>
-                  </ul>
-                </div>
-              </nav>
-              <div class="container" style="padding:5%;">
-            <table class="table rounded-table">
-                <thead>
-                    <tr>
-                        <th>Order Name</th>
-                        <th>Client</th>
-                        <th>Status</th>
-                        <th>Due Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in client_orders_data %}
-                        <tr>
-                            <td><a href="#" data-toggle="modal" class="linkset" data-target="#clientOrderModal" onclick="fetchClientOrderDetails({{ order.id }})">{{ order.order_number }}</a></td>
-                            <td>{{ order.client__name }}</td>
-                            <td>{{ order.status }}</td>
-                            <td>{{ order.term }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div class="modal fade" id="clientOrderModal" tabindex="-1" role="dialog" aria-labelledby="clientOrderModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="clientOrderModalLabel">Order Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Order details will be filled here by JavaScript -->
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            </div>
-        </div>   
+  
         <div id="Employees" class="tabcontent" style="display: none;">
             <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
                 <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
