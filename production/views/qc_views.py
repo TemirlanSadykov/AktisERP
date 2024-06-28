@@ -155,6 +155,7 @@ def get_piece_info(request, barcode):
         data = {
             'piece_id': piece.id,
             'passport': piece.passport_size.passport.id,
+            'order': piece.passport_size.passport.order.model.name,
             'passport_size': piece.passport_size.id,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",

@@ -39,12 +39,13 @@
             </button>
           </div>
           <div class="modal-body">
+            <p><strong>Заказ:</strong> <span id="modal-order"></span></p>
             <p><strong>Паспорт:</strong> <span id="modal-passport"></span></p>
             <p><strong>Размер:</strong> <span id="modal-size"></span></p>
             <p><strong>Статус:</strong> <span id="modal-stage"></span></p>
             <p><strong>Дефект:</strong> <span id="modal-defect"></span></p>
             <div id="defectTypeSelect" style="display: none;">
-              <label for="defectType"><strong>Defect Type:</strong></label>
+              <label for="defectType"><strong>Тип Дефекта:</strong></label>
               <select id="defectType" class="form-control">
                 <option value="STITCHING">Ошибка шитья</option>
                 <option value="CUTTING">Ошибка резки</option>
@@ -216,6 +217,7 @@
             fetch(`/production/qc/orders/api/get-piece-info/${barcode}/`)
                 .then(response => response.json())
                 .then(data => {
+                    document.getElementById('modal-order').textContent = data.order;
                     document.getElementById('modal-passport').textContent = data.passport;
                     document.getElementById('modal-size').textContent = data.size;
                     document.getElementById('modal-stage').textContent = data.stage;
