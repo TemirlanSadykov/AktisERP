@@ -85,6 +85,8 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+
+
 DATABASES = {
     'default': {
         'ENGINE': config('AKTIS_DB_ENGINE'),
@@ -95,6 +97,7 @@ DATABASES = {
         'PORT': config('AKTIS_DB_PORT'),
     }
 }
+
 
 # Redis cache
 # CACHES = {

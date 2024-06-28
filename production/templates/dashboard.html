@@ -10,64 +10,373 @@
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="{% static 'css/main_style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/clients.css' %}">
+
+    <style>
+        #employeeModal .modal-dialog {
+            max-width: 800px; 
+        }
+    
+        .employee-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .employee-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+
+
+        #clientOrderModal .modal-dialog {
+            max-width: 800px; 
+        }
+    
+        .client-order-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .client-order-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .order-item {
+            background-color: #f8f9fa;
+            transition: transform 0.3s ease;
+        }
+    
+        .order-item:hover {
+            transform: translateY(-5px);
+        }
+    
+        .order-item p {
+            margin: 0;
+        }
+    
+        .order-item a:hover {
+            color: #007bff;
+        }
+    
+
+        #rollModal .modal-dialog {
+            max-width: 800px; 
+        }
+    
+        .roll-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .roll-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .passport-item {
+            background-color: #e9ecef;
+            transition: transform 0.3s ease;
+        }
+    
+        .passport-item:hover {
+            transform: translateY(-5px);
+        }
+    
+        .passport-item p {
+            margin: 0;
+        }
+    
+        .passport-item a:hover {
+            color: #007bff;
+        }
+    
+
+        #orderModal .modal-dialog {
+            max-width: 800px;
+        }
+    
+        .order-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .order-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .passport-item {
+            background-color: #f8f9fa;
+            transition: transform 0.3s ease;
+        }
+    
+        .passport-item:hover {
+            transform: translateY(-5px);
+        }
+    
+        .passport-item p {
+            margin: 0;
+        }
+    
+        .passport-item a:hover {
+            color: #007bff;
+        }
+    
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+
+    
+        .modal-footer {
+            background-color: #f1f1f1;
+        }
+
+        .collapsesidebarset {
+            display:flex;
+            align-items: center;
+            flex-direction: row;
+            height:50px;
+            width:220px;
+        }
+        .table th{
+            background-color: #007bff;
+        }
+        .table thead th {
+        border-bottom: 0px solid #dee2e6;
+        }
+        .table th, .table td{
+            border: 0px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .table td, .table th{
+            vertical-align: middle;
+        }
+        .linkset{
+            text-decoration: none !important;
+        }
+    </style>
+    
 </head>
 <body>
-    <div class="sidebar">
-        <div>
-            <h2>ERP Dashboard</h2>
-            <ul>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Overview')">Overview</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Clients')">Clients</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Production')">Production</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Inventory')">Inventory</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Orders')">Orders</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Employees')">Employees</a></li>
-                <li><a href="{% url 'user_redirect' %}">{% trans 'Home' %}</a></li>
-            </ul>
+    <div class="d-flex" id="wrapper">
+        <div class="border-right" id="sidebar-wrapper">
+            <div class="d-flex justify-content-between align-items-center" style="width:222px;">
+                <button type="button" id="toggle-sidebar" aria-label="Toggle sidebar" style="color:#6c757d; border: none;
+                background: none;
+                outline: none;
+                width: 64px;
+                margin-top:10px;">
+                    <i class="fas fa-bars sideicon"></i>
+                </button>
+                <button type="button" class="close-btn" id="close-sidebar" id="toggle-sidebar" aria-label="Toggle sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div id="sidebar" class="list-group list-group-flush sidenavres">
+                <a href="#" onclick="openTab(event, 'Overview')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
+                    <i class="fas fa-cubes fa-fw"></i><span class="sidetext">Overview</span>
+                </a>
+                 <a href="#" onclick="openTab(event, 'Clients')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="dashboard">
+                    <i class="fas fa-home fa-fw"></i><span class="sidetext">Clients</span>
+                </a> 
+                <a href="#" onclick="openTab(event, 'Production')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="orders">
+                    <i class="fas fa-table  fa-fw"></i><span class="sidetext">Production</span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Inventory')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="employees">
+                    <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">Inventory</span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
+                    <i class="fas fa-user  fa-fw"></i><span class="sidetext">Orders</span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Employees')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="attendances">
+                    <i class="fas fa-clipboard-list  fa-fw"></i><span class="sidetext">Employees</span>
+                </a>
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
+                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
+                </a>
+            </div>
         </div>
-    </div>
-    <div class="main-content">
+        <div id="page-content-wrapper">
+
         <div id="Overview" class="tabcontent">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'ERP Dashboard' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
             <div class="header">
-                <h1>Dashboard</h1>
-                <h4>Per last 30 days</h4>
+                <br>
+                <h4>PER LAST 30 DAYS</h4>
             </div>
-            <div class="cards">
-                <div class="card">
-                    <h3>Total Production</h3>
-                    <p>{{ production_data.total_amount }} units</p>
+
+            <div class="container-fluid ">
+                <div class="row mt-4">
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title">Total Production</h5>
+                              <p>{{ production_data.total_amount }} units</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/all.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title">Completed Units</h5>
+                              <p>{{ production_data.completed_amount }} units</p>
+
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/loading.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="card">
-                    <h3>Completed Units</h3>
-                    <p>{{ production_data.completed_amount }} units</p>
+                <div class="row mt-4">
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title">Orders in Progress</h5>
+                              <p>{{ production_data.orders_in_progress }} orders</p>
+
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/gears.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title">Models in Progress</h5>
+                              <p>{{ production_data.in_progress_orders_count }} models</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/hourglass.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="card">
-                    <h3>Orders in Progress</h3>
-                    <p>{{ production_data.orders_in_progress }} orders</p>
+              </div>
+
+
+              
+              <div class="container-fluid ">
+                <div class="row mt-4">
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title">Errors</h5>
+                              <p>{{ production_data.total_errors }} units</p>
+                            </div>
+                          <div class="icon">
+                            <img src="{% static 'img/no-results.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">Rolls</h5>
+                              <p>{{ production_data.total_rolls_used }} meters</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/fast.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="card">
-                    <h3>Models in Progress</h3>
-                    <p>{{ production_data.in_progress_orders_count }} models</p>
+                <div class="row mt-4">
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">Salary</h5>
+                              <p>{{ production_data.total_salary }} сом</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/allocation.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-sm-6 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title">Total Revenue</h5>
+                              <p>{{ production_data.total_revenue }} сом</p>
+                            </div>
+                          <div class="icon">
+                            <img src="{% static 'img/income-statement.png' %}" alt="" style="width: 100px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            </div>
-            <div class="cards">
-                <div class="card">
-                    <h3>Errors</h3>
-                    <p>{{ production_data.total_errors }} units</p>
-                </div>
-                <div class="card">
-                    <h3>Rolls</h3>
-                    <p>{{ production_data.total_rolls_used }} meters</p>
-                </div>
-                <div class="card">
-                    <h3>Salary</h3>
-                    <p>{{ production_data.total_salary }} сом</p>
-                </div>
-                <div class="card">
-                    <h3>Total Revenue</h3>
-                    <p>{{ production_data.total_revenue }} сом</p>
-                </div>
-            </div>
+              </div>
+
+
             {% comment %} <div class="charts">
                 <div class="chart" id="productionChartContainer">
                     <canvas id="productionChart"></canvas>
@@ -78,7 +387,26 @@
             </div> {% endcomment %}
         </div>
         <div id="Clients" class="tabcontent" style="display: none;">
-            <h2>Client Rankings</h2>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Client Rankings' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
             <table class="table">
                 <thead>
                     <tr>
@@ -91,10 +419,10 @@
                 <tbody>
                     {% for client in client_data %}
                     <tr>
-                        <td><a href="#" data-toggle="modal" data-target="#clientModal" onclick="fetchClientDetails({{ client.id }})">{{ client.client }}</a></td>
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#clientModal" onclick="fetchClientDetails({{ client.id }})">{{ client.client }}</a></td>
                         <td>
                             {% for order_number, client_order_id, model_list, order_income, order_quantity in client.client_orders_details %}
-                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank">{{ order_number }}</a> - {{ order_income }} сом ({{ order_quantity }})</strong><br>
+                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank" class="linkset">{{ order_number }}</a> - {{ order_income }} сом ({{ order_quantity }})</strong><br>
                             {% endfor %}
                         </td>
                         <td>{{ client.total_ordered_amount_by_orders }} сом</td>
@@ -118,15 +446,36 @@
                     </div>
                 </div>
             </div>
-        </div>        
+        </div>
+    </div>
+
         <div id="Production" class="tabcontent" style="display: none;">
-            <h2>Production Overview</h2>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Production Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
             <table class="table">
                 <thead>
                     <tr>
                         <th>Model Name</th>
                         <th>Quantity</th>
-                        <th>Price (Total)</th>
+                        <th>Price</th>
                         <th>Status</th>
                         <th>Assortment</th>
                         <th>Color</th>
@@ -136,7 +485,7 @@
                 <tbody>
                     {% for order in orders_data %}
                     <tr>
-                        <td><a href="#" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
+                        <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
                         <td>{{ order.quantity }}</td>
                         <td>{{ order.total_price }}</td>
                         <td>{{ order.status }}</td>
@@ -148,9 +497,8 @@
                 </tbody>
             </table>
         
-            <!-- Order Details Modal -->
             <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
+                <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
@@ -159,14 +507,38 @@
                             </button>
                         </div>
                         <div class="modal-body">
-                            <!-- Order details will be filled here by JavaScript -->
+                            <!-- Order details will be populated here by JavaScript -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
             </div>
+                
+        </div>
         </div>      
         <div id="Inventory" class="tabcontent" style="display: none;">
-            <h2>Inventory Overview</h2>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Inventory Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
             <table class="table">
                 <thead>
                     <tr>
@@ -180,7 +552,7 @@
                 </thead>
                 <tbody>
                     {% for roll in inventory_data %}
-                        <td><a href="#" data-toggle="modal" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
                         <td>{{ roll.color }}</td>
                         <td>{{ roll.fabrics }}</td>
                         <td>{{ roll.meters }}</td>
@@ -190,10 +562,9 @@
                     {% endfor %}
                 </tbody>
             </table>
-        
-            <!-- Roll Details Modal -->
+
             <div class="modal fade" id="rollModal" tabindex="-1" role="dialog" aria-labelledby="rollModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
+                <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="rollModalLabel">Roll Details</h5>
@@ -204,12 +575,38 @@
                         <div class="modal-body">
                             <!-- Roll details will be filled here by JavaScript -->
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>        
+                
+        </div>
+        </div> 
+
+
         <div id="Orders" class="tabcontent" style="display: none;">
-            <h2>Orders Overview</h2>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Orders Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
             <table class="table">
                 <thead>
                     <tr>
@@ -222,7 +619,7 @@
                 <tbody>
                     {% for order in client_orders_data %}
                         <tr>
-                            <td><a href="#" data-toggle="modal" data-target="#clientOrderModal" onclick="fetchClientOrderDetails({{ order.id }})">{{ order.order_number }}</a></td>
+                            <td><a href="#" data-toggle="modal" class="linkset" data-target="#clientOrderModal" onclick="fetchClientOrderDetails({{ order.id }})">{{ order.order_number }}</a></td>
                             <td>{{ order.client__name }}</td>
                             <td>{{ order.status }}</td>
                             <td>{{ order.term }}</td>
@@ -230,10 +627,9 @@
                     {% endfor %}
                 </tbody>
             </table>
-        
-            <!-- Order Details Modal -->
+
             <div class="modal fade" id="clientOrderModal" tabindex="-1" role="dialog" aria-labelledby="clientOrderModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
+                <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="clientOrderModalLabel">Order Details</h5>
@@ -244,12 +640,36 @@
                         <div class="modal-body">
                             <!-- Order details will be filled here by JavaScript -->
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
+            
+            </div>
         </div>   
         <div id="Employees" class="tabcontent" style="display: none;">
-            <h2>Employee Rankings</h2>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Employee Rankings' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
             <table class="table">
                 <thead>
                     <tr>
@@ -263,15 +683,16 @@
                     {% for employee in employee_data %}
                     <tr>
                         <td>{{ employee.name }}</td>
-                        <td><a href="#" data-toggle="modal" data-target="#employeeModal" onclick="fetchEmployeeDetails({{ employee.id }})">{{ employee.full_name }}</a></td>
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#employeeModal" onclick="fetchEmployeeDetails({{ employee.id }})">{{ employee.full_name }}</a></td>
                         <td>{{ employee.units_produced }}</td>
                         <td>{{ employee.hours_worked }} hrs</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
             <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
+                <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
@@ -282,11 +703,17 @@
                         <div class="modal-body">
                             <!-- Employee details will be filled here by JavaScript -->
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>        
+            
+            </div>
+        </div>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -315,25 +742,22 @@
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#clientModal .modal-body');
-                    // Set up the basic client info
                     modalBody.innerHTML = `
                         <p>Name: ${data.name}</p>
                         <p>Contact Info: ${data.contact_info}</p>
                         <p>Total Spendings: ${data.total_spendings}</p>
                         <canvas id="spendingChart" width="400" height="400"></canvas>
-                    `; // Ensure there is a canvas element for the chart
+                    `; 
         
-                    // Prepare the data for the chart
                     const labels = data.spendings_over_time.map(item => item.date);
                     const co = data.spendings_over_time.map(item => item.co);
                     const spendings = data.spendings_over_time.map(item => item.spendings);
                     const tooltipLabels = labels.map((label, index) => `${label} - ${co[index]}`);
-                    // Render the chart using Chart.js
                     var ctx = document.getElementById('spendingChart').getContext('2d');
                     var spendingChart = new Chart(ctx, {
-                        type: 'line', // or 'bar' if you prefer
+                        type: 'line',
                         data: {
-                          labels: labels,  // Use original labels for X-axis
+                          labels: labels, 
                           datasets: [{
                             label: "Spendings Over Time",
                             data: spendings,
@@ -352,9 +776,9 @@
                             tooltip: {
                               callbacks: {
                                 label: function(tooltipItem) {
-                                  const label = tooltipItem.label; // date
-                                  const value = tooltipItem.raw; // spending amount
-                                  const coValue = co[tooltipItem.dataIndex]; // co value for the tooltip
+                                  const label = tooltipItem.label;  
+                                  const value = tooltipItem.raw;
+                                  const coValue = co[tooltipItem.dataIndex];
                                   return `${coValue} - ${value}`;
                                 }
                               }
@@ -366,34 +790,55 @@
                 .catch(error => console.error('Error loading client details:', error));
         }           
     </script>
+
     <script>
         function fetchEmployeeDetails(employeeId) {
             fetch(`/production/api/employees/${employeeId}/`)
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#employeeModal .modal-body');
-                    const operationsList = data.operations.map(op => `<li>${op.operation}: ${op.quantity}, Average Time Per Unit: ${op.average_time_per_unit.toFixed(2)} seconds (Preferred: ${op.preferred_completion_time} seconds)</li>`).join('');
+                    const operationsList = data.operations.map(op => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${op.operation}: ${op.quantity}
+                            <span class="badge badge-primary badge-pill">Avg Time: ${op.average_time_per_unit.toFixed(2)}s (Preferred: ${op.preferred_completion_time}s)</span>
+                        </li>
+                    `).join('');
     
-                    // Set up the basic employee info
                     modalBody.innerHTML = `
-                        <p>Name: ${data.full_name}</p>
-                        <p>Username: ${data.username}</p>
-                        <p>Earnings: ${data.earnings} сом</p>
-                        <p>Efficiency: ${data.efficiency.toFixed(2)}%</p>
-                        <p>Operations Worked On:</p>
-                        <ul>${operationsList}</ul>
-                        <p>Total Defects: ${data.total_defects}</p>
-                        <canvas id="productionChart" width="400" height="400"></canvas>
-                    `; // Ensure there is a canvas element for the chart
+                        <div class="employee-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Name:</strong> ${data.full_name}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Username:</strong> ${data.username}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Earnings:</strong> ${data.earnings} сом</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Efficiency:</strong> ${data.efficiency.toFixed(2)}%</p>
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <p><strong>Operations Worked On:</strong></p>
+                                    <ul class="list-group">${operationsList}</ul>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Total Defects:</strong> ${data.total_defects}</p>
+                                </div>
+                                <div class="col-12">
+                                    <canvas id="productionChart" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    `;
     
-                    // Prepare the data for the chart
                     const labels = data.units_over_time.map(item => item.date);
                     const unitsProduced = data.units_over_time.map(item => item.units);
     
-                    // Render the chart using Chart.js
                     var ctx = document.getElementById('productionChart').getContext('2d');
                     var productionChart = new Chart(ctx, {
-                        type: 'line', // or 'bar' if you prefer
+                        type: 'line', 
                         data: {
                             labels: labels,
                             datasets: [{
@@ -415,7 +860,8 @@
                 })
                 .catch(error => console.error('Error loading employee details:', error));
         }
-    </script>    
+    </script>
+
     <script>
         function fetchOrderDetails(orderId) {
             fetch(`/production/api/orders/${orderId}/`)
@@ -423,11 +869,11 @@
                 .then(data => {
                     const modalBody = document.querySelector('#orderModal .modal-body');
                     let passportsHtml = data.passports.map(passport => `
-                        <div>
-                            <a href="/production/admin/passports/${passport.passport_id}/" style="text-decoration: none; color: inherit;" target="_blank">
+                        <div class="passport-item mb-3 p-3 border rounded shadow-sm">
+                            <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Passport ID:</strong> ${passport.passport_id}, 
-                                    <strong>Size Range:</strong> ${passport.size_range},
+                                    <strong>Passport ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Size Range:</strong> ${passport.size_range}<br>
                                     ${passport.rolls.map(roll => `
                                         <span>${roll.roll_name}: ${roll.meters} meters</span>
                                     `).join(', ')}
@@ -437,19 +883,40 @@
                     `).join('');
     
                     modalBody.innerHTML = `
-                        <p><strong>Model Name:</strong> ${data.model_name}</p>
-                        <p><strong>Quantity:</strong> ${data.quantity}</p>
-                        <p><strong>Price Per Piece:</strong> ${data.price_per_piece}</p>
-                        <p><strong>Production Cost Per Piece:</strong> ${data.production_cost_per_piece}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
-                        <p><strong>Assortment:</strong> ${data.assortment}</p>
-                        <p><strong>Color:</strong> ${data.color}</p>
-                        ${passportsHtml}
+                        <div class="order-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Model Name:</strong> ${data.model_name}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Quantity:</strong> ${data.quantity}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Price Per Piece:</strong> ${data.price_per_piece}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Production Cost Per Piece:</strong> ${data.production_cost_per_piece}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Status:</strong> ${data.status}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Assortment:</strong> ${data.assortment}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Color:</strong> ${data.color}</p>
+                                </div>
+                                <div class="col-12">
+                                    ${passportsHtml}
+                                </div>
+                            </div>
+                        </div>
                     `;
                 })
                 .catch(error => console.error('Error loading order details:', error));
         }
     </script>
+    
     <script>
         function fetchRollDetails(rollId) {
             fetch(`/production/api/rolls/${rollId}/`)
@@ -457,30 +924,49 @@
                 .then(data => {
                     const modalBody = document.querySelector('#rollModal .modal-body');
                     let passportsHtml = data.passports_used.map(passport => `
-                        <div>
-                            <a href="/production/admin/passports/${passport.passport_id}/" style="text-decoration: none; color: inherit;" target="_blank">
+                        <div class="passport-item mb-3 p-3 border rounded shadow-sm">
+                            <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Passport ID:</strong> ${passport.passport_id}, 
-                                    <strong>Meters Used:</strong> ${passport.meters_used},
+                                    <strong>Passport ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Meters Used:</strong> ${passport.meters_used}<br>
                                     <strong>Model:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
                                 </p>
                             </a>
                         </div>
                     `).join('');
-    
+        
                     modalBody.innerHTML = `
-                        <p><strong>Name:</strong> ${data.name}</p>
-                        <p><strong>Color:</strong> ${data.color}</p>
-                        <p><strong>Fabrics:</strong> ${data.fabrics}</p>
-                        <p><strong>Total Meters:</strong> ${data.meters}</p>
-                        <p><strong>Used Meters:</strong> ${data.used_meters}</p>
-                        <p><strong>Available Meters:</strong> ${data.available_meters}</p>
-                        ${passportsHtml}
+                        <div class="roll-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Name:</strong> ${data.name}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Color:</strong> ${data.color}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Fabrics:</strong> ${data.fabrics}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Total Meters:</strong> ${data.meters}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Used Meters:</strong> ${data.used_meters}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Available Meters:</strong> ${data.available_meters}</p>
+                                </div>
+                                <div class="col-12">
+                                    ${passportsHtml}
+                                </div>
+                            </div>
+                        </div>
                     `;
                 })
                 .catch(error => console.error('Error loading roll details:', error));
         }
     </script>
+    
     <script>
         function fetchClientOrderDetails(clientOrderId) {
             fetch(`/production/api/client-orders/${clientOrderId}/`)
@@ -488,11 +974,11 @@
                 .then(data => {
                     const modalBody = document.querySelector('#clientOrderModal .modal-body');
                     let ordersHtml = data.orders.map(order => `
-                        <div>
-                            <a href="/production/admin/orders/${order.order_id}/" style="text-decoration: none; color: inherit;" target="_blank">
+                        <div class="order-item mb-3 p-3 border rounded shadow-sm">
+                            <a href="/production/admin/orders/${order.order_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Model Name:</strong> ${order.model_name}, 
-                                    <strong>Assortment:</strong> ${order.assortment}, 
+                                    <strong>Model Name:</strong> ${order.model_name}<br>
+                                    <strong>Assortment:</strong> ${order.assortment}<br>
                                     <strong>Completed Percentage:</strong> ${order.completed_percentage.toFixed(2)}%
                                 </p>
                             </a>
@@ -500,15 +986,56 @@
                     `).join('');
     
                     modalBody.innerHTML = `
-                        <p><strong>Order Name:</strong> ${data.order_number}</p>
-                        <p><strong>Client:</strong> ${data.client}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
-                        <p><strong>Due Date:</strong> ${data.term}</p>
-                        ${ordersHtml}
+                        <div class="client-order-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Order Name:</strong> ${data.order_number}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Client:</strong> ${data.client}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Status:</strong> ${data.status}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Due Date:</strong> ${data.term}</p>
+                                </div>
+                                <div class="col-12">
+                                    ${ordersHtml}
+                                </div>
+                            </div>
+                        </div>
                     `;
                 })
                 .catch(error => console.error('Error loading order details:', error));
         }
-    </script>      
+    </script>
+    
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sidebarWrapper = document.getElementById('sidebar-wrapper');
+            const toggleButton = document.getElementById('toggle-sidebar');
+            const closeButton = document.getElementById('close-sidebar');
+            const currentPath = window.location.pathname;
+    
+            document.querySelectorAll('#sidebar .list-group-item').forEach(function(link) {
+                const linkPath = new URL(link.href).pathname;
+                
+                if (currentPath === linkPath || currentPath.includes(linkPath)) {
+                    document.querySelectorAll('#sidebar .list-group-item').forEach(item => item.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+    
+            toggleButton.addEventListener('click', function() {
+                sidebarWrapper.classList.toggle('collapsed');
+            });
+    
+            closeButton.addEventListener('click', function() {
+                sidebarWrapper.classList.toggle('collapsed');
+            });
+        });
+    </script>
 </body>
 </html>
