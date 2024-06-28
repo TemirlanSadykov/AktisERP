@@ -141,7 +141,6 @@ class Operation(models.Model):
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
-    operations = models.ManyToManyField(Operation, related_name='assortments', verbose_name='Операции')
     def __str__(self):
         return self.name
 
