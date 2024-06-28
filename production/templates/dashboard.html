@@ -14,8 +14,52 @@
 
     <link rel="stylesheet" href="{% static 'css/main_style.css' %}">
     <link rel="stylesheet" href="{% static 'css/clients.css' %}">
-
     <style>
+        #clientModal .modal-dialog {
+            max-width: 800px; /* Increase the width of the modal */
+        }
+    
+        .client-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .client-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: calc(1.3rem - 5px) !important;
+            border-top-right-radius: calc(1.3rem - 5px) !important;
+            /* border-radius: 10px !important; */
+            
+        }
+
+    
+        .modal-footer {
+            background-color: #f1f1f1;
+            border-top: 0px solid #dee2e6;
+            border-bottom-right-radius: calc(1.3rem - 5px);
+            border-bottom-left-radius: calc(1.3rem - 5px);
+            /* border-radius: 10px !important; */
+        }
+
+    </style>
+    
+    <style>
+        .rounded-table {
+    border-collapse: separate; 
+    border-spacing: 0; 
+    border-radius: 10px !important; 
+    overflow: hidden; 
+}
+
+
         #employeeModal .modal-dialog {
             max-width: 800px; 
         }
@@ -138,11 +182,10 @@
         .modal-header {
             background-color: #007bff;
             color: white;
-        }
-
-    
-        .modal-footer {
-            background-color: #f1f1f1;
+            border-top-left-radius: calc(1.3rem - 5px) !important;
+            border-top-right-radius: calc(1.3rem - 5px) !important;
+            /* border-radius: 10px !important; */
+            
         }
 
         .collapsesidebarset {
@@ -192,22 +235,22 @@
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">Overview</span>
                 </a>
                  <a href="#" onclick="openTab(event, 'Clients')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="dashboard">
-                    <i class="fas fa-home fa-fw"></i><span class="sidetext">Clients</span>
+                    <i class="fas fa-user  fa-fw"></i><span class="sidetext">Clients</span>
                 </a> 
                 <a href="#" onclick="openTab(event, 'Production')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="orders">
                     <i class="fas fa-table  fa-fw"></i><span class="sidetext">Production</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Inventory')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="employees">
-                    <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">Inventory</span>
+                    <i class="fas fa-clipboard-list  fa-fw"> </i><span class="sidetext">Inventory</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
-                    <i class="fas fa-user  fa-fw"></i><span class="sidetext">Orders</span>
+                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">Orders</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Employees')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="attendances">
-                    <i class="fas fa-clipboard-list  fa-fw"></i><span class="sidetext">Employees</span>
+                    <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">Employees</span>
                 </a>
                 <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
-                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
+                     <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
                 </a>
             </div>
         </div>
@@ -240,65 +283,64 @@
 
             <div class="container-fluid ">
                 <div class="row mt-4">
-                  <div class="col-md-6 col-sm-6 mb-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title">Total Production</h5>
+                              <h5 class="card-title text-left">Total Production</h5>
                               <p>{{ production_data.total_amount }} units</p>
                           </div>
                           <div class="icon">
-                            <img src="{% static 'img/all.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/all.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="col-md-6 col-sm-6 mb-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title">Completed Units</h5>
+                              <h5 class="card-title text-left">Completed Units</h5>
                               <p>{{ production_data.completed_amount }} units</p>
 
                           </div>
                           <div class="icon">
-                            <img src="{% static 'img/loading.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/loading.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="row mt-4">
-                  <div class="col-md-6 col-sm-6 mb-4">
+                <!-- </div>
+                <div class="row mt-4"> -->
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title">Orders in Progress</h5>
+                              <h5 class="card-title text-left">Orders in Progress</h5>
                               <p>{{ production_data.orders_in_progress }} orders</p>
-
                           </div>
                           <div class="icon">
-                            <img src="{% static 'img/gears.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/gears.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="col-md-6 col-sm-6 mb-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title">Models in Progress</h5>
+                              <h5 class="card-title text-left">Models in Progress</h5>
                               <p>{{ production_data.in_progress_orders_count }} models</p>
                           </div>
                           <div class="icon">
-                            <img src="{% static 'img/hourglass.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/hourglass.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
@@ -311,22 +353,22 @@
               
               <div class="container-fluid ">
                 <div class="row mt-4">
-                  <div class="col-md-6 col-sm-6 mb-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title">Errors</h5>
+                              <h5 class="card-title text-left">Errors</h5>
                               <p>{{ production_data.total_errors }} units</p>
                             </div>
                           <div class="icon">
-                            <img src="{% static 'img/no-results.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/no-results.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="col-md-6 col-sm-6 mb-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -335,15 +377,15 @@
                               <p>{{ production_data.total_rolls_used }} meters</p>
                           </div>
                           <div class="icon">
-                            <img src="{% static 'img/fast.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/fast.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="row mt-4">
-                  <div class="col-md-6 col-sm-6 mb-4">
+                <!-- </div>
+                <div class="row mt-4"> -->
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -352,22 +394,22 @@
                               <p>{{ production_data.total_salary }} сом</p>
                           </div>
                           <div class="icon">
-                            <img src="{% static 'img/allocation.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/allocation.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="col-md-6 col-sm-6 mb-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
                     <div class="card text-black h-100">
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title">Total Revenue</h5>
+                              <h5 class="card-title text-left">Total Revenue</h5>
                               <p>{{ production_data.total_revenue }} сом</p>
                             </div>
                           <div class="icon">
-                            <img src="{% static 'img/income-statement.png' %}" alt="" style="width: 100px;">
+                            <img src="{% static 'img/income-statement.png' %}" alt="" style="width: 80px;">
                           </div>
                         </div>
                       </div>
@@ -407,7 +449,7 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table">
+            <table class="table rounded-table">
                 <thead>
                     <tr>
                         <th>Client</th>
@@ -431,21 +473,26 @@
                     {% endfor %}
                 </tbody>
             </table>
+
             <div class="modal fade" id="clientModal" tabindex="-1" role="dialog" aria-labelledby="clientModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
                             <h5 class="modal-title" id="clientModalLabel">Client Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <!-- Client details will be filled here by JavaScript -->
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
+            
         </div>
     </div>
 
@@ -470,7 +517,7 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table">
+            <table class="table rounded-table">
                 <thead>
                     <tr>
                         <th>Model Name</th>
@@ -499,10 +546,10 @@
         
             <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
                             <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -539,7 +586,7 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table">
+            <table class="table rounded-table">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -565,10 +612,10 @@
 
             <div class="modal fade" id="rollModal" tabindex="-1" role="dialog" aria-labelledby="rollModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
                             <h5 class="modal-title" id="rollModalLabel">Roll Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -607,7 +654,7 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table">
+            <table class="table rounded-table">
                 <thead>
                     <tr>
                         <th>Order Name</th>
@@ -630,10 +677,10 @@
 
             <div class="modal fade" id="clientOrderModal" tabindex="-1" role="dialog" aria-labelledby="clientOrderModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
                             <h5 class="modal-title" id="clientOrderModalLabel">Order Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -670,7 +717,7 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table">
+            <table class="table rounded-table">
                 <thead>
                     <tr>
                         <th>Employee ID</th>
@@ -693,10 +740,10 @@
 
             <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
                             <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -743,54 +790,64 @@
                 .then(data => {
                     const modalBody = document.querySelector('#clientModal .modal-body');
                     modalBody.innerHTML = `
-                        <p>Name: ${data.name}</p>
-                        <p>Contact Info: ${data.contact_info}</p>
-                        <p>Total Spendings: ${data.total_spendings}</p>
-                        <canvas id="spendingChart" width="400" height="400"></canvas>
-                    `; 
-        
+                        <div class="client-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Name:</strong> ${data.name}</p>
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <p><strong>Contact Info:</strong> ${data.contact_info}</p>
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <p><strong>Total Spendings:</strong> ${data.total_spendings}</p>
+                                </div>
+                                <div class="col-12">
+                                    <canvas id="spendingChart" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+    
                     const labels = data.spendings_over_time.map(item => item.date);
                     const co = data.spendings_over_time.map(item => item.co);
                     const spendings = data.spendings_over_time.map(item => item.spendings);
-                    const tooltipLabels = labels.map((label, index) => `${label} - ${co[index]}`);
+                    
                     var ctx = document.getElementById('spendingChart').getContext('2d');
                     var spendingChart = new Chart(ctx, {
                         type: 'line',
                         data: {
-                          labels: labels, 
-                          datasets: [{
-                            label: "Spendings Over Time",
-                            data: spendings,
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                          }]
+                            labels: labels,
+                            datasets: [{
+                                label: "Spendings Over Time",
+                                data: spendings,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
                         },
                         options: {
-                          scales: {
-                            y: {
-                              beginAtZero: true
-                            }
-                          },
-                          plugins: {
-                            tooltip: {
-                              callbacks: {
-                                label: function(tooltipItem) {
-                                  const label = tooltipItem.label;  
-                                  const value = tooltipItem.raw;
-                                  const coValue = co[tooltipItem.dataIndex];
-                                  return `${coValue} - ${value}`;
+                            scales: {
+                                y: {
+                                    beginAtZero: true
                                 }
-                              }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem) {
+                                            const coValue = co[tooltipItem.dataIndex];
+                                            const value = tooltipItem.raw;
+                                            return `${coValue} - ${value}`;
+                                        }
+                                    }
+                                }
                             }
-                          }
                         }
                     });
                 })
                 .catch(error => console.error('Error loading client details:', error));
-        }           
+        }
     </script>
-
     <script>
         function fetchEmployeeDetails(employeeId) {
             fetch(`/production/api/employees/${employeeId}/`)
