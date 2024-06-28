@@ -42,12 +42,12 @@ class BarcodePassport(View):
         # Additional Passport data
         model_name = passport.order.model.name  # Assuming model relation exists
         color = passport.order.color
-        assortment = passport.order.assortment
+        fabrcis = passport.order.fabrics
         passport_number = passport.id
 
         p.drawString(10, text_start_height, f"Модель: {model_name}")
         p.drawString(10, text_start_height - 25, f"Цвет: {color}")
-        p.drawString(10, text_start_height - 50, f"Ассортимент: {assortment}")
+        p.drawString(10, text_start_height - 50, f"Ткань: {fabrcis}")
         p.drawString(10, text_start_height - 75, f"Паспорт: №{passport_number}")
 
         # Generate and position QR code
@@ -105,13 +105,13 @@ class BarcodePassportSize(View):
         # Additional Passport Size data
         model_name = passport_size.passport.order.model.name
         color = passport_size.passport.order.color
-        assortment = passport_size.passport.order.assortment
+        fabrics = passport_size.passport.order.fabrics
         passport_number = passport_size.passport.id
         size = passport_size.size_quantity.size
 
         p.drawString(10, text_start_height, f"Модель: {model_name}")
         p.drawString(10, text_start_height - 25, f"Цвет: {color}")
-        p.drawString(10, text_start_height - 50, f"Ассортимент: {assortment}")
+        p.drawString(10, text_start_height - 50, f"Ткань: {fabrics}")
         p.drawString(10, text_start_height - 75, f"Паспорт: №{passport_number}")
         p.drawString(10, text_start_height - 100, f"Размер: {size}")
 
@@ -170,21 +170,23 @@ class BarcodePassportSizePerPiece(View):
         top_margin = 40 * 2.83464567  # Convert mm to points (1 mm = 2.83464567 points)
         text_start_height = height - top_margin
 
+        piece_number = 1
+
         for piece in pieces:
             # Draw additional data about the piece
             model_name = passport_size.passport.order.model.name
             color = passport_size.passport.order.color
-            assortment = passport_size.passport.order.assortment
+            fabrics = passport_size.passport.order.fabrics
             passport_number = passport_size.passport.id
             size = passport_size.size_quantity.size
 
             p.setFont("DejaVuSans", 14)
             p.drawString(10, text_start_height, f"Модель: {model_name}")
             p.drawString(10, text_start_height - 25, f"Цвет: {color}")
-            p.drawString(10, text_start_height - 50, f"Ассортимент: {assortment}")
+            p.drawString(10, text_start_height - 50, f"Ткань: {fabrics}")
             p.drawString(10, text_start_height - 75, f"Паспорт: №{passport_number}")
             p.drawString(10, text_start_height - 100, f"Размер: {size}")
-            p.drawString(10, text_start_height - 125, f"Единица: {piece.id}")
+            p.drawString(10, text_start_height - 125, f"Единица: {piece_number}")
 
             # Generate QR code
             qr_data = f"{passport_number}-{passport_size.id}-{piece.id}"
@@ -217,6 +219,8 @@ class BarcodePassportSizePerPiece(View):
 
             # Create a new page for the next QR code and data set
             p.showPage()
+
+            piece_number += 1
 
         p.save()
         return response
