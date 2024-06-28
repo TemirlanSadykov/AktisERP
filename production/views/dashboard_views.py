@@ -7,6 +7,8 @@ from django.utils.dateformat import DateFormat
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
+from django.db.models import F, Value, CharField
+from django.db.models.functions import Concat
 
 
 from ..models import *
@@ -250,6 +252,19 @@ def fetch_model_records(request):
         data = list(ClientOrder.objects.values('id', 'order_number'))
     elif model_type == 'Order':
         data = list(Order.objects.values('id', 'model__name'))
+    elif model_type == 'Error':
+        data = Error.objects.annotate(
+            custom_error=Concat(
+                F('error_type'), Value(': '),
+                F('piece__passport_size__passport__order'), Value(' - '),
+                F('piece__passport_size__passport__id'), Value(' - '),
+                F('piece__passport_size__size_quantity__size'), Value(' - '),
+                F('piece__id'),
+                output_field=CharField()
+            )
+        ).values('id', 'custom_error')
+        print(data)
+        data = list(data)
     elif model_type == 'Passport':
         data = 'input_required'  # Special handling
     elif model_type == 'ProductionPiece':

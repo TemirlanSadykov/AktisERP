@@ -255,7 +255,7 @@ class ProductionPiece(models.Model):
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
     defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
     def __str__(self):
-        return f"Passport Size ID: {self.passport_size.id}, Piece: {self.piece_number}, Stage: {self.stage}"
+        return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
 class PassportRoll(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
@@ -316,7 +316,7 @@ class Error(models.Model):
     resolved_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата решения')
 
     def __str__(self):
-        return f"{self.error_type}: - {self.piece.id}"
+        return f"{self.error_type}: {self.piece.passport_size.passport.order} - {self.piece.passport_size.passport.id} - {self.piece.passport_size.size_quantity.size} - {self.piece.id}"
     
 class ErrorResponsibility(models.Model):
     error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Ошибка')

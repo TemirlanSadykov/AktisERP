@@ -445,6 +445,7 @@
                     <option value="Model">Models</option>
                     <option value="ClientOrder">Client Orders</option>
                     <option value="Order">Orders</option>
+                    <option value="Error">Error</option>
                     <option value="Passport">Passports</option>
                     <option value="ProductionPiece">Production Pieces</option>
                 </select>
@@ -1161,7 +1162,7 @@
                             select.className = 'custom-select';
                             select.innerHTML = `<option value="">Select Record...</option>`;
                             data.forEach(record => {
-                                select.innerHTML += `<option value="${record.id}">${record.name || record.order_number || record.user__username}</option>`;
+                                select.innerHTML += `<option value="${record.id}">${record.name || record.order_number || record.user__username || record.custom_error}</option>`;
                             });
                             secondaryContainer.appendChild(select);
                             goButton.style.display = 'block';  // Show the GO button
