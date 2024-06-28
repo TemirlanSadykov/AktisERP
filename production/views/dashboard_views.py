@@ -4,6 +4,10 @@ from ..decorators import admin_required
 from django.http import JsonResponse
 from django.db.models import Sum, F
 from django.utils.dateformat import DateFormat
+from django.apps import apps
+from django.core.exceptions import ObjectDoesNotExist
+from django.forms.models import model_to_dict
+
 
 from ..models import *
 
@@ -220,3 +224,79 @@ def client_order_api(request, client_order_id):
 
     except ClientOrder.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
+
+@login_required
+@admin_required
+def fetch_model_records(request):
+    model_type = request.GET.get('model_type')
+    # Fetching data based on model type
+    if model_type == 'UserProfile':
+        data = list(UserProfile.objects.values('id', 'user__username'))
+    elif model_type == 'Client':
+        data = list(Client.objects.values('id', 'name'))
+    elif model_type == 'Roll':
+        data = list(Roll.objects.values('id', 'name'))
+    elif model_type == 'Equipment':
+        data = list(Equipment.objects.values('id', 'name'))
+    elif model_type == 'Node':
+        data = list(Node.objects.values('id', 'name'))
+    elif model_type == 'Operation':
+        data = list(Operation.objects.values('id', 'name'))
+    elif model_type == 'Assortment':
+        data = list(Assortment.objects.values('id', 'name'))
+    elif model_type == 'Model':
+        data = list(Model.objects.values('id', 'name'))
+    elif model_type == 'ClientOrder':
+        data = list(ClientOrder.objects.values('id', 'order_number'))
+    elif model_type == 'Order':
+        data = list(Order.objects.values('id', 'model__name'))
+    elif model_type == 'Passport':
+        data = 'input_required'  # Special handling
+    elif model_type == 'ProductionPiece':
+        data = 'input_required'  # Special handling
+    else:
+        data = []
+    return JsonResponse(data, safe=False)
+
+def serialize_instance(instance):
+    """ Serializes a Django model instance including following foreign keys and handling complex types like ManyToMany fields. """
+    data = model_to_dict(instance, fields=[field.name for field in instance._meta.fields if not field.is_relation])
+    
+    # Handle foreign key and one-to-one relations
+    for field in instance._meta.fields:
+        if field.is_relation and not field.many_to_many:
+            related_object = getattr(instance, field.name, None)
+            if related_object is not None:
+                data[field.name] = str(related_object)
+    
+    # Handle many-to-many relations
+    for field in instance._meta.many_to_many:
+        if hasattr(instance, field.name):
+            related_objects = getattr(instance, field.name).all()
+            data[field.name] = [str(obj) for obj in related_objects]
+    
+    return data
+
+@login_required
+@admin_required
+def fetch_record_details(request):
+    model_type = request.GET.get('model_type')
+    record_id = request.GET.get('record_id')
+
+    # Get model class from the model type
+    try:
+        model = apps.get_model('production', model_type)
+    except LookupError:
+        return JsonResponse({'error': 'Invalid model type'}, status=400)
+
+    # Fetch the record from the model
+    try:
+        record = model.objects.get(id=record_id)
+        data = serialize_instance(record)
+    except model.DoesNotExist:
+        return JsonResponse({'error': 'Record not found'}, status=404)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid ID format'}, status=400)
+
+    # Return the serialized data
+    return JsonResponse(data)

@@ -170,8 +170,6 @@ class BarcodePassportSizePerPiece(View):
         top_margin = 40 * 2.83464567  # Convert mm to points (1 mm = 2.83464567 points)
         text_start_height = height - top_margin
 
-        piece_number = 1
-
         for piece in pieces:
             # Draw additional data about the piece
             model_name = passport_size.passport.order.model.name
@@ -179,6 +177,7 @@ class BarcodePassportSizePerPiece(View):
             fabrics = passport_size.passport.order.fabrics
             passport_number = passport_size.passport.id
             size = passport_size.size_quantity.size
+            piece_number = piece.piece_number
 
             p.setFont("DejaVuSans", 14)
             p.drawString(10, text_start_height, f"Модель: {model_name}")
@@ -219,8 +218,6 @@ class BarcodePassportSizePerPiece(View):
 
             # Create a new page for the next QR code and data set
             p.showPage()
-
-            piece_number += 1
 
         p.save()
         return response

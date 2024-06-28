@@ -234,6 +234,9 @@
                 <a href="#" onclick="openTab(event, 'Overview')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">Overview</span>
                 </a>
+                <a href="#" onclick="openTab(event, 'Search')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="search">
+                    <i class="fas fa-search fa-fw"></i><span class="sidetext">Search</span>
+                </a>
                 <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
                     <i class="fas fa-server  fa-fw"></i><span class="sidetext">Orders</span>
                 </a>
@@ -427,6 +430,32 @@
                     <canvas id="inventoryChart"></canvas>
                 </div>
             </div> {% endcomment %}
+        </div>
+        <div id="Search" class="tabcontent" style="display: none;">
+            <div class="container" style="padding:5%;">
+                <select id="modelSelector" class="custom-select mb-3">
+                    <option value="">Select Model...</option>
+                    <option value="UserProfile">User Profiles</option>
+                    <option value="Client">Clients</option>
+                    <option value="Roll">Rolls</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Node">Nodes</option>
+                    <option value="Operation">Operations</option>
+                    <option value="Assortment">Assortments</option>
+                    <option value="Model">Models</option>
+                    <option value="ClientOrder">Client Orders</option>
+                    <option value="Order">Orders</option>
+                    <option value="Passport">Passports</option>
+                    <option value="ProductionPiece">Production Pieces</option>
+                </select>
+                <div id="secondarySelectorContainer" class="mb-3">
+                    <!-- Secondary selector or input will be populated here -->
+                </div>
+                <button id="goButton" class="btn btn-primary" style="display:none;">GO</button>
+                <div id="recordDetails" class="mt-3">
+                    <!-- Record details will be populated here -->
+                </div>
+            </div>
         </div>
         <div id="Orders" class="tabcontent" style="display: none;">
             <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
@@ -1099,6 +1128,74 @@
             closeButton.addEventListener('click', function() {
                 sidebarWrapper.classList.toggle('collapsed');
             });
+        });
+    </script>
+    <script>
+        document.getElementById('modelSelector').addEventListener('change', function() {
+            const modelName = this.value;
+            const secondaryContainer = document.getElementById('secondarySelectorContainer');
+            const goButton = document.getElementById('goButton');
+            
+            // Clear previous content
+            secondaryContainer.innerHTML = '';
+            goButton.style.display = 'none';
+            
+            if (modelName) {
+                // Check if the selected model requires direct ID input
+                if (modelName === 'Passport' || modelName === 'ProductionPiece') {
+                    // Create an input field for Passport and ProductionPiece
+                    const input = document.createElement('input');
+                    input.id = 'recordInput';
+                    input.placeholder = 'Enter ID';
+                    input.className = 'form-control';
+                    secondaryContainer.appendChild(input);
+                    goButton.style.display = 'block';  // Show the GO button
+                } else {
+                    // Fetch records from server for other models
+                    fetch(`/production/api/fetch-model-records/?model_type=${modelName}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Create a selector for models providing selectable options
+                            const select = document.createElement('select');
+                            select.id = 'recordSelector';
+                            select.className = 'custom-select';
+                            select.innerHTML = `<option value="">Select Record...</option>`;
+                            data.forEach(record => {
+                                select.innerHTML += `<option value="${record.id}">${record.name || record.order_number || record.user__username}</option>`;
+                            });
+                            secondaryContainer.appendChild(select);
+                            goButton.style.display = 'block';  // Show the GO button
+                        })
+                        .catch(error => console.error('Error fetching model records:', error));
+                }
+            }
+        });
+        
+        document.getElementById('goButton').addEventListener('click', function() {
+            const modelName = document.getElementById('modelSelector').value;
+            const recordId = document.getElementById('recordSelector') ? document.getElementById('recordSelector').value : document.getElementById('recordInput').value;
+        
+            fetch(`/production/api/fetch-record-details/?model_type=${modelName}&record_id=${recordId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const detailsContainer = document.getElementById('recordDetails');
+                    detailsContainer.innerHTML = '';
+                    if (data.error) {
+                        detailsContainer.innerHTML = `<p>Error: ${data.error}</p>`;
+                    } else {
+                        const table = document.createElement('table');
+                        table.className = 'table';
+                        for (let key in data) {
+                            let row = table.insertRow();
+                            let cellKey = row.insertCell(0);
+                            let cellValue = row.insertCell(1);
+                            cellKey.textContent = key;
+                            cellValue.textContent = data[key];
+                        }
+                        detailsContainer.appendChild(table);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         });
     </script>
 </body>
