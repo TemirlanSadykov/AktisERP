@@ -29,7 +29,7 @@ class BarcodePassport(View):
         response['Content-Disposition'] = f'attachment; filename="passport_{passport.id}_qrcode.pdf"'
 
         # Custom page size with a 30:70 ratio, dimensions in points
-        width, height = 252, 588  # Approximately 3.5 inches by 8.167 inches
+        width, height = 252, 504  # Approximately 3.5 inches by 8.167 inches
 
         # Set up PDF with custom size
         p = canvas.Canvas(response, pagesize=(width, height))
