@@ -98,6 +98,16 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     'default': {
+#     'ENGINE': 'django.db.backends.postgresql',
+#     'NAME': 'railway',
+#     'USER': 'postgres',
+#     'PASSWORD': 'XVEQsudWuJwpGaJUisuZRSfqPXpJOJXt',
+#     'HOST': 'monorail.proxy.rlwy.net',
+#     'PORT': '32670',
+#     }
+# }
 
 
 # Redis cache
