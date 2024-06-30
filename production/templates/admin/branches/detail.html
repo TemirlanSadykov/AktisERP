@@ -30,7 +30,7 @@
       <div class="card-body">
           <div class="row">
               <div class="col-md-6 details">
-                <p><strong> {% trans "Branch Detailss:" %}</strong> {{ branch.name }}</p>
+                <p><strong> {% trans "Branch Details:" %}</strong> {{ branch.name }}</p>
                   <a href="{% url 'branch_edit' branch.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
                   <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
               </div>

@@ -230,7 +230,7 @@
             </div>
             <div id="sidebar" class="list-group list-group-flush sidenavres">
                 <a href="#" onclick="openTab(event, 'Overview')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
-                    <i class="fas fa-cubes fa-fw"></i><span class="sidetext">Overview</span>
+                    <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Overview' %}</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Search')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="search">
                     <i class="fas fa-search fa-fw"></i><span class="sidetext">{% trans 'Search' %} </span>
@@ -280,7 +280,7 @@
               </nav>
             <div class="header">
                 <br>
-                <h4>PER LAST 30 DAYS</h4>
+                <h4>За последние 30 дней</h4>
             </div>
 
             <div class="container-fluid ">
@@ -845,13 +845,13 @@
                         <div class="client-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Name:</strong> ${data.name}</p>
+                                    <p><strong>Имя:</strong> ${data.name}</p>
                                 </div>
                                 <div class="col-12 mb-2">
-                                    <p><strong>Contact Info:</strong> ${data.contact_info}</p>
+                                    <p><strong>Контактная Информация:</strong> ${data.contact_info}</p>
                                 </div>
                                 <div class="col-12 mb-2">
-                                    <p><strong>Total Spendings:</strong> ${data.total_spendings}</p>
+                                    <p><strong>Затраты:</strong> ${data.total_spendings}</p>
                                 </div>
                                 <div class="col-12">
                                     <canvas id="spendingChart" width="400" height="400"></canvas>
@@ -870,7 +870,7 @@
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: "Spendings Over Time",
+                                label: "Затраты за все время",
                                 data: spendings,
                                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                                 borderColor: 'rgba(54, 162, 235, 1)',
@@ -917,23 +917,23 @@
                         <div class="employee-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Name:</strong> ${data.full_name}</p>
+                                    <p><strong>Имя:</strong> ${data.full_name}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Username:</strong> ${data.username}</p>
+                                    <p><strong>Имя пользователя:</strong> ${data.username}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Earnings:</strong> ${data.earnings} сом</p>
+                                    <p><strong>Заработок:</strong> ${data.earnings} сом</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Efficiency:</strong> ${data.efficiency.toFixed(2)}%</p>
+                                    <p><strong>Эффективность:</strong> ${data.efficiency.toFixed(2)}%</p>
                                 </div>
                                 <div class="col-12 mb-2">
-                                    <p><strong>Operations Worked On:</strong></p>
+                                    <p><strong>Работал(-а) над операциями:</strong></p>
                                     <ul class="list-group">${operationsList}</ul>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Total Defects:</strong> ${data.total_defects}</p>
+                                    <p><strong>Число браков:</strong> ${data.total_defects}</p>
                                 </div>
                                 <div class="col-12">
                                     <canvas id="productionChart" width="400" height="400"></canvas>
@@ -951,7 +951,7 @@
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: "Units Produced Over Time",
+                                label: "Единиц произведено за все время",
                                 data: unitsProduced,
                                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -981,10 +981,10 @@
                         <div class="passport-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Passport ID:</strong> ${passport.passport_id}<br>
-                                    <strong>Size Range:</strong> ${passport.size_range}<br>
+                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Размеры:</strong> ${passport.size_range}<br>
                                     ${passport.rolls.map(roll => `
-                                        <span>${roll.roll_name}: ${roll.meters} meters</span>
+                                        <span>${roll.roll_name}: ${roll.meters} метров</span>
                                     `).join(', ')}
                                 </p>
                             </a>
@@ -995,25 +995,25 @@
                         <div class="order-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Model Name:</strong> ${data.model_name}</p>
+                                    <p><strong>Модель:</strong> ${data.model_name}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Quantity:</strong> ${data.quantity}</p>
+                                    <p><strong>Количество:</strong> ${data.quantity}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Price Per Piece:</strong> ${data.price_per_piece}</p>
+                                    <p><strong>Цена за единицу:</strong> ${data.price_per_piece}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Production Cost Per Piece:</strong> ${data.production_cost_per_piece}</p>
+                                    <p><strong>Стоимость производства:</strong> ${data.production_cost_per_piece}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Status:</strong> ${data.status}</p>
+                                    <p><strong>Статус:</strong> ${data.status}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Assortment:</strong> ${data.assortment}</p>
+                                    <p><strong>Ассортимент:</strong> ${data.assortment}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Color:</strong> ${data.color}</p>
+                                    <p><strong>Цвет:</strong> ${data.color}</p>
                                 </div>
                                 <div class="col-12">
                                     ${passportsHtml}
@@ -1036,9 +1036,9 @@
                         <div class="passport-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Passport ID:</strong> ${passport.passport_id}<br>
-                                    <strong>Meters Used:</strong> ${passport.meters_used}<br>
-                                    <strong>Model:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
+                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Метров использовано:</strong> ${passport.meters_used}<br>
+                                    <strong>Модель:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
                                 </p>
                             </a>
                         </div>
@@ -1048,22 +1048,22 @@
                         <div class="roll-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Name:</strong> ${data.name}</p>
+                                    <p><strong>Название:</strong> ${data.name}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Color:</strong> ${data.color}</p>
+                                    <p><strong>Цвет:</strong> ${data.color}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Fabrics:</strong> ${data.fabrics}</p>
+                                    <p><strong>Ткань:</strong> ${data.fabrics}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Total Meters:</strong> ${data.meters}</p>
+                                    <p><strong>Всего Метров:</strong> ${data.meters}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Used Meters:</strong> ${data.used_meters}</p>
+                                    <p><strong>Использовано:</strong> ${data.used_meters}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Available Meters:</strong> ${data.available_meters}</p>
+                                    <p><strong>Доступно:</strong> ${data.available_meters}</p>
                                 </div>
                                 <div class="col-12">
                                     ${passportsHtml}
@@ -1086,9 +1086,9 @@
                         <div class="order-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/orders/${order.order_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Model Name:</strong> ${order.model_name}<br>
-                                    <strong>Assortment:</strong> ${order.assortment}<br>
-                                    <strong>Completed Percentage:</strong> ${order.completed_percentage.toFixed(2)}%
+                                    <strong>Модель:</strong> ${order.model_name}<br>
+                                    <strong>Ассортимент:</strong> ${order.assortment}<br>
+                                    <strong>Выполненное количество:</strong> ${order.completed_percentage.toFixed(2)}%
                                 </p>
                             </a>
                         </div>
@@ -1098,16 +1098,16 @@
                         <div class="client-order-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Order Name:</strong> ${data.order_number}</p>
+                                    <p><strong>Заказ:</strong> ${data.order_number}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Client:</strong> ${data.client}</p>
+                                    <p><strong>Клиент:</strong> ${data.client}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Status:</strong> ${data.status}</p>
+                                    <p><strong>Статус:</strong> ${data.status}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Due Date:</strong> ${data.term}</p>
+                                    <p><strong>Срок:</strong> ${data.term}</p>
                                 </div>
                                 <div class="col-12">
                                     ${ordersHtml}
@@ -1211,9 +1211,9 @@
                         const thead = document.createElement('thead');
                         const headerRow = thead.insertRow();
                         const keyHeader = document.createElement('th');
-                        keyHeader.textContent = 'Key';
+                        keyHeader.textContent = 'Параметр';
                         const valueHeader = document.createElement('th');
-                        valueHeader.textContent = 'Value';
+                        valueHeader.textContent = 'Значени';
 
                         headerRow.appendChild(keyHeader);
                         headerRow.appendChild(valueHeader);
