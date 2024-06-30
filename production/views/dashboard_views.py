@@ -263,7 +263,6 @@ def fetch_model_records(request):
                 output_field=CharField()
             )
         ).values('id', 'custom_error')
-        print(data)
         data = list(data)
     elif model_type == 'Passport':
         data = 'input_required'  # Special handling
