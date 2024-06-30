@@ -181,7 +181,7 @@ def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
         order = passport_size.passport.order
-        operations = Operation.objects.filter(node__type=Node.PACKING)
+        operations = Operation.objects.filter(node__type=Node.PACKING, node__is_common=True)
         with transaction.atomic():
             if passport_size.stage == PassportSize.DONE:
                 passport_size.stage = PassportSize.PACKING

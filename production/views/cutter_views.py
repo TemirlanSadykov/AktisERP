@@ -381,7 +381,8 @@ def passport_delete(request, passport_id):
 def mark_as_sewing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.CUTTING)
+        operations = Operation.objects.filter(node__type=Node.CUTTING, node__is_common=True)
+        print(operations)
         with transaction.atomic():
             if passport_size.stage == PassportSize.SEWING:
                 passport_size.stage = PassportSize.CUTTING
