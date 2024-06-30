@@ -22,6 +22,7 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
+import itertools
 
 from ..decorators import admin_required
 from ..forms import *
@@ -181,11 +182,10 @@ def get_client_data():
 
     return sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
 
-import itertools
 def get_employee_data():
     # Fetch all employees first to ensure everyone is included
     all_employees = UserProfile.objects.all().values(
-        'id', 'user__username', 'user__first_name', 'user__last_name'
+        'id', 'user__username', 'user__first_name', 'user__last_name', 'employee_id'
     )
 
     # Aggregating units produced by each employee from AssignedWork
@@ -215,6 +215,7 @@ def get_employee_data():
         employee_data.append({
             'id': employee_id,
             'name': employee['user__username'],
+            'employee_id': employee['employee_id'],
             'full_name': full_name,
             'units_produced': units_produced,
             'hours_worked': hours_worked

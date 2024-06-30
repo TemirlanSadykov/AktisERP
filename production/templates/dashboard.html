@@ -785,7 +785,7 @@
                     {% for employee in employee_data %}
                     <tr>
                         <td>{{ employee.name }}</td>
-                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#employeeModal" onclick="fetchEmployeeDetails({{ employee.id }})">{{ employee.full_name }}</a></td>
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#employeeModal" onclick="fetchEmployeeDetails({{ employee.id }})">{{ employee.employee_id }} - {{ employee.full_name }}</a></td>
                         <td>{{ employee.units_produced }}</td>
                         <td>{{ employee.hours_worked }} hrs</td>
                     </tr>
