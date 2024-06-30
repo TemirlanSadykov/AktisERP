@@ -49,9 +49,7 @@
             /* border-radius: 10px !important; */
         }
 
-    </style>
-    
-    <style>
+
         .rounded-table {
     border-collapse: separate; 
     border-spacing: 0; 
@@ -235,26 +233,27 @@
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">Overview</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Search')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="search">
-                    <i class="fas fa-search fa-fw"></i><span class="sidetext">Search</span>
+                    <i class="fas fa-search fa-fw"></i><span class="sidetext">{% trans 'Search' %} </span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
-                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">Orders</span>
+                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">{% trans 'Orders' %}</span>
                 </a>
                  <a href="#" onclick="openTab(event, 'Clients')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="dashboard">
-                    <i class="fas fa-user  fa-fw"></i><span class="sidetext">Clients</span>
+                    <i class="fas fa-user  fa-fw"></i><span class="sidetext">{% trans 'Clients' %}</span>
                 </a> 
                 <a href="#" onclick="openTab(event, 'Production')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="orders">
-                    <i class="fas fa-table  fa-fw"></i><span class="sidetext">Production</span>
+                    <i class="fas fa-table  fa-fw"></i><span class="sidetext">{% trans 'Production' %}</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Inventory')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="employees">
-                    <i class="fas fa-clipboard-list  fa-fw"> </i><span class="sidetext">Inventory</span>
+                    <i class="fas fa-clipboard-list  fa-fw"> </i><span class="sidetext">{% trans 'Inventory' %}</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Employees')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="attendances">
-                    <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">Employees</span>
+                    <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">{% trans 'Employees' %}</span>
                 </a>
-                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="home">
                      <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
                 </a>
+                <a href="#" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" style="display: none;"></a> 
             </div>
         </div>
         <div id="page-content-wrapper">
@@ -291,7 +290,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Total Production</h5>
+                              <h5 class="card-title text-left">{% trans 'Total Production' %}</h5>
                               <p>{{ production_data.total_amount }} units</p>
                           </div>
                           <div class="icon">
@@ -306,7 +305,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Completed Units</h5>
+                              <h5 class="card-title text-left">{% trans 'Completed Units' %}</h5>
                               <p>{{ production_data.completed_amount }} units</p>
 
                           </div>
@@ -324,7 +323,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Orders in Progress</h5>
+                              <h5 class="card-title text-left">{% trans 'Orders in Progress' %}</h5>
                               <p>{{ production_data.orders_in_progress }} orders</p>
                           </div>
                           <div class="icon">
@@ -339,7 +338,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Models in Progress</h5>
+                              <h5 class="card-title text-left">{% trans 'Models in Progress' %}</h5>
                               <p>{{ production_data.in_progress_orders_count }} models</p>
                           </div>
                           <div class="icon">
@@ -361,7 +360,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Errors</h5>
+                              <h5 class="card-title text-left">{% trans 'Errors' %}</h5>
                               <p>{{ production_data.total_errors }} units</p>
                             </div>
                           <div class="icon">
@@ -376,7 +375,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Rolls</h5>
+                              <h5 class="card-title text-left">{% trans 'Rolls' %}</h5>
                               <p>{{ production_data.total_rolls_used }} meters</p>
                           </div>
                           <div class="icon">
@@ -393,7 +392,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Salary</h5>
+                              <h5 class="card-title text-left">{% trans 'Salary' %}</h5>
                               <p>{{ production_data.total_salary }} сом</p>
                           </div>
                           <div class="icon">
@@ -408,7 +407,7 @@
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
-                              <h5 class="card-title text-left">Total Revenue</h5>
+                              <h5 class="card-title text-left">{% trans 'Total Revenue' %}</h5>
                               <p>{{ production_data.total_revenue }} сом</p>
                             </div>
                           <div class="icon">
@@ -432,27 +431,46 @@
             </div> {% endcomment %}
         </div>
         <div id="Search" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Search' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
             <div class="container" style="padding:5%;">
-                <select id="modelSelector" class="custom-select mb-3">
-                    <option value="">Select Model...</option>
-                    <option value="UserProfile">User Profiles</option>
-                    <option value="Client">Clients</option>
-                    <option value="Roll">Rolls</option>
-                    <option value="Equipment">Equipment</option>
-                    <option value="Node">Nodes</option>
-                    <option value="Operation">Operations</option>
-                    <option value="Assortment">Assortments</option>
-                    <option value="Model">Models</option>
-                    <option value="ClientOrder">Client Orders</option>
-                    <option value="Order">Orders</option>
-                    <option value="Error">Error</option>
-                    <option value="Passport">Passports</option>
-                    <option value="ProductionPiece">Production Pieces</option>
+                <select id="modelSelector" class="custom-select mb-3" style="height:50px;">
+                    <option value="">{% trans 'Select Model...' %}</option>
+                    <option value="UserProfile">{% trans 'User Profiles' %}</option>
+                    <option value="Client">{% trans 'Clients' %}</option>
+                    <option value="Roll">{% trans 'Rolls' %}</option>
+                    <option value="Equipment">{% trans 'Equipment' %}</option>
+                    <option value="Node">{% trans 'Nodes' %}</option>
+                    <option value="Operation">{% trans 'Operations' %}</option>
+                    <option value="Assortment">{% trans 'Assortments' %}</option>
+                    <option value="Model">{% trans 'Models' %}</option>
+                    <option value="ClientOrder">{% trans 'Client Orders' %}</option>
+                    <option value="Order">{% trans 'Orders' %}</option>
+                    <option value="Error">{% trans 'Error' %}</option>
+                    <option value="Passport">{% trans 'Passports' %}</option>
+                    <option value="ProductionPiece">{% trans 'Production Pieces' %}</option>
                 </select>
                 <div id="secondarySelectorContainer" class="mb-3">
                     <!-- Secondary selector or input will be populated here -->
                 </div>
-                <button id="goButton" class="btn btn-primary" style="display:none;">GO</button>
+                <button id="goButton" class="btn btn-create buttonsetting" style="display:none; margin:auto; width:40%;">GO</button>
                 <div id="recordDetails" class="mt-3">
                     <!-- Record details will be populated here -->
                 </div>
@@ -482,10 +500,10 @@
             <table class="table rounded-table">
                 <thead>
                     <tr>
-                        <th>Order Name</th>
-                        <th>Client</th>
-                        <th>Status</th>
-                        <th>Due Date</th>
+                        <th>{% trans 'Order Name' %}</th>
+                        <th>{% trans 'Client' %}</th>
+                        <th>{% trans 'Status' %}</th>
+                        <th>{% trans 'Due Date' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -514,7 +532,7 @@
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="clientOrderModalLabel">Order Details</h5>
+                            <h5 class="modal-title" id="clientOrderModalLabel">{% trans 'Order Details' %}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -522,9 +540,9 @@
                         <div class="modal-body">
                             <!-- Order details will be filled here by JavaScript -->
                         </div>
-                        <div class="modal-footer">
+                        <!-- <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -555,10 +573,10 @@
             <table class="table rounded-table">
                 <thead>
                     <tr>
-                        <th>Client</th>
-                        <th>Client Orders (Number - Income)</th>
-                        <th>Total Value</th>
-                        <th>Total Ordered Amount</th>
+                        <th> {% trans 'Client' %}</th>
+                        <th>{% trans 'Client Orders (Number - Income)' %}</th>
+                        <th>{% trans 'Total Value' %}</th>
+                        <th>{% trans 'Total Ordered Amount' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -581,7 +599,7 @@
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="clientModalLabel">Client Details</h5>
+                            <h5 class="modal-title" id="clientModalLabel">{% trans 'Client Details' %}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -589,9 +607,9 @@
                         <div class="modal-body">
                             <!-- Client details will be filled here by JavaScript -->
                         </div>
-                        <div class="modal-footer">
+                        <!-- <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -623,12 +641,12 @@
             <table class="table rounded-table">
                 <thead>
                     <tr>
-                        <th>Model Name</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
-                        <th>Assortment</th>
-                        <th>Color</th>
-                        <th>Fabrics</th>
+                        <th>{% trans 'Model Name' %}</th>
+                        <th>{% trans 'Quantity' %}</th>
+                        <th>{% trans 'Price' %}</th>
+                        <th>{% trans 'Assortment' %}</th>
+                        <th>{% trans 'Color' %}</th>
+                        <th>{% trans 'Fabrics' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -649,7 +667,7 @@
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
+                            <h5 class="modal-title" id="orderModalLabel">{% trans 'Order Details' %}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -657,9 +675,9 @@
                         <div class="modal-body">
                             <!-- Order details will be populated here by JavaScript -->
                         </div>
-                        <div class="modal-footer">
+                        <!-- <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -690,12 +708,12 @@
             <table class="table rounded-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Color</th>
-                        <th>Fabrics</th>
-                        <th>Total Meters</th>
-                        <th>Used Meters</th>
-                        <th>Available Meters</th>
+                        <th>{% trans 'Name' %}</th>
+                        <th>{% trans 'Color' %}</th>
+                        <th>{% trans 'Fabrics' %}</th>
+                        <th>{% trans 'Total Meters' %}</th>
+                        <th>{% trans 'Used Meters' %}</th>
+                        <th>{% trans 'Available Meters' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -715,7 +733,7 @@
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="rollModalLabel">Roll Details</h5>
+                            <h5 class="modal-title" id="rollModalLabel">{% trans 'Roll Details' %}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -723,9 +741,9 @@
                         <div class="modal-body">
                             <!-- Roll details will be filled here by JavaScript -->
                         </div>
-                        <div class="modal-footer">
+                        <!-- <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -757,10 +775,10 @@
             <table class="table rounded-table">
                 <thead>
                     <tr>
-                        <th>Employee ID</th>
-                        <th>Full Name</th>
-                        <th>Units Produced</th>
-                        <th>Hours Worked</th>
+                        <th>{% trans 'Employee ID' %}</th>
+                        <th>{% trans 'Full Name' %}</th>
+                        <th>{% trans 'Units Produced' %}</th>
+                        <th>{% trans 'Hours Worked' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -779,16 +797,13 @@
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
+                            <h5 class="modal-title" id="employeeModalLabel">{% trans 'Employee Details' %}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <!-- Employee details will be filled here by JavaScript -->
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -1111,6 +1126,8 @@
             const sidebarWrapper = document.getElementById('sidebar-wrapper');
             const toggleButton = document.getElementById('toggle-sidebar');
             const closeButton = document.getElementById('close-sidebar');
+            const overviewLink = document.querySelector('#sidebar .list-group-item[data-id="user_redirect"]');
+
             const currentPath = window.location.pathname;
     
             document.querySelectorAll('#sidebar .list-group-item').forEach(function(link) {
@@ -1121,6 +1138,9 @@
                     link.classList.add('active');
                 }
             });
+            if (overviewLink) {
+            overviewLink.classList.add('active');
+        }
     
             toggleButton.addEventListener('click', function() {
                 sidebarWrapper.classList.toggle('collapsed');
@@ -1160,6 +1180,7 @@
                             const select = document.createElement('select');
                             select.id = 'recordSelector';
                             select.className = 'custom-select';
+                            select.style.height = '50px';
                             select.innerHTML = `<option value="">Select Record...</option>`;
                             data.forEach(record => {
                                 select.innerHTML += `<option value="${record.id}">${record.name || record.order_number || record.user__username || record.custom_error}</option>`;
@@ -1185,7 +1206,22 @@
                         detailsContainer.innerHTML = `<p>Error: ${data.error}</p>`;
                     } else {
                         const table = document.createElement('table');
-                        table.className = 'table';
+                        table.className = 'table rounded-table';
+
+                        const thead = document.createElement('thead');
+                        const headerRow = thead.insertRow();
+                        const keyHeader = document.createElement('th');
+                        keyHeader.textContent = 'Key';
+                        const valueHeader = document.createElement('th');
+                        valueHeader.textContent = 'Value';
+
+                        headerRow.appendChild(keyHeader);
+                        headerRow.appendChild(valueHeader);
+
+                        table.appendChild(thead);
+
+                        const tbody = document.createElement('tbody');
+
                         for (let key in data) {
                             let row = table.insertRow();
                             let cellKey = row.insertCell(0);
