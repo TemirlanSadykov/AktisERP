@@ -113,7 +113,7 @@
             {% endfor %}
             <td>{{ total_per_size|get_item:size|default:"0" }}</td>
             <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
-            <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-" }}</td>
+            <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-"|display_over }}</td>
           </tr>
           {% empty %}
           <tr>
