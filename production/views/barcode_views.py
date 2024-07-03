@@ -107,7 +107,7 @@ class BarcodePassportSize(View):
         color = passport_size.passport.order.color
         fabrics = passport_size.passport.order.fabrics
         passport_number = passport_size.passport.id
-        size = passport_size.size_quantity.size
+        size = f"{passport_size.size_quantity.size}-{passport_size.extra}" if passport_size.extra else passport_size.size_quantity.size
 
         p.drawString(10, text_start_height, f"Модель: {model_name}")
         p.drawString(10, text_start_height - 25, f"Цвет: {color}")
@@ -176,7 +176,7 @@ class BarcodePassportSizePerPiece(View):
             color = passport_size.passport.order.color
             fabrics = passport_size.passport.order.fabrics
             passport_number = passport_size.passport.id
-            size = passport_size.size_quantity.size
+            size = f"{passport_size.size_quantity.size}-{passport_size.extra}" if passport_size.extra else passport_size.size_quantity.size
             piece_number = piece.piece_number
 
             p.setFont("DejaVuSans", 14)

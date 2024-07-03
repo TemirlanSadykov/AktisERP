@@ -58,7 +58,11 @@
               <div class="employee-size">
                 {% trans "Size:" %}
                 {% if assigned_work.work.passport_size.size_quantity %}
-                  <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
+                  {% if assigned_work.work.passport_size.extra %}
+                    <strong>{{ assigned_work.work.passport_size.size_quantity.size }}-{{ assigned_work.work.passport_size.extra }}</strong>
+                  {% else %}
+                    <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
+                  {% endif %}
                 {% else %}
                   --
                 {% endif %}
