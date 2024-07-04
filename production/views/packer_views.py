@@ -154,7 +154,21 @@ def update_piece_packer(request, piece_id):
 
         Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
 
-        return JsonResponse({'success': True, 'message': 'Piece status updated to Packed.'})
+        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
+
+        # Forming the response with piece details
+        data = {
+            'success': True,
+            'message': 'Piece status updated to Packed.',
+            'piece_id': piece.id,
+            'passport': piece.passport_size.passport.id,
+            'order': piece.passport_size.passport.order.model.name,
+            'passport_size': piece.passport_size.id,
+            'size': size,
+            'defect': piece.defect_type if piece.defect_type else "--",
+            'stage': piece.get_stage_display()
+        }
+        return JsonResponse(data)
 
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
@@ -245,3 +259,11 @@ def calculate_discrepancies(request, order_pk):
             discrepancies_created += 1
 
     return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})
+
+@login_required
+@packer_required
+def scan_packer_page(request):
+    context = {
+            'sidebar_type': 'packer'
+            }
+    return render(request, 'packer/scans/detail.html', context)

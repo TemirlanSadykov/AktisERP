@@ -104,7 +104,7 @@ class OrderDetailQcView(DetailView):
                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
 
                 # Counting checked pieces
-                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.CHECKED).count()
+                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
                 size_data[extra_key][passport.id]['checked_quantity'] += checked_pieces
                 
                 total_per_size[size] += passport_size.quantity
@@ -270,3 +270,11 @@ def mark_as_packing(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+
+@login_required
+@qc_required
+def scan_qc_page(request):
+    context = {
+            'sidebar_type': 'qc_page'
+            }
+    return render(request, 'qc/scans/detail.html', context)

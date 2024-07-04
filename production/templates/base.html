@@ -81,6 +81,8 @@
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
                 <a href="{% url 'order_list_qc' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                     <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Models' %}</span></a>
+                <a href="{% url 'scan_qc_page' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
+                    <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
                 {% else %}
                 <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="user_redirect">
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
@@ -93,6 +95,8 @@
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
                 <a href="{% url 'order_list_packer' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                     <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Models' %}</span></a>
+                <a href="{% url 'scan_packer_page' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
+                    <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
                 {% else %}
                 <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="user_redirect">
                     <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
