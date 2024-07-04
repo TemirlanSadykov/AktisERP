@@ -24,135 +24,109 @@
   </div>
 </nav>
 
-  <div class="container maincontr">
-    <div class="card-header">
-      {% trans "Model Details:" %} {{ order.model.name }}
-    </div>
+<div class="container maincontr">
+  <div class="card-header">
+    {% trans "Model Details:" %} {{ order.model.name }}
+  </div>
   <div class="container">
-    <!-- <div class="card"> -->
-      <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true" data-backdrop="false">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="errorModalLabel">Error</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body" id="errorModalMessage">
-              <!-- Error message will be displayed here -->
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-          </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
+          <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+          <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
+          <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
+          <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
+          <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
+          <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+          <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+          <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+          <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+        </div>
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid"><br>
+          <button id="calculate-discrepancies" class="btn btn-primary" data-order-id="{{ order.pk }}">
+            {% trans 'Calculate Discrepancies' %}
+          </button>
         </div>
       </div>
+    </div>
 
-          <div class="card-body">
-              <div class="row">
-                  <div class="col-md-6 details">
-                    <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
-                    <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
-                    <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
-                    <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
-                    <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
-                    <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
-                    <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
-                    <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
-                    <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
-                    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
-                  </div>
-
-                  <div class="col-md-5 text-center">
-                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid"><br>
-                      <button id="calculate-discrepancies" class="btn btn-primary" data-order-id="{{ order.pk }}">
-                        {% trans 'Calculate Discrepancies' %}
-                      </button>
-                  </div>
-              </div>
-          </div>
-
-          <input type="text" id="barcode-input" autofocus style="margin: 20px 0; padding: 8px; width: 100%;"/>
-          <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
-        
-          <div class="table-responsive">
-
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th>{% trans "Size\Passport" %}</th>
-                {% for passport in passports %}
-                <th>№{{ passport.id }}</th>
-                {% endfor %}
-                <th>{% trans "Sum" %}</th>
-                <th>{% trans "Required" %}</th>
-                <th>{% trans "Missing" %}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for size, data in required_missing.items %}
-              <tr>
-                  <td>{{ size }}</td>
-                  {% for passport in passports %}
-                  <td>
-                    {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
-                    ({{ size_data|get_item:size|get_item:passport.id|get_item:"packed_quantity"|default_if_none:"0" }})
-                    {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
-                    {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 4 %}
-                      <button type="button" class="stage-done-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                        {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                      </button>
-                    {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" < 3 %}
-                      <button type="button" class="stage-done-button btn back-btn">
-                        {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                      </button>
-                    {% else %}
-                      <button type="button" class="stage-done-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                        {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                      </button>
-                    {%endif%}
-                  </td>
-                  {% endfor %}
-                  <td>{{ total_per_size|get_item:size|default:"0" }}</td>
-                  <td>{{ data.required }}</td>
-                  <td>{{ data.missing }}</td>
-              </tr>
-              {% empty %}
-              <tr>
-                  <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
-              </tr>
-              {% endfor %}   
-            </tbody>
-          </table>
-          </div>
-<br>
-          <div class="container-fluid bottomContainer">
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>{% trans "Associated Discrepancies" %}</h3>
-            </div>
-
-            </div><br>
-            {% if errors %}
-            {% for error in errors %}
-            <div class="list-group" >
-                <a class="list-group-item list-group-item-action"
-                  style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
-                  {% trans "Discrepancy" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
-                </a>
-            </div>
+    <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
+    
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Size\Passport" %}</th>
+            {% for passport in passports %}
+            <th>№{{ passport.id }}</th>
             {% endfor %}
-            {% else %}
-            <div class="list-group" >
-                <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-                  {% trans "No associated discrepancies." %}
-                </a>
-            </div>
-            {% endif %}
-          </div>
-<!-- </div> -->
+            <th>{% trans "Sum" %}</th>
+            <th>{% trans "Required" %}</th>
+            <th>{% trans "Missing" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for size, data in size_data.items %}
+          <tr>
+            <td>{{ size }}</td>
+            {% for passport in passports %}
+            <td>
+              {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+              ({{ size_data|get_item:size|get_item:passport.id|get_item:"packed_quantity"|default_if_none:"0" }})
+              {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
+              {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 4 %}
+                <button type="button" class="stage-done-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+                  {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+                </button>
+              {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" < 3 %}
+                <button type="button" class="stage-done-button btn back-btn">
+                  {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+                </button>
+              {% else %}
+                <button type="button" class="stage-done-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
+                  {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
+                </button>
+              {%endif%}
+            </td>
+            {% endfor %}
+            <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+            <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
+            <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-"|display_over }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="container-fluid bottomContainer">
+      <div class="row">
+        <div class="col-md-6">
+          <h3>{% trans "Associated Discrepancies" %}</h3>
+        </div>
+      </div><br>
+      {% if errors %}
+      {% for error in errors %}
+      <div class="list-group">
+        <a class="list-group-item list-group-item-action"
+           style="color: {% if error.status == 'RESOLVED' %}green{% elif error.status == 'REPORTED' %}red{% else %}blue{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
+          {% trans "Discrepancy" %} {{ error.piece.passport_size.passport.id }}-{{ error.piece.passport_size.id }}-{{ error.piece.id }}
+        </a>
       </div>
+      {% endfor %}
+      {% else %}
+      <div class="list-group">
+        <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+          {% trans "No associated discrepancies." %}
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -197,59 +171,6 @@
       }
   });
 </script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var barcodeInput = document.getElementById('barcode-input');
-
-    barcodeInput.addEventListener('change', function() {
-      var barcode = barcodeInput.value.trim();
-      if (barcode) {
-        let ids = barcode.split('-');
-        let pieceId = ids[ids.length - 1];  // Get the piece ID from barcode
-
-        fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({stage: 'Packed'})
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            console.log('Piece updated to Packed:', data.message);
-          } else {
-            document.getElementById('errorModalMessage').textContent = data.message;
-            $('#errorModal').modal('show');
-          }
-        })
-        .catch(error => {
-          console.error('Error updating piece:', error);
-          document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
-          $('#errorModal').modal('show');
-        });
-      }
-      barcodeInput.value = ''; // Clear the input
-      barcodeInput.focus();   // Refocus the input
-    });
-
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    }
-  });
-</script> 
 <script>
   document.getElementById('calculate-discrepancies').addEventListener('click', function() {
     const orderId = this.getAttribute('data-order-id');  // Assuming you have the order ID stored, or you can embed it in the button as a data attribute

@@ -91,19 +91,21 @@ class OrderDetailPackerView(DetailView):
         passports = order.passports.all()
 
         # Initialize data structures to track quantity and packed quantities
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0, 'extra': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id]['stage'] = passport_size.stage
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
+                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                size_data[extra_key][passport.id]['stage'] = passport_size.stage
+                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport.id]['extra'] = passport_size.extra
 
                 # Count packed pieces only
                 packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
-                size_data[size][passport.id]['packed_quantity'] += packed_pieces
+                size_data[extra_key][passport.id]['packed_quantity'] += packed_pieces
                 
                 total_per_size[size] += passport_size.quantity
 
@@ -114,8 +116,18 @@ class OrderDetailPackerView(DetailView):
             if size not in required_missing:
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
+        # Sorting size_data keys
+        def sort_key(x):
+            parts = x.split('-')
+            try:
+                return int(parts[0]), x
+            except ValueError:
+                return float('inf'), x
+
+        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
         context.update({
-            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
@@ -142,7 +154,21 @@ def update_piece_packer(request, piece_id):
 
         Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
 
-        return JsonResponse({'success': True, 'message': 'Piece status updated to Packed.'})
+        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
+
+        # Forming the response with piece details
+        data = {
+            'success': True,
+            'message': 'Piece status updated to Packed.',
+            'piece_id': piece.id,
+            'passport': piece.passport_size.passport.id,
+            'order': piece.passport_size.passport.order.model.name,
+            'passport_size': piece.passport_size.id,
+            'size': size,
+            'defect': piece.defect_type if piece.defect_type else "--",
+            'stage': piece.get_stage_display()
+        }
+        return JsonResponse(data)
 
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
@@ -169,7 +195,7 @@ def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
         order = passport_size.passport.order
-        operations = Operation.objects.filter(node__type=Node.PACKING)
+        operations = Operation.objects.filter(node__type=Node.PACKING, node__is_common=True)
         with transaction.atomic():
             if passport_size.stage == PassportSize.DONE:
                 passport_size.stage = PassportSize.PACKING
@@ -233,3 +259,11 @@ def calculate_discrepancies(request, order_pk):
             discrepancies_created += 1
 
     return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})
+
+@login_required
+@packer_required
+def scan_packer_page(request):
+    context = {
+            'sidebar_type': 'packer'
+            }
+    return render(request, 'packer/scans/detail.html', context)

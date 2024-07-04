@@ -1,9 +1,9 @@
-body {
+/* body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
     display: flex;
     background-color: #f5f5f5;
-}
+} */
 
 .sidebar {
     width: 250px;
@@ -47,7 +47,7 @@ body {
 }
 
 .main-content {
-    margin-left: 250px;
+    margin-left: 222px;
     padding: 20px;
     flex-grow: 1;
     background-color: #ecf0f1;
@@ -56,6 +56,9 @@ body {
 .header {
     text-align: center;
     margin-bottom: 20px;
+
+    display: flex !important;
+    flex-direction: column;
 }
 
 .header h1 {
@@ -70,7 +73,7 @@ body {
     gap: 20px;
 }
 
-.card {
+/* .card {
     background-color: white;
     padding: 20px;
     border-radius: 8px;
@@ -78,9 +81,9 @@ body {
     width: 22%;
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+} */
 
-.card:hover {
+/* .card:hover {
     transform: translateY(-10px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
@@ -93,7 +96,7 @@ body {
 .card p {
     font-size: 1.5em;
     color: #2c3e50;
-}
+} */
 
 .charts {
     display: flex;

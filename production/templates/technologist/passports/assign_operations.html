@@ -63,8 +63,8 @@
                   <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
                   {% for ps in size_quantities %}
                     <th>
-                      {{ ps.size_quantity.size }}<br>
-                      ({% trans "Qty:" %} {{ ps.quantity }})
+                      {{ ps.size_quantity.size }}{% if ps.extra %}-{{ ps.extra }}{% endif %}<br>
+                      ({{ ps.quantity }})
                     </th>
                   {% endfor %}
                 </tr>
@@ -130,12 +130,17 @@
                 <div class="modal-buttons">
 
                 <button type="submit" class="buttonsetting" style="background-color: #007bff !important;">{% trans "Submit" %}</button>
-                <button type="button" onclick="closePopup()">{% trans "Cancel" %}</button>
+                <button type="button" onclick="closePopup()" class="cancel">{% trans "Cancel" %}</button>
                 </div>
               </form>
             </div>  
           </div>
-
+          <div class="modal" id="messageModal">
+            <div class="modal-content">
+                <span class="close" id="closeMessageBtn">&times;</span>
+                <p id="messageModalContent"></p>
+            </div>
+        </div>
 </div>
       <!-- </div> -->
 </div>

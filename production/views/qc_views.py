@@ -91,19 +91,21 @@ class OrderDetailQcView(DetailView):
         passports = order.passports.all()
 
         # Extended defaultdict to track checked quantity
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0, 'extra': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
-                size_data[size][passport.id]['stage'] = passport_size.stage
+                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport.id]['stage'] = passport_size.stage
+                size_data[extra_key][passport.id]['extra'] = passport_size.extra
 
                 # Counting checked pieces
-                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.CHECKED).count()
-                size_data[size][passport.id]['checked_quantity'] += checked_pieces
+                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
+                size_data[extra_key][passport.id]['checked_quantity'] += checked_pieces
                 
                 total_per_size[size] += passport_size.quantity
 
@@ -115,8 +117,18 @@ class OrderDetailQcView(DetailView):
             if size not in required_missing:
                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
+        # Sorting size_data keys
+        def sort_key(x):
+            parts = x.split('-')
+            try:
+                return int(parts[0]), x
+            except ValueError:
+                return float('inf'), x
+
+        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
         context.update({
-            'size_data': {k: dict(v) for k, v in size_data.items()},
+            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'passports': passports,
@@ -138,11 +150,14 @@ def get_piece_info(request, barcode):
         piece_id = parts[2]  # Assuming the last part is the piece ID
         piece = ProductionPiece.objects.get(id=piece_id)  # Fetch the piece using the extracted ID
 
+        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
+
         data = {
             'piece_id': piece.id,
             'passport': piece.passport_size.passport.id,
+            'order': piece.passport_size.passport.order.model.name,
             'passport_size': piece.passport_size.id,
-            'size': piece.passport_size.size_quantity.size,
+            'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display(),
         }
@@ -226,7 +241,7 @@ class DefectDeleteView(DeleteView):
 def mark_as_packing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.QC)
+        operations = Operation.objects.filter(node__type=Node.QC, node__is_common=True)
         with transaction.atomic():
             if passport_size.stage == PassportSize.PACKING:
                 passport_size.stage = PassportSize.QC
@@ -255,3 +270,11 @@ def mark_as_packing(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+
+@login_required
+@qc_required
+def scan_qc_page(request):
+    context = {
+            'sidebar_type': 'qc_page'
+            }
+    return render(request, 'qc/scans/detail.html', context)
