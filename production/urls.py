@@ -4,7 +4,7 @@ from .views import *
 
 urlpatterns = [
     path('', user_redirect, name='user_redirect'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('employee/clock-in-out/', clock_in_out, name='clock_in_out'),
     
@@ -150,6 +150,7 @@ urlpatterns = [
     path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
     path('qc/orders/api/get-piece-info/<str:barcode>/', get_piece_info, name='get_piece_info'),
     path('qc/orders/update-piece-status/<int:piece_id>/', update_piece_qc, name='update_piece_qc'),
+    path('qc/scan/', scan_qc_page, name='scan_qc_page'),
     
     path('packer/orders/', OrderListPackerView.as_view(), name='order_list_packer'),
     path('packer/orders/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
@@ -159,6 +160,7 @@ urlpatterns = [
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
     path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
     path('packer/orders/calculate-discrepancies/<int:order_pk>/', calculate_discrepancies, name='calculate_discrepancies'),
+    path('packer/scan/', scan_packer_page, name='scan_packer_page'),
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
