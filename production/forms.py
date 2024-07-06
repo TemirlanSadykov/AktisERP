@@ -141,7 +141,7 @@ class SizeQuantityForm(forms.ModelForm):
         model = SizeQuantity
         fields = ['size', 'quantity']
         widgets = {
-            'size': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Size'}),
+            'size': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Size'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
         }
 
