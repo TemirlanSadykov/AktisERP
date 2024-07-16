@@ -291,7 +291,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
                               <h5 class="card-title text-left">{% trans 'Total Production' %}</h5>
-                              <p>{{ production_data.total_amount }} units</p>
+                              <p>{{ production_data.total_amount }} ед</p>
                           </div>
                           <div class="icon">
                             <img src="{% static 'img/all.png' %}" alt="" style="width: 80px;">
@@ -306,7 +306,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
                               <h5 class="card-title text-left">{% trans 'Completed Units' %}</h5>
-                              <p>{{ production_data.completed_amount }} units</p>
+                              <p>{{ production_data.completed_amount }} ед</p>
 
                           </div>
                           <div class="icon">
@@ -324,7 +324,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
                               <h5 class="card-title text-left">{% trans 'Orders in Progress' %}</h5>
-                              <p>{{ production_data.orders_in_progress }} orders</p>
+                              <p>{{ production_data.orders_in_progress }} заказа</p>
                           </div>
                           <div class="icon">
                             <img src="{% static 'img/gears.png' %}" alt="" style="width: 80px;">
@@ -339,7 +339,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
                               <h5 class="card-title text-left">{% trans 'Models in Progress' %}</h5>
-                              <p>{{ production_data.in_progress_orders_count }} models</p>
+                              <p>{{ production_data.in_progress_orders_count }} модели</p>
                           </div>
                           <div class="icon">
                             <img src="{% static 'img/hourglass.png' %}" alt="" style="width: 80px;">
@@ -361,7 +361,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
                               <h5 class="card-title text-left">{% trans 'Errors' %}</h5>
-                              <p>{{ production_data.total_errors }} units</p>
+                              <p>{{ production_data.total_errors }} брака</p>
                             </div>
                           <div class="icon">
                             <img src="{% static 'img/no-results.png' %}" alt="" style="width: 80px;">
@@ -376,7 +376,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                           <div>
                               <h5 class="card-title text-left">{% trans 'Rolls' %}</h5>
-                              <p>{{ production_data.total_rolls_used }} meters</p>
+                              <p>{{ production_data.total_rolls_used }} метров</p>
                           </div>
                           <div class="icon">
                             <img src="{% static 'img/fast.png' %}" alt="" style="width: 80px;">
@@ -667,7 +667,7 @@
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="orderModalLabel">{% trans 'Order Details' %}</h5>
+                            <h5 class="modal-title" id="orderModalLabel">{% trans 'Model Details' %}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
