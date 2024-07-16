@@ -100,22 +100,17 @@
 
 
 
-<div class="row">
+<div class="clock-container">
   {% if request.user.userprofile.type != 0 %}
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">{% trans 'Clock In/Out' %}</h5>
-          <form action="{% url 'clock_in_out' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary btn-block">
-              {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+  <h1 class="clock-heading">{% trans 'Clock In/Out' %}</h1>
+  <form action="{% url 'clock_in_out' %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="clock-btn">
+      {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
+    </button>
+  </form>
   {% endif %}
+</div>
+
 
 {% endblock %}

@@ -103,7 +103,7 @@
       <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
         {% csrf_token %}
         <div class="form-group d-flex align-items-center">
-          <h4 class="mb-0 mr-3">Branch:</h4>
+          <h4 class="mb-0 mr-3">Филиал:</h4>
           <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
             {% for branch in branches %}
               <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
