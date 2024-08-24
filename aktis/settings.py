@@ -89,12 +89,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
-        'NAME': config('MERPS_TEST_DB_NAME'),
-        'USER': config('MERPS_TEST_DB_USER'),
-        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
-        'HOST': config('MERPS_TEST_DB_HOST'),
-        'PORT': config('MERPS_TEST_DB_PORT'),
+        'ENGINE': config('AKTIS_DB_ENGINE'),
+        'NAME': config('AKTIS_DB_NAME'),
+        'USER': config('AKTIS_DB_USER'),
+        'PASSWORD': config('AKTIS_DB_PASSWORD'),
+        'HOST': config('AKTIS_DB_HOST'),
+        'PORT': config('AKTIS_DB_PORT'),
     }
 }
 
