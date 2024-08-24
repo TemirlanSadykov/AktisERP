@@ -17,6 +17,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from openpyxl import Workbook
 from openpyxl.styles import  Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
+from django.db.models import Q
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -44,6 +45,7 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
 
     def get_queryset(self):
         status = self.request.GET.get('status', None)
+        search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
         if status:
@@ -53,6 +55,13 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
                     queryset = queryset.filter(status=status)
             except ValueError:
                 pass
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(model__name__icontains=search_query) |
+                Q(color__icontains=search_query) |
+                Q(fabrics__icontains=search_query)
+            )
 
         return queryset
 
@@ -72,6 +81,7 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
 
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['selected_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('search', '')
         context['Order'] = Order
         context['sidebar_type'] = 'technology'
         return context
