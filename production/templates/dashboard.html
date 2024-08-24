@@ -278,11 +278,21 @@
                   </ul>
                 </div>
               </nav>
-            <div class="header">
-                <br>
-                <h4>За последние 30 дней</h4>
-            </div>
-
+              <div class="header">
+                <form method="get" class="form-row align-items-end" style="margin-top: 20px;">
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="start_date">{% trans 'Start Date' %}</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ form.start_date.value|default_if_none:'' }}" style="width: 100%;">
+                    </div>
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="end_date">{% trans 'End Date' %}</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ form.end_date.value|default_if_none:'' }}" style="width: 100%;">
+                    </div>
+                    <div class="col-12 col-md-4 mb-3">
+                        <button type="submit" class="btn btn-primary w-100" style="font-size:13px !important;">{% trans "Filter" %}</button>
+                    </div>
+                </form>
+            </div>            
             <div class="container-fluid ">
                 <div class="row mt-4">
                   <div class="col-md-3 col-sm-3 mb-4">

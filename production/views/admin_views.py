@@ -28,7 +28,8 @@ from ..decorators import admin_required
 from ..forms import *
 from ..mixins import *
 from ..models import *
-
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -46,14 +47,37 @@ def admin_page(request):
 @login_required
 @admin_required
 def dashboard_page(request):
-    client_data = get_client_data()
-    employee_data = get_employee_data()
-    production_data = get_production_data()
-    orders_data = get_orders_data()
-    inventory_data = get_inventory_data()
-    client_orders_data = get_client_orders_data()
+    form = DateRangeForm(request.GET or None)
+    client_data = []
+    employee_data = []
+    production_data = {}
+    orders_data = []
+    inventory_data = []
+    client_orders_data = []
+
+    if form.is_valid():
+        start_date = timezone.make_aware(datetime.combine(form.cleaned_data['start_date'], datetime.min.time()))
+        end_date = timezone.make_aware(datetime.combine(form.cleaned_data['end_date'], datetime.max.time()))
+        client_data = get_client_data(start_date, end_date)
+        employee_data = get_employee_data(start_date, end_date)
+        production_data = get_production_data(start_date, end_date)
+        orders_data = get_orders_data(start_date, end_date)
+        inventory_data = get_inventory_data(start_date, end_date)
+        client_orders_data = get_client_orders_data(start_date, end_date)
+    else:
+        # Default to the last 30 days if no valid dates are provided
+        
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=30)
+        client_data = get_client_data(start_date, end_date)
+        employee_data = get_employee_data(start_date, end_date)
+        production_data = get_production_data(start_date, end_date)
+        orders_data = get_orders_data(start_date, end_date)
+        inventory_data = get_inventory_data(start_date, end_date)
+        client_orders_data = get_client_orders_data(start_date, end_date)      
 
     context = {
+        'form': form,
         'client_data': client_data,
         'employee_data': employee_data,
         'production_data': production_data,
@@ -63,72 +87,81 @@ def dashboard_page(request):
     }
     return render(request, 'dashboard.html', context)
 
-def get_client_orders_data():
-    client_orders_data = ClientOrder.objects.select_related('client').values(
+
+
+class DateRangeForm(forms.Form):
+    start_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=True,
+        label='Start Date'
+    )
+    end_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=True,
+        label='End Date'
+    )
+    
+def get_client_orders_data(start_date, end_date):
+    client_orders_data = ClientOrder.objects.filter(
+        created_at__range=[start_date, end_date]
+    ).select_related('client').values(
         'id', 'order_number', 'client__name', 'status', 'term'
     ).order_by('status')
+    
     return list(client_orders_data)
 
-def get_inventory_data():
+def get_inventory_data(start_date, end_date):
     rolls_data = Roll.objects.annotate(
         available_meters=F('meters') - F('used_meters')
     ).values(
         'id', 'name', 'color', 'fabrics', 'meters', 'used_meters', 'available_meters'
     )
+    
     return list(rolls_data)
 
-def get_orders_data():
-    orders_data = Order.objects.select_related('model').annotate(
+def get_orders_data(start_date, end_date):
+    orders_data = Order.objects.filter(
+        client_order__created_at__range=[start_date, end_date]
+    ).select_related('model').annotate(
         model_name=F('model__name'),
         assortment_name=F('assortment__name'),
-        total_price=F('quantity') * F('payment'),
+        total_price=F('quantity') * F('payment')
     ).values(
         'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'color', 'fabrics'
     ).order_by('assortment_name')
 
     return list(orders_data)
 
-def get_production_data():
-    today = timezone.now()
-    thirty_days_ago = today - timedelta(days=30)
-
-    # Filter Orders based on the creation date of the associated ClientOrder in the last 30 days
-    recent_orders = Order.objects.filter(client_order__created_at__range=[thirty_days_ago, today])
-
+def get_production_data(start_date, end_date):
+    recent_orders = Order.objects.filter(client_order__created_at__range=[start_date, end_date])
+    
     in_progress_orders_count = recent_orders.filter(status=Order.IN_PROGRESS).count()
 
-    # Aggregates total units ordered in the last 30 days
     total_amount = recent_orders.aggregate(total=Sum('quantity'))['total'] or 0
 
-    # Aggregates revenue (payment * quantity) in the last 30 days
     total_revenue = recent_orders.aggregate(
         total=Sum(F('quantity') * F('payment'))
     )['total'] or 0
 
-    # Aggregates total units completed in the last 30 days
     completed_amount = recent_orders.aggregate(total=Sum('completed_quantity'))['total'] or 0
 
-    # Counts the number of client orders in progress that were created in the last 30 days
     orders_in_progress = ClientOrder.objects.filter(
         status=ClientOrder.IN_PROGRESS,
-        created_at__range=[thirty_days_ago, today]
+        created_at__range=[start_date, end_date]
     ).count()
 
-    # Aggregates total salary paid based on assigned works completed in the last 30 days
     total_salary = AssignedWork.objects.filter(
-        end_time__range=[thirty_days_ago, today],
-        is_success=True  # Ensuring we only count completed and successful tasks
+        end_time__range=[start_date, end_date],
+        is_success=True
     ).aggregate(total=Sum(F('quantity') * F('work__operation__payment')))['total'] or 0
 
-    # Count total errors reported in the last 30 days
     total_errors = Error.objects.filter(
-        reported_date__range=[thirty_days_ago, today]
+        reported_date__range=[start_date, end_date]
     ).count()
 
     total_rolls_used = PassportRoll.objects.filter(
-        passport__order__client_order__created_at__range=[thirty_days_ago, today]
+        passport__order__client_order__created_at__range=[start_date, end_date]
     ).aggregate(total_meters=Sum('meters'))['total_meters'] or 0
-
 
     return {
         'total_amount': total_amount,
@@ -141,12 +174,15 @@ def get_production_data():
         'total_rolls_used': total_rolls_used
     }
 
-def get_client_data():
-    clients = Client.objects.all()
+
+def get_client_data(start_date, end_date):
+    client_orders = ClientOrder.objects.filter(created_at__range=[start_date, end_date])
+    clients = Client.objects.filter(client_orders__in=client_orders).distinct()
+    
     client_data = []
     for client in clients:
-        client_orders = ClientOrder.objects.filter(client=client)
-        # Compute total amounts and quantities for each client
+        client_orders = client.client_orders.filter(created_at__range=[start_date, end_date])
+        
         total_ordered_amount_by_orders = client_orders.annotate(
             total_amount=Sum(F('orders__quantity') * F('orders__payment'))
         ).aggregate(sum=Sum('total_amount'))['sum'] or 0
@@ -155,7 +191,6 @@ def get_client_data():
             total_amount=Sum('orders__quantity')
         )['total_amount'] or 0
         
-        # Collecting order details, income per order, and quantity
         client_orders_details = []
         for co in client_orders:
             order_details = co.orders.aggregate(
@@ -182,21 +217,24 @@ def get_client_data():
 
     return sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
 
-def get_employee_data():
-    # Fetch all employees first to ensure everyone is included
-    all_employees = UserProfile.objects.all().values(
-        'id', 'user__username', 'user__first_name', 'user__last_name', 'employee_id'
-    )
-
-    # Aggregating units produced by each employee from AssignedWork
-    employee_units = AssignedWork.objects.filter(is_success=True).values('employee__id').annotate(
+def get_employee_data(start_date, end_date):
+    # Aggregating units produced by each employee from AssignedWork within the date range
+    employee_units = AssignedWork.objects.filter(
+        is_success=True, 
+        end_time__range=[start_date, end_date]
+    ).values('employee__id').annotate(
         total_units=Sum('quantity')
     ).order_by('-total_units')
+    
     units_dict = {eu['employee__id']: eu['total_units'] for eu in employee_units}
 
-    # Calculating hours worked from EmployeeAttendance
+    # Calculating hours worked from EmployeeAttendance within the date range
     employee_hours = {}
-    attendances = EmployeeAttendance.objects.filter(is_clock_in=True).values('employee__id', 'timestamp').order_by('employee__id', 'timestamp')
+    attendances = EmployeeAttendance.objects.filter(
+        timestamp__range=[start_date, end_date], 
+        is_clock_in=True
+    ).values('employee__id', 'timestamp').order_by('employee__id', 'timestamp')
+    
     for emp_id, group in itertools.groupby(attendances, key=lambda x: x['employee__id']):
         timestamps = list(group)
         total_hours = sum(
@@ -205,7 +243,11 @@ def get_employee_data():
         ) if len(timestamps) % 2 == 0 else 0
         employee_hours[emp_id] = total_hours
 
-    # Combining data and ensuring all employees are included
+    # Fetch all employees and compile their data with units produced and hours worked
+    all_employees = UserProfile.objects.all().values(
+        'id', 'user__username', 'user__first_name', 'user__last_name', 'employee_id'
+    )
+
     employee_data = []
     for employee in all_employees:
         employee_id = employee['id']
@@ -221,10 +263,7 @@ def get_employee_data():
             'hours_worked': hours_worked
         })
 
-    # Sorting the final list of employee data by units produced in descending order
-    employee_data = sorted(employee_data, key=lambda x: x['units_produced'], reverse=True)
-
-    return employee_data
+    return sorted(employee_data, key=lambda x: x['units_produced'], reverse=True)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
