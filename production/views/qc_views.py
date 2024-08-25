@@ -16,6 +16,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from io import BytesIO
 from django.views.decorators.http import require_POST
+from django.db.models import Q
 
 from ..decorators import qc_required
 from ..forms import *
@@ -42,6 +43,7 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
 
     def get_queryset(self):
         status = self.request.GET.get('status', None)
+        search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
         if status:
@@ -52,6 +54,13 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
             except ValueError:
                 pass
 
+        if search_query:
+            queryset = queryset.filter(
+                Q(model__name__icontains=search_query) |
+                Q(color__icontains=search_query) |
+                Q(fabrics__icontains=search_query)
+            )
+            
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -69,6 +78,7 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('search', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['sidebar_type'] = 'qc_page'
         return context
