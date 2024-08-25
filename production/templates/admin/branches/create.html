@@ -14,7 +14,7 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-outline-custom">{% trans 'Logout' %}</button>
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>

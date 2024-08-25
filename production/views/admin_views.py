@@ -281,6 +281,12 @@ class BranchCreateView(CreateView):
     form_class = BranchForm
     template_name = 'admin/branches/create.html'
     success_url = reverse_lazy('branch_list')
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except ValidationError as e:
+            form.add_error(None, e.message)
+            return self.form_invalid(form)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchDetailView(DetailView):

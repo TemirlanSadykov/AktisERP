@@ -3,10 +3,17 @@ import datetime
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class Branch(models.Model):
-    name = models.CharField(max_length=100) 
+    name = models.CharField(max_length=100)
+
+    def save(self, *args, **kwargs):
+        if not self.pk and Branch.objects.exists():
+            raise ValidationError('Cannot create more than one branch.')
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
     
