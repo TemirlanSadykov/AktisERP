@@ -587,7 +587,7 @@ class OperationListView(ListView):
         return 15
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('number')
+        queryset = super().get_queryset().filter(is_archived=False).order_by('number')
         node_id = self.request.GET.get('node', None)
         if node_id:
             queryset = queryset.filter(node_id=node_id)
@@ -595,7 +595,7 @@ class OperationListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        nodes = Node.objects.all().order_by('name')
+        nodes = Node.objects.filter(is_archived=False).order_by('name')
         context['nodes'] = nodes
         context['selected_node'] = self.request.GET.get('node', '')
         context['upload_form'] = UploadFileForm()
@@ -656,6 +656,47 @@ class OperationDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedOperationListView(ListView):
+    model = Operation
+    template_name = 'technologist/operations/list.html'
+    context_object_name = 'operations'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Operation.objects.filter(is_archived=True).order_by('number')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        context['archived'] = True
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OperationArchiveView(UpdateView):
+    model = Operation
+    template_name = 'technologist/operations/delete.html'
+    success_url = reverse_lazy('operation_list')
+
+    def post(self, request, *args, **kwargs):
+        operation = self.get_object()
+        operation.is_archived = True
+        operation.save()
+        return HttpResponseRedirect(self.success_url)
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OperationUnArchiveView(UpdateView):
+    model = Operation
+    template_name = 'technologist/operations/delete.html'
+    success_url = reverse_lazy('archived_operation_list')
+
+    def post(self, request, *args, **kwargs):
+        operation = self.get_object()
+        operation.is_archived = False
+        operation.save()
+        return HttpResponseRedirect(self.success_url)
+
 
 @login_required
 @technologist_required
@@ -765,8 +806,23 @@ class RollListView(RestrictBranchMixin, ListView):
     template_name = 'technologist/rolls/list.html'
     context_object_name = 'rolls'
     paginate_by = 10
+    
     def get_queryset(self):
-        return super().get_queryset().order_by('name')
+        return super().get_queryset().filter(is_archived=False).order_by('name')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedRollListView(RestrictBranchMixin, ListView):
+    model = Roll
+    template_name = 'technologist/rolls/list.html'
+    context_object_name = 'rolls'
+    paginate_by = 10
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=True).order_by('name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -819,8 +875,31 @@ class RollDeleteView(RestrictBranchMixin, DeleteView):
         context['sidebar_type'] = 'technology'
         return context
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class RollArchiveView(RestrictBranchMixin, UpdateView):
+    model = Roll
+    template_name = 'technologist/rolls/delete.html'
+    success_url = reverse_lazy('roll_list')
+    
+    def post(self, request, *args, **kwargs):
+        roll = self.get_object()
+        roll.is_archived = True
+        roll.save()
+        return HttpResponseRedirect(self.success_url)
 
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class RollUnArchiveView(RestrictBranchMixin, UpdateView):
+    model = Roll
+    template_name = 'technologist/rolls/delete.html'
+    success_url = reverse_lazy('roll_list')
+
+    def post(self, request, *args, **kwargs):
+        roll = self.get_object()
+        roll.is_archived = False
+        roll.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentListView(RestrictBranchMixin, ListView):
     model = Assortment
@@ -828,14 +907,52 @@ class AssortmentListView(RestrictBranchMixin, ListView):
     context_object_name = 'assortments'
     paginate_by = 10
     def get_queryset(self):
-        return super().get_queryset().order_by('name')
+        return super().get_queryset().filter(is_archived=False).order_by('name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
+    
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedAssortmentListView(RestrictBranchMixin, ListView):
+    model = Assortment
+    template_name = 'technologist/assortments/list.html'
+    context_object_name = 'assortments'
+    paginate_by = 10
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class AssortmentArchiveView(RestrictBranchMixin, UpdateView):
+    model = Assortment
+    template_name = 'technologist/assortments/delete.html'
+    success_url = reverse_lazy('assortment_list')
+    
+    def post(self, request, *args, **kwargs):
+        assortment = self.get_object()
+        assortment.is_archived = True
+        assortment.save()
+        return HttpResponseRedirect(self.success_url)
 
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class AssortmentUnArchiveView(UpdateView):
+    model = Assortment
+    success_url = reverse_lazy('assortment_list')
+
+    def post(self, request, *args, **kwargs):
+        assortment = self.get_object()
+        assortment.is_archived = False
+        assortment.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentCreateView(AssignBranchMixin, CreateView):
     model = Assortment
@@ -895,13 +1012,54 @@ class ModelListView(ListView):
     paginate_by = 10
     def get_queryset(self):
         assortment_id = self.kwargs.get('a_id')
-        return Model.objects.filter(assortment=assortment_id).order_by('name')
+        return Model.objects.filter(assortment=assortment_id, is_archived=False).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         context['sidebar_type'] = 'technology'
         return context
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedModelListView(ListView):
+    model = Model
+    template_name = 'technologist/models/list.html'
+    context_object_name = 'models'
+    paginate_by = 10
+    def get_queryset(self):
+        assortment_id = self.kwargs.get('a_id')
+        return Model.objects.filter(assortment=assortment_id, is_archived=True).order_by('name')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ModelArchiveView(UpdateView):
+    model = Model
+    template_name = 'technologist/models/delete.html'
+
+    def post(self, request, *args, **kwargs):
+        model = self.get_object()
+        model.is_archived = True
+        model.save()
+        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ModelUnArchiveView(UpdateView):
+    model = Model
+    template_name = 'technologist/models/delete.html'
+
+    def post(self, request, *args, **kwargs):
+        model = self.get_object()
+        model.is_archived = False
+        model.save()
+        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+    
+
+        
+        
 @login_required
 @technologist_required
 def model_create(request, a_id, pk=None):
@@ -984,13 +1142,52 @@ class NodeListVIew(ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        return Node.objects.all().order_by('name')
+        return Node.objects.filter(is_archived=False).order_by('name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
 
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedNodeListView(ListView):
+    model = Node
+    template_name = 'technologist/nodes/list.html'
+    context_object_name = 'nodes'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Node.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeArchiveView(UpdateView):
+    model = Node
+    template_name = 'technologist/nodes/delete.html'
+    success_url = reverse_lazy('node_list')
+
+    def post(self, request, *args, **kwargs):
+        node = self.get_object()
+        node.is_archived = True
+        node.save()
+        return HttpResponseRedirect(self.success_url)
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeUnArchiveView(UpdateView):
+    model = Node
+    template_name = 'technologist/nodes/delete.html'
+    success_url = reverse_lazy('node_list')
+
+    def post(self, request, *args, **kwargs):
+        node = self.get_object()
+        node.is_archived = False
+        node.save()
+        return HttpResponseRedirect(self.success_url)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class NodeCreateView(CreateView):
@@ -1047,14 +1244,52 @@ class EquipmentListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Equipment.objects.all().order_by('name')
+        return Equipment.objects.filter(is_archived=True).order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedEquipmentListView(ListView):
+    model = Equipment
+    template_name = 'technologist/equipment/list.html'
+    context_object_name = 'equipment'
+    paginate_by = 10
 
+    def get_queryset(self):
+        return Equipment.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentArchiveView(UpdateView):
+    model = Equipment
+    template_name = 'technologist/equipment/delete.html'
+    success_url = reverse_lazy('equipment_list')
+
+    def post(self, request, *args, **kwargs):
+        equipment = self.get_object()
+        equipment.is_archived = True
+        equipment.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentUnArchiveView(UpdateView):
+    model = Equipment
+    template_name = 'technologist/equipment/delete.html'
+    success_url = reverse_lazy('equipment_list')
+
+    def post(self, request, *args, **kwargs):
+        equipment = self.get_object()
+        equipment.is_archived = False
+        equipment.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentCreateView(CreateView):
     model = Equipment
