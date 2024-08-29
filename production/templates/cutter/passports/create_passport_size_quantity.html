@@ -40,13 +40,18 @@
                     <label>{% trans "Quantity:" %}</label>
                     {{ form.quantity }}
                 </div>
-                <button type="submit" class="btn edit-btn mb-2" style="width:70px;">{% trans "Add" %}</button>
+                <div class="form-group">
+                    <label>{% trans "Roll:" %}</label>
+                    {{ form.roll }} <!-- Add this line to include roll selection -->
+                </div>
+                <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
             </form><br>
             <div id="sizeQuantityList" class="size-quantity-list">
                 {% for ps in passport_sizes %}
                 <li id="sq-{{ ps.id }}" class="size-quantity-item">
-                    <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}{% if ps.extra %}-{{ ps.extra }}{% endif %}</span></span>
+                    <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.size_quantity.size }}</span></span>
                     <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.quantity }}</span></span>
+                    <span class="detail"><strong>{% trans "Roll:" %}</strong> <span class="roll" data-sq-id="{{ ps.id }}" contenteditable="false">{{ ps.roll }}</span></span>
                     <button class="edit-btn" data-sq-id="{{ ps.id }}">{% trans "Edit" %}</button>
                     <button class="delete-btn" data-sq-id="{{ ps.id }}">{% trans "Delete" %}</button>
                 </li>

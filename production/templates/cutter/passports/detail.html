@@ -67,7 +67,7 @@
               </tr>
               {% for roll in passport_rolls %}
               <tr>
-                <td>{{ roll.roll.name }}</td>
+                <td>{{ roll.roll.name }}-{{ roll.roll.color }}-{{ roll.roll.fabrics }}</td>
                 <td>{{ roll.meters }}</td>
               </tr>
               {% empty %}
@@ -88,7 +88,7 @@
               {% for size in passport_sizes %}
               <tr>
                 <td>
-                  <a href="{% url 'barcode_passport_size' size.id %}">{{ size.size_quantity.size }}{% if size.extra %}-{{ size.extra }}{% endif %}</a>
+                  <a href="{% url 'barcode_passport_size' size.id %}">{{ size.size_quantity.size }} - {{ size.roll.name }}-{{ size.roll.color }}-{{ size.roll.fabrics }}</a>
                 </td>
                 <td>
                   <a href="{% url 'barcode_passport_size_per_piece' size.id %}">{{ size.quantity }}</a>

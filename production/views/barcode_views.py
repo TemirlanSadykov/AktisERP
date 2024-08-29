@@ -104,16 +104,18 @@ class BarcodePassportSize(View):
 
         # Additional Passport Size data
         model_name = passport_size.passport.order.model.name
-        color = passport_size.passport.order.color
+        color = passport_size.roll.color
         fabrics = passport_size.passport.order.fabrics
+        roll = passport_size.roll.name
         passport_number = passport_size.passport.id
-        size = f"{passport_size.size_quantity.size}-{passport_size.extra}" if passport_size.extra else passport_size.size_quantity.size
+        size = passport_size.size_quantity.size
 
         p.drawString(10, text_start_height, f"Модель: {model_name}")
         p.drawString(10, text_start_height - 25, f"Цвет: {color}")
         p.drawString(10, text_start_height - 50, f"Ткань: {fabrics}")
-        p.drawString(10, text_start_height - 75, f"Паспорт: №{passport_number}")
-        p.drawString(10, text_start_height - 100, f"Размер: {size}")
+        p.drawString(10, text_start_height - 75, f"Рулон: {roll}")
+        p.drawString(10, text_start_height - 100, f"Паспорт: №{passport_number}")
+        p.drawString(10, text_start_height - 125, f"Размер: {size}")
 
         # Generate and position QR code
         qr_data = f"{passport_size.passport.id}-{passport_size.id}"
@@ -131,7 +133,7 @@ class BarcodePassportSize(View):
         img.save(temp_file)
         temp_file.close()
 
-        qr_code_y_position = text_start_height - 350
+        qr_code_y_position = text_start_height - 375
 
         # Draw the QR code image on the PDF
         qr_code_size = 220
@@ -139,7 +141,7 @@ class BarcodePassportSize(View):
 
         # Draw the QR data text under the QR code
         p.setFont("DejaVuSans", 12)
-        p.drawString(10, qr_code_y_position - 20, f"QR Data: {qr_data}")
+        p.drawString(10, qr_code_y_position - 10, f"QR Data: {qr_data}")
 
         p.showPage()
         p.save()
@@ -173,19 +175,21 @@ class BarcodePassportSizePerPiece(View):
         for piece in pieces:
             # Draw additional data about the piece
             model_name = passport_size.passport.order.model.name
-            color = passport_size.passport.order.color
+            color = passport_size.roll.color
             fabrics = passport_size.passport.order.fabrics
+            roll = passport_size.roll.name
             passport_number = passport_size.passport.id
-            size = f"{passport_size.size_quantity.size}-{passport_size.extra}" if passport_size.extra else passport_size.size_quantity.size
+            size = passport_size.size_quantity.size
             piece_number = piece.piece_number
 
             p.setFont("DejaVuSans", 14)
             p.drawString(10, text_start_height, f"Модель: {model_name}")
             p.drawString(10, text_start_height - 25, f"Цвет: {color}")
             p.drawString(10, text_start_height - 50, f"Ткань: {fabrics}")
-            p.drawString(10, text_start_height - 75, f"Паспорт: №{passport_number}")
-            p.drawString(10, text_start_height - 100, f"Размер: {size}")
-            p.drawString(10, text_start_height - 125, f"Единица: {piece_number}")
+            p.drawString(10, text_start_height - 75, f"Рулон: {roll}")
+            p.drawString(10, text_start_height - 100, f"Паспорт: №{passport_number}")
+            p.drawString(10, text_start_height - 125, f"Размер: {size}")
+            p.drawString(10, text_start_height - 150, f"Единица: {piece_number}")
 
             # Generate QR code
             qr_data = f"{passport_number}-{passport_size.id}-{piece.id}"
@@ -203,7 +207,7 @@ class BarcodePassportSizePerPiece(View):
             img.save(temp_file)
             temp_file.close()
 
-            qr_code_y_position = text_start_height - 350
+            qr_code_y_position = text_start_height - 375
 
             # Draw the QR code image on the PDF
             qr_code_size = 220
@@ -211,7 +215,7 @@ class BarcodePassportSizePerPiece(View):
 
             # Draw the QR data text under the QR code
             p.setFont("DejaVuSans", 12)
-            p.drawString(10, qr_code_y_position - 20, f"QR Data: {qr_data}")
+            p.drawString(10, qr_code_y_position - 10, f"QR Data: {qr_data}")
 
             # Clean up the temporary file
             os.remove(temp_file.name)
