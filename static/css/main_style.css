@@ -171,6 +171,7 @@ nav form button:hover {
     background: #007bff; /* Bootstrap blue */
     border: 1px solid #007bff;
     color: #fff; /* White text */
+    margin-left: 0%;
 }
 
 .create-btn:hover {
