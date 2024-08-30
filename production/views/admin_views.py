@@ -22,6 +22,9 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
+
+from django.db.models.functions import TruncMonth
+
 import itertools
 
 from ..decorators import admin_required
@@ -1070,6 +1073,40 @@ def client_order_complete(request, pk):
 
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class OrderCalendarView(ListView):
+    model = ClientOrder
+    template_name = 'admin/calendar/calendar.html'
+    context_object_name = 'orders'
+
+    def get_queryset(self):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset()
+        return queryset.annotate(month=TruncMonth('term')).filter(month__month=current_month, month__year=current_year).values('id', 'order_number', 'term')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['events_url'] = reverse('order_calendar_events')
+        return context
+    
+
+class OrderCalendarEventsView(View):
+    def get(self, request, *args, **kwargs):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        orders = ClientOrder.objects.annotate(month=TruncMonth('term')).filter(month__month=current_month, month__year=current_year).values('id', 'order_number', 'term','created_at',"status")
+        events = []
+        for order in orders:
+            events.append({
+                'id': order['id'],
+                'title': order['order_number'],
+                'start': order['created_at'].isoformat(),
+                'end': (order['term'] - timezone.localdate()).days,
+                "url": reverse('client_order_detail', kwargs={'pk': order['id']}),
+                'description': f"Order {order['order_number']} {order['status']} {order['term'] - timezone.localdate() if order['term'] >= timezone.localdate() else 'overdue'}"
+            })
+        return JsonResponse(events, safe=False)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderCreateView(CreateView):
