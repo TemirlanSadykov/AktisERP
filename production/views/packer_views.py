@@ -11,6 +11,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_POST
+from django.db.models import Q
 
 from ..decorators import packer_required
 from ..forms import *
@@ -37,6 +38,7 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
 
     def get_queryset(self):
         status = self.request.GET.get('status', None)
+        search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
         if status:
@@ -46,6 +48,13 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
                     queryset = queryset.filter(status=status)
             except ValueError:
                 pass
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(model__name__icontains=search_query) |
+                Q(color__icontains=search_query) |
+                Q(fabrics__icontains=search_query)
+            )
 
         return queryset
 
@@ -64,6 +73,7 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('search', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['sidebar_type'] = 'packer'
         return context

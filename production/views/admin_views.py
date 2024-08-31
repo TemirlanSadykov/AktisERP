@@ -276,8 +276,19 @@ class BranchListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Branch.objects.all().order_by('name')
+        return Branch.objects.filter(is_archived=False).order_by('name')
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedBranchListView(ListView):
+    model = Branch
+    template_name = 'admin/branches/list.html'
+    context_object_name = 'branches'
+    paginate_by = 10
 
+    def get_queryset(self):
+        return Branch.objects.filter(is_archived=True).order_by('name')
+    
+
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchCreateView(CreateView):
     model = Branch
@@ -303,7 +314,45 @@ class BranchDeleteView(DeleteView):
     model = Branch
     template_name = 'admin/branches/delete.html'
     success_url = reverse_lazy('branch_list')
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchArchiveView(UpdateView):
+    model = Branch
+    template_name = 'admin/branches/list.html'
+    success_url = reverse_lazy('branch_list')
 
+    def post(self, request, *args, **kwargs):
+        branch = self.get_object()
+        branch.is_archived = True
+        branch.save()
+        return HttpResponseRedirect(self.success_url)
+    
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchUnArchiveView(UpdateView):
+    model = Branch  
+    template_name = 'admin/branches/list.html'  
+    success_url = reverse_lazy('branch_list') 
+
+    def post(self, request, *args, **kwargs):
+        branch = self.get_object()  
+        branch.is_archived = False  
+        branch.save() 
+        return HttpResponseRedirect(self.success_url)  
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedBranchDetailView(DetailView):
+    model = Branch
+    template_name = 'admin/branches/archived_detail.html'
+    context_object_name = 'archive_branch'
+    
+# @method_decorator([login_required, admin_required], name='dispatch')
+# class ArchivedBranchDeleteView(DeleteView):
+#     model = Branch
+#     template_name = 'admin/branches/archived_delete.html'
+#     success_url = reverse_lazy('archive_branch_list')
+
+   
 @login_required
 @admin_required
 def branch_switch(request):
@@ -331,13 +380,14 @@ class EmployeeListView(ListView):
     paginate_by = 10
     def get_queryset(self):
         return UserProfile.objects.filter(
-            branch=self.request.user.userprofile.branch
+            branch=self.request.user.userprofile.branch,
+            is_archived=False
         ).order_by('employee_id')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['upload_form'] = UploadFileForm()
         return context
-
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
     template_name = 'admin/employees/create.html'
@@ -374,6 +424,43 @@ class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     template_name = 'admin/employees/delete.html'
     success_url = reverse_lazy('employee_list')
     
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = True
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+   
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeUnArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = False
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+     
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedEmployeeListView(ListView):
+    template_name = 'admin/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(            
+            branch=self.request.user.userprofile.branch,
+            is_archived=True
+            ).order_by('employee_id')
+    
+
 @login_required
 @admin_required
 @require_POST
@@ -929,7 +1016,6 @@ def attendance_list(request):
 
 
 
-
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientOrderListView(RestrictBranchMixin, ListView):
     model = ClientOrder
@@ -939,7 +1025,7 @@ class ClientOrderListView(RestrictBranchMixin, ListView):
     form_class = DateRangeForm 
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('term')
+        queryset = super().get_queryset().filter(is_archived=False).order_by('term')
         status = self.request.GET.get('status', None)
         form = self.form_class(self.request.GET)
 
@@ -1027,6 +1113,82 @@ class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
     template_name = 'admin/client/orders/delete.html'
     success_url = reverse_lazy('client_order_list')
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderArchiveView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+        
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = True
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderUnArchiveView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+        
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = False
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedClientOrderListView(RestrictBranchMixin, ListView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/list.html'  # Use a separate template if necessary
+    context_object_name = 'archived_orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=True).order_by('term')
+        status = self.request.GET.get('status', None)
+        form = self.form_class(self.request.GET)
+
+        if status:
+            try:
+                status = int(status)
+                if status in dict(self.model.TYPE_CHOICES):
+                    queryset = queryset.filter(status=status)
+            except ValueError:
+                pass
+
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+
+            if start_date and end_date:
+                queryset = queryset.filter(created_at__date__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(created_at__date__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(created_at__date__lte=end_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None) 
+        today = timezone.localdate()
+        orders_with_days_left = []
+        for order in context['archived_orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+
+        context['orders_with_days_left'] = sorted(orders_with_days_left, key=lambda x: x['days_left'])
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['ClientOrder'] = ClientOrder 
+        return context
+
+        
+    
+    
 @login_required
 @admin_required
 @require_POST
@@ -1224,7 +1386,22 @@ class ClientListView(ListView):
     context_object_name = 'clients'
     paginate_by = 10
     def get_queryset(self):
-        return Client.objects.all().order_by('name')
+        return Client.objects.filter(
+            is_archived=False
+            ).order_by('name')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedClientListView(ListView):
+    template_name = 'admin/clients/list.html'
+    context_object_name = 'clients'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Client.objects.filter(            
+            is_archived=True
+            ).order_by('name')
+    
+
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientCreateView(CreateView):
@@ -1254,7 +1431,31 @@ class ClientDeleteView(DeleteView):
     success_url = reverse_lazy('client_list')
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientArchiveView(UpdateView):
+    model = Client
+    template_name = 'admin/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = True
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
 
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientUnArchiveView(UpdateView):
+    model = Client
+    template_name = 'admin/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = False
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class FixedSalaryListView(RestrictBranchMixin, ListView):
     model = FixedSalary
@@ -1262,7 +1463,20 @@ class FixedSalaryListView(RestrictBranchMixin, ListView):
     context_object_name = 'fixed_salaries'
     paginate_by = 10
     def get_queryset(self):
-        return FixedSalary.objects.all().order_by('position')
+        return FixedSalary.objects.filter(
+            is_archived = False
+            ).order_by('position')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedFixedSalaryListView(RestrictBranchMixin, ListView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/list.html'
+    context_object_name = 'fixed_salaries'
+    paginate_by = 10
+    def get_queryset(self):
+        return FixedSalary.objects.filter(
+            is_archived = True
+            ).order_by('position')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class FixedSalaryCreateView(AssignBranchMixin, CreateView):
@@ -1291,7 +1505,31 @@ class FixedSalaryDeleteView(RestrictBranchMixin, DeleteView):
     success_url = reverse_lazy('fixed_salary_list')
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryArchiveView(RestrictBranchMixin, UpdateView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/delete.html'
+    success_url = reverse_lazy('fixed_salary_list')
+    
+    def post(self, request, *args, **kwargs):
+        fixed_salary = self.get_object()
+        fixed_salary.is_archived = True
+        fixed_salary.save()
+        return HttpResponseRedirect(self.success_url)
 
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryUnArchiveView(RestrictBranchMixin, UpdateView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/delete.html'
+    success_url = reverse_lazy('fixed_salary_list')
+    
+    def post(self, request, *args, **kwargs):
+        fixed_salary = self.get_object()
+        fixed_salary.is_archived = False
+        fixed_salary.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class ErrorDetailAdminView(CreateView):
     model = ErrorResponsibility

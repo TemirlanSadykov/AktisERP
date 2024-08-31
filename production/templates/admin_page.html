@@ -106,9 +106,11 @@
           <h4 class="mb-0 mr-3">Филиал:</h4>
           <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
             {% for branch in branches %}
+            {% if not branch.is_archived %}
               <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
                 {{ branch.name }}
               </option>
+              {% endif %}
             {% endfor %}
           </select>
         </div>

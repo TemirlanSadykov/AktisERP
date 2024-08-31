@@ -35,6 +35,7 @@
           <div class="col">
         <a href="{% url 'assortment_detail' assortment.pk %}" class="btn edit-btn">{% trans "Assortment Details" %}</a>
           <a href="{% url 'model_create' assortment.pk %}" class="btn create-btn">{% trans "Create Model" %}</a>
+          <a href="{% url 'archived_model_list' a_id=assortment.pk  %}" class="btn create-btn">{% trans "Archived Models" %}</a>
         </div>
       </div>
       <ul class="clients-list">

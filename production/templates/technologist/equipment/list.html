@@ -27,6 +27,7 @@
       <div class="clients-header">
         <span class="operation-text">{% trans "Equipment" %}</span>
           <a href="{% url 'equipment_create' %}" class="btn create-btn">{% trans "Create" %}</a>
+          <a href="{% url 'archived_equipment_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
       </div>
       <ul class="clients-list">
         {% for equipment in equipment %}
