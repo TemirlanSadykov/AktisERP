@@ -1258,7 +1258,7 @@ class OrderCalendarEventsView(View):
         current_month = timezone.now().month
         current_year = timezone.now().year
         client_orders = ClientOrder.objects.annotate(month=TruncMonth('term')).filter(
-            month__month=current_month, month__year=current_year
+            month__month=current_month, month__year=current_year, is_archived=False
         ).select_related('client').prefetch_related('orders__model')
 
         events = []
