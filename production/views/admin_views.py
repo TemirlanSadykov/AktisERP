@@ -1257,17 +1257,27 @@ class OrderCalendarEventsView(View):
     def get(self, request, *args, **kwargs):
         current_month = timezone.now().month
         current_year = timezone.now().year
-        orders = ClientOrder.objects.annotate(month=TruncMonth('term')).filter(month__month=current_month, month__year=current_year).values('id', 'order_number', 'term','created_at',"status")
+        client_orders = ClientOrder.objects.annotate(month=TruncMonth('term')).filter(
+            month__month=current_month, month__year=current_year, is_archived=False
+        ).select_related('client').prefetch_related('orders__model')
+
         events = []
-        for order in orders:
+        for client_order in client_orders:
+            model_names = ', '.join(
+                [order.model.name for order in client_order.orders.all()]
+            )
+
+            description = f"Client: {client_order.client.name}, Models: {model_names}"
+            
             events.append({
-                'id': order['id'],
-                'title': order['order_number'],
-                'start': order['created_at'].isoformat(),
-                'end': (order['term'] - timezone.localdate()).days,
-                "url": reverse('client_order_detail', kwargs={'pk': order['id']}),
-                'description': f"Order {order['order_number']} {order['status']} {order['term'] - timezone.localdate() if order['term'] >= timezone.localdate() else 'overdue'}"
+                'id': client_order.id,
+                'title': client_order.order_number,
+                'start': client_order.term.isoformat(),
+                'end': client_order.term.isoformat(),
+                'description': description,
+                'url': reverse('client_order_detail', kwargs={'pk': client_order.id})
             })
+        
         return JsonResponse(events, safe=False)
 
 @method_decorator([login_required, admin_required], name='dispatch')
