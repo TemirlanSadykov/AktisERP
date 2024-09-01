@@ -25,8 +25,8 @@
       <div class="clients-container">
           <div class="clients-header">
             <span class="operation-text">{% trans "Fixed Salaries" %}</span>
-
-              <a href="{% url 'fixed_salary_create' %}" class="btn create-btn">{% trans "Create" %}</a>
+              <a href="{% url 'fixed_salary_create' %}" class="btn create-btn" style="margin-right: 5px;">{% trans "Create" %}</a>
+              <a href="{% url 'archived_fixed_salary_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
           </div>
           <ul class="clients-list">
             {% for fixed_salary in fixed_salaries %}

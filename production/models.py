@@ -7,6 +7,8 @@ from django.utils import timezone
 
 class Branch(models.Model):
     name = models.CharField(max_length=100) 
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
     
@@ -18,6 +20,8 @@ class UserProfile(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', null=True, blank=True, verbose_name='Филиал')
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
     employee_id = models.CharField(max_length=100, verbose_name='ID сотрудника')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['employee_id', 'branch'], name='unique_employee_id_per_branch')
@@ -65,6 +69,7 @@ class EmployeeAttendance(models.Model):
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
     contact_info = models.TextField(verbose_name='Контактная информация')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name
 
@@ -75,6 +80,8 @@ class Roll(models.Model):
     fabrics = models.CharField(max_length=100, verbose_name='Ткани')
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
+   
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
     @property
@@ -83,6 +90,8 @@ class Roll(models.Model):
 
 class Equipment(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
     
@@ -101,6 +110,7 @@ class Node(models.Model):
         (PACKING, 'Упаковка'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name
     
@@ -114,6 +124,8 @@ class Operation(models.Model):
     average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_values = {}
@@ -141,6 +153,8 @@ class Operation(models.Model):
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
 
@@ -148,6 +162,7 @@ class Model(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
     operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name
     
@@ -169,6 +184,7 @@ class ClientOrder(models.Model):
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
@@ -331,6 +347,7 @@ class FixedSalary(models.Model):
     position = models.CharField(max_length=100, verbose_name='Должность')
     employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries', verbose_name='Сотрудники')
     salary = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Зарплата')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
         return f"{self.position} - {self.salary}"

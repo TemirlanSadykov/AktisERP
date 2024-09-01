@@ -29,6 +29,7 @@
         <span class="operation-text">{% trans "Nodes" %}</span>
 
           <a href="{% url 'node_create' %}" class="btn create-btn">{% trans "Create" %}</a>
+          <a href="{% url 'archived_node_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
       </div>
       <ul class="clients-list">
         {% for node in nodes %}
