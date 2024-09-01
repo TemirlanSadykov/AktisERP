@@ -1240,7 +1240,7 @@ msgstr "Метров"
 #: .\production\templates\cutter\passports\create_passport_size_quantity.html:30
 #: .\production\templates\technologist\passports\create_size_quantity.html:9
 msgid "Add Size and Quantity for Passport:"
-msgstr "Добавть Размер и Количество для Паспорта"
+msgstr "Добавить Размер и Количество для Паспорта"
 
 #: .\production\templates\cutter\passports\detail.html:36
 msgid "QR Code"

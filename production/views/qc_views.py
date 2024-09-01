@@ -107,7 +107,8 @@ class OrderDetailQcView(DetailView):
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                roll = passport_size.roll.name
+                extra_key = f'{size} - {roll}'
                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
