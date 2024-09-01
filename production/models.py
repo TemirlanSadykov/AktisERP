@@ -161,6 +161,7 @@ class ModelOperation(models.Model):
 class SizeQuantity(models.Model):
     size = models.CharField(max_length=10, verbose_name='Размер')
     quantity = models.IntegerField(verbose_name='Количество')
+    color = models.CharField(verbose_name='Цвет', null=True, blank=True)
     def __str__(self):
         return f"Размер: {self.size}, Количество: {self.quantity}"
     

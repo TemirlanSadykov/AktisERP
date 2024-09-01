@@ -1150,7 +1150,8 @@ class SizeQuantityCreateView(View):
                 new_size_quantity.save()
                 order = get_object_or_404(Order, pk=pk)
                 order.size_quantities.add(new_size_quantity)
-                size_quantities = order.size_quantities.values('id', 'size', 'quantity')
+                size_quantities = order.size_quantities.values('id', 'size', 'quantity', 'color')
+                
                 return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
             else:
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)

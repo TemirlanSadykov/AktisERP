@@ -45,7 +45,7 @@
             <div id="rollMetersList" class="roll-meters-list">
                 {% for pr in passport_rolls %}
                 <li id="rm-{{ pr.id }}" class="roll-meters-item" style="padding:15px; border-radius:0px; margin-bottom: 0px;">
-                    <span class="detail"><strong>{% trans "Roll:" %}</strong> <span class="roll" data-rm-id="{{ pr.id }}" contenteditable="false">{{ pr.roll.name }}</span></span>
+                    <span class="detail"><strong>{% trans "Roll:" %}</strong> <span class="roll" data-rm-id="{{ pr.id }}" contenteditable="false">{{ pr.roll }}</span></span>
                     <span class="detail"><strong>{% trans "Meters:" %}</strong> <span class="meters" data-rm-id="{{ pr.id }}" contenteditable="false">{{ pr.meters }}</span></span>
                     <button class="edit-btn" data-rm-id="{{ pr.id }}">{% trans "Edit" %}</button>
                     <button class="delete-btn" data-rm-id="{{ pr.id }}">{% trans "Delete" %}</button>

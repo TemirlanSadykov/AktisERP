@@ -139,10 +139,11 @@ class OperationAssignmentForm(forms.ModelForm):
 class SizeQuantityForm(forms.ModelForm):
     class Meta:
         model = SizeQuantity
-        fields = ['size', 'quantity']
+        fields = ['size', 'quantity', 'color']
         widgets = {
-            'size': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Enter Size'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+            'size': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Size'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Quantity'}),
+            'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Color'})
         }
 
 class DateForm(forms.Form):
@@ -194,7 +195,7 @@ class PassportRollForm(forms.ModelForm):
 
 class SizeQuantityChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
-        return obj.size
+        return f'{obj.size} - {obj.color}'
 class RollChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return f'{obj.name} - {obj.color} - {obj.fabrics}'
