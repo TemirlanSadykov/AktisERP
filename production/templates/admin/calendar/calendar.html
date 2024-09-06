@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Admin Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container clients-wrapper maincontr">
+  <!-- Calendar -->
+  <div id="calendar"></div>
+</div>
+
+<style>
+  .fc .fc-button {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+  }
+
+  .fc .fc-button:hover {
+    background-color: darkblue;
+    border-color: darkblue;
+  }
+
+  /* Tooltip styling */
+  .tooltip {
+    position: absolute;
+    z-index: 10001;
+    background: #000000;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: block;
+  }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+  crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.min.js"
+  integrity="sha256-Fb0zP4jE3JHqu+IBB9YktLcSjI1Zc6J2b6gTjB0LpoM=" crossorigin="anonymous"></script>
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const tooltip = document.createElement('div');
+
+    tooltip.innerHTML = `<strong>$</strong><br>$`;
+    document.body.appendChild(tooltip);
+
+    // Position the tooltip near the mouse
+    tooltip.style.position = 'absolute';
+    tooltip.style.zIndex = '10001';
+    tooltip.style.backgroundColor = '#fff';
+    tooltip.style.border = '1px solid #ddd';
+    tooltip.style.padding = '10px';
+    tooltip.style.borderRadius = '4px';
+    tooltip.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+    tooltip.style.fontSize = '12px';
+    tooltip.style.height = 'auto';
+    tooltip.style.width = 'auto';
+
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      color: '#3788d8',
+      initialView: 'dayGridMonth',
+      locale: 'ru',
+      events: '{{ events_url }}',
+      eventMouseEnter: function (info) {
+        const tooltip = document.createElement('div');
+        tooltip.id = 'tooltip';
+        tooltip.innerHTML = `<strong>${info.event.title}</strong><br>${info.event.extendedProps.description}`;
+        document.body.appendChild(tooltip);
+
+        // Position the tooltip near the mouse
+        tooltip.style.position = 'absolute';
+        tooltip.style.zIndex = '10001';
+        tooltip.style.backgroundColor = '#fff';
+        tooltip.style.border = '1px solid #ddd';
+        tooltip.style.padding = '10px';
+        tooltip.style.borderRadius = '4px';
+        tooltip.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+        tooltip.style.fontSize = '12px';
+
+        info.el.addEventListener('mousemove', function (e) {
+          tooltip.style.top = e.pageY + 10 + 'px';
+          tooltip.style.left = e.pageX + 10 + 'px';
+        });
+      },
+      eventMouseLeave: function (info) {
+        const tooltips = document.getElementById('tooltip');
+        if (tooltips) {
+          tooltips.parentNode.removeChild(tooltips);
+        }
+      }
+    });
+    calendar.render();
+  });
+</script>
+{% endblock %}

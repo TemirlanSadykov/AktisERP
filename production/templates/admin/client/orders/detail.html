@@ -27,21 +27,22 @@
   <div class="container">
     <!-- <div class="card"> -->
           <div class="card-header">
-            <!-- <div class="d-flex justify-content-end"> -->
-          <div class="row">
-            <div class="col-md-9" style="margin:auto">
-            {% trans "Client Order Details:" %} {{ client_order.order_number }}
-          </div>
-            <div class="col-md-3" >
-              {% if client_order.status != client_order.COMPLETED %}
-              <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form ">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success completebutton" >{% trans "Complete" %}</button>
-              </form>
-            {% endif %}
-          </div>
-            <!-- </div> -->
-          </div>
+            <div class="row">
+              <div class="col-md-9" style="margin:auto">
+                {% trans "Client Order Details:" %} {{ client_order.order_number }}
+              </div>
+              <div class="col-md-3 text-right">
+                {% if client_order.status != client_order.COMPLETED %}
+                  <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success completebutton">{% trans "Complete" %}</button>
+                  </form>
+                {% endif %}
+                {% if client_order.is_archived %}
+                  <a href="javascript:void(0);" id="unArchiveBtn" class="btn btn-warning unarchive-btn">{% trans "Unarchive" %}</a>
+                {% endif %}
+              </div>
+            </div>
           </div>
           <div class="card-body">
               <div class="row">
@@ -50,10 +51,20 @@
                     <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
                     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
                     <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
-                      <a href="{% url 'client_order_edit' client_order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
-                      <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+                    {% if not client_order.is_archived %}  
+                      <a href="{% url 'client_order_edit' client_order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
+                    {% endif %} 
+                    <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
                   </div>
-                  <form id="deleteForm" action="{% url 'client_order_delete' client_order.pk %}" method="post" style="display:none;">
+                  <form id="archiveForm" action="{% if client_order.is_archived %} 
+                  {% url 'client_order_delete' client_order.pk %}
+                  {% else %}
+                  {% url 'client_order_archive' client_order.pk %}
+                  {% endif %}"
+                  method="post" style="display:none;">
+                    {% csrf_token %}
+                  </form>
+                  <form id="unArchiveForm" action="{% url 'client_order_unarchive' client_order.pk %}" method="post" style="display:none;">
                     {% csrf_token %}
                   </form>
                   <div class="col-md-5 text-center">
@@ -98,6 +109,16 @@
                 </div>
             </div>
         </div>
+        <div class="modal" id="unarchiveModal">
+            <div class="modal-content">
+                <span class="close" id="closeUnarchiveBtn">&times;</span>
+                <p>{% trans "Are you sure you want to unarchive this client order?" %}</p>
+                <div class="modal-buttons">
+                    <button class="btn confirm" id="confirmUnarchiveBtn">{% trans 'Confirm' %}</button>
+                    <button class="btn cancel" id="cancelUnarchiveBtn">{% trans 'Cancel' %}</button>
+                </div>
+            </div>
+        </div>
 <!-- </div> -->
       </div>
 </div>
@@ -115,7 +136,19 @@
     };
 
     document.getElementById('confirmDeleteBtn').onclick = function() {
-        document.getElementById('deleteForm').submit();
+        document.getElementById('archiveForm').submit();
     };
+
+    document.getElementById('unArchiveBtn').onclick = function() {
+        document.getElementById('unarchiveModal').style.display = 'flex';
+    };
+
+    document.getElementById('closeUnarchiveBtn').onclick = function() {
+        document.getElementById('unarchiveModal').style.display = 'none';
+    };
+
+  document.getElementById('confirmUnarchiveBtn').onclick = function() {
+      document.getElementById('unArchiveForm').submit();
+  };
 </script>
 {% endblock %}
