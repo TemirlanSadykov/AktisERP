@@ -24,7 +24,8 @@
         <!-- <div class="clients-container"> -->
             <div class="clients-header">
               <span class="operation-text">{% trans "Clients" %}</span>
-                <a href="{% url 'client_create' %}" class="btn create-btn">{% trans "Create" %}</a>
+                <a href="{% url 'client_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+                <a href="{% url 'archived_clients_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
             </div>
             <ul class="clients-list">
               {% for client in clients %}
