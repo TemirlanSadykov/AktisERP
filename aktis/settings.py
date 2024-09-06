@@ -89,12 +89,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
-        'NAME': config('MERPS_TEST_DB_NAME'),
-        'USER': config('MERPS_TEST_DB_USER'),
-        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
-        'HOST': config('MERPS_TEST_DB_HOST'),
-        'PORT': config('MERPS_TEST_DB_PORT'),
+        'ENGINE': config('PROD_ARITEX_DB_ENGINE'),
+        'NAME': config('PROD_ARITEX_DB_NAME'),
+        'USER': config('PROD_ARITEX_DB_USER'),
+        'PASSWORD': config('PROD_ARITEX_DB_PASSWORD'),
+        'HOST': config('PROD_ARITEX_DB_HOST'),
+        'PORT': config('PROD_ARITEX_DB_PORT'),
     }
 }
 
@@ -189,7 +189,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://thriving-achievement-production.up.railway.app', 'https://aktiserp.up.railway.app', 'https://merps-test.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://prod-aritex.up.railway.app']
 
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
