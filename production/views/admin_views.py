@@ -22,6 +22,9 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
+
+from django.db.models.functions import TruncMonth
+
 import itertools
 
 from ..decorators import admin_required
@@ -1232,6 +1235,50 @@ def client_order_complete(request, pk):
 
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class OrderCalendarView(ListView):
+    model = ClientOrder
+    template_name = 'admin/calendar/calendar.html'
+    context_object_name = 'orders'
+
+    def get_queryset(self):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset()
+        return queryset.annotate(month=TruncMonth('term')).filter(month__month=current_month, month__year=current_year).values('id', 'order_number', 'term')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['events_url'] = reverse('order_calendar_events')
+        return context
+    
+
+class OrderCalendarEventsView(View):
+    def get(self, request, *args, **kwargs):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        client_orders = ClientOrder.objects.annotate(month=TruncMonth('term')).filter(
+            month__month=current_month, month__year=current_year, is_archived=False
+        ).select_related('client').prefetch_related('orders__model')
+
+        events = []
+        for client_order in client_orders:
+            model_names = ', '.join(
+                [order.model.name for order in client_order.orders.all()]
+            )
+
+            description = f"Client: {client_order.client.name}, Models: {model_names}"
+            
+            events.append({
+                'id': client_order.id,
+                'title': client_order.order_number,
+                'start': client_order.term.isoformat(),
+                'end': client_order.term.isoformat(),
+                'description': description,
+                'url': reverse('client_order_detail', kwargs={'pk': client_order.id})
+            })
+        
+        return JsonResponse(events, safe=False)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderCreateView(CreateView):

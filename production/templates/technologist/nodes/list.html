@@ -24,11 +24,11 @@
 </nav>
 
 <div class="container clients-wrapper maincontr">
-  <div class="clients-container">
+  {% comment %} <div class="clients-container"> {% endcomment %}
       <div class="clients-header">
         <span class="operation-text">{% trans "Nodes" %}</span>
 
-          <a href="{% url 'node_create' %}" class="btn create-btn">{% trans "Create" %}</a>
+          <a href="{% url 'node_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
           <a href="{% url 'archived_node_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
       </div>
       <ul class="clients-list">
@@ -62,6 +62,6 @@
             </ul>
             {% endif %}
         </nav>
-  </div>
+  {% comment %} </div> {% endcomment %}
 </div>
 {% endblock %}

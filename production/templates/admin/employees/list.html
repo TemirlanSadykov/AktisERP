@@ -26,7 +26,7 @@
         <div class="d-flex justify-content-end mb-3 ">
           <span class="operation-text">{% trans "Employees" %}</span>
             <a href="{% url 'employee_create' %}" class=" btn create-btn mr-2 " >{% trans "Create" %}</a>
-            <a href="{% url 'archived_employee_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+            <a href="{% url 'archived_employee_list' %}" class="btn create-btn mr-2 ">{% trans "Archived" %}</a>
             <button type="button" data-toggle="modal"  data-target="#uploadModal" class="btn create-btn" id="openUploadPopup">{% trans "Upload" %}</button>
         </div><hr>
         <ul class="list-group" >
