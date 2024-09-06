@@ -37,15 +37,14 @@
     {% endif %} {% endcomment %}
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
-        <div class="row">
-          <div class="col-lg-10 col-md-8 col-sm-4">
-            <h4 class="font-weight-bold">{% trans 'Client Orders' %}</h4>
-          </div>
-          <div class="col-lg-2 col-md-4 col-sm-2 text-md-right text-sm-right">
-            <a href="{% url 'client_order_create' %}" class="btn btn-primary">{% trans 'Create' %}</a>
-            <a href="{% url 'archived_client_order_list' %}" class="btn create-btn">{% trans 'Archived' %}</a>
-          </div>
-        </div>
+        {% comment %} <div class="row"> {% endcomment %}
+          <div class="clients-header">
+            <span class="operation-text">{% trans "Client Orders" %}</span>
+
+              <a href="{% url 'client_order_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+              <a href="{% url 'archived_client_order_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+            </div>
+        {% comment %} </div> {% endcomment %}
         <br />
         {% comment %} {% if not client_order.is_archived %}
           {% endcomment %}

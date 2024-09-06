@@ -103,17 +103,13 @@
 
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
-        <div class="row">
-          <div class="col-lg-6 col-md-6 col-sm-4">
-            <h4 class="font-weight-bold">{% trans 'Operations' %}</h4>
-          </div>
-          <div class="col-lg-6 col-md-6 col-sm-2 text-md-right text-sm-right">
-            <a href="{% url 'operation_create' %}" class="btn btn-create buttonsetting">{% trans 'Create' %}</a>
-            <button type="button" data-toggle="modal" data-target="#uploadModal" class="btn btn-create buttonsetting" id="openUploadPopup">{% trans 'Upload from Excel' %}</button>
-            <a href="{% url 'operation_download' %}" class="btn btn-create buttonsetting">{% trans 'Download Excel' %}</a>
+        <div class="clients-header">
+          <span class="operation-text">{% trans "Operations" %}</span>
+            <a href="{% url 'operation_create' %}" class="btn btn-create buttonsetting mr-2 ">{% trans 'Create' %}</a>
+            <button type="button" data-toggle="modal" data-target="#uploadModal" class="btn btn-create buttonsetting mr-2 " id="openUploadPopup">{% trans 'Upload from Excel' %}</button>
+            <a href="{% url 'operation_download' %}" class="btn btn-create buttonsetting mr-2 ">{% trans 'Download Excel' %}</a>
             <a href="{% url 'archived_operation_list' %}" class="btn btn-create buttonsetting">{% trans 'Archived' %}</a>
           </div>
-        </div>
       </div>
       <br />
       <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;" />
