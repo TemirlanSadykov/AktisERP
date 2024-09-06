@@ -195,25 +195,30 @@ class PassportRollForm(forms.ModelForm):
 class SizeQuantityChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
-
+class RollChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return f'{obj.name} - {obj.color} - {obj.fabrics}'
 class PassportSizeForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}) ) 
+    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}))
+    roll = RollChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}))  # Add this line
 
     class Meta:
         model = PassportSize
-        fields = ['size_quantity', 'quantity']
+        fields = ['size_quantity', 'quantity', 'roll']  # Include 'roll' here
         widgets = {
             'size_quantity': forms.Select(attrs={'class': 'form-control'}),
             'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
+            'roll': forms.Select(attrs={'class': 'form-control'}),  # Add this line
         }
 
     def __init__(self, *args, **kwargs):
         passport_id = kwargs.pop('passport_id', None)
         super().__init__(*args, **kwargs)
         
-        if (passport_id):
+        if passport_id:
             passport = Passport.objects.get(pk=passport_id)
             self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
+            self.fields['roll'].queryset = passport.rolls.all()  # Add this line to filter rolls based on the passport
 
 class OperationForm(forms.ModelForm):
     class Meta:
