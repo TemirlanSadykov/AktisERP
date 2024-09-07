@@ -1,39 +1,61 @@
 
   document.addEventListener("DOMContentLoaded", function () {
-    // Get the current URL path and split it into segments
-    const path = window.location.pathname;
-    const segments = path.split("/").filter(Boolean);  // Remove empty segments
-
     const breadcrumbList = document.getElementById("breadcrumb");
 
-    // Add the "Home" breadcrumb
-    // const homeCrumb = document.createElement("li");
-    // homeCrumb.classList.add("breadcrumb-item");
-    // const homeLink = document.createElement("a");
-    // homeLink.href = "/";
-    // homeLink.textContent = "Home";
-    // homeCrumb.appendChild(homeLink);
-    // breadcrumbList.appendChild(homeCrumb);
-
-    // Create breadcrumbs for each segment
     let cumulativePath = "";
-    segments.forEach((segment, index) => {
-      cumulativePath += `/${segment}`;
-      const crumb = document.createElement("li");
+    bread_dict = reteriving_breadcrumb()
+    bread_dict.forEach((segment, index) => {
+        segment = JSON.parse(segment)
+        segment = Object.entries(segment)
+        segment.forEach(([key, value]) =>  {
+            cumulativePath += `/${value}`;
+            const crumb = document.createElement("li");
 
-      // If it's the last segment, make it active, otherwise make it a link
-      if (index === segments.length - 1) {
-        crumb.classList.add("breadcrumb-item", "active");
-        crumb.textContent = segment.charAt(0).toUpperCase() + segment.slice(1);
-        crumb.setAttribute("aria-current", "page");
-      } else {
-        crumb.classList.add("breadcrumb-item");
-        const link = document.createElement("a");
-        link.href = cumulativePath;
-        link.textContent = segment.charAt(0).toUpperCase() + segment.slice(1);
-        crumb.appendChild(link);
-      }
-      breadcrumbList.appendChild(crumb);
-      console.log(breadcrumbList)
-    });
+            if (index === bread_dict.length - 1) {
+                crumb.classList.add("breadcrumb-item", "active");
+                crumb.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+                crumb.setAttribute("aria-current", "page");
+            } else {
+                crumb.classList.add("breadcrumb-item");
+                const link = document.createElement("a");
+                link.href = cumulativePath;
+                link.addEventListener('click', (event) => {
+                    remove_breadcrump(key);
+                });
+                link.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+                crumb.appendChild(link);
+            }
+            breadcrumbList.appendChild(crumb);
+        })        
+    })
   });
+
+function remove_breadcrump(item_key){
+    let storedTags = localStorage.getItem('bread');
+    let tagsArray = storedTags ? JSON.parse(storedTags) : [];
+
+    let keys = Object.keys(tagsArray);
+    const index = keys.indexOf(item_key);
+    tagsArray = tagsArray.slice(0, index);
+    localStorage.setItem('bread', JSON.stringify(tagsArray));
+}
+
+function new_breadcrump(item){
+    let items = []
+    items.push(JSON.stringify(item))
+    localStorage.setItem('bread', JSON.stringify(items));
+
+}
+
+function saving_breadcrump(item_key, item){
+    let storedTags = localStorage.getItem('bread');
+    let tagsArray = storedTags ? JSON.parse(storedTags) : [];
+    let newTag = JSON.stringify({[item] :item_key});
+    tagsArray.push(newTag)
+    localStorage.setItem('bread', JSON.stringify(tagsArray));
+}
+
+function reteriving_breadcrumb(){
+    let storedTags = localStorage.getItem('bread');
+    return storedTags ? JSON.parse(storedTags) : [];
+}

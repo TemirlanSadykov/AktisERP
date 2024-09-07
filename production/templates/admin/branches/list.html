@@ -35,8 +35,8 @@
               </div>
             <ul class="clients-list">
               {% for branch in branches %}
-              <a href="{% url 'branch_detail' branch.pk %}">
-                <li class="list-group-item" style="padding:18px;">
+              <a href="{% url 'branch_detail' branch.pk %}" onclick="saving_breadcrump('{{ branch.pk }}', '{{ branch.name }}')">
+                <li class="list-group-item" style="padding:18px;" >
                   {{ branch.name }}
                 </li>
               </a>

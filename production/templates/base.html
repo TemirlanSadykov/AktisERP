@@ -192,9 +192,9 @@
                         data-id="attendances">
                         <i class="fas fa-clipboard-list  fa-fw"></i><span class="sidetext">{% trans 'Attendances' %}</span>
                     </a>
-                    <a href="{% url 'branch_list' %}"
+                    <a href="{% url 'branch_list' %}" onclick="new_breadcrump({'branches': 'production/admin/branches'})"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="branches">
-                        <i class="fas fa-server  fa-fw"></i><span class="sidetext">{% trans 'Branches' %}</span>
+                        <i class="fas fa-server  fa-fw"></i><span class="sidetext" onclick="new_breadcrump({'branches': 'branches'})">{% trans 'Branches' %}</span>
                     </a>
                     <a href="{% url 'salary_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="salaries">
