@@ -61,7 +61,4 @@ def clock_in_out(request):
     user_profile.status = not user_profile.status
     user_profile.save()
 
-    return JsonResponse({
-        'error': 'Clock-in/out successful',
-        'distance': distance
-    })
+    return JsonResponse({'success': 'Clock-in/out successful'})
