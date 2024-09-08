@@ -70,7 +70,7 @@
     const fp = await FingerprintJS.load();
     const result = await fp.get();
     const fingerprint = result.visitorId;
-
+    alert(result['version']);
     // Get location
     getLocation(function(location) {
       if (location) {
@@ -86,11 +86,12 @@
             latitude: location.latitude,
             longitude: location.longitude
           })
-        }).then(response => {
-          if (response.ok) {
+        }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
             window.location.href = "{% url 'user_redirect' %}";
-          } else {
-            alert("Clock-in/out failed. Please try again.");
+          } else if (data.error) {
+            alert(`Clock-in/out failed: ${data.error}. You are ${data.distance.toFixed(2)} meters away from the workplace.`);
           }
         }).catch(error => {
           console.error("Error:", error);

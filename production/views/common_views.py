@@ -50,27 +50,18 @@ def clock_in_out(request):
     employee_location = (latitude, longitude)
     workplace_location = (WORKPLACE_LAT, WORKPLACE_LON)
     distance = geodesic(employee_location, workplace_location).meters
-    print(distance)
-    print(workplace_location)
-    print("----------------")
-    print(employee_location)
 
     if distance > ALLOWED_RADIUS:
-        print("You are outside the allowed clock-in area")
-        return JsonResponse({'error': 'You are outside the allowed clock-in area'}, status=400)
+        return JsonResponse({
+            'error': 'You are outside the allowed clock-in area',
+            'distance': distance,
+        }, status=400)
 
     # Proceed with clock-in/out
     user_profile.status = not user_profile.status
     user_profile.save()
 
-    # Record the clock-in/out along with fingerprint and location
-    # EmployeeAttendance.objects.create(
-    #     employee=user_profile,
-    #     is_clock_in=user_profile.status,
-    #     branch=user_profile.branch,
-    #     fingerprint=fingerprint,
-    #     latitude=latitude,
-    #     longitude=longitude
-    # )
-
-    return JsonResponse({'success': 'Clock-in/out successful'})
+    return JsonResponse({
+        'error': 'Clock-in/out successful',
+        'distance': distance
+    })
