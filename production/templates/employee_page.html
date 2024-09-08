@@ -70,7 +70,6 @@
     const fp = await FingerprintJS.load();
     const result = await fp.get();
     const fingerprint = result.visitorId;
-    alert(result['version']);
     // Get location
     getLocation(function(location) {
       if (location) {
