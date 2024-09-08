@@ -28,8 +28,8 @@ def user_redirect(request):
         return redirect('index')
 
 # Set the workplace location
-WORKPLACE_LAT = 35.38360653021277     # Example latitude
-WORKPLACE_LON = 139.44952893343785  # Example longitude
+WORKPLACE_LAT = 42.8875192     # Example latitude
+WORKPLACE_LON = 74.5815609  # Example longitude
 ALLOWED_RADIUS = 200  # 100 meters radius
 
 @login_required
