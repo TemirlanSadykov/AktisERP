@@ -42,7 +42,6 @@ def clock_in_out(request):
     fingerprint = data.get('fingerprint')
     latitude = data.get('latitude')
     longitude = data.get('longitude')
-    print(WORKPLACE_LAT, WORKPLACE_LON, ALLOWED_RADIUS)
 
     if not latitude or not longitude:
         return JsonResponse({'error': 'Location not provided'}, status=400)
