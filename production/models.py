@@ -21,7 +21,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
     employee_id = models.CharField(max_length=100, verbose_name='ID сотрудника')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
+    fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')  # New field for fingerprint
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['employee_id', 'branch'], name='unique_employee_id_per_branch')
@@ -62,9 +62,11 @@ class EmployeeAttendance(models.Model):
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_clock_in = models.BooleanField(default=False)
+    distance = models.FloatField(null=True, blank=True, verbose_name='Distance from Workplace (meters)')
+    fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
-        return f"{self.employee} - {event_type} at {self.timestamp}"
+        return f"{self.employee} - {event_type} at {self.timestamp} (Distance: {self.distance}m)"
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
