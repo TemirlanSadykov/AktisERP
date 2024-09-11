@@ -89,12 +89,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
-        'NAME': config('MERPS_TEST_DB_NAME'),
-        'USER': config('MERPS_TEST_DB_USER'),
-        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
-        'HOST': config('MERPS_TEST_DB_HOST'),
-        'PORT': config('MERPS_TEST_DB_PORT'),
+        'ENGINE': config('PROD_CHOLPON_DB_ENGINE'),
+        'NAME': config('PROD_CHOLPON_DB_NAME'),
+        'USER': config('PROD_CHOLPON_DB_USER'),
+        'PASSWORD': config('PROD_CHOLPON_DB_PASSWORD'),
+        'HOST': config('PROD_CHOLPON_DB_HOST'),
+        'PORT': config('PROD_CHOLPON_DB_PORT'),
     }
 }
 
@@ -189,12 +189,12 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://merps-test.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://prod-cholpon.up.railway.app']
 
 # Load the environment variables
-WORKPLACE_LAT = config('MERPS_TEST_WORKPLACE_LAT', cast=float)
-WORKPLACE_LON = config('MERPS_TEST_WORKPLACE_LON', cast=float)
-ALLOWED_RADIUS = config('MERPS_TEST_ALLOWED_RADIUS', cast=int)
+WORKPLACE_LAT = config('PROD_CHOLPON_WORKPLACE_LAT', cast=float)
+WORKPLACE_LON = config('PROD_CHOLPON_WORKPLACE_LON', cast=float)
+ALLOWED_RADIUS = config('PROD_CHOLPON_ALLOWED_RADIUS', cast=int)
 
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
