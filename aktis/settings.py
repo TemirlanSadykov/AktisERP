@@ -13,8 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from decouple import config
-from dotenv import load_dotenv
-load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -91,12 +90,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('MERPS_TEST_DB_ENGINE'),
-        'NAME': os.getenv('MERPS_TEST_DB_NAME'),
-        'USER': os.getenv('MERPS_TEST_DB_USER'),
-        'PASSWORD': os.getenv('MERPS_TEST_DB_PASSWORD'),
-        'HOST': os.getenv('MERPS_TEST_DB_HOST'),
-        'PORT': os.getenv('MERPS_TEST_DB_PORT'),
+        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
+        'NAME': config('MERPS_TEST_DB_NAME'),
+        'USER': config('MERPS_TEST_DB_USER'),
+        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
+        'HOST': config('MERPS_TEST_DB_HOST'),
+        'PORT': config('MERPS_TEST_DB_PORT'),
     }
 }
 

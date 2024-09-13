@@ -19,7 +19,7 @@ numpy==1.26.4
 openpyxl==3.1.2
 pandas==2.2.2
 pillow==10.3.0
-psycopg2-binary
+psycopg2==2.9.9
 pydantic==2.6.4
 pydantic_core==2.16.3
 python-barcode==0.15.1
