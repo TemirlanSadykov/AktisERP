@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from decouple import config
-
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     'django_select2',
     'whitenoise.runserver_nostatic',
     'storages',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -89,12 +91,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
-        'NAME': config('MERPS_TEST_DB_NAME'),
-        'USER': config('MERPS_TEST_DB_USER'),
-        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
-        'HOST': config('MERPS_TEST_DB_HOST'),
-        'PORT': config('MERPS_TEST_DB_PORT'),
+        'ENGINE': os.getenv('MERPS_TEST_DB_ENGINE'),
+        'NAME': os.getenv('MERPS_TEST_DB_NAME'),
+        'USER': os.getenv('MERPS_TEST_DB_USER'),
+        'PASSWORD': os.getenv('MERPS_TEST_DB_PASSWORD'),
+        'HOST': os.getenv('MERPS_TEST_DB_HOST'),
+        'PORT': os.getenv('MERPS_TEST_DB_PORT'),
     }
 }
 
@@ -191,6 +193,14 @@ LOCALE_PATHS = [
 
 CSRF_TRUSTED_ORIGINS = ['https://merps-test.up.railway.app']
 
+# Load the environment variables
+# WORKPLACE_LAT = config('MERPS_TEST_WORKPLACE_LAT', cast=float)
+# WORKPLACE_LON = config('MERPS_TEST_WORKPLACE_LON', cast=float)
+# ALLOWED_RADIUS = config('MERPS_TEST_ALLOWED_RADIUS', cast=int)
+CRONJOBS = [
+    ('* * * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
+    
+]
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 # AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
