@@ -32,7 +32,7 @@ class UserProfile(models.Model):
     CUTTER = 3
     QC = 4
     PACKER = 5
-    KEEPER = 5
+    KEEPER = 6
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -51,6 +51,7 @@ class UserProfile(models.Model):
         ('ironing_station', 'Утюжный участок'),
         ('quality_control', 'ОТК'),
         ('package', 'Упаковка'),
+        ('warehouse', 'Склад'),
         ('interns', 'Практиканты'),
         ('others', 'Остальные'),
     ]
