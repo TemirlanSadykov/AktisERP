@@ -191,6 +191,11 @@ LOCALE_PATHS = [
 
 CSRF_TRUSTED_ORIGINS = ['https://prod-aritex.up.railway.app']
 
+# Load the environment variables
+WORKPLACE_LAT = config('PROD_ARITEX_WORKPLACE_LAT', cast=float)
+WORKPLACE_LON = config('PROD_ARITEX_WORKPLACE_LON', cast=float)
+ALLOWED_RADIUS = config('PROD_ARITEX_ALLOWED_RADIUS', cast=int)
+
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 # AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')

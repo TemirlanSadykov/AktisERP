@@ -108,8 +108,8 @@ class OrderDetailTechnologistView(DetailView):
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                roll = passport_size.roll.name
-                extra_key = f'{size} - {roll}'
+                color = passport_size.size_quantity.color
+                extra_key = f'{size} - {color}'
                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
                 size_data[extra_key][passport.id]['stage'] = passport_size.stage

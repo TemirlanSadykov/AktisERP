@@ -22,61 +22,88 @@
     </ul>
   </div>
 </nav>
+
 <div class="clock-container">
   {% if request.user.userprofile.type != 0 %}
   <h1 class="clock-heading">{% trans 'Clock In/Out' %}</h1>
-<form action="{% url 'clock_in_out' %}" method="post">
-  {% csrf_token %}
-  <button type="submit" class="clock-btn">
+  <button id="clock-btn" class="clock-btn">
     {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
   </button>
-</form>
-{% endif %}
+  {% endif %}
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+<script>
+  // Function to get location
+  function getLocation(callback) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        callback({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      }, function(error) {
+        alert("Unable to retrieve your location. Please check location settings.");
+        callback(null);
+      });
+    } else {
+      alert("Geolocation is not supported by this browser.");
+      callback(null);
+    }
+  }
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  // Function to get browser fingerprint and submit clock-in data
+  async function clockInOut() {
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    const fingerprint = result.visitorId;
+    // Get location
+    getLocation(function(location) {
+      if (location) {
+        // Send fingerprint and location to the backend
+        fetch("{% url 'clock_in_out' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+            fingerprint: fingerprint,
+            latitude: location.latitude,
+            longitude: location.longitude
+          })
+        }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = "{% url 'user_redirect' %}";
+          } else if (data.error) {
+            alert(`Clock-in/out failed: ${data.error}. You are ${data.distance.toFixed(2)} meters away from the workplace.`);
+          }
+        }).catch(error => {
+          console.error("Error:", error);
+          alert("Clock-in/out failed due to an error.");
+        });
+      }
+    });
+  }
 
+  // Attach event listener to clock-in/out button
+  document.getElementById("clock-btn").addEventListener("click", function() {
+    clockInOut();
+  });
+</script>
 
-
-{% comment %}
-<div class="dashboard-container">
-  <h1>{% trans 'Employee Dashboard' %}</h1>
-  <p>{% trans 'Welcome,' %} {{ request.user.username }}! {% trans "You're logged in as an Employee." %}</p>
-  
-  <div class="row">
-    {% if request.user.userprofile.type != 0 %}
-      <div class="col-xs-12 col-sm-6 col-md-4 mb-4">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title">{% trans 'Clock In/Out' %}</h5>
-            <form action="{% url 'clock_in_out' %}" method="post">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-primary btn-block btn-lg">
-                {% if request.user.userprofile.status %}{% trans 'Clock Out' %}{% else %}{% trans 'Clock In' %}{% endif %}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    {% endif %}
-    
-    <div class="col-xs-12 col-sm-6 col-md-8 mb-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">{% trans 'Your Tasks' %}</h5>
-          {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
-            <div class="btn-group-vertical btn-block">
-              <a href="{% url 'done_works_list' %}" class="btn btn-success btn-lg">{% trans 'Done Work' %}</a>
-              <a href="{% url 'pending_works_list' %}" class="btn btn-warning btn-lg">{% trans 'Pending Work' %}</a>
-              <a href="{% url 'reassigned_works_list' %}" class="btn btn-primary btn-lg">{% trans 'Reassigned Work' %}</a>
-            </div>
-          {% else %}
-            <p><em>{% trans 'You need to be clocked in to access your tasks and updates.' %}</em></p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-  
-</div>
-{% endcomment %}
 {% endblock %}

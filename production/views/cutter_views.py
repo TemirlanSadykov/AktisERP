@@ -102,36 +102,45 @@ class OrderDetailCutterView(DetailView):
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                roll = passport_size.roll.name
-                extra_key = f'{size} - {roll}'
-                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport.id]['stage'] = passport_size.stage
-                size_data[extra_key][passport.id]['extra'] = passport_size.extra
-                total_per_size[size] += passport_size.quantity
+                color = passport_size.size_quantity.color
+                key = f'{size} - {color}'  # Use only size and color for the key
+                size_data[key][passport.id]['quantity'] += passport_size.quantity
+                size_data[key][passport.id]['passport_size_id'] = passport_size.id
+                size_data[key][passport.id]['stage'] = passport_size.stage
+                size_data[key][passport.id]['extra'] = passport_size.extra
+                total_per_size[key] += passport_size.quantity  # Aggregate total per size-color combination
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
+        required_missing = {}
+        required_data = []
+
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
+            missing = required - total_per_size.get(key, 0)  # Compare against aggregated total
+
+            # Add to required_missing
+            required_missing[key] = {
+                'required': required,
+                'missing': missing
+            }
+
+            # Add to required_data for the new table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
 
         # Adjusting for sizes in passports not in order sizes
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-        # Sorting size_data keys
-        def sort_key(x):
-            parts = x.split('-')
-            try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
-
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        for key in total_per_size:
+            if key not in required_missing:
+                required_missing[key] = {'required': 0, 'missing': -total_per_size[key]}
 
         context.update({
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+            'size_data': dict(size_data),
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
+            'required_data': required_data,  # Data for the "Required Quantities" table
             'passports': passports,
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
             'sidebar_type': 'cutter'
