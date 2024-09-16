@@ -1338,6 +1338,208 @@ class EquipmentDeleteView(DeleteView):
         return context
 
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorListView(ListView):
+    model = Color
+    template_name = 'technologist/color/list.html'
+    context_object_name = 'color'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Color.objects.filter(is_archived=False).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedColorListView(ListView):
+    model = Color
+    template_name = 'technologist/color/list.html'
+    context_object_name = 'color'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Color.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorArchiveView(UpdateView):
+    model = Color
+    template_name = 'technologist/color/delete.html'
+    success_url = reverse_lazy('color_list')
+
+    def post(self, request, *args, **kwargs):
+        color = self.get_object()
+        color.is_archived = True
+        color.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorUnArchiveView(UpdateView):
+    model = Color
+    template_name = 'technologist/color/delete.html'
+    success_url = reverse_lazy('color_list')
+
+    def post(self, request, *args, **kwargs):
+        color = self.get_object()
+        color.is_archived = False
+        color.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorCreateView(CreateView):
+    model = Color
+    form_class = ColorForm
+    template_name = 'technologist/color/create.html'
+    success_url = reverse_lazy('color_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorDetailView(DetailView):
+    model = Color
+    template_name = 'technologist/color/detail.html'
+    context_object_name = 'color'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorUpdateView(UpdateView):
+    model = Color
+    form_class = ColorForm
+    template_name = 'technologist/color/edit.html'
+    success_url = reverse_lazy('color_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ColorDeleteView(DeleteView):
+    model = Color
+    template_name = 'technologist/color/delete.html'
+    success_url = reverse_lazy('color_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsListView(ListView):
+    model = Fabrics
+    template_name = 'technologist/fabrics/list.html'
+    context_object_name = 'fabrics'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Fabrics.objects.filter(is_archived=False).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedFabricsListView(ListView):
+    model = Fabrics
+    template_name = 'technologist/fabrics/list.html'
+    context_object_name = 'fabrics'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Fabrics.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsArchiveView(UpdateView):
+    model = Fabrics
+    template_name = 'technologist/fabrics/delete.html'
+    success_url = reverse_lazy('fabrics_list')
+
+    def post(self, request, *args, **kwargs):
+        fabric = self.get_object()
+        fabric.is_archived = True
+        fabric.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsUnArchiveView(UpdateView):
+    model = Fabrics
+    template_name = 'technologist/fabrics/delete.html'
+    success_url = reverse_lazy('fabrics_list')
+
+    def post(self, request, *args, **kwargs):
+        fabric = self.get_object()
+        fabric.is_archived = False
+        fabric.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsCreateView(CreateView):
+    model = Fabrics
+    form_class = FabricsForm
+    template_name = 'technologist/fabrics/create.html'
+    success_url = reverse_lazy('fabrics_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsDetailView(DetailView):
+    model = Fabrics
+    template_name = 'technologist/fabrics/detail.html'
+    context_object_name = 'fabric'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsUpdateView(UpdateView):
+    model = Fabrics
+    form_class = FabricsForm
+    template_name = 'technologist/fabrics/edit.html'
+    success_url = reverse_lazy('fabrics_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class FabricsDeleteView(DeleteView):
+    model = Fabrics
+    template_name = 'technologist/fabrics/delete.html'
+    success_url = reverse_lazy('fabrics_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
 @login_required
 @technologist_required
 def mark_as_qc(request, passport_size_id):

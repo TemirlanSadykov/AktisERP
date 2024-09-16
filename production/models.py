@@ -97,6 +97,20 @@ class Equipment(models.Model):
     def __str__(self):
         return self.name
     
+class Color(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+    
+class Fabrics(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+    
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
@@ -206,9 +220,8 @@ class ClientOrder(models.Model):
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
-    color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, null=True, verbose_name='Ткани')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='orders', null=True, blank=True, verbose_name='Цвет')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='orders', null=True, blank=True, verbose_name='Ткань')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2

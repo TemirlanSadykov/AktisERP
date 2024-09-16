@@ -74,6 +74,12 @@
                     <a href="{% url 'equipment_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="Equipment"><i class="fas fa-clipboard-list fa-fw"></i><span class="sidetext">{% trans 'Equipment' %}</span></a>
+                    <a href="{% url 'color_list' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="Color"><i class="fas fa-paint-roller fa-fw"></i><span class="sidetext">{% trans 'Color' %}</span></a>
+                    <a href="{% url 'fabrics_list' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="Fabrics"><i class="fas fa-toilet-paper fa-fw"></i><span class="sidetext">{% trans 'Fabrics' %}</span></a>
                     {% else %}
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
