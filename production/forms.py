@@ -237,7 +237,7 @@ class OperationForm(forms.ModelForm):
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
-        fields = ['name', 'meters']
+        fields = ['name', 'color', 'fabrics', 'meters', 'width']
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
                 'color': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
@@ -341,11 +341,11 @@ class ClientOrderForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['model', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
+        fields = ['model', 'colors', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
             'model': forms.Select(attrs={'class': 'form-control'}),
-            'color': forms.Select(attrs={'class': 'form-control'}),
-            'fabrics': forms.Select(attrs={'class': 'form-control'}),
+            'colors': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'fabrics': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -355,12 +355,12 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
         self.fields['model'].queryset = Model.objects.all()
-        self.fields['color'].queryset = Color.objects.all()
+        self.fields['colors'].queryset = Color.objects.all()
         self.fields['fabrics'].queryset = Fabrics.objects.all()
 
         # Make certain fields optional in the form
         self.fields['model'].required = False
-        self.fields['color'].required = False
+        self.fields['colors'].required = False
         self.fields['fabrics'].required = False
 
 class NodeForm(forms.ModelForm):

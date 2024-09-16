@@ -97,7 +97,6 @@ class Roll(models.Model):
     width = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Ширина')
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
-   
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
@@ -220,8 +219,8 @@ class ClientOrder(models.Model):
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='orders', null=True, blank=True, verbose_name='Цвет')
-    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='orders', null=True, blank=True, verbose_name='Ткань')
+    colors = models.ManyToManyField(Color, related_name='orders', blank=True, verbose_name='Цвета')
+    fabrics = models.ManyToManyField(Fabrics, related_name='orders', blank=True, verbose_name='Ткани')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
