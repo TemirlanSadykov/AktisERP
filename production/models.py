@@ -32,6 +32,7 @@ class UserProfile(models.Model):
     CUTTER = 3
     QC = 4
     PACKER = 5
+    KEEPER = 5
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -39,6 +40,7 @@ class UserProfile(models.Model):
         (CUTTER, 'Закройщик'),
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),
+        (KEEPER, 'Кладовщик'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=False, verbose_name='Статус')
