@@ -237,12 +237,13 @@ class OperationForm(forms.ModelForm):
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
-        fields = ['name', 'color', 'fabrics', 'meters']
+        fields = ['name', 'meters']
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
-                'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
-                'fabrics': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
+                'color': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
+                'fabrics': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
                 'meters': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter meters'}),
+                'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter width'}),
             }
     
 class AssortmentForm(forms.ModelForm):

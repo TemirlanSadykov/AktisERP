@@ -75,11 +75,26 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
+class Color(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+    
+class Fabrics(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+
 class Roll(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
-    color = models.CharField(max_length=50, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, verbose_name='Ткани')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Цвет')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Ткань')
+    width = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Ширина')
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
    
@@ -89,22 +104,7 @@ class Roll(models.Model):
     @property
     def available_meters(self):
         return self.meters - self.used_meters
-
 class Equipment(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return self.name
-    
-class Color(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return self.name
-    
-class Fabrics(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
