@@ -237,12 +237,13 @@ class OperationForm(forms.ModelForm):
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
-        fields = ['name', 'color', 'fabrics', 'meters']
+        fields = ['name', 'color', 'fabrics', 'meters', 'width']
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
-                'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
-                'fabrics': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
+                'color': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
+                'fabrics': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
                 'meters': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter meters'}),
+                'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter width'}),
             }
     
 class AssortmentForm(forms.ModelForm):
@@ -340,12 +341,11 @@ class ClientOrderForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
+        fields = ['model', 'colors', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
             'model': forms.Select(attrs={'class': 'form-control'}),
-            'assortment': forms.Select(attrs={'class': 'form-control'}),
-            'color': forms.TextInput(attrs={'class': 'form-control'}),
-            'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
+            'colors': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'fabrics': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -355,21 +355,13 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
         self.fields['model'].queryset = Model.objects.all()
-        self.fields['assortment'].queryset = Assortment.objects.all()
+        self.fields['colors'].queryset = Color.objects.all()
+        self.fields['fabrics'].queryset = Fabrics.objects.all()
 
         # Make certain fields optional in the form
         self.fields['model'].required = False
-        self.fields['assortment'].required = False
-
-class OrderFormTechnologist(forms.ModelForm):
-    class Meta:
-        model = Order
-        fields = ['model', 'assortment']
-
-    def __init__(self, *args, **kwargs):
-        super(OrderFormTechnologist, self).__init__(*args, **kwargs)
-        self.fields['model'].queryset = Model.objects.all()
-        self.fields['assortment'].queryset = Assortment.objects.all()
+        self.fields['colors'].required = False
+        self.fields['fabrics'].required = False
 
 class NodeForm(forms.ModelForm):
     class Meta:
@@ -389,6 +381,22 @@ class EquipmentForm(forms.ModelForm):
         fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter equipment name'}),
+        }
+
+class ColorForm(forms.ModelForm):
+    class Meta:
+        model = Color
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color name'}),
+        }
+
+class FabricsForm(forms.ModelForm):
+    class Meta:
+        model = Fabrics
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
         }
 
 class SizeQuantityChoiceField(forms.ModelChoiceField):

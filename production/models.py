@@ -21,7 +21,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
     employee_id = models.CharField(max_length=100, verbose_name='ID сотрудника')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
+    fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')  # New field for fingerprint
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['employee_id', 'branch'], name='unique_employee_id_per_branch')
@@ -32,6 +32,7 @@ class UserProfile(models.Model):
     CUTTER = 3
     QC = 4
     PACKER = 5
+    KEEPER = 6
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -39,6 +40,7 @@ class UserProfile(models.Model):
         (CUTTER, 'Закройщик'),
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),
+        (KEEPER, 'Кладовщик'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=False, verbose_name='Статус')
@@ -49,6 +51,7 @@ class UserProfile(models.Model):
         ('ironing_station', 'Утюжный участок'),
         ('quality_control', 'ОТК'),
         ('package', 'Упаковка'),
+        ('warehouse', 'Склад'),
         ('interns', 'Практиканты'),
         ('others', 'Остальные'),
     ]
@@ -62,9 +65,11 @@ class EmployeeAttendance(models.Model):
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_clock_in = models.BooleanField(default=False)
+    distance = models.FloatField(null=True, blank=True, verbose_name='Distance from Workplace (meters)')
+    fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
-        return f"{self.employee} - {event_type} at {self.timestamp}"
+        return f"{self.employee} - {event_type} at {self.timestamp} (Distance: {self.distance}m)"
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
@@ -73,21 +78,34 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
+class Color(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+    
+class Fabrics(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+
 class Roll(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
-    color = models.CharField(max_length=50, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, verbose_name='Ткани')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Цвет')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Ткань')
+    width = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Ширина')
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
-   
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
     @property
     def available_meters(self):
         return self.meters - self.used_meters
-
 class Equipment(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
@@ -204,9 +222,8 @@ class ClientOrder(models.Model):
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
-    color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, null=True, verbose_name='Ткани')
+    colors = models.ManyToManyField(Color, related_name='orders', blank=True, verbose_name='Цвета')
+    fabrics = models.ManyToManyField(Fabrics, related_name='orders', blank=True, verbose_name='Ткани')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2

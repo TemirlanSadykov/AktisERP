@@ -6,7 +6,7 @@ from ..models import EmployeeAttendance, UserProfile
 from django.http import JsonResponse
 import json
 from geopy.distance import geodesic
-
+from django.conf import settings
 
 
 @login_required
@@ -24,13 +24,15 @@ def user_redirect(request):
         return redirect('qc_page')
     elif user_profile.type == UserProfile.PACKER:
         return redirect('packer_page')
+    elif user_profile.type == UserProfile.KEEPER:
+        return redirect('keeper_page')
     else:
         return redirect('index')
 
 # Set the workplace location
-WORKPLACE_LAT = 42.8875192     # Example latitude
-WORKPLACE_LON = 74.5815609  # Example longitude
-ALLOWED_RADIUS = 200  # 100 meters radius
+WORKPLACE_LAT = settings.WORKPLACE_LAT
+WORKPLACE_LON = settings.WORKPLACE_LON
+ALLOWED_RADIUS = settings.ALLOWED_RADIUS
 
 @login_required
 @require_POST
@@ -51,14 +53,23 @@ def clock_in_out(request):
     workplace_location = (WORKPLACE_LAT, WORKPLACE_LON)
     distance = geodesic(employee_location, workplace_location).meters
 
-    if distance > ALLOWED_RADIUS:
-        return JsonResponse({
-            'error': 'You are outside the allowed clock-in area',
-            'distance': distance,
-        }, status=400)
+    # Update fingerprint if not already present in the user profile
+    if not user_profile.fingerprint:
+        user_profile.fingerprint = fingerprint
+        user_profile.save()
 
-    # Proceed with clock-in/out
+    # Proceed with clock-in/out regardless of the distance
     user_profile.status = not user_profile.status
     user_profile.save()
 
-    return JsonResponse({'success': 'Clock-in/out successful'})
+    # Save attendance data with the distance and fingerprint
+    EmployeeAttendance.objects.create(
+        employee=user_profile,
+        is_clock_in=user_profile.status,
+        branch=user_profile.branch,
+        fingerprint=fingerprint,
+        distance=distance  # Store the calculated distance
+    )
+
+    # Respond with success message and the recorded distance
+    return JsonResponse({ 'success': 'Clock-in/out successful' })

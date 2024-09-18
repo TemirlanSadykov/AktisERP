@@ -108,7 +108,7 @@ class OrderDetailTechnologistView(DetailView):
         for passport in passports:
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
-                color = passport_size.roll.color
+                color = passport_size.size_quantity.color
                 extra_key = f'{size} - {color}'
                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
@@ -799,107 +799,6 @@ def operation_download(request):
     response['Content-Disposition'] = 'attachment; filename=operations.xlsx'
     workbook.save(response)
     return response
-
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollListView(RestrictBranchMixin, ListView):
-    model = Roll
-    template_name = 'technologist/rolls/list.html'
-    context_object_name = 'rolls'
-    paginate_by = 10
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(is_archived=False).order_by('name')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-    
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ArchivedRollListView(RestrictBranchMixin, ListView):
-    model = Roll
-    template_name = 'technologist/rolls/list.html'
-    context_object_name = 'rolls'
-    paginate_by = 10
-    def get_queryset(self):
-        return super().get_queryset().filter(is_archived=True).order_by('name')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollCreateView(AssignBranchMixin, CreateView):
-    model = Roll
-    form_class = RollForm
-    template_name = 'technologist/rolls/create.html'
-    success_url = reverse_lazy('roll_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollDetailView(DetailView):
-    model = Roll
-    template_name = 'technologist/rolls/detail.html'
-    context_object_name = 'roll'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollUpdateView(RestrictBranchMixin, UpdateView):
-    model = Roll
-    form_class = RollForm
-    template_name = 'technologist/rolls/edit.html'
-    success_url = reverse_lazy('roll_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollDeleteView(RestrictBranchMixin, DeleteView):
-    model = Roll
-    template_name = 'technologist/rolls/delete.html'
-    success_url = reverse_lazy('roll_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollArchiveView(RestrictBranchMixin, UpdateView):
-    model = Roll
-    template_name = 'technologist/rolls/delete.html'
-    success_url = reverse_lazy('roll_list')
-    
-    def post(self, request, *args, **kwargs):
-        roll = self.get_object()
-        roll.is_archived = True
-        roll.save()
-        return HttpResponseRedirect(self.success_url)
-
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollUnArchiveView(RestrictBranchMixin, UpdateView):
-    model = Roll
-    template_name = 'technologist/rolls/delete.html'
-    success_url = reverse_lazy('roll_list')
-
-    def post(self, request, *args, **kwargs):
-        roll = self.get_object()
-        roll.is_archived = False
-        roll.save()
-        return HttpResponseRedirect(self.success_url)
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentListView(RestrictBranchMixin, ListView):

@@ -14,6 +14,7 @@ urlpatterns = [
     path('cutter/', cutter_page, name='cutter_page'),
     path('qc/', qc_page, name='qc_page'),
     path('packer/', packer_page, name='packer_page'),
+    path('keeper/', keeper_page, name='keeper_page'),
 
     path('admin/dashboard/', dashboard_page, name='dashboard_page'),
 
@@ -118,15 +119,6 @@ urlpatterns = [
     path('technologist/operations/upload/', operation_upload, name='operation_upload'),
     path('technologist/operations/download/', operation_download, name='operation_download'),
 
-    path('technologist/rolls/', RollListView.as_view(), name='roll_list'),
-    path('technologist/rolls/create/', RollCreateView.as_view(), name='roll_create'),
-    path('technologist/rolls/<int:pk>/', RollDetailView.as_view(), name='roll_detail'),
-    path('technologist/rolls/<int:pk>/edit/', RollUpdateView.as_view(), name='roll_edit'),
-    path('technologist/rolls/archived/', ArchivedRollListView.as_view(), name='archived_roll_list'),
-    path('technologist/rolls/<int:pk>/archive/', RollArchiveView.as_view(), name='roll_archive'),
-    path('technologist/rolls/<int:pk>/unarchive/', RollUnArchiveView.as_view(), name='roll_unarchive'),
-    path('technologist/rolls/<int:pk>/delete/', RollDeleteView.as_view(), name='roll_delete'),
-
     path('technologist/assortments/', AssortmentListView.as_view(), name='assortment_list'),
     path('technologist/assortments/create/', AssortmentCreateView.as_view(), name='assortment_create'),
     path('technologist/assortments/<int:pk>/', AssortmentDetailView.as_view(), name='assortment_detail'),
@@ -200,6 +192,33 @@ urlpatterns = [
     path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
     path('packer/orders/calculate-discrepancies/<int:order_pk>/', calculate_discrepancies, name='calculate_discrepancies'),
     path('packer/scan/', scan_packer_page, name='scan_packer_page'),
+
+    path('keeper/rolls/', RollListView.as_view(), name='roll_list'),
+    path('keeper/rolls/create/', RollCreateView.as_view(), name='roll_create'),
+    path('keeper/rolls/<int:pk>/', RollDetailView.as_view(), name='roll_detail'),
+    path('keeper/rolls/<int:pk>/edit/', RollUpdateView.as_view(), name='roll_edit'),
+    path('keeper/rolls/archived/', ArchivedRollListView.as_view(), name='archived_roll_list'),
+    path('keeper/rolls/<int:pk>/archive/', RollArchiveView.as_view(), name='roll_archive'),
+    path('keeper/rolls/<int:pk>/unarchive/', RollUnArchiveView.as_view(), name='roll_unarchive'),
+    path('keeper/rolls/<int:pk>/delete/', RollDeleteView.as_view(), name='roll_delete'),
+    
+    path('keeper/color/', ColorListView.as_view(), name='color_list'),
+    path('keeper/color/create/', ColorCreateView.as_view(), name='color_create'),
+    path('keeper/color/<int:pk>/', ColorDetailView.as_view(), name='color_detail'),
+    path('keeper/color/<int:pk>/edit/', ColorUpdateView.as_view(), name='color_edit'),
+    path('keeper/color/archived/', ArchivedColorListView.as_view(), name='archived_color_list'),
+    path('keeper/color/<int:pk>/archive/', ColorArchiveView.as_view(), name='color_archive'),
+    path('keeper/color<int:pk>/unarchive/', ColorUnArchiveView.as_view(), name='color_unarchive'), 
+    path('keeper/color/<int:pk>/delete/', ColorDeleteView.as_view(), name='color_delete'),
+
+    path('keeper/fabrics/', FabricsListView.as_view(), name='fabrics_list'),
+    path('keeper/fabrics/create/', FabricsCreateView.as_view(), name='fabrics_create'),
+    path('keeper/fabrics/<int:pk>/', FabricsDetailView.as_view(), name='fabrics_detail'),
+    path('keeper/fabrics/<int:pk>/edit/', FabricsUpdateView.as_view(), name='fabrics_edit'),
+    path('keeper/fabrics/archived/', ArchivedFabricsListView.as_view(), name='archived_fabrics_list'),
+    path('keeper/fabrics/<int:pk>/archive/', FabricsArchiveView.as_view(), name='fabrics_archive'),
+    path('keeper/fabrics<int:pk>/unarchive/', FabricsUnArchiveView.as_view(), name='fabrics_unarchive'), 
+    path('keeper/fabrics/<int:pk>/delete/', FabricsDeleteView.as_view(), name='fabrics_delete'),
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
