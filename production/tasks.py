@@ -12,15 +12,14 @@ logger.setLevel(logging.INFO)
 
 def send_whatsapp_message(data):
     if not data:
-        print("No data passed to send_whatsapp_message")
+        logger.warning("No data passed to send_whatsapp_message")
         return
-    logger.info('HERE..............')
     
     account_sid = os.getenv("account_sid")
     auth_token = os.getenv("auth_token")
 
-    if not account_sid or not auth_token:
-        print("Twilio credentials are missing.")
+    if not account_sid and not auth_token:
+        logger.error("Twilio credentials are missing.")
         return
 
     client = Client(account_sid, auth_token)
@@ -37,9 +36,8 @@ def send_whatsapp_message(data):
             body=message_body,
             to=f'whatsapp:{recipient_number}'
         )
-        print(f"Message sent to {number}, SID: {message.sid}")
     except Exception as e:
-        print(f"Failed to send message to {number}: {str(e)}")
+        logger.error(f"Failed to send message to {recipient_number}: {str(e)}")
 
 
 def call_api():
@@ -53,7 +51,8 @@ def call_api():
     client_order_details = ClientOrder.objects.filter(id__in=filtered_orders).values('order_number', 'term', 'client__name')
     data = list(client_order_details)
     if data:
-        print(data)
-        # send_whatsapp_message(data)
+        logger.info("Message sending on Whatsapp")
+        send_whatsapp_message(data)
+        logger.info("Message sent on Whatsapp")
     return JsonResponse(data, safe=False, json_dumps_params={'indent': 2})
 

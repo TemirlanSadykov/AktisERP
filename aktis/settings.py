@@ -193,11 +193,11 @@ LOCALE_PATHS = [
 CSRF_TRUSTED_ORIGINS = ['https://merps-test.up.railway.app']
 
 # Load the environment variables
-# WORKPLACE_LAT = config('MERPS_TEST_WORKPLACE_LAT', cast=float)
-# WORKPLACE_LON = config('MERPS_TEST_WORKPLACE_LON', cast=float)
-# ALLOWED_RADIUS = config('MERPS_TEST_ALLOWED_RADIUS', cast=int)
+WORKPLACE_LAT = config('MERPS_TEST_WORKPLACE_LAT', cast=float)
+WORKPLACE_LON = config('MERPS_TEST_WORKPLACE_LON', cast=float)
+ALLOWED_RADIUS = config('MERPS_TEST_ALLOWED_RADIUS', cast=int)
 CRONJOBS = [
-    ('* * * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
+    ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
     
 ]
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
