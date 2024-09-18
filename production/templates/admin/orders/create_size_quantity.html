@@ -206,10 +206,11 @@ document.addEventListener("DOMContentLoaded", function() {
         quantitySpan.setAttribute('data-sq-id', sq.id);
         quantitySpan.textContent = sq.quantity;
 
-        const colorSpan = document.createElement('span');  // Add this block
+        // Assuming you have access to the color name in the object
+        const colorSpan = document.createElement('span');
         colorSpan.classList.add('color');
         colorSpan.setAttribute('data-sq-id', sq.id);
-        colorSpan.textContent = sq.color;
+        colorSpan.textContent = sq.color ? sq.color.name : 'No Color';  // Display the color name or a default text
 
         const editBtn = document.createElement('button');
         editBtn.classList.add('edit-btn');
@@ -235,14 +236,14 @@ document.addEventListener("DOMContentLoaded", function() {
         li.appendChild(quantityTextEl);
         li.appendChild(quantitySpan);
         li.appendChild(colorTextEl);
-        li.appendChild(colorSpan);  // Append color to the list item
+        li.appendChild(colorSpan);
         li.appendChild(editBtn);
         li.appendChild(deleteBtn);
 
         list.appendChild(li);
     });
   }
-
+  
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

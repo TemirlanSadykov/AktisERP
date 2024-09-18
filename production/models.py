@@ -206,9 +206,10 @@ class ModelOperation(models.Model):
 class SizeQuantity(models.Model):
     size = models.CharField(max_length=10, verbose_name='Размер')
     quantity = models.IntegerField(verbose_name='Количество')
-    color = models.CharField(verbose_name='Цвет', null=True, blank=True)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
+
     def __str__(self):
-        return f"Размер: {self.size}, Количество: {self.quantity}"
+        return f"Размер: {self.size}, Количество: {self.quantity}, Цвет: {self.color.name if self.color else 'None'}"
     
 class ClientOrder(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')

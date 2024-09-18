@@ -1316,7 +1316,7 @@ class OrderDetailView(DetailView):
             context['errors'] = Error.objects.none()
         context['passports'] = order.passports.all()
         context['size_quantities'] = order.size_quantities.all().order_by('size')
-        context['size_quantity_form'] = SizeQuantityForm()
+        context['size_quantity_form'] = SizeQuantityForm(order=order)
         today = timezone.localdate()
         if order.client_order.term >= today:
             days_left = (order.client_order.term - today).days
@@ -1344,22 +1344,23 @@ class OrderDeleteView(DeleteView):
 class SizeQuantityCreateView(View):
     def get(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
-        form = SizeQuantityForm()
+        form = SizeQuantityForm(order=order)  # Pass the order to the form
         size_quantities = order.size_quantities.all()
         return render(request, 'admin/orders/create_size_quantity.html', {
             'form': form,
             'size_quantities': size_quantities,
             'order': order
         })
+
     def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            form = SizeQuantityForm(request.POST)
+            form = SizeQuantityForm(request.POST, order=order)  # Pass the order to the form
             if form.is_valid():
                 new_size_quantity = form.save(commit=False)
                 new_size_quantity.save()
-                order = get_object_or_404(Order, pk=pk)
                 order.size_quantities.add(new_size_quantity)
-                size_quantities = order.size_quantities.values('id', 'size', 'quantity', 'color')
+                size_quantities = order.size_quantities.values('id', 'size', 'quantity', 'color')  # Pass color field
                 
                 return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
             else:

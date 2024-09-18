@@ -137,14 +137,21 @@ class OperationAssignmentForm(forms.ModelForm):
         fields = ['employee_id', 'quantity']
 
 class SizeQuantityForm(forms.ModelForm):
+    color = forms.ModelChoiceField(queryset=Color.objects.none(), empty_label="Select Color", widget=forms.Select(attrs={'class': 'form-control'}))
+    
     class Meta:
         model = SizeQuantity
         fields = ['size', 'quantity', 'color']
         widgets = {
             'size': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Size'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Quantity'}),
-            'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Color'})
         }
+
+    def __init__(self, *args, **kwargs):
+        order = kwargs.pop('order', None)
+        super().__init__(*args, **kwargs)
+        if order:
+            self.fields['color'].queryset = order.colors.all()
 
 class DateForm(forms.Form):
     date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}))
