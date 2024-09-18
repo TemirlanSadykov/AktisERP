@@ -330,3 +330,104 @@ class FabricsDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryListView(ListView):
+    model = Accessory
+    template_name = 'keeper/accessory/list.html'
+    context_object_name = 'accessory'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Accessory.objects.filter(is_archived=False).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedAccessoryListView(ListView):
+    model = Accessory
+    template_name = 'keeper/accessory/list.html'
+    context_object_name = 'accessory'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Accessory.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryArchiveView(UpdateView):
+    model = Accessory
+    template_name = 'keeper/accessory/delete.html'
+    success_url = reverse_lazy('accessory_list')
+
+    def post(self, request, *args, **kwargs):
+        accessory = self.get_object()
+        accessory.is_archived = True
+        accessory.save()
+        return HttpResponseRedirect(self.success_url)
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryUnArchiveView(UpdateView):
+    model = Accessory
+    template_name = 'keeper/accessory/delete.html'
+    success_url = reverse_lazy('accessory_list')
+
+    def post(self, request, *args, **kwargs):
+        accessory = self.get_object()
+        accessory.is_archived = False
+        accessory.save()
+        return HttpResponseRedirect(self.success_url)
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryCreateView(CreateView):
+    model = Accessory
+    form_class = AccessoryForm
+    template_name = 'keeper/accessory/create.html'
+    success_url = reverse_lazy('accessory_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryDetailView(DetailView):
+    model = Accessory
+    template_name = 'keeper/accessory/detail.html'
+    context_object_name = 'accessory'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryUpdateView(UpdateView):
+    model = Accessory
+    form_class = AccessoryForm
+    template_name = 'keeper/accessory/edit.html'
+    success_url = reverse_lazy('accessory_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class AccessoryDeleteView(DeleteView):
+    model = Accessory
+    template_name = 'keeper/accessory/delete.html'
+    success_url = reverse_lazy('accessory_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context

@@ -399,6 +399,19 @@ class FabricsForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
         }
 
+class AccessoryForm(forms.ModelForm):
+    class Meta:
+        model = Accessory
+        fields = ['name', 'quantity', 'unit', 'key', 'value', 'info']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter accessory name'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter unit of measurement'}),
+            'key': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter key characteristic'}),
+            'value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter characteristic value'}),
+            'info': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter additional information', 'rows': 3}),
+        }
+
 class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size

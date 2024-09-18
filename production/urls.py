@@ -219,6 +219,15 @@ urlpatterns = [
     path('keeper/fabrics/<int:pk>/archive/', FabricsArchiveView.as_view(), name='fabrics_archive'),
     path('keeper/fabrics<int:pk>/unarchive/', FabricsUnArchiveView.as_view(), name='fabrics_unarchive'), 
     path('keeper/fabrics/<int:pk>/delete/', FabricsDeleteView.as_view(), name='fabrics_delete'),
+
+    path('keeper/accessory/', AccessoryListView.as_view(), name='accessory_list'),
+    path('keeper/accessory/create/', AccessoryCreateView.as_view(), name='accessory_create'),
+    path('keeper/accessory/<int:pk>/', AccessoryDetailView.as_view(), name='accessory_detail'),
+    path('keeper/accessory/<int:pk>/edit/', AccessoryUpdateView.as_view(), name='accessory_edit'),
+    path('keeper/accessory/archived/', ArchivedAccessoryListView.as_view(), name='archived_accessory_list'),
+    path('keeper/accessory/<int:pk>/archive/', AccessoryArchiveView.as_view(), name='accessory_archive'),
+    path('keeper/accessory<int:pk>/unarchive/', AccessoryUnArchiveView.as_view(), name='accessory_unarchive'), 
+    path('keeper/accessory/<int:pk>/delete/', AccessoryDeleteView.as_view(), name='accessory_delete'),
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),

@@ -92,6 +92,18 @@ class Fabrics(models.Model):
     def __str__(self):
         return self.name
 
+class Accessory(models.Model):
+    name = models.CharField(max_length=100)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=50)
+    key = models.CharField(max_length=100, blank=True, null=True)
+    value = models.CharField(max_length=100, blank=True, null=True)
+    info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return f"{self.name} ({self.key}: {self.value}) - {self.quantity} {self.unit}"
+
 class Roll(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')

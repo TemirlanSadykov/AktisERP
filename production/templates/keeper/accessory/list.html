@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans 'Keeper Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container clients-wrapper maincontr">
+  {% comment %} <div class="clients-container"> {% endcomment %}
+      <div class="clients-header">
+        <span class="operation-text">{% trans "Accessory" %}</span>
+          <a href="{% url 'accessory_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+          <a href="{% url 'archived_accessory_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+      </div>
+      <ul class="clients-list">
+        {% for accessory in accessory %}
+        <a href="{% url 'accessory_detail' accessory.pk %}">
+        <li class="list-group-item listequal">
+            {{ accessory }}
+          </li>
+        </a>
+          {% endfor %}
+        </ul>
+  {% comment %} </div> {% endcomment %}
+
+  <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
+    {% if is_paginated %}
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+          {% endif %}
+          {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item"><a class="page-link active" href="?page={{ num }}">{{ num }}</a></li>
+          {% else %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+          {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+          {% endif %}
+      </ul>
+      {% endif %}
+  </nav>
+</div>
+{% endblock %}
