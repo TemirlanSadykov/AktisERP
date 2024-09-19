@@ -1,0 +1,71 @@
+                        {% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2>Scan this QR code to join our WhatsApp Sandbox</h2>
+<div class="qr-container">
+    <img src="{% static 'img/whatsapp-qr-code.svg' %}" alt="Twilio Sandbox QR Code" style="width: 300px; border: 5px solid black;" />
+
+    <form id="mobileForm" style="margin-top: 20px;">
+        {% csrf_token %}
+        <label for="mobile_number">Enter your mobile number with country code:</label>
+        <input type="text" id="mobile_number" name="mobile_number" required  />
+        <button type="submit">Submit</button>
+    </form>
+    
+    <div id="successMessage" style="display:none; color: green; margin-top: 20px;"></div>
+</div>
+
+<style>
+    .qr-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+    }
+    h2 {
+        align-items:center ;
+        text-align: center;
+        text-decoration: underline;
+    }
+</style>
+
+<script>
+    document.getElementById('mobileForm').addEventListener('submit', function(event) {
+        event.preventDefault(); 
+
+        var mobileNumber = document.getElementById('mobile_number').value;
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch("{% url 'submit_mobile_number' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                'mobile_number': mobileNumber
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('successMessage').innerText = data.message;
+                document.getElementById('successMessage').style.display = 'block'; 
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+            document.getElementById('mobileForm').reset();
+            } else {
+                alert(data.message); 
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}
