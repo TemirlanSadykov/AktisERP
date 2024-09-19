@@ -173,6 +173,13 @@ class PassportRollCreateView(CreateView):
     form_class = PassportRollForm
     template_name = 'cutter/passports/create_passport_roll.html'
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        passport_id = self.kwargs.get('passport_id')
+        passport = get_object_or_404(Passport, pk=passport_id)
+        kwargs['passport'] = passport 
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         passport_id = self.kwargs.get('passport_id')

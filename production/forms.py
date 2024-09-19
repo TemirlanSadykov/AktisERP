@@ -196,9 +196,17 @@ class PassportRollForm(forms.ModelForm):
             'roll': forms.Select(attrs={'class': 'form-control'}),
             'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'})
         }
+
     def __init__(self, *args, **kwargs):
+        passport = kwargs.pop('passport', None)
         super().__init__(*args, **kwargs)
-        self.fields['roll'].queryset = Roll.objects.all()
+        if passport and passport.order:
+            self.fields['roll'].queryset = Roll.objects.filter(
+                color__in=passport.order.colors.all(),
+                fabrics__in=passport.order.fabrics.all()
+            )
+        else:
+            self.fields['roll'].queryset = Roll.objects.none()
 
 class SizeQuantityChoiceField(ModelChoiceField):
     def label_from_instance(self, obj):
