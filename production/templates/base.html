@@ -232,6 +232,13 @@
                         <i class="fas fa-calendar  fa-fw"></i><span class="sidetext">{% trans 'Calendar' %}</span>
 
                     </a>
+
+                    <a href="{% url 'whatsapp-qr' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="whatsapp_qrcode">
+                        <i class="qr-code-link fa-fw"></i>
+                        <span class="sidetext">{% trans 'WhatsApp QR Code' %}</span>
+                    </a>
                 </div>
                 {% endif %}
             </div>

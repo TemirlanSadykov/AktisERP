@@ -9,7 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-
+                                                                             
 def send_whatsapp_message(data):
     if not data:
         logger.warning("No data passed to send_whatsapp_message")
@@ -24,20 +24,23 @@ def send_whatsapp_message(data):
 
     client = Client(account_sid, auth_token)
     twilio_number = os.getenv("twilio_number")
-    recipient_number = os.getenv("recipient_numbers")
+    all_numbers = list(PhoneNumberScaner.objects.values_list('mobile_number', flat=True))
+    recipient_numbers = [number if number.startswith('+') else f'+{number}' for number in all_numbers]
+
+    recipient_number = recipient_numbers
     message_body = "1 day to ship:\n\n"
 
     for order in data:
         message_body += f"Order Number: {order['order_number']}\nEND DATE: {order['term']}\nClient: {order['client__name']}\n\n"
-
-    try:
-        message = client.messages.create(
-            from_=twilio_number,
-            body=message_body,
-            to=f'whatsapp:{recipient_number}'
-        )
-    except Exception as e:
-        logger.error(f"Failed to send message to {recipient_number}: {str(e)}")
+    for number in recipient_number:
+        try:
+            message = client.messages.create(
+                from_=twilio_number,
+                body=message_body,
+                to=f'whatsapp:{number}'
+            )
+        except Exception as e:
+            logger.error(f"Failed to send message to {recipient_number}: {str(e)}")
 
 
 def call_api():

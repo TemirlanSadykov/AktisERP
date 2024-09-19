@@ -379,3 +379,8 @@ class SalaryPayment(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.payment_date} - {self.amount}"
+    
+    
+class PhoneNumberScaner(models.Model):
+    mobile_number = models.CharField(max_length=15)
+    created_at = models.DateTimeField(auto_now_add=True)

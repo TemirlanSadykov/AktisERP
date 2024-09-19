@@ -11,7 +11,9 @@ from django.conf import settings
 
 @login_required
 def user_redirect(request):
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
     user_profile = request.user.userprofile
+    print(user_profile,"8888888888888888888888")
     if user_profile.type == UserProfile.ADMIN:
         return redirect('admin_page')
     elif user_profile.type == UserProfile.TECHNOLOGIST:
