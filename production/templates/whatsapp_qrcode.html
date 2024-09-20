@@ -1,15 +1,16 @@
-                        {% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block content %}
 
-<h2>Scan this QR code to join our WhatsApp Sandbox</h2>
+<h1>Scan this QR code to join our WhatsApp Sandbox</h1>
+
 <div class="qr-container">
-    <img src="{% static 'img/whatsapp-qr-code.svg' %}" alt="Twilio Sandbox QR Code" style="width: 300px; border: 5px solid black;" />
+    <img src="{% static 'img/whatsapp_qr_integration.png' %}" alt="Twilio Sandbox QR Code" style="width: 500px; ;" />
 
     <form id="mobileForm" style="margin-top: 20px;">
         {% csrf_token %}
-        <label for="mobile_number">Enter your mobile number with country code:</label>
+        <label for="mobile_number"><strong><font size="4">Enter your mobile number with country code:</font></strong></label><br>
         <input type="text" id="mobile_number" name="mobile_number" required  />
         <button type="submit">Submit</button>
     </form>
@@ -26,7 +27,7 @@
         height: 100vh;
         text-align: center;
     }
-    h2 {
+    h1 {
         align-items:center ;
         text-align: center;
         text-decoration: underline;
@@ -53,14 +54,17 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+              
                 document.getElementById('successMessage').innerText = data.message;
                 document.getElementById('successMessage').style.display = 'block'; 
                 setTimeout(() => {
                     document.getElementById('successMessage').style.display = 'none';
                 }, 3000);
-            document.getElementById('mobileForm').reset();
+                document.getElementById('mobileForm').reset(); 
             } else {
+
                 alert(data.message); 
+                document.getElementById('mobileForm').reset(); 
             }
         })
         .catch(error => {
@@ -68,4 +72,5 @@
         });
     });
 </script>
+
 {% endblock %}

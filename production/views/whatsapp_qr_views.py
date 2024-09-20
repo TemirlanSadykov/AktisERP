@@ -15,10 +15,12 @@ class WhatsAppQRCodeView(TemplateView):
 class MobileNumberSubmitView(View):
 
     def post(self, request, *args, **kwargs):
-        mobile_number = request.POST.get('mobile_number')
-        print(mobile_number,"777777777777777777777777777")
+        mobile_number = request.POST.get('mobile_number')        
         if mobile_number:
-            PhoneNumberScaner.objects.create(mobile_number=mobile_number)
-            return JsonResponse({'success': True, 'message': 'Number successfully verified'})
+            if PhoneNumberScaner.objects.filter(mobile_number=mobile_number).exists():
+                return JsonResponse({'success': False, 'message': 'Number already exists'}, status=400)
+            else:
+                PhoneNumberScaner.objects.create(mobile_number=mobile_number)
+                return JsonResponse({'success': True, 'message': 'Number successfully verified'})
         else:
             return JsonResponse({'success': False, 'message': 'Invalid number'}, status=400)

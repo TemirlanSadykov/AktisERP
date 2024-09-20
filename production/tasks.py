@@ -7,29 +7,29 @@ import os
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+from dotenv import load_dotenv
 
-
-                                                                             
+load_dotenv()
+                                                                          
 def send_whatsapp_message(data):
     if not data:
         logger.warning("No data passed to send_whatsapp_message")
         return
     
-    account_sid = os.getenv("account_sid")
-    auth_token = os.getenv("auth_token")
+    account_sid = os.getenv('account_sid')
+    auth_token =os.getenv('auth_token')
 
-    if not account_sid and not auth_token:
+    if not account_sid or not auth_token:
         logger.error("Twilio credentials are missing.")
         return
 
     client = Client(account_sid, auth_token)
-    twilio_number = os.getenv("twilio_number")
-    all_numbers = list(PhoneNumberScaner.objects.values_list('mobile_number', flat=True))
+    twilio_number = os.getenv('twilio_number')
+    all_numbers = list(PhoneNumberScaner.objects.values_list('mobile_number', flat=True).distinct())
     recipient_numbers = [number if number.startswith('+') else f'+{number}' for number in all_numbers]
-
     recipient_number = recipient_numbers
     message_body = "1 day to ship:\n\n"
-
+    
     for order in data:
         message_body += f"Order Number: {order['order_number']}\nEND DATE: {order['term']}\nClient: {order['client__name']}\n\n"
     for number in recipient_number:
@@ -41,7 +41,6 @@ def send_whatsapp_message(data):
             )
         except Exception as e:
             logger.error(f"Failed to send message to {recipient_number}: {str(e)}")
-
 
 def call_api():
     today = timezone.localdate()
