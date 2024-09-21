@@ -83,6 +83,72 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         context['sidebar_type'] = 'qc_page'
         return context
 
+# @method_decorator([login_required, qc_required], name='dispatch')
+# class OrderDetailQcView(DetailView):
+#     model = Order
+#     template_name = 'qc/orders/detail.html'
+#     context_object_name = 'order'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         order = context['order']
+#         passport = Passport.objects.filter(order=order).first()
+#         if passport:
+#             context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DEFECT)
+#         else:
+#             context['errors'] = Error.objects.none()
+        
+#         passports = order.passports.all()
+
+#         # Extended defaultdict to track checked quantity
+#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0, 'extra': None}))
+#         total_per_size = defaultdict(int)
+
+#         for passport in passports:
+#             for passport_size in passport.passport_sizes.all():
+#                 size = passport_size.size_quantity.size
+#                 color = passport_size.size_quantity.color
+#                 extra_key = f'{size} - {color}'
+#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
+#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
+
+#                 # Counting checked pieces
+#                 checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
+#                 size_data[extra_key][passport.id]['checked_quantity'] += checked_pieces
+                
+#                 total_per_size[size] += passport_size.quantity
+
+#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+#                             for sq in order.size_quantities.all().order_by('size')}
+
+#         # Adjusting for sizes in passports not in order sizes
+#         for size in total_per_size:
+#             if size not in required_missing:
+#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+#         # Sorting size_data keys
+#         def sort_key(x):
+#             parts = x.split('-')
+#             try:
+#                 return int(parts[0]), x
+#             except ValueError:
+#                 return float('inf'), x
+
+#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
+#         context.update({
+#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+#             'total_per_size': dict(total_per_size),
+#             'required_missing': required_missing,
+#             'passports': passports,
+#             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+#             'sidebar_type' : 'qc_page'
+#         })
+
+#         return context
+    
 @method_decorator([login_required, qc_required], name='dispatch')
 class OrderDetailQcView(DetailView):
     model = Order
@@ -92,63 +158,67 @@ class OrderDetailQcView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        if passport:
-            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DEFECT)
-        else:
-            context['errors'] = Error.objects.none()
-        
-        passports = order.passports.all()
 
-        # Extended defaultdict to track checked quantity
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0, 'extra': None}))
-        total_per_size = defaultdict(int)
+        # Data for the "Required Quantities" table
+        required_data = []
 
-        for passport in passports:
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                color = passport_size.size_quantity.color
-                extra_key = f'{size} - {color}'
-                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport.id]['stage'] = passport_size.stage
-                size_data[extra_key][passport.id]['extra'] = passport_size.extra
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
 
-                # Counting checked pieces
-                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
-                size_data[extra_key][passport.id]['checked_quantity'] += checked_pieces
-                
-                total_per_size[size] += passport_size.quantity
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-
-        # Adjusting for sizes in passports not in order sizes
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-        # Sorting size_data keys
-        def sort_key(x):
-            parts = x.split('-')
-            try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
-
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
 
         context.update({
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
-            'passports': passports,
+            'required_data': required_data,  # Data for the "Required Quantities" table
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'sidebar_type' : 'qc_page'
+            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'sidebar_type': 'qc_page'
         })
 
         return context
     
+@method_decorator([login_required, qc_required], name='dispatch')
+class CutDetailQcView(DetailView):
+    model = Cut
+    template_name = 'qc/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
+            'sidebar_type': 'qc_page'
+        })
+
+        return context
+
 @login_required
 @qc_required
 def get_piece_info(request, barcode):

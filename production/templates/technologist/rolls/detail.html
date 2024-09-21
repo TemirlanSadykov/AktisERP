@@ -37,6 +37,7 @@
         <div class="col-md-6 details">
           <p><strong>{% trans "Color:" %}</strong> {{ roll.color }}</p>
           <p><strong>{% trans "Fabrics:" %}</strong> {{ roll.fabrics }}</p>
+          <p><strong>{% trans "Width:" %}</strong> {{ roll.width }}</p>
           <p><strong>{% trans "Meters Available:" %}</strong> {{ roll|available_meters }}</p>
           <p><strong>{% trans "Meters Used:" %}</strong> {{ roll.used_meters }}</p>
           {% if not roll.is_archived %}

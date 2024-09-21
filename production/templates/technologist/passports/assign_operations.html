@@ -36,14 +36,10 @@
               <!-- <div class="row"> -->
                   <!-- <div class="col-md-12 details"> -->
                     <p>
-                      <strong>{% trans "Model:" %}</strong> {{ passport.order.model.name }},
-                      <strong>{% trans "Client:" %}</strong> {{ passport.order.client_order.client.name }},
-                      <strong>{% trans "Assortment:" %}</strong> {{ passport.order.assortment.name }},
-                      <strong>{% trans "Roll:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.name }}{% endfor %},
-                      <strong>{% trans "Usage:" %}</strong> {% for pr in passport_rolls %} {{ pr.meters }}м{% endfor %},
-                      <strong>{% trans "Color:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.color }}{% endfor %},
-                      <strong>{% trans "Fabrics:" %}</strong> {% for pr in passport_rolls %} {{ pr.roll.fabrics }}{% endfor %},
-                      <strong>{% trans "Date:" %}</strong> {{ passport.date|date:"Y-m-d" }}
+                      <strong>{% trans "Model:" %}</strong> {{ passport.cut.order.model.name }},
+                      <strong>{% trans "Roll:" %}</strong> {{ passport.roll }},
+                      <strong>{% trans "Usage:" %}</strong> {{ passport.meters }}м,
+                      <strong>{% trans "Date:" %}</strong> {{ passport.cut.date|date:"Y-m-d" }}
                     </p>
                   <!-- </div> -->
 
@@ -63,7 +59,7 @@
                   <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
                   {% for ps in size_quantities %}
                     <th>
-                      {{ ps.size_quantity.size }}-{{ ps.roll.color }}<br>
+                      {{ ps.size_quantity.size }}<br>
                       ({{ ps.quantity }})
                     </th>
                   {% endfor %}
@@ -108,8 +104,8 @@
                 <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
               {% endif %}
             </form> {% endcomment %}
-            <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
-            <a href="{% url 'order_detail_technologist' passport.order.pk %}" class="btn back-btn">{% trans "Back" %}</a>
+            {% comment %} <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
+            <a href="{% url 'order_detail_technologist' passport.cut.order.pk %}" class="btn back-btn">{% trans "Back" %}</a> {% endcomment %}
           </div>
           <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
             <div id="reassignPopup" class="reassign-popup" style="display: none;">

@@ -17,7 +17,7 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
@@ -33,9 +33,20 @@
       <div class="row">
         <div class="col-md-6 details">
           <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
-          <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
-          <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
-          <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
+          <p><strong>{% trans "Color:" %}</strong> 
+            {% for color in order.colors.all %}
+                {{ color }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                {% trans "No colors selected" %}
+            {% endfor %}
+          </p>
+          <p><strong>{% trans "Fabrics:" %}</strong> 
+            {% for fabric in order.fabrics.all %}
+                {{ fabric }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                {% trans "No fabrics selected" %}
+            {% endfor %}
+          </p>
           <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
           <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
           <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
@@ -46,6 +57,7 @@
         </div>
       </div>
     </div>
+
     <div class="row">
       <div class="col-md-6">
         <h3>{% trans "Required Quantities" %}</h3>
@@ -69,139 +81,42 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="4">{% trans "No required sizes available." %}</td>
+              <td colspan="3">{% trans "No required sizes available." %}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <div class="row">
-      <div class="col-md-6">
-        <h3>{% trans "Size Quantities" %}</h3>
-      </div>
-    </div><br>
-    <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>{% trans "Size\Passport" %}</th>
-            {% for passport in passports %}
-              <th>№{{ passport.id }}</th>
-            {% endfor %}
-            <th>{% trans "Sum" %}</th>
-            <th>{% trans "Required" %}</th>
-            <th>{% trans "Missing" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for size, data in size_data.items %}
-            <tr>
-              <td>{{ size }}</td>
-              {% for passport in passports %}
-                <td>
-                  {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
-                  {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
-                  {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 1 %}
-                    <button type="button" class="stage-sewing-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                      {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                    </button>
-                  {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" > 1 %}
-                    <button type="button" class="stage-sewing-button btn back-btn">
-                      {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                    </button>
-                  {% else %}
-                    <button type="button" class="stage-sewing-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                      {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                    </button>
-                  {%endif%}
-                </td>
-              {% endfor %}
-              <td>{{ total_per_size|get_item:size|default:"0" }}</td>
-              <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
-              <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-"|display_over }}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>    
   </div><br>
+  
   <div class="container-fluid bottomContainer">
     <div class="row">
       <div class="col-md-6" style="margin:auto;">
-        <h3>{% trans "Associated Passports" %}</h3>
+        <h3>{% trans "Associated Cuts" %}</h3>
       </div>
       <div class="col-md-6 text-center">
-        <form method="post" action="{% url 'passport_create' order.pk %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-primary">{% trans "Create New Passport" %}</button>
-        </form>       
+          <a href="{% url 'cut_create' order.pk %}" class="btn btn-primary">{% trans "Create New Cut" %}</a>
       </div>
     </div><br>
-    {% if passports %}
-      {% for passport in passports %}
+      {% if associated_cuts %}
+        {% for cut in associated_cuts %}
         <div class="list-group">
-          <a href="{% url 'passport_detail' passport.pk %}"
-             class="list-group-item list-group-item-action"
-             style="color: {{ passport.is_completed|yesno:'green,red' }}; border: 1px solid #ced4da; border-radius: 0px;">
-            {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
+          <a href="{% url 'cut_detail' cut.pk %}"
+            class="list-group-item list-group-item-action"
+            style="border: 1px solid #ced4da; border-radius: 0px;">
+            {% trans "Cut Number:" %} {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
           </a>
         </div>
-      {% endfor %}
-    {% else %}
-      <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-          {% trans "No associated passports." %}
-        </a>
-      </div>
-    {% endif %}
+        {% endfor %}
+      {% else %}
+        <div class="list-group">
+          <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+            {% trans "No associated cuts." %}
+          </a>
+        </div>
+      {% endif %}
+    </div>
   </div>
-</div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var buttons = document.querySelectorAll('.stage-sewing-button');
-    buttons.forEach(function(button) {
-      button.addEventListener('click', function() { // Changed to 'click' event for buttons
-        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
-        if (passportSizeId) {
-          fetch(`/production/cutter/orders/mark-as-sewing/${passportSizeId}/`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              window.location.reload();
-            } else {
-              alert('Не получилось обновить');
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-          });
-        }
-      });
-    });
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    }
-  });
-</script>
+
 {% endblock %}

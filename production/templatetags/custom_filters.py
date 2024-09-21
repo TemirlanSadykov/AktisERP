@@ -98,3 +98,11 @@ def display_over(value):
         return value
     except (ValueError, TypeError):
         return value
+    
+@register.filter
+def split_part(value, arg):
+    try:
+        part_index = int(arg)
+        return value.split(" - ")[part_index]
+    except (IndexError, ValueError):
+        return None
