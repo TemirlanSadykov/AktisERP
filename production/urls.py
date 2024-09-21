@@ -40,7 +40,7 @@ urlpatterns = [
     path('admin/employees/archived/', ArchivedEmployeeListView.as_view(), name='archived_employee_list'),
     path('admin/employees/upload_employees/', employee_upload, name='employee_upload'),
 
-    path('admin/passports/<int:pk>/', passport_detail_admin, name='passport_detail_admin'),
+    # path('admin/passports/<int:pk>/', passport_detail_admin, name='passport_detail_admin'),
 
     path('admin/salaries/', salary_list, name='salary_list'),
     path('admin/salaries/<int:pk>/', salary_detail, name='salary_detail'),

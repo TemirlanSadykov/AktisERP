@@ -163,9 +163,9 @@ def get_production_data(start_date, end_date):
         reported_date__range=[start_date, end_date]
     ).count()
 
-    total_rolls_used = PassportRoll.objects.filter(
-        passport__order__client_order__created_at__range=[start_date, end_date]
-    ).aggregate(total_meters=Sum('meters'))['total_meters'] or 0
+    # total_rolls_used = PassportRoll.objects.filter(
+    #     passport__order__client_order__created_at__range=[start_date, end_date]
+    # ).aggregate(total_meters=Sum('meters'))['total_meters'] or 0
 
     return {
         'total_amount': total_amount,
@@ -175,7 +175,7 @@ def get_production_data(start_date, end_date):
         'in_progress_orders_count': in_progress_orders_count,
         'total_salary': total_salary,
         'total_errors': total_errors,
-        'total_rolls_used': total_rolls_used
+        # 'total_rolls_used': total_rolls_used
     }
 
 
@@ -517,30 +517,30 @@ def employee_upload(request):
         messages.error(request, 'Invalid file format.')
         return redirect(reverse_lazy('employee_list'))
 
-@login_required
-@admin_required
-def passport_detail_admin(request, pk):
-    passport = get_object_or_404(Passport, pk=pk)
-    operations = passport.order.model.operations.all() 
-    size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
-    passport_rolls = PassportRoll.objects.filter(passport=passport)
+# @login_required
+# @admin_required
+# def passport_detail_admin(request, pk):
+#     passport = get_object_or_404(Passport, pk=pk)
+#     operations = passport.order.model.operations.all() 
+#     size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
+#     passport_rolls = PassportRoll.objects.filter(passport=passport)
 
-    work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
-        # Key as a tuple of operation_id and passport_size_id
-        key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
-        if key not in work_by_op_and_size:
-            work_by_op_and_size[key] = [assigned_work]
-        else:
-            work_by_op_and_size[key].append(assigned_work)
+#     work_by_op_and_size = {}
+#     for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+#         # Key as a tuple of operation_id and passport_size_id
+#         key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
+#         if key not in work_by_op_and_size:
+#             work_by_op_and_size[key] = [assigned_work]
+#         else:
+#             work_by_op_and_size[key].append(assigned_work)
 
-    return render(request, 'admin/passports/detail.html', {
-        'passport': passport,
-        'passport_rolls': passport_rolls,
-        'operations': operations,
-        'size_quantities': size_quantities,
-        'work_by_op_and_size': work_by_op_and_size
-    })
+#     return render(request, 'admin/passports/detail.html', {
+#         'passport': passport,
+#         'passport_rolls': passport_rolls,
+#         'operations': operations,
+#         'size_quantities': size_quantities,
+#         'work_by_op_and_size': work_by_op_and_size
+#     })
 
 @login_required
 @admin_required
