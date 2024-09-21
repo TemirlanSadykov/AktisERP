@@ -86,6 +86,66 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
         context['sidebar_type'] = 'technology'
         return context
 
+# @method_decorator([login_required, technologist_required], name='dispatch')
+# class OrderDetailTechnologistView(DetailView):
+#     model = Order
+#     template_name = 'technologist/orders/detail.html'
+#     context_object_name = 'order'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         order = context['order']
+
+#         # Fetch all passports related to the order
+#         passports = order.passports.all()
+
+#         # Aggregating errors across all passports associated with the order
+#         errors = Error.objects.filter(piece__passport_size__passport__in=passports).order_by('error_type')
+
+#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
+#         total_per_size = defaultdict(int)
+
+#         for passport in passports:
+#             for passport_size in passport.passport_sizes.all():
+#                 size = passport_size.size_quantity.size
+#                 color = passport_size.size_quantity.color
+#                 extra_key = f'{size} - {color}'
+#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
+#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
+#                 total_per_size[size] += passport_size.quantity
+
+#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+#                             for sq in order.size_quantities.all().order_by('size')}
+
+#         # Adjusting for sizes in passports not in order sizes
+#         for size in total_per_size:
+#             if size not in required_missing:
+#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+#         # Sorting size_data keys
+#         def sort_key(x):
+#             parts = x.split('-')
+#             try:
+#                 return int(parts[0]), x
+#             except ValueError:
+#                 return float('inf'), x
+
+#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
+#         context.update({
+#             'errors': errors,
+#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+#             'total_per_size': dict(total_per_size),
+#             'required_missing': required_missing,
+#             'passports': passports,
+#             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+#             'sidebar_type': 'technology'
+#         })
+
+#         return context
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderDetailTechnologistView(DetailView):
     model = Order
@@ -96,51 +156,61 @@ class OrderDetailTechnologistView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # Fetch all passports related to the order
-        passports = order.passports.all()
+        # Data for the "Required Quantities" table
+        required_data = []
 
-        # Aggregating errors across all passports associated with the order
-        errors = Error.objects.filter(piece__passport_size__passport__in=passports).order_by('error_type')
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
 
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
-        total_per_size = defaultdict(int)
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
 
-        for passport in passports:
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                color = passport_size.size_quantity.color
-                extra_key = f'{size} - {color}'
-                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport.id]['stage'] = passport_size.stage
-                size_data[extra_key][passport.id]['extra'] = passport_size.extra
-                total_per_size[size] += passport_size.quantity
-
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-
-        # Adjusting for sizes in passports not in order sizes
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-        # Sorting size_data keys
-        def sort_key(x):
-            parts = x.split('-')
-            try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
-
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
 
         context.update({
-            'errors': errors,
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
-            'passports': passports,
+            'required_data': required_data,  # Data for the "Required Quantities" table
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'sidebar_type': 'technology'
+        })
+
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class CutDetailTechnologistView(DetailView):
+    model = Cut
+    template_name = 'technologist/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
             'sidebar_type': 'technology'
         })
 
@@ -204,7 +274,7 @@ def error_update_status(request, pk):
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
     model_operations = ModelOperation.objects.filter(
-        model=passport.order.model
+        model=passport.cut.order.model
     ).select_related('operation').order_by('order')
     operations = [model_op.operation for model_op in model_operations]
     size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
@@ -237,7 +307,6 @@ def assign_operations(request, passport_id):
                     work, created = Work.objects.get_or_create(
                         operation_id=operation_id,
                         passport_size=passport_size,
-                        passport=passport
                     )
                     AssignedWork.objects.create(
                         work=work,
@@ -250,9 +319,8 @@ def assign_operations(request, passport_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-    passport_rolls = PassportRoll.objects.filter(passport=passport)
     work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+    for assigned_work in AssignedWork.objects.filter(work__passport_size__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
         # Key as a tuple of operation_id and passport_size_id
         key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
         if key not in work_by_op_and_size:
@@ -262,7 +330,6 @@ def assign_operations(request, passport_id):
 
     return render(request, 'technologist/passports/assign_operations.html', {
         'passport': passport,
-        'passport_rolls': passport_rolls,
         'operations': operations,
         'size_quantities': size_quantities,
         'work_by_op_and_size': work_by_op_and_size,
@@ -356,7 +423,6 @@ def reassign_work(request):
     new_employee_id = data.get('new_employee_id')
     quantity = data.get('quantity')
     reason = data.get('reason')
-    print(data)
     # Validation
     if not all([work_id, new_employee_id, quantity, reason]):
         return JsonResponse({'message': 'Missing required data'}, status=400)

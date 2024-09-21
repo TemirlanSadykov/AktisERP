@@ -4,6 +4,7 @@ import json
 import openpyxl
 import pandas as pd
 from urllib.parse import urlencode
+from collections import defaultdict
 
 from django.conf import settings
 from django.contrib import messages
@@ -1307,22 +1308,71 @@ class OrderDetailView(DetailView):
     context_object_name = 'order'
 
     def get_context_data(self, **kwargs):
-        context = super(OrderDetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        if passport:
-            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport).order_by('error_type')
-        else:
-            context['errors'] = Error.objects.none()
-        context['passports'] = order.passports.all()
-        context['size_quantities'] = order.size_quantities.all().order_by('size')
-        context['size_quantity_form'] = SizeQuantityForm(order=order)
+
+        # Data for the "Required Quantities" table
+        required_data = []
+
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
+
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
+
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
+
+        # Calculate days left
         today = timezone.localdate()
-        if order.client_order.term >= today:
-            days_left = (order.client_order.term - today).days
-        else:
-            days_left = 0
-        context['days_left'] = days_left
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
+
+        context.update({
+            'required_data': required_data,  # Data for the "Required Quantities" table
+            'days_left': days_left,          # Days left for the order deadline
+            'associated_cuts': associated_cuts,  # Send associated cuts to the template
+            'sidebar_type': 'admin'
+        })
+
+        return context
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class CutDetailAdminView(DetailView):
+    model = Cut
+    template_name = 'admin/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
+            'sidebar_type': 'admin'
+        })
+
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')

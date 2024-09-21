@@ -163,15 +163,31 @@ urlpatterns = [
 
     path('cutter/orders/', OrderListCutterView.as_view(), name='order_list_cutter'),
     path('cutter/orders/<int:pk>/', OrderDetailCutterView.as_view(), name='order_detail_cutter'),
-    path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
-    path('cutter/orders/<int:pk>/passport/create', PassportCreateView.as_view(), name='passport_create'),
-    path('cutter/orders/passport/<int:passport_id>/delete/', passport_delete, name='passport_delete'),
-    path('cutter/orders/passport/<int:passport_id>/create_passport_roll/', PassportRollCreateView.as_view(), name='create_passport_roll'),
-    path('cutter/orders/passport/<int:passport_id>/create_passport_size/', PassportSizeCreateView.as_view(), name='create_passport_size'),
-    path('cutter/orders/passport/<int:sq_id>/edit_size_quantity/', edit_passport_size_quantity, name='edit_passport_size_quantity'),
-    path('cutter/orders/passport/<int:sq_id>/delete_size_quantity/', delete_passport_size_quantity, name='delete_passport_size_quantity'),
-    path('cutter/orders/passport/<int:pr_id>/edit_passport_roll/', edit_passport_roll, name='edit_passport_roll'),
-    path('cutter/orders/passport/<int:pr_id>/delete_passport_roll/', delete_passport_roll, name='delete_passport_roll'),
+    # path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
+    # path('cutter/orders/<int:pk>/passport/create', PassportCreateView.as_view(), name='passport_create'),
+
+    path('cutter/orders/<int:pk>/cut/create/', CutCreateView.as_view(), name='cut_create'),
+    path('cutter/orders/<int:pk>/cut/detail/', CutDetailView.as_view(), name='cut_detail'),
+
+    path('cutter/orders/<int:pk>/cut/consumption/create/', ConsumptionCreateView.as_view(), name='consumption_create'),
+    path('cutter/cuts/delete-consumption/<int:pk>/', delete_consumption, name='delete_consumption'),
+
+    path('cutter/orders/<int:pk>/cut/passport/create/', PassportCreateView.as_view(), name='passport_create'),
+    path('cutter/cuts/delete-passport/<int:pk>/', delete_passport, name='delete_passport'),
+
+    path('admin/orders/<int:pk>/cut/detail/', CutDetailAdminView.as_view(), name='cut_detail_admin'),
+    path('technologist/orders/<int:pk>/cut/detail/', CutDetailTechnologistView.as_view(), name='cut_detail_technologist'),
+    path('qc/orders/<int:pk>/cut/detail/', CutDetailQcView.as_view(), name='cut_detail_qc'),
+    path('packer/orders/<int:pk>/cut/detail/', CutDetailPackerView.as_view(), name='cut_detail_packer'),
+
+
+    # path('cutter/orders/passport/<int:passport_id>/delete/', passport_delete, name='passport_delete'),
+    # path('cutter/orders/passport/<int:passport_id>/create_passport_roll/', PassportRollCreateView.as_view(), name='create_passport_roll'),
+    # path('cutter/orders/passport/<int:passport_id>/create_passport_size/', PassportSizeCreateView.as_view(), name='create_passport_size'),
+    # path('cutter/orders/passport/<int:sq_id>/edit_size_quantity/', edit_passport_size_quantity, name='edit_passport_size_quantity'),
+    # path('cutter/orders/passport/<int:sq_id>/delete_size_quantity/', delete_passport_size_quantity, name='delete_passport_size_quantity'),
+    # path('cutter/orders/passport/<int:pr_id>/edit_passport_roll/', edit_passport_roll, name='edit_passport_roll'),
+    # path('cutter/orders/passport/<int:pr_id>/delete_passport_roll/', delete_passport_roll, name='delete_passport_roll'),
 
     path('qc/orders/', OrderListQcView.as_view(), name='order_list_qc'),
     path('qc/orders/<int:pk>/', OrderDetailQcView.as_view(), name='order_detail_qc'),

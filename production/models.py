@@ -3,6 +3,7 @@ import datetime
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from datetime import date
 
 
 class Branch(models.Model):
@@ -253,20 +254,66 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.model}"
     
-class Passport(models.Model):
+class Cut(models.Model):
+    number = models.IntegerField(verbose_name='Номер', editable=False)  # Remove AutoField and use IntegerField
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='passports', verbose_name='Заказ')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
+    size_quantities = models.ManyToManyField(SizeQuantity, related_name='cuts', verbose_name='Размеры и количества')
+
+    def __str__(self):
+        return f"Cut {self.number} for Order {self.order}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            current_year = date.today().year
+            latest_cut = Cut.objects.filter(date__year=current_year).order_by('-number').first()
+            if latest_cut:
+                self.number = latest_cut.number + 1
+            else:
+                self.number = 1
+
+        super().save(*args, **kwargs)
+
+class Consumption(models.Model):
+    cut = models.ForeignKey(Cut, on_delete=models.CASCADE, related_name='consumptions', verbose_name='Крой')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='consumptions', verbose_name='Ткани')
+    width = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Ширина')
+    length = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Длина')
+    factual = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Фактическое')
+    commerce = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Коммерческое')
+    def __str__(self):
+        return f"Consumption with {self.fabrics} fabric"
+
+class Passport(models.Model):
+    cut = models.ForeignKey(Cut, on_delete=models.CASCADE, blank=True, null=True, related_name='passports', verbose_name='Крой')
+    number = models.IntegerField(verbose_name='Номер', null=True, blank=True)
+    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон', null=True, blank=True)
     size_quantities = models.ManyToManyField(SizeQuantity, through='PassportSize', related_name='passports', verbose_name='Размеры и количества')
-    rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports', verbose_name='Рулоны')
+    layers = models.DecimalField(max_digits=10, decimal_places=0, verbose_name='Слои', null=True, blank=True)
+    meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры', null=True, blank=True)
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
+
     def __str__(self):
         return f"ID {str(self.id)}"
+
+    @property
+    def quantity(self):
+        if self.layers:
+            return self.layers * self.size_quantities.count()
+        return 0
+
+    def delete(self, *args, **kwargs):
+        # Return the meters back to the associated roll when passport is deleted
+        if self.roll and self.meters:
+            self.roll.used_meters = max(0, self.roll.used_meters - self.meters)  # Reduce the used meters
+            self.roll.save()  # Save the roll with updated used meters
+        super(Passport, self).delete(*args, **kwargs)  # Call the superclass delete method
+
     
 class PassportSize(models.Model):
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, blank=True, null=True, related_name='passport_sizes', verbose_name='Паспорт')
     extra = models.CharField(max_length=5, blank=True, null=True)
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
-    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Рулон', blank=True, null=True)
     quantity = models.IntegerField(verbose_name='Количество')
     CUTTING = 0
     SEWING = 1
@@ -305,17 +352,16 @@ class ProductionPiece(models.Model):
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
-class PassportRoll(models.Model):
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
-    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон')
-    meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры')
-    def __str__(self):
-        return f"{self.meters} метров {self.roll.name}"
+# class PassportRoll(models.Model):
+#     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
+#     roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон')
+#     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры')
+#     def __str__(self):
+#         return f"{self.meters} метров {self.roll.name}"
 
 class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='works', verbose_name='Паспорт')
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True, verbose_name='Размер и количество')
     def __str__(self):
         if self.passport_size:

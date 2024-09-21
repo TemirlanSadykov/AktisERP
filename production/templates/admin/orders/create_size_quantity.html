@@ -52,7 +52,7 @@
                 <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
                 <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span></span>
                 <span class="detail"><strong>{% trans "Color:" %}</strong> <span class="color" data-sq-id="{{ sq.id }}">{{ sq.color }}</span></span>
-                <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
+                {% comment %} <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button> {% endcomment %}
                 <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
               </li>
             {% endfor %}

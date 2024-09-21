@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load custom_filters %}
 {% block content %}
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
@@ -60,7 +61,16 @@
             {% for order_info in orders_with_days_left %}
             <a href="{% url 'order_detail_cutter' order_info.order.pk %}" class="order-link ">
             <li class="list-group-item custom-list-item listequal" style="color:#007bff;">
-                  {{ order_info.order.model.name }} - {{ order_info.order.color }} - {{ order_info.order.fabrics }}
+                  {{ order_info.order.model.name }} - {% for color in order_info.order.colors.all %}
+                                              {{ color }}{% if not forloop.last %}, {% endif %}
+                                          {% empty %}
+                                              {% trans "No colors selected" %}
+                                          {% endfor %} - 
+                                          {% for fabric in order_info.order.fabrics.all %}
+                                              {{ fabric }}{% if not forloop.last %}, {% endif %}
+                                          {% empty %}
+                                              {% trans "No fabrics selected" %}
+                                          {% endfor %} - {{ order_info.order.quantity }} {% trans "pcs" %} ({{ order_info.order|size_range }})
                 <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
               </li>
             </a>
