@@ -273,13 +273,22 @@ class PassportCreateView(CreateView):
 
             # Automatically create PassportSize for each size_quantity in the cut
             for size_quantity in cut.size_quantities.filter(color=roll.color):
-                PassportSize.objects.create(
+                passport_size = PassportSize.objects.create(
                     passport=passport,
                     size_quantity=size_quantity,
                     quantity=form.cleaned_data['layers'],  # Layers from form input
                     stage=0,  # Default to CUTTING
                     extra=''  # Extra left empty
                 )
+                
+                quantity = int(passport_size.quantity)
+
+                # Generate ProductionPiece for each PassportSize based on quantity
+                for i in range(1, quantity + 1):
+                    ProductionPiece.objects.create(
+                        passport_size=passport_size,
+                        piece_number=i
+                    )
 
             return redirect(self.get_success_url())
         else:
