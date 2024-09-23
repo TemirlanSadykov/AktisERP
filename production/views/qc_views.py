@@ -16,6 +16,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from io import BytesIO
 from django.views.decorators.http import require_POST
+from django.db.models import Q
 
 from ..decorators import qc_required
 from ..forms import *
@@ -42,6 +43,7 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
 
     def get_queryset(self):
         status = self.request.GET.get('status', None)
+        search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
         if status:
@@ -52,6 +54,13 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
             except ValueError:
                 pass
 
+        if search_query:
+            queryset = queryset.filter(
+                Q(model__name__icontains=search_query) |
+                Q(color__icontains=search_query) |
+                Q(fabrics__icontains=search_query)
+            )
+            
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -69,10 +78,77 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         orders_with_days_left_sorted = sorted(orders_with_days_left, key=lambda x: x['days_left'])
         context['Order'] = Order
         context['selected_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('search', '')
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['sidebar_type'] = 'qc_page'
         return context
 
+# @method_decorator([login_required, qc_required], name='dispatch')
+# class OrderDetailQcView(DetailView):
+#     model = Order
+#     template_name = 'qc/orders/detail.html'
+#     context_object_name = 'order'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         order = context['order']
+#         passport = Passport.objects.filter(order=order).first()
+#         if passport:
+#             context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DEFECT)
+#         else:
+#             context['errors'] = Error.objects.none()
+        
+#         passports = order.passports.all()
+
+#         # Extended defaultdict to track checked quantity
+#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0, 'extra': None}))
+#         total_per_size = defaultdict(int)
+
+#         for passport in passports:
+#             for passport_size in passport.passport_sizes.all():
+#                 size = passport_size.size_quantity.size
+#                 color = passport_size.size_quantity.color
+#                 extra_key = f'{size} - {color}'
+#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
+#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
+
+#                 # Counting checked pieces
+#                 checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
+#                 size_data[extra_key][passport.id]['checked_quantity'] += checked_pieces
+                
+#                 total_per_size[size] += passport_size.quantity
+
+#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+#                             for sq in order.size_quantities.all().order_by('size')}
+
+#         # Adjusting for sizes in passports not in order sizes
+#         for size in total_per_size:
+#             if size not in required_missing:
+#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+#         # Sorting size_data keys
+#         def sort_key(x):
+#             parts = x.split('-')
+#             try:
+#                 return int(parts[0]), x
+#             except ValueError:
+#                 return float('inf'), x
+
+#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
+#         context.update({
+#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+#             'total_per_size': dict(total_per_size),
+#             'required_missing': required_missing,
+#             'passports': passports,
+#             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+#             'sidebar_type' : 'qc_page'
+#         })
+
+#         return context
+    
 @method_decorator([login_required, qc_required], name='dispatch')
 class OrderDetailQcView(DetailView):
     model = Order
@@ -82,50 +158,67 @@ class OrderDetailQcView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        if passport:
-            context['errors'] = Error.objects.filter(passport=passport, error_type=Error.ErrorType.DEFECT)
-        else:
-            context['errors'] = Error.objects.none()
-        
-        passports = order.passports.all()
 
-        # Extended defaultdict to track checked quantity
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0}))
-        total_per_size = defaultdict(int)
+        # Data for the "Required Quantities" table
+        required_data = []
 
-        for passport in passports:
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
-                size_data[size][passport.id]['stage'] = passport_size.stage
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
 
-                # Counting checked pieces
-                checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.CHECKED).count()
-                size_data[size][passport.id]['checked_quantity'] += checked_pieces
-                
-                total_per_size[size] += passport_size.quantity
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-
-        # Adjusting for sizes in passports not in order sizes
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
 
         context.update({
-            'size_data': {k: dict(v) for k, v in size_data.items()},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
-            'passports': passports,
+            'required_data': required_data,  # Data for the "Required Quantities" table
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'sidebar_type' : 'qc_page'
+            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'sidebar_type': 'qc_page'
         })
 
         return context
     
+@method_decorator([login_required, qc_required], name='dispatch')
+class CutDetailQcView(DetailView):
+    model = Cut
+    template_name = 'qc/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
+            'sidebar_type': 'qc_page'
+        })
+
+        return context
+
 @login_required
 @qc_required
 def get_piece_info(request, barcode):
@@ -138,11 +231,14 @@ def get_piece_info(request, barcode):
         piece_id = parts[2]  # Assuming the last part is the piece ID
         piece = ProductionPiece.objects.get(id=piece_id)  # Fetch the piece using the extracted ID
 
+        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
+
         data = {
             'piece_id': piece.id,
             'passport': piece.passport_size.passport.id,
+            'order': piece.passport_size.passport.order.model.name,
             'passport_size': piece.passport_size.id,
-            'size': piece.passport_size.size_quantity.size,
+            'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display(),
         }
@@ -160,7 +256,7 @@ def update_piece_qc(request, piece_id):
     try:
         data = json.loads(request.body)
         status = data.get('status')
-        defect_type = data.get('defectType', None)  # Retrieve defect type if provided
+        defect_type = data.get('defectType', None)
 
         valid_statuses = {
             'Checked': ProductionPiece.StageChoices.CHECKED,
@@ -173,28 +269,32 @@ def update_piece_qc(request, piece_id):
         piece = ProductionPiece.objects.get(id=piece_id)
         piece.stage = valid_statuses[status]
 
-        if status == 'Defect' and defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
-            piece.defect_type = defect_type
-            piece.save()
+        if status == 'Defect':
+            if defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
+                piece.defect_type = defect_type
+                piece.save()
 
-            # Create an Error instance if a defect is reported
-            error = Error.objects.create(
-                error_type=Error.ErrorType.DEFECT,
-                defect_type=defect_type,
-                cost=piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
-                passport=piece.passport_size.passport,
-                size_quantity=piece.passport_size.size_quantity,
-                quantity=1,
-                status=Error.Status.REPORTED,
-                reported_date=timezone.now()
-            )
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status} with defect type {defect_type}. Error record created.'})
+                error, created = Error.objects.update_or_create(
+                    piece=piece,
+                    error_type=Error.ErrorType.DEFECT,
+                    defaults={
+                        'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
+                        'status': Error.Status.REPORTED,
+                        'reported_date': timezone.now()
+                    }
+                )
 
-        elif status == 'Defect' and not defect_type:
-            return JsonResponse({'success': False, 'message': 'Defect type required for defect status.'}, status=400)
+                message = f'Piece status updated to {status} with defect type {defect_type}. {"Error record created." if created else "Error record updated."}'
+                return JsonResponse({'success': True, 'message': message})
+
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
+        
         else:
+            piece.defect_type = None
             piece.save()
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}.'})
+            Error.objects.filter(piece=piece, error_type=Error.ErrorType.DEFECT).delete()
+            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}. Any related error records have been removed.'})
         
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
@@ -204,67 +304,10 @@ def update_piece_qc(request, piece_id):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 @method_decorator([login_required, qc_required], name='dispatch')
-class DefectCreateView(CreateView):
-    model = Error
-    form_class = ErrorForm
-    template_name = 'qc/defects/create.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        order_pk = self.kwargs.get('order_pk')
-        kwargs['order_pk'] = order_pk
-        kwargs['error_type'] = 'DEFECT'
-        return kwargs
-
-    def form_valid(self, form):
-        order = get_object_or_404(Order, pk=self.kwargs['order_pk'])
-        form.instance.order = order
-        unit_price = getattr(order, 'payment', None)
-        quantity = getattr(form.instance, 'quantity', None)
-        if unit_price is not None and quantity is not None:
-            form.instance.cost = unit_price * quantity
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        order_pk = self.kwargs['order_pk']
-        context['order'] = get_object_or_404(Order, pk=order_pk)
-        context['sidebar_type'] = 'qc_page'
-        return context
-
-@method_decorator([login_required, qc_required], name='dispatch')
 class DefectDetailView(DetailView):
     model = Error 
     template_name = 'qc/defects/detail.html'  
     context_object_name = 'error'
-
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectUpdateView(UpdateView):
-    model = Error 
-    form_class = ErrorForm
-    template_name = 'qc/defects/edit.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        order_pk = self.kwargs.get('order_pk')
-        kwargs['order_pk'] = order_pk
-        kwargs['error_type'] = 'DEFECT'
-        return kwargs
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        error_pk = self.kwargs['pk']
-        context['error'] = get_object_or_404(Error, pk=error_pk)
-        context['sidebar_type'] = 'qc_page'
-        return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDeleteView(DeleteView):
@@ -279,7 +322,7 @@ class DefectDeleteView(DeleteView):
 def mark_as_packing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.QC)
+        operations = Operation.objects.filter(node__type=Node.QC, node__is_common=True)
         with transaction.atomic():
             if passport_size.stage == PassportSize.PACKING:
                 passport_size.stage = PassportSize.QC
@@ -308,3 +351,11 @@ def mark_as_packing(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+
+@login_required
+@qc_required
+def scan_qc_page(request):
+    context = {
+            'sidebar_type': 'qc_page'
+            }
+    return render(request, 'qc/scans/detail.html', context)

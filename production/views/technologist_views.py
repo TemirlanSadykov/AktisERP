@@ -17,6 +17,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from openpyxl import Workbook
 from openpyxl.styles import  Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
+from django.db.models import Q
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -44,6 +45,7 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
 
     def get_queryset(self):
         status = self.request.GET.get('status', None)
+        search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
         if status:
@@ -53,6 +55,13 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
                     queryset = queryset.filter(status=status)
             except ValueError:
                 pass
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(model__name__icontains=search_query) |
+                Q(color__icontains=search_query) |
+                Q(fabrics__icontains=search_query)
+            )
 
         return queryset
 
@@ -72,10 +81,71 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
 
         context['orders_with_days_left'] = orders_with_days_left_sorted
         context['selected_status'] = self.request.GET.get('status', '')
+        context['search_query'] = self.request.GET.get('search', '')
         context['Order'] = Order
         context['sidebar_type'] = 'technology'
         return context
 
+# @method_decorator([login_required, technologist_required], name='dispatch')
+# class OrderDetailTechnologistView(DetailView):
+#     model = Order
+#     template_name = 'technologist/orders/detail.html'
+#     context_object_name = 'order'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         order = context['order']
+
+#         # Fetch all passports related to the order
+#         passports = order.passports.all()
+
+#         # Aggregating errors across all passports associated with the order
+#         errors = Error.objects.filter(piece__passport_size__passport__in=passports).order_by('error_type')
+
+#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
+#         total_per_size = defaultdict(int)
+
+#         for passport in passports:
+#             for passport_size in passport.passport_sizes.all():
+#                 size = passport_size.size_quantity.size
+#                 color = passport_size.size_quantity.color
+#                 extra_key = f'{size} - {color}'
+#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
+#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
+#                 total_per_size[size] += passport_size.quantity
+
+#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+#                             for sq in order.size_quantities.all().order_by('size')}
+
+#         # Adjusting for sizes in passports not in order sizes
+#         for size in total_per_size:
+#             if size not in required_missing:
+#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+#         # Sorting size_data keys
+#         def sort_key(x):
+#             parts = x.split('-')
+#             try:
+#                 return int(parts[0]), x
+#             except ValueError:
+#                 return float('inf'), x
+
+#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
+#         context.update({
+#             'errors': errors,
+#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+#             'total_per_size': dict(total_per_size),
+#             'required_missing': required_missing,
+#             'passports': passports,
+#             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+#             'sidebar_type': 'technology'
+#         })
+
+#         return context
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderDetailTechnologistView(DetailView):
     model = Order
@@ -86,38 +156,61 @@ class OrderDetailTechnologistView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # Fetch all passports related to the order
-        passports = order.passports.all()
+        # Data for the "Required Quantities" table
+        required_data = []
 
-        # Aggregating errors across all passports associated with the order
-        errors = Error.objects.filter(passport__in=passports).order_by('error_type')
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
 
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None}))
-        total_per_size = defaultdict(int)
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
 
-        for passport in passports:
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                size_data[size][passport.id]['quantity'] += passport_size.quantity
-                size_data[size][passport.id]['passport_size_id'] = passport_size.id
-                size_data[size][passport.id]['stage'] = passport_size.stage
-                total_per_size[size] += passport_size.quantity
-
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-
-        # Adjusting for sizes in passports not in order sizes
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
 
         context.update({
-            'errors': errors,
-            'size_data': {k: dict(v) for k, v in size_data.items()},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
-            'passports': passports,
+            'required_data': required_data,  # Data for the "Required Quantities" table
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'sidebar_type': 'technology'
+        })
+
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class CutDetailTechnologistView(DetailView):
+    model = Cut
+    template_name = 'technologist/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
             'sidebar_type': 'technology'
         })
 
@@ -128,8 +221,8 @@ class OrderDetailTechnologistView(DetailView):
 def error_detail(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         error = Error.objects.filter(pk=pk).values(
-            'pk', 'passport__id', 'size_quantity__size', 'size_quantity__id',
-            'quantity', 'error_type', 'defect_type', 'cost', 'status',
+            'pk', 'piece__passport_size__passport__id', 'piece__passport_size__size_quantity__size', 'piece__id', 'piece__passport_size__size_quantity__id',
+            'error_type', 'piece__defect_type', 'cost', 'status',
             'reported_date', 'resolved_date'
         ).first()
 
@@ -137,13 +230,11 @@ def error_detail(request, pk):
             error['reported_date'] = error['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
             error['resolved_date'] = error['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if error['resolved_date'] else None
             error['status'] = Error.Status(error['status']).label
-            if 'defect_type' in error and error['defect_type']:
-                error['defect_type'] = Error.DefectType(error['defect_type']).label
 
             if error['error_type'] == 'DEFECT':
                 works = AssignedWork.objects.filter(
-                    work__passport_id=error['passport__id'],
-                    work__passport_size__size_quantity_id=error['size_quantity__id']
+                    work__passport_id=error['piece__passport_size__passport__id'],
+                    work__passport_size__size_quantity_id=error['piece__passport_size__size_quantity__id']
                 ).select_related('employee')
                 employee_ids = [work.employee.employee_id for work in works]
                 error['responsible_employees'] = employee_ids
@@ -183,7 +274,7 @@ def error_update_status(request, pk):
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
     model_operations = ModelOperation.objects.filter(
-        model=passport.order.model
+        model=passport.cut.order.model
     ).select_related('operation').order_by('order')
     operations = [model_op.operation for model_op in model_operations]
     size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
@@ -216,7 +307,6 @@ def assign_operations(request, passport_id):
                     work, created = Work.objects.get_or_create(
                         operation_id=operation_id,
                         passport_size=passport_size,
-                        passport=passport
                     )
                     AssignedWork.objects.create(
                         work=work,
@@ -229,9 +319,8 @@ def assign_operations(request, passport_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-    passport_rolls = PassportRoll.objects.filter(passport=passport)
     work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+    for assigned_work in AssignedWork.objects.filter(work__passport_size__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
         # Key as a tuple of operation_id and passport_size_id
         key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
         if key not in work_by_op_and_size:
@@ -241,7 +330,6 @@ def assign_operations(request, passport_id):
 
     return render(request, 'technologist/passports/assign_operations.html', {
         'passport': passport,
-        'passport_rolls': passport_rolls,
         'operations': operations,
         'size_quantities': size_quantities,
         'work_by_op_and_size': work_by_op_and_size,
@@ -335,7 +423,6 @@ def reassign_work(request):
     new_employee_id = data.get('new_employee_id')
     quantity = data.get('quantity')
     reason = data.get('reason')
-    print(data)
     # Validation
     if not all([work_id, new_employee_id, quantity, reason]):
         return JsonResponse({'message': 'Missing required data'}, status=400)
@@ -567,7 +654,7 @@ class OperationListView(ListView):
         return 15
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('number')
+        queryset = super().get_queryset().filter(is_archived=False).order_by('number')
         node_id = self.request.GET.get('node', None)
         if node_id:
             queryset = queryset.filter(node_id=node_id)
@@ -575,7 +662,7 @@ class OperationListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        nodes = Node.objects.all().order_by('name')
+        nodes = Node.objects.filter(is_archived=False).order_by('name')
         context['nodes'] = nodes
         context['selected_node'] = self.request.GET.get('node', '')
         context['upload_form'] = UploadFileForm()
@@ -636,6 +723,47 @@ class OperationDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedOperationListView(ListView):
+    model = Operation
+    template_name = 'technologist/operations/list.html'
+    context_object_name = 'operations'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Operation.objects.filter(is_archived=True).order_by('number')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        context['archived'] = True
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OperationArchiveView(UpdateView):
+    model = Operation
+    template_name = 'technologist/operations/delete.html'
+    success_url = reverse_lazy('operation_list')
+
+    def post(self, request, *args, **kwargs):
+        operation = self.get_object()
+        operation.is_archived = True
+        operation.save()
+        return HttpResponseRedirect(self.success_url)
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OperationUnArchiveView(UpdateView):
+    model = Operation
+    template_name = 'technologist/operations/delete.html'
+    success_url = reverse_lazy('archived_operation_list')
+
+    def post(self, request, *args, **kwargs):
+        operation = self.get_object()
+        operation.is_archived = False
+        operation.save()
+        return HttpResponseRedirect(self.success_url)
+
 
 @login_required
 @technologist_required
@@ -737,70 +865,7 @@ def operation_download(request):
     response['Content-Disposition'] = 'attachment; filename=operations.xlsx'
     workbook.save(response)
     return response
-
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollListView(RestrictBranchMixin, ListView):
-    model = Roll
-    template_name = 'technologist/rolls/list.html'
-    context_object_name = 'rolls'
-    paginate_by = 10
-    def get_queryset(self):
-        return super().get_queryset().order_by('name')
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollCreateView(AssignBranchMixin, CreateView):
-    model = Roll
-    form_class = RollForm
-    template_name = 'technologist/rolls/create.html'
-    success_url = reverse_lazy('roll_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollDetailView(DetailView):
-    model = Roll
-    template_name = 'technologist/rolls/detail.html'
-    context_object_name = 'roll'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollUpdateView(RestrictBranchMixin, UpdateView):
-    model = Roll
-    form_class = RollForm
-    template_name = 'technologist/rolls/edit.html'
-    success_url = reverse_lazy('roll_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class RollDeleteView(RestrictBranchMixin, DeleteView):
-    model = Roll
-    template_name = 'technologist/rolls/delete.html'
-    success_url = reverse_lazy('roll_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-
-
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentListView(RestrictBranchMixin, ListView):
     model = Assortment
@@ -808,14 +873,52 @@ class AssortmentListView(RestrictBranchMixin, ListView):
     context_object_name = 'assortments'
     paginate_by = 10
     def get_queryset(self):
-        return super().get_queryset().order_by('name')
+        return super().get_queryset().filter(is_archived=False).order_by('name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
+    
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedAssortmentListView(RestrictBranchMixin, ListView):
+    model = Assortment
+    template_name = 'technologist/assortments/list.html'
+    context_object_name = 'assortments'
+    paginate_by = 10
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class AssortmentArchiveView(RestrictBranchMixin, UpdateView):
+    model = Assortment
+    template_name = 'technologist/assortments/delete.html'
+    success_url = reverse_lazy('assortment_list')
+    
+    def post(self, request, *args, **kwargs):
+        assortment = self.get_object()
+        assortment.is_archived = True
+        assortment.save()
+        return HttpResponseRedirect(self.success_url)
 
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class AssortmentUnArchiveView(UpdateView):
+    model = Assortment
+    success_url = reverse_lazy('assortment_list')
+
+    def post(self, request, *args, **kwargs):
+        assortment = self.get_object()
+        assortment.is_archived = False
+        assortment.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class AssortmentCreateView(AssignBranchMixin, CreateView):
     model = Assortment
@@ -875,13 +978,54 @@ class ModelListView(ListView):
     paginate_by = 10
     def get_queryset(self):
         assortment_id = self.kwargs.get('a_id')
-        return Model.objects.filter(assortment=assortment_id).order_by('name')
+        return Model.objects.filter(assortment=assortment_id, is_archived=False).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         context['sidebar_type'] = 'technology'
         return context
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedModelListView(ListView):
+    model = Model
+    template_name = 'technologist/models/list.html'
+    context_object_name = 'models'
+    paginate_by = 10
+    def get_queryset(self):
+        assortment_id = self.kwargs.get('a_id')
+        return Model.objects.filter(assortment=assortment_id, is_archived=True).order_by('name')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ModelArchiveView(UpdateView):
+    model = Model
+    template_name = 'technologist/models/delete.html'
+
+    def post(self, request, *args, **kwargs):
+        model = self.get_object()
+        model.is_archived = True
+        model.save()
+        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ModelUnArchiveView(UpdateView):
+    model = Model
+    template_name = 'technologist/models/delete.html'
+
+    def post(self, request, *args, **kwargs):
+        model = self.get_object()
+        model.is_archived = False
+        model.save()
+        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+    
+
+        
+        
 @login_required
 @technologist_required
 def model_create(request, a_id, pk=None):
@@ -964,13 +1108,52 @@ class NodeListVIew(ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        return Node.objects.all().order_by('name')
+        return Node.objects.filter(is_archived=False).order_by('name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
 
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedNodeListView(ListView):
+    model = Node
+    template_name = 'technologist/nodes/list.html'
+    context_object_name = 'nodes'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Node.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeArchiveView(UpdateView):
+    model = Node
+    template_name = 'technologist/nodes/delete.html'
+    success_url = reverse_lazy('node_list')
+
+    def post(self, request, *args, **kwargs):
+        node = self.get_object()
+        node.is_archived = True
+        node.save()
+        return HttpResponseRedirect(self.success_url)
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class NodeUnArchiveView(UpdateView):
+    model = Node
+    template_name = 'technologist/nodes/delete.html'
+    success_url = reverse_lazy('node_list')
+
+    def post(self, request, *args, **kwargs):
+        node = self.get_object()
+        node.is_archived = False
+        node.save()
+        return HttpResponseRedirect(self.success_url)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class NodeCreateView(CreateView):
@@ -1027,14 +1210,52 @@ class EquipmentListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Equipment.objects.all().order_by('name')
+        return Equipment.objects.filter(is_archived=False).order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
 
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedEquipmentListView(ListView):
+    model = Equipment
+    template_name = 'technologist/equipment/list.html'
+    context_object_name = 'equipment'
+    paginate_by = 10
 
+    def get_queryset(self):
+        return Equipment.objects.filter(is_archived=True).order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentArchiveView(UpdateView):
+    model = Equipment
+    template_name = 'technologist/equipment/delete.html'
+    success_url = reverse_lazy('equipment_list')
+
+    def post(self, request, *args, **kwargs):
+        equipment = self.get_object()
+        equipment.is_archived = True
+        equipment.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EquipmentUnArchiveView(UpdateView):
+    model = Equipment
+    template_name = 'technologist/equipment/delete.html'
+    success_url = reverse_lazy('equipment_list')
+
+    def post(self, request, *args, **kwargs):
+        equipment = self.get_object()
+        equipment.is_archived = False
+        equipment.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentCreateView(CreateView):
     model = Equipment

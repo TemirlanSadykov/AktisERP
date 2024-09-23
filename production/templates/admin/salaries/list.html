@@ -64,7 +64,7 @@
             <tr class="{% if data.status == 0 %}payment-pending{% elif data.status == 1 %}payment-paid{% endif %}">
               <td>
                 <a href="{% url 'salary_detail' pk=user.id %}?salary_type={{ request.GET.salary_type }}&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}">
-                  {{ user.user.get_full_name }}
+                  {{ user.employee_id }} - {{ user.user.get_full_name }}
                 </a>
               </td>
               <td>{{ data.salary|floatformat:2 }}</td>

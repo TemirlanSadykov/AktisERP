@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
+{% load custom_filters %}
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
@@ -44,10 +45,16 @@
   <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
           <div class="row">
-              <div class="col-lg-6 col-md-6 col-sm-4">
-                  <h4 class="font-weight-bold">{% trans "Models" %}</h4>
-              </div>
-
+            <div class="col-lg-6 col-md-6 col-sm-4">
+                <h4 class="font-weight-bold">{% trans "Models" %}</h4>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-8 d-flex justify-content-end">
+                <form method="get" class="form-inline my-2 my-lg-0">
+                    <!-- Insert the search input field here -->
+                    <input class="form-control" type="search" name="search" placeholder="{% trans 'Search' %}" value="{{ search_query }}" aria-label="Search" style="margin: 0;">
+                    <input type="hidden" name="status" value="{{ selected_status }}">
+                </form>
+            </div>
           </div>
           </div>
           <br>
@@ -56,7 +63,16 @@
             <a href="{% url 'order_detail_technologist' order_info.order.pk %}" class="order-link ">
 
             <li class="list-group-item custom-list-item listequal" style="color:#007bff">
-                  {{ order_info.order.model.name }} - {{ order_info.order.color }} - {{ order_info.order.fabrics }}
+              {{ order_info.order.model.name }} - {% for color in order_info.order.colors.all %}
+                                                      {{ color }}{% if not forloop.last %}, {% endif %}
+                                                  {% empty %}
+                                                      {% trans "No colors selected" %}
+                                                  {% endfor %} - 
+                                                  {% for fabric in order_info.order.fabrics.all %}
+                                                      {{ fabric }}{% if not forloop.last %}, {% endif %}
+                                                  {% empty %}
+                                                      {% trans "No fabrics selected" %}
+                                                  {% endfor %} - {{ order_info.order.quantity }} {% trans "pcs" %} ({{ order_info.order|size_range }})
                 <span class="days-left flex-shrink-0">{% trans "Days left:" %} {{ order_info.days_left }}</span>
               </li>
             </a>
@@ -65,27 +81,28 @@
         </ul>
       </div>
 
-  <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
-    {% if is_paginated %}
-      <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
-          {% endif %}
-          {% for num in paginator.page_range %}
-          {% if page_obj.number == num %}
-          <li class="page-item"><a class="page-link active" href="?page={{ num }}">{{ num }}</a></li>
-          {% else %}
-          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-          {% endif %}
-          {% endfor %}
-          {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
-          <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
-          {% endif %}
-      </ul>
-      {% endif %}
-  </nav>
+      <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
+        {% if is_paginated %}
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1&status={{ selected_status }}&search={{ search_query }}">&laquo; first</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ selected_status }}&search={{ search_query }}">&lsaquo; previous</a></li>
+                {% endif %}
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item"><a class="page-link active" href="?page={{ num }}&status={{ selected_status }}&search={{ search_query }}">{{ num }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}&status={{ selected_status }}&search={{ search_query }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ selected_status }}&search={{ search_query }}">next &rsaquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}&status={{ selected_status }}&search={{ search_query }}">last &raquo;</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
+    </nav>
+    
 <!-- </div> -->
  </div>
  

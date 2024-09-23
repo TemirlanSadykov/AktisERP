@@ -98,6 +98,7 @@
   <div class="col-md-12">
     <form method="post" id="modelForm" class="crud-form">
         {% csrf_token %}
+        <input type="hidden" id="operationsOrder" value="{{ operations_order_json }}">
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
         {{ form.name }}
         {% if form.name.errors %}
@@ -109,7 +110,7 @@
             {% for operation in form.fields.operations.queryset %}
                 <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
                     <label>
-                        <input type="checkbox" name="operations" value="{{ operation.id }}">
+                        <input type="checkbox" name="operations" value="{{ operation.id }}"
                         {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
                         {{ operation }}
                     </label>

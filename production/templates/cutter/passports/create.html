@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Cutter Dashboard' %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+        <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+            <li class="nav-item dropdown" style="margin: 10px;">
+                {{ request.user.username }}
+            </li>
+            <li class="nav-item dropdown">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container maincontr" style="max-width: 100%;">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card-header">
+                <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Passport for Cut:" %} #{{ cut.number }}</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" class="date-filter-form" style="align-items: flex-end;">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>{% trans "Roll:" %}</label>
+                        {{ form.roll }}
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Meters:" %}</label>
+                        {{ form.meters }}
+                    </div>
+                    <div class="form-group">
+                        <label>{% trans "Layers:" %}</label>
+                        {{ form.layers }}
+                    </div>
+                    <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
+                </form>
+                <br>
+                <div id="passportList" class="size-quantity-list">
+                    {% for passport in cut.passports.all %}
+                        <li id="passport-{{ passport.id }}" class="size-quantity-item">
+                            <span class="detail"><strong>{% trans "Roll:" %}</strong> {{ passport.roll.name }} - {{ passport.roll.color }} - {{ passport.roll.fabrics }}</span>
+                            <span class="detail"><strong>{% trans "Meters:" %}</strong> {{ passport.meters }}</span>
+                            <span class="detail"><strong>{% trans "Layers:" %}</strong> {{ passport.layers }}</span>
+                            <span class="detail"><strong>{% trans "Quantity:" %}</strong> {{ passport.quantity }}</span>
+                            {% comment %} <button class="edit-btn" data-passport-id="{{ passport.id }}">{% trans "Edit" %}</button> {% endcomment %}
+                            <button class="delete-btn" data-passport-id="{{ passport.id }}">{% trans "Delete" %}</button>
+                        </li>
+                    {% endfor %}
+                </div>
+                <div class="form-actions">
+                    <a href="{% url 'cut_detail' cut.pk %}" class="btn create-btn">{% trans "Save" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var cutNumber = "{{ cut.number }}";
+    var deleteText = "{% trans 'Delete' %}";
+    var editText = "{% trans 'Edit' %}";
+    var saveText = "{% trans 'Save' %}";
+    var confirmDeleteText = "{% trans 'Are you sure you want to delete this item?' %}";
+    var rollText = "{% trans 'Roll:' %}";
+    var metersText = "{% trans 'Meters:' %}";
+    var layersText = "{% trans 'Layers:' %}";
+    var quantityText = "{% trans 'Quantity:' %}";
+  
+    document.addEventListener("DOMContentLoaded", function() {
+      const form = document.querySelector('.date-filter-form');
+  
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const actionUrl = `/production/cutter/cuts/${cutNumber}/create_passport/`;
+  
+        fetch(actionUrl, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updatePassportList(data.passports);
+            form.reset();  // Clear the form inputs after successful submission
+          } else {
+            console.error('Submission failed', data.errors);
+            alert('Не получилось обновить');
+          }
+        })
+        .catch(error => console.error('There has been a problem with your fetch operation:', error));
+      });
+  
+      document.getElementById('passportList').addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-btn')) {
+          handleEdit(e.target);
+        } else if (e.target.classList.contains('delete-btn')) {
+          handleDelete(e.target);
+        }
+      });
+  
+      function handleEdit(button) {
+        let passportId = button.getAttribute("data-passport-id");
+        let parentLi = document.querySelector(`#passport-${passportId}`);
+        let rollSpan = parentLi.querySelector(".roll");
+        let metersSpan = parentLi.querySelector(".meters");
+        let layersSpan = parentLi.querySelector(".layers");
+  
+        if (!rollSpan.isContentEditable) {
+          rollSpan.contentEditable = "true";
+          metersSpan.contentEditable = "true";
+          layersSpan.contentEditable = "true";
+          rollSpan.focus();
+          button.textContent = saveText;
+        } else {
+          rollSpan.contentEditable = "false";
+          metersSpan.contentEditable = "false";
+          layersSpan.contentEditable = "false";
+          button.textContent = editText;
+          let updatedRoll = rollSpan.textContent;
+          let updatedMeters = metersSpan.textContent;
+          let updatedLayers = layersSpan.textContent;
+          updatePassport(passportId, updatedRoll, updatedMeters, updatedLayers);
+        }
+      }
+  
+      function handleDelete(button) {
+        let passportId = button.getAttribute("data-passport-id");
+        if (confirm(confirmDeleteText)) {
+          deletePassport(passportId);
+        }
+      }
+  
+      function updatePassport(passportId, roll, meters, layers) {
+        fetch(`/production/cutter/cuts/edit-passport/${passportId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ roll: roll, meters: meters, layers: layers })
+        })
+        .then(response => {
+            if (response.ok) {
+                let rollSpan = document.querySelector(`.roll[data-passport-id="${passportId}"]`);
+                let metersSpan = document.querySelector(`.meters[data-passport-id="${passportId}"]`);
+                let layersSpan = document.querySelector(`.layers[data-passport-id="${passportId}"]`);
+                rollSpan.textContent = roll;
+                metersSpan.textContent = meters;
+                layersSpan.textContent = layers;
+            } else {
+                alert('Не получилось обновить');
+            }
+        });
+      }
+  
+      function deletePassport(passportId) {
+        fetch(`/production/cutter/cuts/delete-passport/${passportId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            // Remove the passport element without reloading
+            let parentLi = document.querySelector(`#passport-${passportId}`);
+            if (parentLi) {
+              parentLi.remove();
+            }
+          } else {
+            alert('Не получилось удалить');
+          }
+        });
+      }
+  
+      function updatePassportList(passports) {
+        const list = document.getElementById('passportList');
+        list.innerHTML = ''; // Clear existing list
+        passports.forEach(passport => {
+            const li = document.createElement('li');
+            li.setAttribute('id', 'passport-' + passport.id);
+            li.classList.add('size-quantity-item');
+  
+            const rollSpan = document.createElement('span');
+            rollSpan.classList.add('roll');
+            rollSpan.setAttribute('data-passport-id', passport.id);
+            rollSpan.textContent = `${passport.roll.name} - ${passport.roll.color} - ${passport.roll.fabrics}`;
+  
+            const metersSpan = document.createElement('span');
+            metersSpan.classList.add('meters');
+            metersSpan.setAttribute('data-passport-id', passport.id);
+            metersSpan.textContent = passport.meters;
+  
+            const layersSpan = document.createElement('span');
+            layersSpan.classList.add('layers');
+            layersSpan.setAttribute('data-passport-id', passport.id);
+            layersSpan.textContent = passport.layers;
+  
+            const quantitySpan = document.createElement('span');
+            quantitySpan.classList.add('quantity');
+            quantitySpan.setAttribute('data-passport-id', passport.id);
+            quantitySpan.textContent = passport.quantity;
+  
+            const editBtn = document.createElement('button');
+            editBtn.classList.add('edit-btn');
+            editBtn.setAttribute('data-passport-id', passport.id);
+            editBtn.textContent = editText;
+  
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.setAttribute('data-passport-id', passport.id);
+            deleteBtn.textContent = deleteText;
+  
+            const rollTextEl = document.createElement('strong');
+            rollTextEl.textContent = rollText;
+  
+            const metersTextEl = document.createElement('strong');
+            metersTextEl.textContent = metersText;
+  
+            const layersTextEl = document.createElement('strong');
+            layersTextEl.textContent = layersText;
+  
+            const quantityTextEl = document.createElement('strong');
+            quantityTextEl.textContent = quantityText;
+  
+            li.appendChild(rollTextEl);
+            li.appendChild(rollSpan);
+            li.appendChild(metersTextEl);
+            li.appendChild(metersSpan);
+            li.appendChild(layersTextEl);
+            li.appendChild(layersSpan);
+            li.appendChild(quantityTextEl);
+            li.appendChild(quantitySpan);
+            li.appendChild(editBtn);
+            li.appendChild(deleteBtn);
+  
+            list.appendChild(li);
+        });
+      }
+  
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    });
+  </script>  
+{% endblock %}

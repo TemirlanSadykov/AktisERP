@@ -4,13 +4,14 @@ import json
 import openpyxl
 import pandas as pd
 from urllib.parse import urlencode
+from collections import defaultdict
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
-from django.db.models import F, Window, Sum
+from django.db.models import F, Window, Sum, Count, Q
 from django.db.models.functions import Lead
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
@@ -23,11 +24,16 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
 
+from django.db.models.functions import TruncMonth
+
+import itertools
+
 from ..decorators import admin_required
 from ..forms import *
 from ..mixins import *
 from ..models import *
-
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -45,13 +51,142 @@ def admin_page(request):
 @login_required
 @admin_required
 def dashboard_page(request):
-    clients = Client.objects.all()
+    form = DateRangeForm(request.GET or None)
     client_data = []
+    employee_data = []
+    production_data = {}
+    orders_data = []
+    inventory_data = []
+    client_orders_data = []
 
-    for client in clients:
-        client_orders = ClientOrder.objects.filter(client=client)
+    if form.is_valid():
+        start_date = timezone.make_aware(datetime.combine(form.cleaned_data['start_date'], datetime.min.time()))
+        end_date = timezone.make_aware(datetime.combine(form.cleaned_data['end_date'], datetime.max.time()))
+        client_data = get_client_data(start_date, end_date)
+        employee_data = get_employee_data(start_date, end_date)
+        production_data = get_production_data(start_date, end_date)
+        orders_data = get_orders_data(start_date, end_date)
+        inventory_data = get_inventory_data(start_date, end_date)
+        client_orders_data = get_client_orders_data(start_date, end_date)
+    else:
+        # Default to the last 30 days if no valid dates are provided
         
-        # Compute total amounts and quantities for each client separately
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=30)
+        client_data = get_client_data(start_date, end_date)
+        employee_data = get_employee_data(start_date, end_date)
+        production_data = get_production_data(start_date, end_date)
+        orders_data = get_orders_data(start_date, end_date)
+        inventory_data = get_inventory_data(start_date, end_date)
+        client_orders_data = get_client_orders_data(start_date, end_date)      
+
+    context = {
+        'form': form,
+        'client_data': client_data,
+        'employee_data': employee_data,
+        'production_data': production_data,
+        'orders_data': orders_data,
+        'inventory_data': inventory_data,
+        'client_orders_data': client_orders_data
+    }
+    return render(request, 'dashboard.html', context)
+
+
+
+class DateRangeForm(forms.Form):
+    start_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=True,
+        label='Start Date'
+    )
+    end_date = forms.DateField(
+        widget=forms.TextInput(attrs={'type': 'date'}),
+        required=True,
+        label='End Date'
+    )
+    
+def get_client_orders_data(start_date, end_date):
+    client_orders_data = ClientOrder.objects.filter(
+        created_at__range=[start_date, end_date]
+    ).select_related('client').values(
+        'id', 'order_number', 'client__name', 'status', 'term'
+    ).order_by('status')
+    
+    return list(client_orders_data)
+
+def get_inventory_data(start_date, end_date):
+    rolls_data = Roll.objects.annotate(
+        available_meters=F('meters') - F('used_meters')
+    ).values(
+        'id', 'name', 'color', 'fabrics', 'meters', 'used_meters', 'available_meters'
+    )
+    
+    return list(rolls_data)
+
+def get_orders_data(start_date, end_date):
+    orders_data = Order.objects.filter(
+        client_order__created_at__range=[start_date, end_date]
+    ).select_related('model').annotate(
+        model_name=F('model__name'),
+        assortment_name=F('assortment__name'),
+        total_price=F('quantity') * F('payment')
+    ).values(
+        'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'color', 'fabrics'
+    ).order_by('assortment_name')
+
+    return list(orders_data)
+
+def get_production_data(start_date, end_date):
+    recent_orders = Order.objects.filter(client_order__created_at__range=[start_date, end_date])
+    
+    in_progress_orders_count = recent_orders.filter(status=Order.IN_PROGRESS).count()
+
+    total_amount = recent_orders.aggregate(total=Sum('quantity'))['total'] or 0
+
+    total_revenue = recent_orders.aggregate(
+        total=Sum(F('quantity') * F('payment'))
+    )['total'] or 0
+
+    completed_amount = recent_orders.aggregate(total=Sum('completed_quantity'))['total'] or 0
+
+    orders_in_progress = ClientOrder.objects.filter(
+        status=ClientOrder.IN_PROGRESS,
+        created_at__range=[start_date, end_date]
+    ).count()
+
+    total_salary = AssignedWork.objects.filter(
+        end_time__range=[start_date, end_date],
+        is_success=True
+    ).aggregate(total=Sum(F('quantity') * F('work__operation__payment')))['total'] or 0
+
+    total_errors = Error.objects.filter(
+        reported_date__range=[start_date, end_date]
+    ).count()
+
+    total_rolls_used = PassportRoll.objects.filter(
+        passport__order__client_order__created_at__range=[start_date, end_date]
+    ).aggregate(total_meters=Sum('meters'))['total_meters'] or 0
+
+    return {
+        'total_amount': total_amount,
+        'total_revenue': total_revenue,
+        'completed_amount': completed_amount,
+        'orders_in_progress': orders_in_progress,
+        'in_progress_orders_count': in_progress_orders_count,
+        'total_salary': total_salary,
+        'total_errors': total_errors,
+        'total_rolls_used': total_rolls_used
+    }
+
+
+def get_client_data(start_date, end_date):
+    client_orders = ClientOrder.objects.filter(created_at__range=[start_date, end_date])
+    clients = Client.objects.filter(client_orders__in=client_orders).distinct()
+    
+    client_data = []
+    for client in clients:
+        client_orders = client.client_orders.filter(created_at__range=[start_date, end_date])
+        
         total_ordered_amount_by_orders = client_orders.annotate(
             total_amount=Sum(F('orders__quantity') * F('orders__payment'))
         ).aggregate(sum=Sum('total_amount'))['sum'] or 0
@@ -60,7 +195,6 @@ def dashboard_page(request):
             total_amount=Sum('orders__quantity')
         )['total_amount'] or 0
         
-        # Collecting order details, income per order, and quantity
         client_orders_details = []
         for co in client_orders:
             order_details = co.orders.aggregate(
@@ -85,9 +219,55 @@ def dashboard_page(request):
             'total_ordered_amount': total_ordered_amount
         })
 
-    client_data = sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
+    return sorted(client_data, key=lambda x: x['total_ordered_amount'], reverse=True)
 
-    return render(request, 'dashboard.html', {'client_data': client_data})
+def get_employee_data(start_date, end_date):
+    # Aggregating units produced by each employee from AssignedWork within the date range
+    employee_units = AssignedWork.objects.filter(
+        is_success=True, 
+        end_time__range=[start_date, end_date]
+    ).values('employee__id').annotate(
+        total_units=Sum('quantity')
+    ).order_by('-total_units')
+    
+    units_dict = {eu['employee__id']: eu['total_units'] for eu in employee_units}
+
+    # Calculating hours worked from EmployeeAttendance within the date range
+    employee_hours = {}
+    attendances = EmployeeAttendance.objects.filter(
+        timestamp__range=[start_date, end_date], 
+        is_clock_in=True
+    ).values('employee__id', 'timestamp').order_by('employee__id', 'timestamp')
+    
+    for emp_id, group in itertools.groupby(attendances, key=lambda x: x['employee__id']):
+        timestamps = list(group)
+        total_hours = sum(
+            (timestamps[i+1]['timestamp'] - timestamps[i]['timestamp']).total_seconds() / 3600
+            for i in range(0, len(timestamps) - 1, 2)
+        ) if len(timestamps) % 2 == 0 else 0
+        employee_hours[emp_id] = total_hours
+
+    # Fetch all employees and compile their data with units produced and hours worked
+    all_employees = UserProfile.objects.all().values(
+        'id', 'user__username', 'user__first_name', 'user__last_name', 'employee_id'
+    )
+
+    employee_data = []
+    for employee in all_employees:
+        employee_id = employee['id']
+        units_produced = units_dict.get(employee_id, 0)
+        hours_worked = employee_hours.get(employee_id, 0)
+        full_name = f"{employee['user__first_name']} {employee['user__last_name']}".strip()
+        employee_data.append({
+            'id': employee_id,
+            'name': employee['user__username'],
+            'employee_id': employee['employee_id'],
+            'full_name': full_name,
+            'units_produced': units_produced,
+            'hours_worked': hours_worked
+        })
+
+    return sorted(employee_data, key=lambda x: x['units_produced'], reverse=True)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchListView(ListView):
@@ -97,8 +277,19 @@ class BranchListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Branch.objects.all().order_by('name')
+        return Branch.objects.filter(is_archived=False).order_by('name')
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedBranchListView(ListView):
+    model = Branch
+    template_name = 'admin/branches/list.html'
+    context_object_name = 'branches'
+    paginate_by = 10
 
+    def get_queryset(self):
+        return Branch.objects.filter(is_archived=True).order_by('name')
+    
+
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class BranchCreateView(CreateView):
     model = Branch
@@ -124,7 +315,45 @@ class BranchDeleteView(DeleteView):
     model = Branch
     template_name = 'admin/branches/delete.html'
     success_url = reverse_lazy('branch_list')
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchArchiveView(UpdateView):
+    model = Branch
+    template_name = 'admin/branches/list.html'
+    success_url = reverse_lazy('branch_list')
 
+    def post(self, request, *args, **kwargs):
+        branch = self.get_object()
+        branch.is_archived = True
+        branch.save()
+        return HttpResponseRedirect(self.success_url)
+    
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class BranchUnArchiveView(UpdateView):
+    model = Branch  
+    template_name = 'admin/branches/list.html'  
+    success_url = reverse_lazy('branch_list') 
+
+    def post(self, request, *args, **kwargs):
+        branch = self.get_object()  
+        branch.is_archived = False  
+        branch.save() 
+        return HttpResponseRedirect(self.success_url)  
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedBranchDetailView(DetailView):
+    model = Branch
+    template_name = 'admin/branches/archived_detail.html'
+    context_object_name = 'archive_branch'
+    
+# @method_decorator([login_required, admin_required], name='dispatch')
+# class ArchivedBranchDeleteView(DeleteView):
+#     model = Branch
+#     template_name = 'admin/branches/archived_delete.html'
+#     success_url = reverse_lazy('archive_branch_list')
+
+   
 @login_required
 @admin_required
 def branch_switch(request):
@@ -150,15 +379,18 @@ class EmployeeListView(ListView):
     template_name = 'admin/employees/list.html'
     context_object_name = 'employees'
     paginate_by = 10
+
     def get_queryset(self):
         return UserProfile.objects.filter(
-            branch=self.request.user.userprofile.branch
-        ).order_by('employee_id')
+            branch=self.request.user.userprofile.branch,
+            is_archived=False
+        ).exclude(user__username='admin').order_by('employee_id')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['upload_form'] = UploadFileForm()
         return context
-
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
     template_name = 'admin/employees/create.html'
@@ -195,6 +427,43 @@ class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     template_name = 'admin/employees/delete.html'
     success_url = reverse_lazy('employee_list')
     
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = True
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+   
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeUnArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = False
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+     
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedEmployeeListView(ListView):
+    template_name = 'admin/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(            
+            branch=self.request.user.userprofile.branch,
+            is_archived=True
+            ).order_by('employee_id')
+    
+
 @login_required
 @admin_required
 @require_POST
@@ -562,9 +831,9 @@ def calculate_errors(employee, start_date, end_date):
 
     error_details = [{
         'type': 'Дефект' if resp.error.error_type == Error.ErrorType.DEFECT else 'Несоответствие',
-        'passport': resp.error.passport.id,
-        'size': resp.error.size_quantity.size,
-        'quantity': resp.error.quantity,
+        'passport': resp.error.piece.passport_size.passport.id,
+        'size': resp.error.piece.passport_size.size_quantity.size,
+        'quantity': resp.error.piece.passport_size.quantity,
         'reported_date': resp.error.reported_date,
         'cost': resp.error.cost * (resp.percentage / 100)
     } for resp in error_responsibilities]
@@ -694,9 +963,9 @@ def export_salaries_to_excel(request):
 
             for responsibility in error_responsibilities:
                 errors_data.append([
-                    responsibility.error.passport.order.model.name,
-                    responsibility.error.passport.id,
-                    responsibility.error.size_quantity.size,
+                    responsibility.error.piece.passport_size.passport.order.model.name,
+                    responsibility.error.piece.passport_size.passport.id,
+                    responsibility.error.piece.passport_size.size_quantity.size,
                     employee.user.get_full_name(),
                     employee.employee_id,
                     'Defect' if responsibility.error.error_type == Error.ErrorType.DEFECT else 'Discrepancy',
@@ -750,7 +1019,6 @@ def attendance_list(request):
 
 
 
-
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientOrderListView(RestrictBranchMixin, ListView):
     model = ClientOrder
@@ -760,7 +1028,7 @@ class ClientOrderListView(RestrictBranchMixin, ListView):
     form_class = DateRangeForm 
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('term')
+        queryset = super().get_queryset().filter(is_archived=False).order_by('term')
         status = self.request.GET.get('status', None)
         form = self.form_class(self.request.GET)
 
@@ -848,6 +1116,82 @@ class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
     template_name = 'admin/client/orders/delete.html'
     success_url = reverse_lazy('client_order_list')
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderArchiveView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+        
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = True
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientOrderUnArchiveView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+        
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = False
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedClientOrderListView(RestrictBranchMixin, ListView):
+    model = ClientOrder
+    template_name = 'admin/client/orders/list.html'  # Use a separate template if necessary
+    context_object_name = 'archived_orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=True).order_by('term')
+        status = self.request.GET.get('status', None)
+        form = self.form_class(self.request.GET)
+
+        if status:
+            try:
+                status = int(status)
+                if status in dict(self.model.TYPE_CHOICES):
+                    queryset = queryset.filter(status=status)
+            except ValueError:
+                pass
+
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+
+            if start_date and end_date:
+                queryset = queryset.filter(created_at__date__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(created_at__date__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(created_at__date__lte=end_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None) 
+        today = timezone.localdate()
+        orders_with_days_left = []
+        for order in context['archived_orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+
+        context['orders_with_days_left'] = sorted(orders_with_days_left, key=lambda x: x['days_left'])
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['ClientOrder'] = ClientOrder 
+        return context
+
+        
+    
+    
 @login_required
 @admin_required
 @require_POST
@@ -894,6 +1238,50 @@ def client_order_complete(request, pk):
 
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class OrderCalendarView(ListView):
+    model = ClientOrder
+    template_name = 'admin/calendar/calendar.html'
+    context_object_name = 'orders'
+
+    def get_queryset(self):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        queryset = super().get_queryset()
+        return queryset.annotate(month=TruncMonth('term')).filter(month__month=current_month, month__year=current_year).values('id', 'order_number', 'term')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['events_url'] = reverse('order_calendar_events')
+        return context
+    
+
+class OrderCalendarEventsView(View):
+    def get(self, request, *args, **kwargs):
+        current_month = timezone.now().month
+        current_year = timezone.now().year
+        client_orders = ClientOrder.objects.annotate(month=TruncMonth('term')).filter(
+            month__month=current_month, month__year=current_year, is_archived=False
+        ).select_related('client').prefetch_related('orders__model')
+
+        events = []
+        for client_order in client_orders:
+            model_names = ', '.join(
+                [order.model.name for order in client_order.orders.all()]
+            )
+
+            description = f"Client: {client_order.client.name}, Models: {model_names}"
+            
+            events.append({
+                'id': client_order.id,
+                'title': client_order.order_number,
+                'start': client_order.term.isoformat(),
+                'end': client_order.term.isoformat(),
+                'description': description,
+                'url': reverse('client_order_detail', kwargs={'pk': client_order.id})
+            })
+        
+        return JsonResponse(events, safe=False)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class OrderCreateView(CreateView):
@@ -922,22 +1310,71 @@ class OrderDetailView(DetailView):
     context_object_name = 'order'
 
     def get_context_data(self, **kwargs):
-        context = super(OrderDetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        if passport:
-            context['errors'] = Error.objects.filter(passport=passport).order_by('error_type')
-        else:
-            context['errors'] = Error.objects.none()
-        context['passports'] = order.passports.all()
-        context['size_quantities'] = order.size_quantities.all().order_by('size')
-        context['size_quantity_form'] = SizeQuantityForm()
+
+        # Data for the "Required Quantities" table
+        required_data = []
+
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
+
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
+
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
+
+        # Calculate days left
         today = timezone.localdate()
-        if order.client_order.term >= today:
-            days_left = (order.client_order.term - today).days
-        else:
-            days_left = 0
-        context['days_left'] = days_left
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
+
+        context.update({
+            'required_data': required_data,  # Data for the "Required Quantities" table
+            'days_left': days_left,          # Days left for the order deadline
+            'associated_cuts': associated_cuts,  # Send associated cuts to the template
+            'sidebar_type': 'admin'
+        })
+
+        return context
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class CutDetailAdminView(DetailView):
+    model = Cut
+    template_name = 'admin/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
+            'sidebar_type': 'admin'
+        })
+
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
@@ -959,22 +1396,24 @@ class OrderDeleteView(DeleteView):
 class SizeQuantityCreateView(View):
     def get(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
-        form = SizeQuantityForm()
+        form = SizeQuantityForm(order=order)  # Pass the order to the form
         size_quantities = order.size_quantities.all()
         return render(request, 'admin/orders/create_size_quantity.html', {
             'form': form,
             'size_quantities': size_quantities,
             'order': order
         })
+
     def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            form = SizeQuantityForm(request.POST)
+            form = SizeQuantityForm(request.POST, order=order)  # Pass the order to the form
             if form.is_valid():
                 new_size_quantity = form.save(commit=False)
                 new_size_quantity.save()
-                order = get_object_or_404(Order, pk=pk)
                 order.size_quantities.add(new_size_quantity)
-                size_quantities = order.size_quantities.values('id', 'size', 'quantity')
+                size_quantities = order.size_quantities.values('id', 'size', 'quantity', 'color')  # Pass color field
+                
                 return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
             else:
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
@@ -1011,7 +1450,22 @@ class ClientListView(ListView):
     context_object_name = 'clients'
     paginate_by = 10
     def get_queryset(self):
-        return Client.objects.all().order_by('name')
+        return Client.objects.filter(
+            is_archived=False
+            ).order_by('name')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedClientListView(ListView):
+    template_name = 'admin/clients/list.html'
+    context_object_name = 'clients'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Client.objects.filter(            
+            is_archived=True
+            ).order_by('name')
+    
+
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class ClientCreateView(CreateView):
@@ -1041,7 +1495,31 @@ class ClientDeleteView(DeleteView):
     success_url = reverse_lazy('client_list')
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientArchiveView(UpdateView):
+    model = Client
+    template_name = 'admin/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = True
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
 
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ClientUnArchiveView(UpdateView):
+    model = Client
+    template_name = 'admin/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = False
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class FixedSalaryListView(RestrictBranchMixin, ListView):
     model = FixedSalary
@@ -1049,7 +1527,20 @@ class FixedSalaryListView(RestrictBranchMixin, ListView):
     context_object_name = 'fixed_salaries'
     paginate_by = 10
     def get_queryset(self):
-        return FixedSalary.objects.all().order_by('position')
+        return FixedSalary.objects.filter(
+            is_archived = False
+            ).order_by('position')
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedFixedSalaryListView(RestrictBranchMixin, ListView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/list.html'
+    context_object_name = 'fixed_salaries'
+    paginate_by = 10
+    def get_queryset(self):
+        return FixedSalary.objects.filter(
+            is_archived = True
+            ).order_by('position')
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class FixedSalaryCreateView(AssignBranchMixin, CreateView):
@@ -1078,7 +1569,31 @@ class FixedSalaryDeleteView(RestrictBranchMixin, DeleteView):
     success_url = reverse_lazy('fixed_salary_list')
 
 
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryArchiveView(RestrictBranchMixin, UpdateView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/delete.html'
+    success_url = reverse_lazy('fixed_salary_list')
+    
+    def post(self, request, *args, **kwargs):
+        fixed_salary = self.get_object()
+        fixed_salary.is_archived = True
+        fixed_salary.save()
+        return HttpResponseRedirect(self.success_url)
 
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class FixedSalaryUnArchiveView(RestrictBranchMixin, UpdateView):
+    model = FixedSalary
+    template_name = 'admin/fixed_salaries/delete.html'
+    success_url = reverse_lazy('fixed_salary_list')
+    
+    def post(self, request, *args, **kwargs):
+        fixed_salary = self.get_object()
+        fixed_salary.is_archived = False
+        fixed_salary.save()
+        return HttpResponseRedirect(self.success_url)
+    
 @method_decorator([login_required, admin_required], name='dispatch')
 class ErrorDetailAdminView(CreateView):
     model = ErrorResponsibility

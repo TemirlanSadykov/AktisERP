@@ -40,6 +40,10 @@
               <label>{% trans "Quantity:" %}</label>
               {{ form.quantity }}
             </div>
+            <div class="form-group">
+              <label>{% trans "Color:" %}</label>
+              {{ form.color }}
+            </div>
             <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
           </form><br>
           <div id="sizeQuantityList" class="size-quantity-list">
@@ -47,7 +51,8 @@
               <li id="sq-{{ sq.id }}" class="size-quantity-item">
                 <span class="detail"><strong>{% trans "Size:" %}</strong> <span class="size" data-sq-id="{{ sq.id }}">{{ sq.size }}</span></span>
                 <span class="detail"><strong>{% trans "Quantity:" %}</strong> <span class="quantity" data-sq-id="{{ sq.id }}">{{ sq.quantity }}</span></span>
-                <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button>
+                <span class="detail"><strong>{% trans "Color:" %}</strong> <span class="color" data-sq-id="{{ sq.id }}">{{ sq.color }}</span></span>
+                {% comment %} <button class="edit-btn" data-sq-id="{{ sq.id }}">{% trans "Edit" %}</button> {% endcomment %}
                 <button class="delete-btn" data-sq-id="{{ sq.id }}">{% trans "Delete" %}</button>
               </li>
             {% endfor %}
@@ -69,6 +74,7 @@
   var confirmDeleteText = "{% trans 'Are you sure you want to delete this item?' %}";
   var sizeText = "{% trans 'Size:' %}";
   var quantityText = "{% trans 'Quantity:' %}";
+  var colorText = "{% trans 'Color:' %}";
 </script>
 
 {% verbatim %}
@@ -138,26 +144,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  function updateSizeQuantity(sqId, size, quantity) {
+  function updateSizeQuantity(sqId, size, quantity, color) {  // Add color parameter
     fetch(`/production/admin/orders/edit-size-quantity/${sqId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ size: size, quantity: quantity })
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ size: size, quantity: quantity, color: color })  // Include color in the payload
     })
     .then(response => {
-      if (response.ok) {
-        let sizeSpan = document.querySelector(`.size[data-sq-id="${sqId}"]`);
-        let quantitySpan = document.querySelector(`.quantity[data-sq-id="${sqId}"]`);
-        sizeSpan.textContent = size;
-        quantitySpan.textContent = quantity;
-      } else {
-        alert('Не получилось обновить');
-      }
+        if (response.ok) {
+            let sizeSpan = document.querySelector(`.size[data-sq-id="${sqId}"]`);
+            let quantitySpan = document.querySelector(`.quantity[data-sq-id="${sqId}"]`);
+            let colorSpan = document.querySelector(`.color[data-sq-id="${sqId}"]`);  // Add this line
+            sizeSpan.textContent = size;
+            quantitySpan.textContent = quantity;
+            colorSpan.textContent = color;  // Update color display
+        } else {
+            alert('Не получилось обновить');
+        }
     });
   }
+
   
   function deleteSizeQuantity(sqId) {
     fetch(`/production/admin/orders/delete-size-quantity/${sqId}/`, {
@@ -183,47 +192,58 @@ document.addEventListener("DOMContentLoaded", function() {
     const list = document.getElementById('sizeQuantityList');
     list.innerHTML = ''; // Clear existing list
     sizeQuantities.forEach(sq => {
-      const li = document.createElement('li');
-      li.setAttribute('id', 'sq-' + sq.id);
-      li.classList.add('size-quantity-item');
-  
-      const sizeSpan = document.createElement('span');
-      sizeSpan.classList.add('size');
-      sizeSpan.setAttribute('data-sq-id', sq.id);
-      sizeSpan.textContent = sq.size;
-  
-      const quantitySpan = document.createElement('span');
-      quantitySpan.classList.add('quantity');
-      quantitySpan.setAttribute('data-sq-id', sq.id);
-      quantitySpan.textContent = sq.quantity;
-  
-      const editBtn = document.createElement('button');
-      editBtn.classList.add('edit-btn');
-      editBtn.setAttribute('data-sq-id', sq.id);
-      editBtn.textContent = editText;
-  
-      const deleteBtn = document.createElement('button');
-      deleteBtn.classList.add('delete-btn');
-      deleteBtn.setAttribute('data-sq-id', sq.id);
-      deleteBtn.textContent = deleteText;
+        const li = document.createElement('li');
+        li.setAttribute('id', 'sq-' + sq.id);
+        li.classList.add('size-quantity-item');
 
-      const sizeTextEl = document.createElement('strong');
-      sizeTextEl.textContent = sizeText;
-  
-      const quantityTextEl = document.createElement('strong');
-      quantityTextEl.textContent = quantityText;
-  
-      li.appendChild(sizeTextEl);
-      li.appendChild(sizeSpan);
-      li.appendChild(quantityTextEl);
-      li.appendChild(quantitySpan);
-      li.appendChild(editBtn);
-      li.appendChild(deleteBtn);
-  
-      list.appendChild(li);
+        const sizeSpan = document.createElement('span');
+        sizeSpan.classList.add('size');
+        sizeSpan.setAttribute('data-sq-id', sq.id);
+        sizeSpan.textContent = sq.size;
+
+        const quantitySpan = document.createElement('span');
+        quantitySpan.classList.add('quantity');
+        quantitySpan.setAttribute('data-sq-id', sq.id);
+        quantitySpan.textContent = sq.quantity;
+
+        // Assuming you have access to the color name in the object
+        const colorSpan = document.createElement('span');
+        colorSpan.classList.add('color');
+        colorSpan.setAttribute('data-sq-id', sq.id);
+        colorSpan.textContent = sq.color ? sq.color.name : 'No Color';  // Display the color name or a default text
+
+        const editBtn = document.createElement('button');
+        editBtn.classList.add('edit-btn');
+        editBtn.setAttribute('data-sq-id', sq.id);
+        editBtn.textContent = editText;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.setAttribute('data-sq-id', sq.id);
+        deleteBtn.textContent = deleteText;
+
+        const sizeTextEl = document.createElement('strong');
+        sizeTextEl.textContent = sizeText;
+
+        const quantityTextEl = document.createElement('strong');
+        quantityTextEl.textContent = quantityText;
+
+        const colorTextEl = document.createElement('strong');
+        colorTextEl.textContent = colorText;
+
+        li.appendChild(sizeTextEl);
+        li.appendChild(sizeSpan);
+        li.appendChild(quantityTextEl);
+        li.appendChild(quantitySpan);
+        li.appendChild(colorTextEl);
+        li.appendChild(colorSpan);
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+
+        list.appendChild(li);
     });
   }
-
+  
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

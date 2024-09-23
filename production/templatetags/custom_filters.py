@@ -88,3 +88,21 @@ def size_range(order):
         last_size = size_quantities.last().size
         return f"{first_size} - {last_size}"
     return "No sizes"
+
+@register.filter(name='display_over')
+def display_over(value):
+    try:
+        value = int(value)
+        if value < 0:
+            return f"Избыток {abs(value)}"
+        return value
+    except (ValueError, TypeError):
+        return value
+    
+@register.filter
+def split_part(value, arg):
+    try:
+        part_index = int(arg)
+        return value.split(" - ")[part_index]
+    except (IndexError, ValueError):
+        return None

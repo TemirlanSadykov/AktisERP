@@ -85,16 +85,30 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'XVEQsudWuJwpGaJUisuZRSfqPXpJOJXt',
-        'HOST': 'monorail.proxy.rlwy.net',
-        'PORT': '32670',
+        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
+        'NAME': config('MERPS_TEST_DB_NAME'),
+        'USER': config('MERPS_TEST_DB_USER'),
+        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
+        'HOST': config('MERPS_TEST_DB_HOST'),
+        'PORT': config('MERPS_TEST_DB_PORT'),
     }
 }
+
+# DATABASES = {
+#     'default': {
+#     'ENGINE': 'django.db.backends.postgresql',
+#     'NAME': 'railway',
+#     'USER': 'postgres',
+#     'PASSWORD': 'XVEQsudWuJwpGaJUisuZRSfqPXpJOJXt',
+#     'HOST': 'monorail.proxy.rlwy.net',
+#     'PORT': '32670',
+#     }
+# }
+
 
 # Redis cache
 # CACHES = {
@@ -175,7 +189,12 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://wasteful-direction-production.up.railway.app', 'https://aktiserp-ken.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://merps-test.up.railway.app']
+
+# Load the environment variables
+WORKPLACE_LAT = config('MERPS_TEST_WORKPLACE_LAT', cast=float)
+WORKPLACE_LON = config('MERPS_TEST_WORKPLACE_LON', cast=float)
+ALLOWED_RADIUS = config('MERPS_TEST_ALLOWED_RADIUS', cast=int)
 
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')

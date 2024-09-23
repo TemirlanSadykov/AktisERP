@@ -3,10 +3,13 @@ import datetime
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from datetime import date
 
 
 class Branch(models.Model):
     name = models.CharField(max_length=100) 
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
     
@@ -18,6 +21,8 @@ class UserProfile(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='user_profiles', null=True, blank=True, verbose_name='Филиал')
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='Пользователь')
     employee_id = models.CharField(max_length=100, verbose_name='ID сотрудника')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')  # New field for fingerprint
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['employee_id', 'branch'], name='unique_employee_id_per_branch')
@@ -28,6 +33,7 @@ class UserProfile(models.Model):
     CUTTER = 3
     QC = 4
     PACKER = 5
+    KEEPER = 6
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -35,6 +41,7 @@ class UserProfile(models.Model):
         (CUTTER, 'Закройщик'),
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),
+        (KEEPER, 'Кладовщик'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=False, verbose_name='Статус')
@@ -45,6 +52,7 @@ class UserProfile(models.Model):
         ('ironing_station', 'Утюжный участок'),
         ('quality_control', 'ОТК'),
         ('package', 'Упаковка'),
+        ('warehouse', 'Склад'),
         ('interns', 'Практиканты'),
         ('others', 'Остальные'),
     ]
@@ -58,31 +66,63 @@ class EmployeeAttendance(models.Model):
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_clock_in = models.BooleanField(default=False)
+    distance = models.FloatField(null=True, blank=True, verbose_name='Distance from Workplace (meters)')
+    fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
-        return f"{self.employee.username} - {event_type} at {self.timestamp}"
+        return f"{self.employee} - {event_type} at {self.timestamp} (Distance: {self.distance}m)"
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
     contact_info = models.TextField(verbose_name='Контактная информация')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name
+
+class Color(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+    
+class Fabrics(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+
+class Accessory(models.Model):
+    name = models.CharField(max_length=100)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=50)
+    key = models.CharField(max_length=100, blank=True, null=True)
+    value = models.CharField(max_length=100, blank=True, null=True)
+    info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return f"{self.name} ({self.key}: {self.value}) - {self.quantity} {self.unit}"
 
 class Roll(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
-    color = models.CharField(max_length=50, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, verbose_name='Ткани')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Цвет')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Ткань')
+    width = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Ширина')
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
     @property
     def available_meters(self):
         return self.meters - self.used_meters
-
 class Equipment(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
     
@@ -101,6 +141,7 @@ class Node(models.Model):
         (PACKING, 'Упаковка'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name
     
@@ -114,6 +155,8 @@ class Operation(models.Model):
     average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_values = {}
@@ -141,7 +184,8 @@ class Operation(models.Model):
 class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
-    operations = models.ManyToManyField(Operation, related_name='assortments', verbose_name='Операции')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
 
@@ -149,6 +193,7 @@ class Model(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
     operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name
     
@@ -162,14 +207,17 @@ class ModelOperation(models.Model):
 class SizeQuantity(models.Model):
     size = models.CharField(max_length=10, verbose_name='Размер')
     quantity = models.IntegerField(verbose_name='Количество')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
+
     def __str__(self):
-        return f"Размер: {self.size}, Количество: {self.quantity}"
+        return f"Размер: {self.size}, Количество: {self.quantity}, Цвет: {self.color.name if self.color else 'None'}"
     
 class ClientOrder(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
@@ -188,9 +236,8 @@ class ClientOrder(models.Model):
 class Order(models.Model):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
-    assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='orders', verbose_name='Ассортимент')
-    color = models.CharField(max_length=50, null=True, verbose_name='Цвет')
-    fabrics = models.CharField(max_length=100, null=True, verbose_name='Ткани')
+    colors = models.ManyToManyField(Color, related_name='orders', blank=True, verbose_name='Цвета')
+    fabrics = models.ManyToManyField(Fabrics, related_name='orders', blank=True, verbose_name='Ткани')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
@@ -207,17 +254,65 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.model}"
     
-class Passport(models.Model):
+class Cut(models.Model):
+    number = models.IntegerField(verbose_name='Номер', editable=False)  # Remove AutoField and use IntegerField
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='passports', verbose_name='Заказ')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
+    size_quantities = models.ManyToManyField(SizeQuantity, related_name='cuts', verbose_name='Размеры и количества')
+
+    def __str__(self):
+        return f"Cut {self.number} for Order {self.order}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            current_year = date.today().year
+            latest_cut = Cut.objects.filter(date__year=current_year).order_by('-number').first()
+            if latest_cut:
+                self.number = latest_cut.number + 1
+            else:
+                self.number = 1
+
+        super().save(*args, **kwargs)
+
+class Consumption(models.Model):
+    cut = models.ForeignKey(Cut, on_delete=models.CASCADE, related_name='consumptions', verbose_name='Крой')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='consumptions', verbose_name='Ткани')
+    width = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Ширина')
+    length = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Длина')
+    factual = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Фактическое')
+    commerce = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Коммерческое')
+    def __str__(self):
+        return f"Consumption with {self.fabrics} fabric"
+
+class Passport(models.Model):
+    cut = models.ForeignKey(Cut, on_delete=models.CASCADE, blank=True, null=True, related_name='passports', verbose_name='Крой')
+    number = models.IntegerField(verbose_name='Номер', null=True, blank=True)
+    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон', null=True, blank=True)
     size_quantities = models.ManyToManyField(SizeQuantity, through='PassportSize', related_name='passports', verbose_name='Размеры и количества')
-    rolls = models.ManyToManyField(Roll, through='PassportRoll', related_name='passports', verbose_name='Рулоны')
+    layers = models.DecimalField(max_digits=10, decimal_places=0, verbose_name='Слои', null=True, blank=True)
+    meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры', null=True, blank=True)
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
+
     def __str__(self):
         return f"ID {str(self.id)}"
+
+    @property
+    def quantity(self):
+        if self.layers:
+            return self.layers * self.size_quantities.count()
+        return 0
+
+    def delete(self, *args, **kwargs):
+        # Return the meters back to the associated roll when passport is deleted
+        if self.roll and self.meters:
+            self.roll.used_meters = max(0, self.roll.used_meters - self.meters)  # Reduce the used meters
+            self.roll.save()  # Save the roll with updated used meters
+        super(Passport, self).delete(*args, **kwargs)  # Call the superclass delete method
+
     
 class PassportSize(models.Model):
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Паспорт')
+    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, blank=True, null=True, related_name='passport_sizes', verbose_name='Паспорт')
+    extra = models.CharField(max_length=5, blank=True, null=True)
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
     quantity = models.IntegerField(verbose_name='Количество')
     CUTTING = 0
@@ -255,19 +350,18 @@ class ProductionPiece(models.Model):
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
     defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
     def __str__(self):
-        return f"Passport Size ID: {self.passport_size.id}, Piece: {self.piece_number}, Stage: {self.stage}"
+        return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
-class PassportRoll(models.Model):
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
-    roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон')
-    meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры')
-    def __str__(self):
-        return f"{self.meters} метров {self.roll.name}"
+# class PassportRoll(models.Model):
+#     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
+#     roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон')
+#     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры')
+#     def __str__(self):
+#         return f"{self.meters} метров {self.roll.name}"
 
 class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='works', verbose_name='Паспорт')
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True, verbose_name='Размер и количество')
     def __str__(self):
         if self.passport_size:
@@ -301,13 +395,6 @@ class Error(models.Model):
     class ErrorType(models.TextChoices):
         DEFECT = 'DEFECT', 'Дефект'
         DISCREPANCY = 'DISCREPANCY', 'Расхождение'
-    
-    class DefectType(models.TextChoices):
-        STITCHING = 'STITCHING', 'Ошибка шитья'
-        CUTTING = 'CUTTING', 'Ошибка резки'
-        FABRIC = 'FABRIC', 'Дефект ткани'
-        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
-        OTHER = 'OTHER', 'Прочие ошибки'
 
     class Status(models.TextChoices):
         REPORTED = 'REPORTED', 'Сообщено'
@@ -315,23 +402,16 @@ class Error(models.Model):
         RESOLVED = 'RESOLVED', 'Разрешено'
     
     error_type = models.CharField(max_length=20, choices=ErrorType.choices, verbose_name='Тип ошибки')
-    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Тип дефекта')
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Стоимость')
     responsible_employees = models.ManyToManyField(UserProfile, through='ErrorResponsibility', verbose_name='Ответственные сотрудники')
-    passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='errors', verbose_name='Паспорт')
-    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='errors', verbose_name='Размер и количество')
-    quantity = models.IntegerField(verbose_name='Количество')
+    piece = models.ForeignKey(ProductionPiece, on_delete=models.CASCADE, related_name='errors', null=True, blank=True, verbose_name='Единица')
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED, verbose_name='Статус')
     reported_date = models.DateTimeField(default=timezone.now, verbose_name='Дата сообщения')
     resolved_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата решения')
 
     def __str__(self):
-        if self.error_type == self.ErrorType.DEFECT:
-            return f"Дефект: {self.defect_type} - Степень: {self.severity}"
-        else:
-            discrepancy_type = "Надостаток" if self.quantity < 0 else "Избыток"
-            return f"Несоответствие: {discrepancy_type} на {abs(self.quantity)}"
-
+        return f"{self.error_type}: {self.piece.passport_size.passport.order} - {self.piece.passport_size.passport.id} - {self.piece.passport_size.size_quantity.size} - {self.piece.id}"
+    
 class ErrorResponsibility(models.Model):
     error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Ошибка')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Сотрудник')
@@ -345,6 +425,7 @@ class FixedSalary(models.Model):
     position = models.CharField(max_length=100, verbose_name='Должность')
     employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries', verbose_name='Сотрудники')
     salary = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Зарплата')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
         return f"{self.position} - {self.salary}"

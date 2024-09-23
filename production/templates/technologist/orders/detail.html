@@ -8,7 +8,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Technologist Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Technologist Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -17,285 +17,103 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
   </div>
 </nav>
 
-
-<div class="container maincontr ">
+<div class="container maincontr">
   <div class="card-header">
     {% trans "Model Details:" %} {{ order.model.name }}          
   </div>
   <div class="container">
-    <!-- <div class="card"> -->
-          <div class="progress" style="margin-bottom: 20px; height:1.25rem">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"0" }}%;" aria-valuenow="{{ order.completed_quantity }}" aria-valuemin="0" aria-valuemax="{{ order.quantity }}">
-              {{ order.completed_quantity|percentage_of:order.quantity|floatformat:"2" }}%
-            </div>
-          </div>
-          {% if errors %}
-            <div class="errors-list">
-              {% for error in errors %}
-                <p class="error-item">
-                  <a href="#" class="error-link" data-error-id="{{ error.pk }}" style="color: {{ error.status|status_color }};">
-                    {% if error.error_type == 'DEFECT' %} {% trans "Defect" %} {% elif error.error_type == 'DISCREPANCY' %} {% trans "Discrepancy" %} {% endif %} {{ error.passport.id }} - {{ error.size_quantity.size }}
-                  </a>
-                </p>
-              {% endfor %}
-            </div>
-            <div id="errorDetailsPopupOverlay" class="popup-overlay" style="display: none;">
-              <div id="errorDetailsPopup" class="popup-content">
-                <div id="errorDetails" class="error-details">
-                  <!-- Error details will be dynamically inserted here -->
-                </div>
-                <form id="errorStatusForm">
-                  <div class="form-actions">
-                    {% csrf_token %}
-                    <input type="hidden" name="errorStatus" id="errorStatusInput">
-                    <input type="hidden" name="errorId" id="errorIdInput">
-                    <button type="submit" onclick="updateErrorStatus('RESOLVED')" class="btn complete-btn">{% trans "Resolved" %}</button>
-                    <button type="submit" onclick="updateErrorStatus('UNRESOLVABLE')" class="btn delete-btn">{% trans "Unresolvable" %}</button>
-                    <button type="button" onclick="closeErrorPopup()" class="btn create-btn">{% trans "Close" %}</button>
-                  </div>
-                </form>
-              </div>  
-            </div>
-          {% endif %}
-          <div class="card-body">
-              <div class="row">
-                  <div class="col-md-6 details">
-                        <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client.name }}</p>
-                        <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
-                        <p><strong>{% trans "Assortment:" %}</strong> {{ order.assortment.name }}</p>
-                        <p><strong>{% trans "Color:" %}</strong> {{ order.color }}</p>
-                        <p><strong>{% trans "Fabrics:" %}</strong> {{ order.fabrics }}</p>
-                        <p><strong>{% trans "Status:" %}</strong> {{ order.get_status_display }}</p>
-                        <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
-                        <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
-                        <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
-                        <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
-                  </div>
-                  <div class="col-md-5 text-center">
-                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
-                  </div>
-              </div>
-          </div>
-
-          <h3 class="sub-heading" style="margin-top: 20px;">{% trans "Size Quantities" %}</h3>
-
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>{% trans "Size\Passport" %}</th>
-                  {% for passport in passports %}
-                  <th>№{{ passport.id }}</th>
-                  {% endfor %}
-                  <th>{% trans "Sum" %}</th>
-                  <th>{% trans "Required" %}</th>
-                  <th>{% trans "Missing" %}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for size, data in required_missing.items %}
-                <tr>
-                    <td>{{ size }}</td>
-                    {% for passport in passports %}
-                    <td>
-                      {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
-                      {% if size_data|get_item:size|get_item:passport.id|get_item:"stage" is None %}
-                      {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" == 2 %}
-                        <button type="button" class="stage-qc-button btn success-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                          {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                        </button>
-                      {% elif size_data|get_item:size|get_item:passport.id|get_item:"stage" > 2 or size_data|get_item:size|get_item:passport.id|get_item:"stage" < 1 %}
-                        <button type="button" class="stage-qc-button btn back-btn">
-                          {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                        </button>
-                      {% else %}
-                        <button type="button" class="stage-qc-button btn edit-btn" data-passport-size-id="{{ size_data|get_item:size|get_item:passport.id|get_item:"passport_size_id" }}">
-                          {{ size_data|get_item:size|get_item:passport.id|get_item:"stage"|get_stage }}
-                        </button>
-                      {%endif%}
-                    </td>
-                    {% endfor %}
-                    <td>{{ total_per_size|get_item:size|default:"0" }}</td>
-                    <td>{{ data.required }}</td>
-                    <td>{{ data.missing }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="{{ passports|length|add:4 }}">{% trans "No size quantities available." %}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-          <br>
-          <div class="container bottomContainer">
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>{% trans "Associated Models" %}</h3>
-            </div>
-            </div><br>
-              {% if passports %}
-              {% for passport in passports %}
-              <div class="list-group" >
-                <a href="{% url 'assign_operations' passport.pk %}"
-                  class="list-group-item list-group-item-action"
-                  style="color: {{ passport.is_completed|yesno:'green,red' }}; border: 1px solid #ced4da; border-radius: 0px;">
-                  {% trans "Passport ID:" %} {{ passport.pk }}, {% trans "Created on:" %} {{ passport.date|date:"Y-m-d" }}, {% trans "Completed:" %} {{ passport.is_completed|yesno:'Yes,No' }}
-                </a>
-            </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+          <p><strong>{% trans "Color:" %}</strong> 
+            {% for color in order.colors.all %}
+                {{ color }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                {% trans "No colors selected" %}
             {% endfor %}
-            {% else %}
-            <div class="list-group" >
-                <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-                  {% trans "No associated passports." %}
-                  </a>
-            </div>
-            {% endif %}
+          </p>
+          <p><strong>{% trans "Fabrics:" %}</strong> 
+            {% for fabric in order.fabrics.all %}
+                {{ fabric }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                {% trans "No fabrics selected" %}
+            {% endfor %}
+          </p>
+          <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+          <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
+          <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+          <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
         </div>
-     
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+        </div>
+      </div>
+    </div>
 
-
-
-<!-- </div> -->
-</div>
-
-
-
-
-
-<script>
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-
-  function showErrorPopup() {
-    document.getElementById('errorDetailsPopup').style.display = 'block';
-    document.getElementById('errorDetailsPopupOverlay').style.display = 'flex';
-  }
+    <div class="row">
+      <div class="col-md-6">
+        <h3>{% trans "Required Quantities" %}</h3>
+      </div>
+    </div><br>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{% trans "Size" %}</th>
+            <th>{% trans "Color" %}</th>
+            <th>{% trans "Required" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in required_data %}
+            <tr>
+              <td>{{ item.size }}</td>
+              <td>{{ item.color }}</td>
+              <td>{{ item.required }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3">{% trans "No required sizes available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div><br>
   
-  function closeErrorPopup() {
-    document.getElementById('errorDetailsPopup').style.display = 'none';
-    document.getElementById('errorDetailsPopupOverlay').style.display = 'none';
-  }
+  <div class="container-fluid bottomContainer">
+    <div class="row">
+      <div class="col-md-6">
+        <h3>{% trans "Associated Cuts" %}</h3>
+      </div>
+    </div><br>
+      {% if associated_cuts %}
+        {% for cut in associated_cuts %}
+        <div class="list-group">
+          <a href="{% url 'cut_detail_technologist' cut.pk %}"
+            class="list-group-item list-group-item-action"
+            style="border: 1px solid #ced4da; border-radius: 0px;">
+            {% trans "Cut Number:" %} {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
+          </a>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="list-group">
+          <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+            {% trans "No associated cuts." %}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
 
-  function updateErrorStatus(status) {
-    document.getElementById('errorStatusInput').value = status;
-  }
 
-  document.addEventListener("DOMContentLoaded", function() {
-    var buttons = document.querySelectorAll('.stage-qc-button');
-    buttons.forEach(function(button) {
-      button.addEventListener('click', function() { // Changed to 'click' event for buttons
-        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
-        if (passportSizeId) {
-          fetch(`/production/technologist/orders/mark-as-qc/${passportSizeId}/`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              window.location.reload();
-            } else {
-              alert('Не получилось обновить');
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-          });
-        }
-      });
-    });
-
-    document.querySelectorAll('.error-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        const errorId = this.getAttribute('data-error-id');
-        document.getElementById('errorIdInput').value = errorId; // Store errorId in hidden input
-        fetchErrorDetails(errorId);
-      });
-    });
-
-    const errorForm = document.getElementById('errorStatusForm');
-    if (errorForm) {
-      errorForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-    
-        const errorId = document.getElementById('errorIdInput').value;
-        const status = document.getElementById('errorStatusInput').value;
-        const data = { status: status };
-    
-        const xhr = new XMLHttpRequest();
-        const url = `/production/technologist/orders/error/${errorId}/update-status/`;
-        xhr.open('POST', url, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-    
-        xhr.onload = function() {
-          const response = JSON.parse(xhr.responseText);
-          if (xhr.status === 200) {
-            alert('Успешное обновление');
-            closeErrorPopup();
-          } else {
-            console.error('Request failed with status:', xhr.status);
-            alert('Не получилось обновить');
-          }
-        };
-    
-        xhr.send(JSON.stringify(data));
-      });
-    }
-  
-    function fetchErrorDetails(errorId) {
-      fetch(`/production/technologist/orders/error/${errorId}/`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          const errorDetails = document.getElementById('errorDetails');
-          errorDetails.innerHTML = 
-            `<p><strong>Тип:</strong> ${data.error.error_type === 'DEFECT' ? 'Дефект' : 'Несоответствие'}</p>
-            <p><strong>Паспорт:</strong> ${data.error.passport__id}</p>
-            <p><strong>Размер:</strong> ${data.error.size_quantity__size}</p>
-            <p><strong>Количество:</strong> ${data.error.quantity}</p>
-            ${data.error.error_type === 'DEFECT' ? `<p><strong>Тип Дефекта:</strong> ${data.error.defect_type}</p>` : ``}
-            <p><strong>Статус:</strong> ${data.error.status}</p>
-            <p><strong>Дата Сообщения:</strong> ${data.error.reported_date}</p>
-            <p><strong>Дата Разрешения:</strong> ${data.error.resolved_date || 'N/A'}</p>`;
-          showErrorPopup();
-        } else {
-          alert('Ничего не найдено');
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching error details:', error);
-        alert('Ошибка при загрузке');
-      });
-    }
-  });
-</script>
 {% endblock %}

@@ -98,17 +98,37 @@
         </a>
         </div>
       </div>
+      <div class="row mt-4">
+        <div class="col-md-6 col-sm-6 mb-4">
+          <a href="{% url 'keeper_page' %}" style="text-decoration: none;">
+            <div class="card text-black h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                      <h5 class="card-title">{% trans 'Keeper' %}</h5>
+                  </div>
+                  <div class="icon">
+                    <img src="{% static 'img/keeper.png' %}" alt="" style="width: 100px;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
     <div class="col-md-4 mt-4">
       <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
         {% csrf_token %}
         <div class="form-group d-flex align-items-center">
-          <h4 class="mb-0 mr-3">Branch:</h4>
+          <h4 class="mb-0 mr-3">Филиал:</h4>
           <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
             {% for branch in branches %}
+            {% if not branch.is_archived %}
               <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
                 {{ branch.name }}
               </option>
+              {% endif %}
             {% endfor %}
           </select>
         </div>

@@ -10,73 +10,592 @@
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="{% static 'css/main_style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/clients.css' %}">
+    <style>
+        #clientModal .modal-dialog {
+            max-width: 800px; /* Increase the width of the modal */
+        }
+    
+        .client-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .client-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: calc(1.3rem - 5px) !important;
+            border-top-right-radius: calc(1.3rem - 5px) !important;
+            /* border-radius: 10px !important; */
+            
+        }
+
+    
+        .modal-footer {
+            background-color: #f1f1f1;
+            border-top: 0px solid #dee2e6;
+            border-bottom-right-radius: calc(1.3rem - 5px);
+            border-bottom-left-radius: calc(1.3rem - 5px);
+            /* border-radius: 10px !important; */
+        }
+
+
+        .rounded-table {
+    border-collapse: separate; 
+    border-spacing: 0; 
+    border-radius: 10px !important; 
+    overflow: hidden; 
+}
+
+
+        #employeeModal .modal-dialog {
+            max-width: 800px; 
+        }
+    
+        .employee-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .employee-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+
+
+        #clientOrderModal .modal-dialog {
+            max-width: 800px; 
+        }
+    
+        .client-order-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .client-order-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .order-item {
+            background-color: #f8f9fa;
+            transition: transform 0.3s ease;
+        }
+    
+        .order-item:hover {
+            transform: translateY(-5px);
+        }
+    
+        .order-item p {
+            margin: 0;
+        }
+    
+        .order-item a:hover {
+            color: #007bff;
+        }
+    
+
+        #rollModal .modal-dialog {
+            max-width: 800px; 
+        }
+    
+        .roll-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .roll-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .passport-item {
+            background-color: #e9ecef;
+            transition: transform 0.3s ease;
+        }
+    
+        .passport-item:hover {
+            transform: translateY(-5px);
+        }
+    
+        .passport-item p {
+            margin: 0;
+        }
+    
+        .passport-item a:hover {
+            color: #007bff;
+        }
+    
+
+        #orderModal .modal-dialog {
+            max-width: 800px;
+        }
+    
+        .order-details {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+    
+        .order-details p {
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .passport-item {
+            background-color: #f8f9fa;
+            transition: transform 0.3s ease;
+        }
+    
+        .passport-item:hover {
+            transform: translateY(-5px);
+        }
+    
+        .passport-item p {
+            margin: 0;
+        }
+    
+        .passport-item a:hover {
+            color: #007bff;
+        }
+    
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: calc(1.3rem - 5px) !important;
+            border-top-right-radius: calc(1.3rem - 5px) !important;
+            /* border-radius: 10px !important; */
+            
+        }
+
+        .collapsesidebarset {
+            display:flex;
+            align-items: center;
+            flex-direction: row;
+            height:50px;
+            width:220px;
+        }
+        .table th{
+            background-color: #007bff;
+        }
+        .table thead th {
+        border-bottom: 0px solid #dee2e6;
+        }
+        .table th, .table td{
+            border: 0px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .table td, .table th{
+            vertical-align: middle;
+        }
+        .linkset{
+            text-decoration: none !important;
+        }
+    </style>
+    
 </head>
 <body>
-    <div class="sidebar">
-        <div>
-            <h2>ERP Dashboard</h2>
-            <ul>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Overview')">Overview</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Clients')">Clients</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Production')">Production</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Inventory')">Inventory</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Orders')">Orders</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Maintenance')">Maintenance</a></li>
-                <li><a href="#" class="tablink" onclick="openTab(event, 'Employees')">Employees</a></li>
-                <li><a href="{% url 'user_redirect' %}">{% trans 'Home' %}</a></li>
-            </ul>
+    <div class="d-flex" id="wrapper">
+        <div class="border-right" id="sidebar-wrapper">
+            <div class="d-flex justify-content-between align-items-center" style="width:222px;">
+                <button type="button" id="toggle-sidebar" aria-label="Toggle sidebar" style="color:#6c757d; border: none;
+                background: none;
+                outline: none;
+                width: 64px;
+                margin-top:10px;">
+                    <i class="fas fa-bars sideicon"></i>
+                </button>
+                <button type="button" class="close-btn" id="close-sidebar" id="toggle-sidebar" aria-label="Toggle sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div id="sidebar" class="list-group list-group-flush sidenavres">
+                <a href="#" onclick="openTab(event, 'Overview')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
+                    <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Overview' %}</span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Search')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="search">
+                    <i class="fas fa-search fa-fw"></i><span class="sidetext">{% trans 'Search' %} </span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Orders')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="clients">
+                    <i class="fas fa-server  fa-fw"></i><span class="sidetext">{% trans 'Orders' %}</span>
+                </a>
+                 <a href="#" onclick="openTab(event, 'Clients')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="dashboard">
+                    <i class="fas fa-user  fa-fw"></i><span class="sidetext">{% trans 'Clients' %}</span>
+                </a> 
+                <a href="#" onclick="openTab(event, 'Production')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="orders">
+                    <i class="fas fa-table  fa-fw"></i><span class="sidetext">{% trans 'Production' %}</span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Inventory')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="employees">
+                    <i class="fas fa-clipboard-list  fa-fw"> </i><span class="sidetext">{% trans 'Inventory' %}</span>
+                </a>
+                <a href="#" onclick="openTab(event, 'Employees')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="attendances">
+                    <i class="fas fa-id-card  fa-fw"></i><span class="sidetext">{% trans 'Employees' %}</span>
+                </a>
+                <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="home">
+                     <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" style="display: none;"></a> 
+            </div>
         </div>
-    </div>
-    <div class="main-content">
+        <div id="page-content-wrapper">
+
         <div id="Overview" class="tabcontent">
-            <div class="header">
-                <h1>Dashboard</h1>
-            </div>
-            <div class="cards">
-                <div class="card">
-                    <h3>Total Production</h3>
-                    <p>5000 units</p>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'ERP Dashboard' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
                 </div>
-                <div class="card">
-                    <h3>Inventory Levels</h3>
-                    <p>15000 items</p>
+              </nav>
+              <div class="header">
+                <form method="get" class="form-row align-items-end" style="margin-top: 20px;">
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="start_date">{% trans 'Start Date' %}</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ form.start_date.value|default_if_none:'' }}" style="width: 100%;">
+                    </div>
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="end_date">{% trans 'End Date' %}</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ form.end_date.value|default_if_none:'' }}" style="width: 100%;">
+                    </div>
+                    <div class="col-12 col-md-4 mb-3">
+                        <button type="submit" class="btn btn-primary w-100" style="font-size:13px !important;">{% trans "Filter" %}</button>
+                    </div>
+                </form>
+            </div>            
+            <div class="container-fluid ">
+                <div class="row mt-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Total Production' %}</h5>
+                              <p>{{ production_data.total_amount }} ед</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/all.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Completed Units' %}</h5>
+                              <p>{{ production_data.completed_amount }} ед</p>
+
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/loading.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <!-- </div>
+                <div class="row mt-4"> -->
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Orders in Progress' %}</h5>
+                              <p>{{ production_data.orders_in_progress }} заказа</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/gears.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Models in Progress' %}</h5>
+                              <p>{{ production_data.in_progress_orders_count }} модели</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/hourglass.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="card">
-                    <h3>Open Orders</h3>
-                    <p>45</p>
+              </div>
+
+
+              
+              <div class="container-fluid ">
+                <div class="row mt-4">
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Errors' %}</h5>
+                              <p>{{ production_data.total_errors }} брака</p>
+                            </div>
+                          <div class="icon">
+                            <img src="{% static 'img/no-results.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Rolls' %}</h5>
+                              <p>{{ production_data.total_rolls_used }} метров</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/fast.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <!-- </div>
+                <div class="row mt-4"> -->
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Salary' %}</h5>
+                              <p>{{ production_data.total_salary }} сом</p>
+                          </div>
+                          <div class="icon">
+                            <img src="{% static 'img/allocation.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 col-sm-3 mb-4">
+                    <div class="card text-black h-100">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                              <h5 class="card-title text-left">{% trans 'Total Revenue' %}</h5>
+                              <p>{{ production_data.total_revenue }} сом</p>
+                            </div>
+                          <div class="icon">
+                            <img src="{% static 'img/income-statement.png' %}" alt="" style="width: 80px;">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="card">
-                    <h3>Pending Maintenance</h3>
-                    <p>3 tasks</p>
-                </div>
-            </div>
-            <div class="charts">
+              </div>
+
+
+            {% comment %} <div class="charts">
                 <div class="chart" id="productionChartContainer">
                     <canvas id="productionChart"></canvas>
                 </div>
                 <div class="chart" id="inventoryChartContainer">
                     <canvas id="inventoryChart"></canvas>
                 </div>
+            </div> {% endcomment %}
+        </div>
+        <div id="Search" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Search' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+            <div class="container" style="padding:5%;">
+                <select id="modelSelector" class="custom-select mb-3" style="height:50px;">
+                    <option value="">{% trans 'Select Model...' %}</option>
+                    <option value="UserProfile">{% trans 'User Profiles' %}</option>
+                    <option value="Client">{% trans 'Clients' %}</option>
+                    <option value="Roll">{% trans 'Rolls' %}</option>
+                    <option value="Equipment">{% trans 'Equipment' %}</option>
+                    <option value="Node">{% trans 'Nodes' %}</option>
+                    <option value="Operation">{% trans 'Operations' %}</option>
+                    <option value="Assortment">{% trans 'Assortments' %}</option>
+                    <option value="Model">{% trans 'Models' %}</option>
+                    <option value="ClientOrder">{% trans 'Client Orders' %}</option>
+                    <option value="Order">{% trans 'Orders' %}</option>
+                    <option value="Error">{% trans 'Error' %}</option>
+                    <option value="Passport">{% trans 'Passports' %}</option>
+                    <option value="ProductionPiece">{% trans 'Production Pieces' %}</option>
+                </select>
+                <div id="secondarySelectorContainer" class="mb-3">
+                    <!-- Secondary selector or input will be populated here -->
+                </div>
+                <button id="goButton" class="btn btn-create buttonsetting" style="display:none; margin:auto; width:40%;">GO</button>
+                <div id="recordDetails" class="mt-3">
+                    <!-- Record details will be populated here -->
+                </div>
             </div>
         </div>
-        <div id="Clients" class="tabcontent" style="display: none;">
-            <h2>Client Rankings</h2>
-            <table class="table">
+        <div id="Orders" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Orders Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
+            <table class="table rounded-table">
                 <thead>
                     <tr>
-                        <th>Client</th>
-                        <th>Client Orders (Number - Income)</th>
-                        <th>Total Value</th>
-                        <th>Total Ordered Amount</th>
+                        <th>{% trans 'Order Name' %}</th>
+                        <th>{% trans 'Client' %}</th>
+                        <th>{% trans 'Status' %}</th>
+                        <th>{% trans 'Due Date' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in client_orders_data %}
+                        <tr>
+                            <td><a href="#" data-toggle="modal" class="linkset" data-target="#clientOrderModal" onclick="fetchClientOrderDetails({{ order.id }})">{{ order.order_number }}</a></td>
+                            <td>{{ order.client__name }}</td>
+                            <td>
+                                {% if order.status == 0 %}
+                                    New
+                                {% elif order.status == 1 %}
+                                    In Progress
+                                {% elif order.status == 2 %}
+                                    Completed
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+                            <td>{{ order.term }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="modal fade" id="clientOrderModal" tabindex="-1" role="dialog" aria-labelledby="clientOrderModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="clientOrderModalLabel">{% trans 'Order Details' %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Order details will be filled here by JavaScript -->
+                        </div>
+                        <!-- <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+            
+            </div>
+        </div> 
+        <div id="Clients" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Client Rankings' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
+            <table class="table rounded-table">
+                <thead>
+                    <tr>
+                        <th> {% trans 'Client' %}</th>
+                        <th>{% trans 'Client Orders (Number - Income)' %}</th>
+                        <th>{% trans 'Total Value' %}</th>
+                        <th>{% trans 'Total Ordered Amount' %}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for client in client_data %}
                     <tr>
-                        <td><a href="#" data-toggle="modal" data-target="#clientModal" onclick="fetchClientDetails({{ client.id }})">{{ client.client }}</a></td>
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#clientModal" onclick="fetchClientDetails({{ client.id }})">{{ client.client }}</a></td>
                         <td>
                             {% for order_number, client_order_id, model_list, order_income, order_quantity in client.client_orders_details %}
-                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank">{{ order_number }}</a> - {{ order_income }} сом ({{ order_quantity }})</strong><br>
+                                <strong><a href="{% url 'client_order_detail' client_order_id %}" target="_blank" class="linkset">{{ order_number }}</a> - {{ order_income }} сом ({{ order_quantity }})</strong><br>
                             {% endfor %}
                         </td>
                         <td>{{ client.total_ordered_amount_by_orders }} сом</td>
@@ -85,404 +604,225 @@
                     {% endfor %}
                 </tbody>
             </table>
+
             <div class="modal fade" id="clientModal" tabindex="-1" role="dialog" aria-labelledby="clientModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="clientModalLabel">Client Details</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <h5 class="modal-title" id="clientModalLabel">{% trans 'Client Details' %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <!-- Client details will be filled here by JavaScript -->
                         </div>
+                        <!-- <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div> -->
                     </div>
                 </div>
             </div>
-        </div>        
-        <div id="Production" class="tabcontent">
-            <h2>Production Overview</h2>
-            <div class="branch-switch">
-                <label for="branchSelect">Select Branch: </label>
-                <select id="branchSelect" onchange="switchBranch()">
-                    <option value="branch1">Branch 1</option>
-                    <option value="branch2">Branch 2</option>
-                </select>
-            </div>
-            <div id="branch1" class="branch">
-                <h3>Branch 1</h3>
-                <div class="grid">
-                    <div class="card">
-                        <h4>Employees</h4>
-                        <ul>
-                            <li>Employee 1</li>
-                            <li>Employee 2</li>
-                            <li>Employee 3</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Units Produced</h4>
-                        <p>2500 units</p>
-                    </div>
-                    <div class="card">
-                        <h4>Models Produced</h4>
-                        <ul>
-                            <li>Model A</li>
-                            <li>Model B</li>
-                            <li>Model C</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Defects</h4>
-                        <ul>
-                            <li>Defect 1</li>
-                            <li>Defect 2</li>
-                            <li>Defect 3</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Discrepancies</h4>
-                        <ul>
-                            <li>Discrepancy 1</li>
-                            <li>Discrepancy 2</li>
-                            <li>Discrepancy 3</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div id="branch2" class="branch" style="display: none;">
-                <h3>Branch 2</h3>
-                <div class="grid">
-                    <div class="card">
-                        <h4>Employees</h4>
-                        <ul>
-                            <li>Employee 4</li>
-                            <li>Employee 5</li>
-                            <li>Employee 6</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Units Produced</h4>
-                        <p>2500 units</p>
-                    </div>
-                    <div class="card">
-                        <h4>Models Produced</h4>
-                        <ul>
-                            <li>Model D</li>
-                            <li>Model E</li>
-                            <li>Model F</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Defects</h4>
-                        <ul>
-                            <li>Defect 4</li>
-                            <li>Defect 5</li>
-                            <li>Defect 6</li>
-                        </ul>
-                    </div>
-                    <div class="card">
-                        <h4>Discrepancies</h4>
-                        <ul>
-                            <li>Discrepancy 4</li>
-                            <li>Discrepancy 5</li>
-                            <li>Discrepancy 6</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="Inventory" class="tabcontent">
-            <h2>Inventory</h2>
-            <h3>Rolls (Fabrics)</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Fabric</th>
-                        <th>Color</th>
-                        <th>Number</th>
-                        <th>Amount Left</th>
-                        <th>Being Used</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Cotton</td>
-                        <td>Red</td>
-                        <td>200</td>
-                        <td>150</td>
-                        <td>50</td>
-                    </tr>
-                    <tr>
-                        <td>Polyester</td>
-                        <td>Blue</td>
-                        <td>150</td>
-                        <td>100</td>
-                        <td>50</td>
-                    </tr>
-                    <tr>
-                        <td>Wool</td>
-                        <td>Green</td>
-                        <td>100</td>
-                        <td>80</td>
-                        <td>20</td>
-                    </tr>
-                </tbody>
-            </table>
-            <h3>Accessories</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Accessory</th>
-                        <th>Type</th>
-                        <th>Quantity</th>
-                        <th>Amount Left</th>
-                        <th>Being Used</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Buttons</td>
-                        <td>Plastic</td>
-                        <td>5000</td>
-                        <td>4000</td>
-                        <td>1000</td>
-                    </tr>
-                    <tr>
-                        <td>Zippers</td>
-                        <td>Metal</td>
-                        <td>3000</td>
-                        <td>2500</td>
-                        <td>500</td>
-                    </tr>
-                    <tr>
-                        <td>Threads</td>
-                        <td>Cotton</td>
-                        <td>7000</td>
-                        <td>6500</td>
-                        <td>500</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="Orders" class="tabcontent">
-            <h2>Orders</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Client</th>
-                        <th>Status</th>
-                        <th>Quantity</th>
-                        <th>Due Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>#1001</td>
-                        <td>Client A</td>
-                        <td><span class="status pending">Pending</span></td>
-                        <td>1000</td>
-                        <td>2024-05-20</td>
-                    </tr>
-                    <tr>
-                        <td>#1002</td>
-                        <td>Client B</td>
-                        <td><span class="status in-progress">In Progress</span></td>
-                        <td>500</td>
-                        <td>2024-05-22</td>
-                    </tr>
-                    <tr>
-                        <td>#1003</td>
-                        <td>Client C</td>
-                        <td><span class="status completed">Completed</span></td>
-                        <td>2000</td>
-                        <td>2024-05-18</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="Maintenance" class="tabcontent">
-            <h2>Maintenance</h2>
-            <div class="equipment-switch">
-                <label for="equipmentSelect">Select Equipment: </label>
-                <select id="equipmentSelect" onchange="switchEquipment()">
-                    <option value="machineA">Machine A</option>
-                    <option value="machineB">Machine B</option>
-                    <option value="machineC">Machine C</option>
-                    <option value="machineD">Machine D</option>
-                    <option value="machineE">Machine E</option>
-                </select>
-            </div>
-            <div id="machineA" class="equipment">
-                <h3>Machine A</h3>
-                <p>Details about Machine A operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Cutting</td>
-                            <td>10</td>
-                            <td>15</td>
-                        </tr>
-                        <tr>
-                            <td>Cutting Patterns</td>
-                            <td>10</td>
-                            <td>15</td>
-                        </tr>
-                        <tr>
-                            <td>Cutting Layers</td>
-                            <td>10</td>
-                            <td>15</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineB" class="equipment" style="display: none;">
-                <h3>Machine B</h3>
-                <p>Details about Machine B operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Sewing Pocket</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Crew</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Sleeve</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Front</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                        <tr>
-                            <td>Sewing Back</td>
-                            <td>8</td>
-                            <td>20</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineC" class="equipment" style="display: none;">
-                <h3>Machine C</h3>
-                <p>Details about Machine C operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Assembling</td>
-                            <td>12</td>
-                            <td>10</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineD" class="equipment" style="display: none;">
-                <h3>Machine D</h3>
-                <p>Details about Machine D operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Painting</td>
-                            <td>6</td>
-                            <td>25</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="machineE" class="equipment" style="display: none;">
-                <h3>Machine E</h3>
-                <p>Details about Machine E operations and usage.</p>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Operation</th>
-                            <th>Times Used Per Day</th>
-                            <th>Duration Per Operation (minutes)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Packaging 1</td>
-                            <td>15</td>
-                            <td>5</td>
-                        </tr>
-                        <tr>
-                            <td>Packaging 2</td>
-                            <td>15</td>
-                            <td>5</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div id="Employees" class="tabcontent">
-            <h2>Employees</h2>
-            <ul class="employee-list">
-                <li><a href="#" onclick="showEmployeeModal('Employee 1')">Employee 1</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 2')">Employee 2</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 3')">Employee 3</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 4')">Employee 4</a></li>
-                <li><a href="#" onclick="showEmployeeModal('Employee 5')">Employee 5</a></li>
-            </ul>
+            
         </div>
     </div>
-    <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="employeeModalLabel">Employee Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+
+        <div id="Production" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Production Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
                 </div>
-                <div class="modal-body">
-                    <h4 id="employeeName"></h4>
-                    <p id="employeeEarnings"></p>
-                    <p id="employeeEfficiency"></p>
-                    <canvas id="employeeChart"></canvas>
+              </nav>
+              <div class="container" style="padding:5%;">
+            <table class="table rounded-table">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Model Name' %}</th>
+                        <th>{% trans 'Quantity' %}</th>
+                        <th>{% trans 'Price' %}</th>
+                        <th>{% trans 'Assortment' %}</th>
+                        <th>{% trans 'Color' %}</th>
+                        <th>{% trans 'Fabrics' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders_data %}
+                    <tr>
+                        <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
+                        <td>{{ order.quantity }}</td>
+                        <td>{{ order.total_price }}</td>
+                        <td>{{ order.assortment_name }}</td>
+                        <td>{{ order.color }}</td>
+                        <td>{{ order.fabrics }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        
+            <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="    border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderModalLabel">{% trans 'Model Details' %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Order details will be populated here by JavaScript -->
+                        </div>
+                        <!-- <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div> -->
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+                
+        </div>
+        </div>      
+        <div id="Inventory" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Inventory Overview' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
                 </div>
+              </nav>
+              <div class="container" style="padding:5%;">
+            <table class="table rounded-table">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Name' %}</th>
+                        <th>{% trans 'Color' %}</th>
+                        <th>{% trans 'Fabrics' %}</th>
+                        <th>{% trans 'Total Meters' %}</th>
+                        <th>{% trans 'Used Meters' %}</th>
+                        <th>{% trans 'Available Meters' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for roll in inventory_data %}
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
+                        <td>{{ roll.color }}</td>
+                        <td>{{ roll.fabrics }}</td>
+                        <td>{{ roll.meters }}</td>
+                        <td>{{ roll.used_meters }}</td>
+                        <td>{{ roll.available_meters }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="modal fade" id="rollModal" tabindex="-1" role="dialog" aria-labelledby="rollModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rollModalLabel">{% trans 'Roll Details' %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Roll details will be filled here by JavaScript -->
+                        </div>
+                        <!-- <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+                
+        </div>
+        </div> 
+  
+        <div id="Employees" class="tabcontent" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Employee Rankings' %}</h4>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+                  <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+                    <li class="nav-item dropdown" style="margin: 10px;">
+                      {{ request.user.username }}
+                    </li>
+                    <li class="nav-item dropdown">
+                      <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              <div class="container" style="padding:5%;">
+            <table class="table rounded-table">
+                <thead>
+                    <tr>
+                        <th>{% trans 'Employee ID' %}</th>
+                        <th>{% trans 'Full Name' %}</th>
+                        <th>{% trans 'Units Produced' %}</th>
+                        <th>{% trans 'Hours Worked' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employee_data %}
+                    <tr>
+                        <td>{{ employee.name }}</td>
+                        <td><a href="#" data-toggle="modal" class="linkset" data-target="#employeeModal" onclick="fetchEmployeeDetails({{ employee.id }})">{{ employee.employee_id }} - {{ employee.full_name }}</a></td>
+                        <td>{{ employee.units_produced }}</td>
+                        <td>{{ employee.hours_worked }} hrs</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="modal fade" id="employeeModal" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border: 0px solid rgba(0, 0, 0, .2);     border-radius: 18px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="employeeModalLabel">{% trans 'Employee Details' %}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Employee details will be filled here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             </div>
         </div>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -504,118 +844,6 @@
             evt.currentTarget.className += " active";
         }
 
-        function switchBranch() {
-            var branchSelect = document.getElementById("branchSelect");
-            var branch1 = document.getElementById("branch1");
-            var branch2 = document.getElementById("branch2");
-
-            if (branchSelect.value === "branch1") {
-                branch1.style.display = "block";
-                branch2.style.display = "none";
-            } else {
-                branch1.style.display = "none";
-                branch2.style.display = "block";
-            }
-        }
-
-        function switchEquipment() {
-            var equipmentSelect = document.getElementById("equipmentSelect");
-            var equipments = document.getElementsByClassName("equipment");
-
-            for (var i = 0; i < equipments.length; i++) {
-                equipments[i].style.display = "none";
-            }
-
-            var selectedEquipment = document.getElementById(equipmentSelect.value);
-            if (selectedEquipment) {
-                selectedEquipment.style.display = "block";
-            }
-        }
-
-        function showEmployeeModal(employeeName) {
-            var earnings = {
-                "Employee 1": "$5000",
-                "Employee 2": "$4800",
-                "Employee 3": "$4700",
-                "Employee 4": "$4900",
-                "Employee 5": "$5100"
-            };
-
-            var efficiency = {
-                "Employee 1": { defects: 2, discrepancies: 1, completedOnTime: 50, completedOffTime: 5 },
-                "Employee 2": { defects: 3, discrepancies: 2, completedOnTime: 48, completedOffTime: 7 },
-                "Employee 3": { defects: 1, discrepancies: 1, completedOnTime: 49, completedOffTime: 6 },
-                "Employee 4": { defects: 4, discrepancies: 3, completedOnTime: 45, completedOffTime: 8 },
-                "Employee 5": { defects: 2, discrepancies: 2, completedOnTime: 52, completedOffTime: 4 }
-            };
-
-            document.getElementById('employeeName').innerText = employeeName;
-            document.getElementById('employeeEarnings').innerText = "Earnings: " + earnings[employeeName];
-            var eff = efficiency[employeeName];
-            document.getElementById('employeeEfficiency').innerText = `Efficiency: Defects: ${eff.defects}, Discrepancies: ${eff.discrepancies}, Completed On Time: ${eff.completedOnTime}, Completed Off Time: ${eff.completedOffTime}`;
-
-            if (employeeChartInstance) {
-                employeeChartInstance.destroy();
-            }
-
-            var ctx = document.getElementById('employeeChart').getContext('2d');
-            employeeChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Efficiency',
-                        data: [80, 85, 88, 90, 87, 85], // Sample data
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            $('#employeeModal').modal('show');
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            var productionData = [500, 600, 700, 800, 900, 1000];
-            var inventoryData = [1000, 950, 900, 850, 800, 750];
-
-            var createChart = function(id, data, title) {
-                var ctx = document.getElementById(id).getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                        datasets: [{
-                            label: title,
-                            data: data,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                            fill: false
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-
-            createChart('productionChart', productionData, 'Monthly Production');
-            createChart('inventoryChart', inventoryData, 'Inventory Levels');
-
-            document.querySelector(".tablink").click();
-        });
     </script>
     <script>
         function fetchClientDetails(clientId) {
@@ -623,56 +851,399 @@
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#clientModal .modal-body');
-                    // Set up the basic client info
                     modalBody.innerHTML = `
-                        <p>Name: ${data.name}</p>
-                        <p>Contact Info: ${data.contact_info}</p>
-                        <p>Total Spendings: ${data.total_spendings}</p>
-                        <canvas id="spendingChart" width="400" height="400"></canvas>
-                    `; // Ensure there is a canvas element for the chart
-        
-                    // Prepare the data for the chart
+                        <div class="client-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Имя:</strong> ${data.name}</p>
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <p><strong>Контактная Информация:</strong> ${data.contact_info}</p>
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <p><strong>Затраты:</strong> ${data.total_spendings}</p>
+                                </div>
+                                <div class="col-12">
+                                    <canvas id="spendingChart" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+    
                     const labels = data.spendings_over_time.map(item => item.date);
                     const co = data.spendings_over_time.map(item => item.co);
                     const spendings = data.spendings_over_time.map(item => item.spendings);
-                    const tooltipLabels = labels.map((label, index) => `${label} - ${co[index]}`);
-                    // Render the chart using Chart.js
+                    
                     var ctx = document.getElementById('spendingChart').getContext('2d');
                     var spendingChart = new Chart(ctx, {
-                        type: 'line', // or 'bar' if you prefer
+                        type: 'line',
                         data: {
-                          labels: labels,  // Use original labels for X-axis
-                          datasets: [{
-                            label: "Spendings Over Time",
-                            data: spendings,
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                          }]
+                            labels: labels,
+                            datasets: [{
+                                label: "Затраты за все время",
+                                data: spendings,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
                         },
                         options: {
-                          scales: {
-                            y: {
-                              beginAtZero: true
-                            }
-                          },
-                          plugins: {
-                            tooltip: {
-                              callbacks: {
-                                label: function(tooltipItem) {
-                                  const label = tooltipItem.label; // date
-                                  const value = tooltipItem.raw; // spending amount
-                                  const coValue = co[tooltipItem.dataIndex]; // co value for the tooltip
-                                  return `${coValue} - ${value}`;
+                            scales: {
+                                y: {
+                                    beginAtZero: true
                                 }
-                              }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(tooltipItem) {
+                                            const coValue = co[tooltipItem.dataIndex];
+                                            const value = tooltipItem.raw;
+                                            return `${coValue} - ${value}`;
+                                        }
+                                    }
+                                }
                             }
-                          }
                         }
                     });
                 })
                 .catch(error => console.error('Error loading client details:', error));
-        }           
+        }
+    </script>
+    <script>
+        function fetchEmployeeDetails(employeeId) {
+            fetch(`/production/api/employees/${employeeId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#employeeModal .modal-body');
+                    const operationsList = data.operations.map(op => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${op.operation}: ${op.quantity}
+                            <span class="badge badge-primary badge-pill">Avg Time: ${op.average_time_per_unit.toFixed(2)}s (Preferred: ${op.preferred_completion_time}s)</span>
+                        </li>
+                    `).join('');
+    
+                    modalBody.innerHTML = `
+                        <div class="employee-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Имя:</strong> ${data.full_name}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Имя пользователя:</strong> ${data.username}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Заработок:</strong> ${data.earnings} сом</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Эффективность:</strong> ${data.efficiency.toFixed(2)}%</p>
+                                </div>
+                                <div class="col-12 mb-2">
+                                    <p><strong>Работал(-а) над операциями:</strong></p>
+                                    <ul class="list-group">${operationsList}</ul>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Число браков:</strong> ${data.total_defects}</p>
+                                </div>
+                                <div class="col-12">
+                                    <canvas id="productionChart" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+    
+                    const labels = data.units_over_time.map(item => item.date);
+                    const unitsProduced = data.units_over_time.map(item => item.units);
+    
+                    var ctx = document.getElementById('productionChart').getContext('2d');
+                    var productionChart = new Chart(ctx, {
+                        type: 'line', 
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: "Единиц произведено за все время",
+                                data: unitsProduced,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading employee details:', error));
+        }
+    </script>
+
+    <script>
+        function fetchOrderDetails(orderId) {
+            fetch(`/production/api/orders/${orderId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#orderModal .modal-body');
+                    let passportsHtml = data.passports.map(passport => `
+                        <div class="passport-item mb-3 p-3 border rounded shadow-sm">
+                            <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
+                                <p>
+                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Размеры:</strong> ${passport.size_range}<br>
+                                    ${passport.rolls.map(roll => `
+                                        <span>${roll.roll_name}: ${roll.meters} метров</span>
+                                    `).join(', ')}
+                                </p>
+                            </a>
+                        </div>
+                    `).join('');
+    
+                    modalBody.innerHTML = `
+                        <div class="order-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Модель:</strong> ${data.model_name}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Количество:</strong> ${data.quantity}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Цена за единицу:</strong> ${data.price_per_piece}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Стоимость производства:</strong> ${data.production_cost_per_piece}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Статус:</strong> ${data.status}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Ассортимент:</strong> ${data.assortment}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Цвет:</strong> ${data.color}</p>
+                                </div>
+                                <div class="col-12">
+                                    ${passportsHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => console.error('Error loading order details:', error));
+        }
+    </script>
+    
+    <script>
+        function fetchRollDetails(rollId) {
+            fetch(`/production/api/rolls/${rollId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#rollModal .modal-body');
+                    let passportsHtml = data.passports_used.map(passport => `
+                        <div class="passport-item mb-3 p-3 border rounded shadow-sm">
+                            <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
+                                <p>
+                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Метров использовано:</strong> ${passport.meters_used}<br>
+                                    <strong>Модель:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
+                                </p>
+                            </a>
+                        </div>
+                    `).join('');
+        
+                    modalBody.innerHTML = `
+                        <div class="roll-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Название:</strong> ${data.name}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Цвет:</strong> ${data.color}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Ткань:</strong> ${data.fabrics}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Всего Метров:</strong> ${data.meters}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Использовано:</strong> ${data.used_meters}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Доступно:</strong> ${data.available_meters}</p>
+                                </div>
+                                <div class="col-12">
+                                    ${passportsHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => console.error('Error loading roll details:', error));
+        }
+    </script>
+    
+    <script>
+        function fetchClientOrderDetails(clientOrderId) {
+            fetch(`/production/api/client-orders/${clientOrderId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalBody = document.querySelector('#clientOrderModal .modal-body');
+                    let ordersHtml = data.orders.map(order => `
+                        <div class="order-item mb-3 p-3 border rounded shadow-sm">
+                            <a href="/production/admin/orders/${order.order_id}/" class="text-decoration-none text-dark" target="_blank">
+                                <p>
+                                    <strong>Модель:</strong> ${order.model_name}<br>
+                                    <strong>Ассортимент:</strong> ${order.assortment}<br>
+                                    <strong>Выполненное количество:</strong> ${order.completed_percentage.toFixed(2)}%
+                                </p>
+                            </a>
+                        </div>
+                    `).join('');
+    
+                    modalBody.innerHTML = `
+                        <div class="client-order-details container-fluid">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <p><strong>Заказ:</strong> ${data.order_number}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Клиент:</strong> ${data.client}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Статус:</strong> ${data.status}</p>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Срок:</strong> ${data.term}</p>
+                                </div>
+                                <div class="col-12">
+                                    ${ordersHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => console.error('Error loading order details:', error));
+        }
+    </script>
+    
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sidebarWrapper = document.getElementById('sidebar-wrapper');
+            const toggleButton = document.getElementById('toggle-sidebar');
+            const closeButton = document.getElementById('close-sidebar');
+            const overviewLink = document.querySelector('#sidebar .list-group-item[data-id="user_redirect"]');
+
+            const currentPath = window.location.pathname;
+    
+            document.querySelectorAll('#sidebar .list-group-item').forEach(function(link) {
+                const linkPath = new URL(link.href).pathname;
+                
+                if (currentPath === linkPath || currentPath.includes(linkPath)) {
+                    document.querySelectorAll('#sidebar .list-group-item').forEach(item => item.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+            if (overviewLink) {
+            overviewLink.classList.add('active');
+        }
+    
+            toggleButton.addEventListener('click', function() {
+                sidebarWrapper.classList.toggle('collapsed');
+            });
+    
+            closeButton.addEventListener('click', function() {
+                sidebarWrapper.classList.toggle('collapsed');
+            });
+        });
+    </script>
+    <script>
+        document.getElementById('modelSelector').addEventListener('change', function() {
+            const modelName = this.value;
+            const secondaryContainer = document.getElementById('secondarySelectorContainer');
+            const goButton = document.getElementById('goButton');
+            
+            // Clear previous content
+            secondaryContainer.innerHTML = '';
+            goButton.style.display = 'none';
+            
+            if (modelName) {
+                // Check if the selected model requires direct ID input
+                if (modelName === 'Passport' || modelName === 'ProductionPiece') {
+                    // Create an input field for Passport and ProductionPiece
+                    const input = document.createElement('input');
+                    input.id = 'recordInput';
+                    input.placeholder = 'Enter ID';
+                    input.className = 'form-control';
+                    secondaryContainer.appendChild(input);
+                    goButton.style.display = 'block';  // Show the GO button
+                } else {
+                    // Fetch records from server for other models
+                    fetch(`/production/api/fetch-model-records/?model_type=${modelName}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Create a selector for models providing selectable options
+                            const select = document.createElement('select');
+                            select.id = 'recordSelector';
+                            select.className = 'custom-select';
+                            select.style.height = '50px';
+                            select.innerHTML = `<option value="">Select Record...</option>`;
+                            data.forEach(record => {
+                                select.innerHTML += `<option value="${record.id}">${record.name || record.order_number || record.user__username || record.custom_error}</option>`;
+                            });
+                            secondaryContainer.appendChild(select);
+                            goButton.style.display = 'block';  // Show the GO button
+                        })
+                        .catch(error => console.error('Error fetching model records:', error));
+                }
+            }
+        });
+        
+        document.getElementById('goButton').addEventListener('click', function() {
+            const modelName = document.getElementById('modelSelector').value;
+            const recordId = document.getElementById('recordSelector') ? document.getElementById('recordSelector').value : document.getElementById('recordInput').value;
+        
+            fetch(`/production/api/fetch-record-details/?model_type=${modelName}&record_id=${recordId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const detailsContainer = document.getElementById('recordDetails');
+                    detailsContainer.innerHTML = '';
+                    if (data.error) {
+                        detailsContainer.innerHTML = `<p>Error: ${data.error}</p>`;
+                    } else {
+                        const table = document.createElement('table');
+                        table.className = 'table rounded-table';
+
+                        const thead = document.createElement('thead');
+                        const headerRow = thead.insertRow();
+                        const keyHeader = document.createElement('th');
+                        keyHeader.textContent = 'Параметр';
+                        const valueHeader = document.createElement('th');
+                        valueHeader.textContent = 'Значени';
+
+                        headerRow.appendChild(keyHeader);
+                        headerRow.appendChild(valueHeader);
+
+                        table.appendChild(thead);
+
+                        const tbody = document.createElement('tbody');
+
+                        for (let key in data) {
+                            let row = table.insertRow();
+                            let cellKey = row.insertCell(0);
+                            let cellValue = row.insertCell(1);
+                            cellKey.textContent = key;
+                            cellValue.textContent = data[key];
+                        }
+                        detailsContainer.appendChild(table);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
     </script>
 </body>
 </html>

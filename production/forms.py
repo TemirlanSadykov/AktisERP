@@ -7,6 +7,7 @@ from django.forms import ModelChoiceField
 from django.db import transaction
 import json
 from .models import *
+from django.db.models import F
 
 
 class BranchForm(forms.ModelForm):
@@ -122,10 +123,71 @@ class UserEditForm(forms.ModelForm):
             user.userprofile.save()
         return user
     
+class CutForm(forms.ModelForm):
+    size_quantities = forms.ModelMultipleChoiceField(
+        queryset=SizeQuantity.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        label="Выберите размеры"
+    )
+
+    class Meta:
+        model = Cut
+        exclude = ['order', 'date', 'number']
+
+    def __init__(self, *args, **kwargs):
+        order = kwargs.pop('order', None)  # Get order from the view
+        super().__init__(*args, **kwargs)
+
+        if order:
+            self.fields['size_quantities'].queryset = order.size_quantities.all()
+
+class ConsumptionForm(forms.ModelForm):
+    class Meta:
+        model = Consumption
+        fields = ['fabrics', 'width', 'length', 'factual', 'commerce']
+        widgets = {
+            'fabrics': forms.Select(attrs={'class': 'form-control'}),
+            'width': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
+            'length': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
+            'factual': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
+            'commerce': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        cut = kwargs.pop('cut', None)
+        super().__init__(*args, **kwargs)
+        if cut and cut.order:
+            self.fields['fabrics'].queryset = cut.order.fabrics.all()
+        else:
+            self.fields['fabrics'].queryset = Fabrics.objects.none()
+
 class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport
-        exclude = ['size_quantities', 'rolls', 'is_completed']
+        fields = ['roll', 'meters', 'layers']
+        widgets = {
+            'roll': forms.Select(attrs={'class': 'form-control'}),
+            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
+            'layers': forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        cut = kwargs.pop('cut', None)  # Get cut from the view
+        super().__init__(*args, **kwargs)
+
+        if cut:
+            self.fields['roll'].queryset = Roll.objects.filter(
+                fabrics__in=cut.order.fabrics.all(),
+                color__in=cut.order.colors.all(),
+                meters__gt=F('used_meters')
+            )
+        else:
+            self.fields['roll'].queryset = Roll.objects.none()
+
+# class PassportForm(forms.ModelForm):
+#     class Meta:
+#         model = Passport
+#         exclude = ['size_quantities', 'rolls', 'is_completed']
 
 class OperationAssignmentForm(forms.ModelForm):
     employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")
@@ -137,13 +199,21 @@ class OperationAssignmentForm(forms.ModelForm):
         fields = ['employee_id', 'quantity']
 
 class SizeQuantityForm(forms.ModelForm):
+    color = forms.ModelChoiceField(queryset=Color.objects.none(), empty_label="Select Color", widget=forms.Select(attrs={'class': 'form-control'}))
+    
     class Meta:
         model = SizeQuantity
-        fields = ['size', 'quantity']
+        fields = ['size', 'quantity', 'color']
         widgets = {
-            'size': forms.NumberInput(attrs={'class': 'form-control','placeholder': 'Enter Size'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+            'size': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Size'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Quantity'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        order = kwargs.pop('order', None)
+        super().__init__(*args, **kwargs)
+        if order:
+            self.fields['color'].queryset = order.colors.all()
 
 class DateForm(forms.Form):
     date = forms.DateField(label='Дата', widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}))
@@ -178,42 +248,53 @@ class SalaryListForm(forms.Form):
         required=False
     )
 
+# class PassportRollForm(forms.ModelForm):
+#     class Meta:
+#         model = PassportRoll
+#         fields = ['roll', 'meters']
+#         widgets = {
+#             'roll': forms.Select(attrs={'class': 'form-control'}),
+#             'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'})
+#         }
 
+#     def __init__(self, *args, **kwargs):
+#         passport = kwargs.pop('passport', None)
+#         super().__init__(*args, **kwargs)
+#         if passport and passport.order:
+#             self.fields['roll'].queryset = Roll.objects.filter(
+#                 color__in=passport.order.colors.all(),
+#                 fabrics__in=passport.order.fabrics.all()
+#             )
+#         else:
+#             self.fields['roll'].queryset = Roll.objects.none()
 
-class PassportRollForm(forms.ModelForm):
-    class Meta:
-        model = PassportRoll
-        fields = ['roll', 'meters']
-        widgets = {
-            'roll': forms.Select(attrs={'class': 'form-control'}),
-            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'})
-        }
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['roll'].queryset = Roll.objects.all()
+# class SizeQuantityChoiceField(ModelChoiceField):
+#     def label_from_instance(self, obj):
+#         return f'{obj.size} - {obj.color}'
+# class RollChoiceField(forms.ModelChoiceField):
+#     def label_from_instance(self, obj):
+#         return f'{obj.name} - {obj.color} - {obj.fabrics}'
+# class PassportSizeForm(forms.ModelForm):
+#     size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}))
+#     roll = RollChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}))  # Add this line
 
-class SizeQuantityChoiceField(ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.size
+#     class Meta:
+#         model = PassportSize
+#         fields = ['size_quantity', 'quantity', 'roll']  # Include 'roll' here
+#         widgets = {
+#             'size_quantity': forms.Select(attrs={'class': 'form-control'}),
+#             'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
+#             'roll': forms.Select(attrs={'class': 'form-control'}),  # Add this line
+#         }
 
-class PassportSizeForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}) ) 
-
-    class Meta:
-        model = PassportSize
-        fields = ['size_quantity', 'quantity']
-        widgets = {
-            'size_quantity': forms.Select(attrs={'class': 'form-control'}),
-            'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        passport_id = kwargs.pop('passport_id', None)
-        super().__init__(*args, **kwargs)
+#     def __init__(self, *args, **kwargs):
+#         passport_id = kwargs.pop('passport_id', None)
+#         super().__init__(*args, **kwargs)
         
-        if passport_id:
-            passport = Passport.objects.get(pk=passport_id)
-            self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
+#         if passport_id:
+#             passport = Passport.objects.get(pk=passport_id)
+#             self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
+#             self.fields['roll'].queryset = passport.rolls.all()  # Add this line to filter rolls based on the passport
 
 class OperationForm(forms.ModelForm):
     class Meta:
@@ -231,12 +312,13 @@ class OperationForm(forms.ModelForm):
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll
-        fields = ['name', 'color', 'fabrics', 'meters']
+        fields = ['name', 'color', 'fabrics', 'meters', 'width']
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
-                'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
-                'fabrics': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
+                'color': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
+                'fabrics': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
                 'meters': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter meters'}),
+                'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter width'}),
             }
     
 class AssortmentForm(forms.ModelForm):
@@ -334,12 +416,11 @@ class ClientOrderForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['model', 'assortment', 'color', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
+        fields = ['model', 'colors', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
         widgets = {
             'model': forms.Select(attrs={'class': 'form-control'}),
-            'assortment': forms.Select(attrs={'class': 'form-control'}),
-            'color': forms.TextInput(attrs={'class': 'form-control'}),
-            'fabrics': forms.TextInput(attrs={'class': 'form-control'}),
+            'colors': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'fabrics': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -349,21 +430,13 @@ class OrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
         self.fields['model'].queryset = Model.objects.all()
-        self.fields['assortment'].queryset = Assortment.objects.all()
+        self.fields['colors'].queryset = Color.objects.all()
+        self.fields['fabrics'].queryset = Fabrics.objects.all()
 
         # Make certain fields optional in the form
         self.fields['model'].required = False
-        self.fields['assortment'].required = False
-
-class OrderFormTechnologist(forms.ModelForm):
-    class Meta:
-        model = Order
-        fields = ['model', 'assortment']
-
-    def __init__(self, *args, **kwargs):
-        super(OrderFormTechnologist, self).__init__(*args, **kwargs)
-        self.fields['model'].queryset = Model.objects.all()
-        self.fields['assortment'].queryset = Assortment.objects.all()
+        self.fields['colors'].required = False
+        self.fields['fabrics'].required = False
 
 class NodeForm(forms.ModelForm):
     class Meta:
@@ -385,41 +458,38 @@ class EquipmentForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter equipment name'}),
         }
 
+class ColorForm(forms.ModelForm):
+    class Meta:
+        model = Color
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color name'}),
+        }
+
+class FabricsForm(forms.ModelForm):
+    class Meta:
+        model = Fabrics
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
+        }
+
+class AccessoryForm(forms.ModelForm):
+    class Meta:
+        model = Accessory
+        fields = ['name', 'quantity', 'unit', 'key', 'value', 'info']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter accessory name'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter unit of measurement'}),
+            'key': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter key characteristic'}),
+            'value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter characteristic value'}),
+            'info': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter additional information', 'rows': 3}),
+        }
+
 class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
-
-class ErrorForm(forms.ModelForm):
-    size_quantity = SizeQuantityChoiceField(queryset=SizeQuantity.objects.none(),widget=forms.Select(attrs={'class': 'form-control'}))
-
-    class Meta:
-        model = Error
-        fields = ['passport', 'size_quantity', 'quantity', 'defect_type']  
-        widgets = {
-            'passport': forms.TextInput(attrs={'class': 'form-control'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'defect_type': forms.Select(attrs={'class': 'form-control'}),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        order_pk = kwargs.pop('order_pk', None)
-        self.error_type = kwargs.pop('error_type', None)
-        super().__init__(*args, **kwargs)
-
-        if order_pk:
-            order = Order.objects.get(pk=order_pk)
-            self.fields['passport'].queryset = Passport.objects.filter(order=order)
-            self.fields['size_quantity'].queryset = order.size_quantities.all()
-
-        if self.error_type != 'DEFECT':
-            if 'defect_type' in self.fields:
-                del self.fields['defect_type']
-        else:
-            self.fields['defect_type'].required = True
-
-    def save(self, commit=True):
-        self.instance.error_type = self.error_type
-        return super().save(commit=commit)
 
 class FixedSalaryForm(forms.ModelForm):
     employees = forms.ModelMultipleChoiceField(
@@ -448,8 +518,8 @@ class ErrorResponsibilityForm(forms.ModelForm):
         model = ErrorResponsibility
         fields = ['employee', 'percentage']
         widgets = {
-            'employee': forms.Select(),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):

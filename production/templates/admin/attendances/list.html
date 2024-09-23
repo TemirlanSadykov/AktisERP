@@ -49,8 +49,25 @@
             <ul id="attendance-records" class="list-group custom-list-group">
               {% for attendance in attendances %}
 
-                <li class="list-group-item custom-list-item" style="color:#007bff; padding:18px;">{{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}</li>
-                {% endfor %}
+              <li class="list-group-item custom-list-item" 
+              style="
+                  color: 
+                      {% if attendance.distance < 100 and attendance.fingerprint == attendance.employee.fingerprint %}
+                          green;
+                      {% else %}
+                          red;
+                      {% endif %}
+              padding:18px;">
+              {{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}
+              
+              {% if attendance.distance >= 100 %}
+                  (Outside allowed distance: {{ attendance.distance }} meters)
+              {% elif attendance.fingerprint != attendance.employee.fingerprint %}
+                  (Fingerprint mismatch)
+              {% endif %}
+              </li>          
+              
+              {% endfor %}
               </ul>
               {% else %}
               <p>{% trans "No attendance records found." %}</p>
