@@ -379,11 +379,13 @@ class EmployeeListView(ListView):
     template_name = 'admin/employees/list.html'
     context_object_name = 'employees'
     paginate_by = 10
+
     def get_queryset(self):
         return UserProfile.objects.filter(
             branch=self.request.user.userprofile.branch,
             is_archived=False
-        ).order_by('employee_id')
+        ).exclude(user__username='admin').order_by('employee_id')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['upload_form'] = UploadFileForm()
