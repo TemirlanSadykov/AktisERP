@@ -159,11 +159,12 @@
         })
         .then(response => {
           if (response.ok) {
+            window.location.reload() 
             // Remove the consumption element without reloading
-            let parentLi = document.querySelector(`#consumption-${consumptionId}`);
-            if (parentLi) {
-              parentLi.remove();
-            }
+            // let parentLi = document.querySelector(`#consumption-${consumptionId}`);
+            // if (parentLi) {
+            //  parentLi.remove();
+            // }
           } else {
             alert('Не получилось удалить');
           }

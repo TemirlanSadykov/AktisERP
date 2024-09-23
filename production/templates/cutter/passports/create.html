@@ -150,11 +150,12 @@
         })
         .then(response => {
           if (response.ok) {
+            window.location.reload() 
             // Remove the passport element without reloading
-            let parentLi = document.querySelector(`#passport-${passportId}`);
-            if (parentLi) {
-              parentLi.remove();
-            }
+            // let parentLi = document.querySelector(`#passport-${passportId}`);
+            // if (parentLi) {
+            //  parentLi.remove();
+            // }
           } else {
             alert('Не получилось удалить');
           }
