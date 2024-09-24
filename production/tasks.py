@@ -25,7 +25,7 @@ def send_whatsapp_message(data):
 
     client = Client(account_sid, auth_token)
     twilio_number = os.getenv('twilio_number')
-    all_numbers = list(PhoneNumberScaner.objects.values_list('mobile_number', flat=True).distinct())
+    all_numbers = list(PhoneNumberScaner.objects.values_list('phone_number', flat=True).distinct())
     recipient_numbers = [number if number.startswith('+') else f'+{number}' for number in all_numbers]
     recipient_number = recipient_numbers
     message_body = "1 day to ship:\n\n"

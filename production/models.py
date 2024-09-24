@@ -382,5 +382,5 @@ class SalaryPayment(models.Model):
     
     
 class PhoneNumberScaner(models.Model):
-    mobile_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=15)
     created_at = models.DateTimeField(auto_now_add=True)
