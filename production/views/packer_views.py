@@ -216,6 +216,19 @@ class CutDetailPackerView(DetailView):
 
         return context
     
+@method_decorator([login_required, packer_required], name='dispatch')
+class PassportDetailPackerView(DetailView):
+    model = Passport
+    template_name = 'packer/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'packer'
+        return context
+
 @require_POST
 @login_required
 @packer_required

@@ -298,6 +298,19 @@ class PassportCreateView(CreateView):
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})
     
+@method_decorator([login_required, cutter_required], name='dispatch')
+class PassportDetailView(DetailView):
+    model = Passport
+    template_name = 'cutter/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'cutter'
+        return context
+    
 @login_required
 @cutter_required
 def delete_passport(request, pk):
@@ -455,8 +468,7 @@ def delete_passport(request, pk):
 def mark_as_sewing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.CUTTING, node__is_common=True)
-        print(operations)
+        operations = Operation.objects.filter(node__type=Node.CUTTING, node__is_common=True) # Work for Employees type Cutter
         with transaction.atomic():
             if passport_size.stage == PassportSize.SEWING:
                 passport_size.stage = PassportSize.CUTTING

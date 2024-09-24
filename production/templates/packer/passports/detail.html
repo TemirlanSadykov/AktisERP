@@ -2,12 +2,13 @@
 {% load i18n %}
 {% load static %}
 {% block content %}
+{% load custom_filters %}
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Cutter Dashboard' %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Packer Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -60,26 +61,30 @@
               <tr>
                 <th>{% trans "Size" %}</th>
                 <th>{% trans "Quantity" %}</th>
+                <th>{% trans "Packed" %}</th>
                 <th>{% trans "Stage" %}</th>
               </tr>
               {% for size in passport_sizes %}
               <tr>
                 <td>
-                  <a href="{% url 'barcode_passport_size' size.id %}" style="display: block; width: 100%; height: 100%;">{{ size.size_quantity.size }}</a>
+                  {{ size.size_quantity.size }}
                 </td>
                 <td>
-                  <a href="{% url 'barcode_passport_size_per_piece' size.id %}" style="display: block; width: 100%; height: 100%;">{{ size.quantity }}</a>
+                  {{ size.quantity }}
                 </td>
                 <td>
-                  {% if size.stage == 0 %}
-                  <button type="button" class="stage-cutting-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Резка</button>
-                  {% elif size.stage == 1 %}
-                  <button type="button" class="stage-cutting-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Шитье</button>
+                  {{ size|packed_pieces }}
+                </td>
+                <td>
+                  {% if size.stage == 3 %}
+                  <button type="button" class="stage-packer-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Упаковка</button>
+                  {% elif size.stage == 4 %}
+                  <button type="button" class="stage-packer-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Готово</button>
                   {% else %}
-                  <button type="button" class="stage-cutting-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
-                    {% if size.stage == 2 %}ОТК
-                    {% elif size.stage == 3 %}Упаковка
-                    {% else %}Готово
+                  <button type="button" class="stage-packer-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
+                    {% if size.stage == 0 %}Резка
+                    {% elif size.stage == 1 %}Шитье
+                    {% else %}ОТК
                     {% endif %}
                   </button>
                   {% endif %}
@@ -96,12 +101,12 @@
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var buttons = document.querySelectorAll('.stage-cutting-button');
+    var buttons = document.querySelectorAll('.stage-packer-button');
     buttons.forEach(function(button) {
       button.addEventListener('click', function() { // Changed to 'click' event for buttons
         var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
         if (passportSizeId) {
-          fetch(`/production/cutter/orders/mark-as-sewing/${passportSizeId}/`, {
+          fetch(`/production/packer/orders/mark-as-done/${passportSizeId}/`, {
             method: 'POST',
             headers: {
               'X-CSRFToken': getCookie('csrftoken')

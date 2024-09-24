@@ -163,8 +163,9 @@ urlpatterns = [
 
     path('cutter/orders/', OrderListCutterView.as_view(), name='order_list_cutter'),
     path('cutter/orders/<int:pk>/', OrderDetailCutterView.as_view(), name='order_detail_cutter'),
-    # path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
-    # path('cutter/orders/<int:pk>/passport/create', PassportCreateView.as_view(), name='passport_create'),
+    path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
+    path('qc/orders/<int:pk>/passport', PassportDetailQcView.as_view(), name='passport_detail_qc'),
+    path('packer/orders/<int:pk>/passport', PassportDetailPackerView.as_view(), name='passport_detail_packer'),
 
     path('cutter/orders/<int:pk>/cut/create/', CutCreateView.as_view(), name='cut_create'),
     path('cutter/orders/<int:pk>/cut/detail/', CutDetailView.as_view(), name='cut_detail'),

@@ -50,51 +50,72 @@
 
 <!-- </div> -->
 
-          <form id="operationAssignmentForm" class="operation-form">
-            {% csrf_token %}
-            <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
-                  {% for ps in size_quantities %}
-                    <th>
-                      {{ ps.size_quantity.size }}<br>
-                      ({{ ps.quantity }})
-                    </th>
+<form id="operationAssignmentForm" class="operation-form">
+  {% csrf_token %}
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
+          {% for ps in size_quantities %}
+            <th>
+              {{ ps.size_quantity.size }}<br>
+              ({{ ps.quantity }})
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for operation in operations %}
+          {% if not operation.node.is_common %}
+          <tr>
+            <td>{{ operation.name }}</td>
+            {% for sq in size_quantities %}
+              <td>
+                {% get_work work_by_op_and_size operation.id sq.id as works %}
+                {% if works %}
+                  {% for work in works %}
+                    <div style="display: block;">
+                      <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
+                      {% if work.end_time %}
+                        <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
+                        <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
+                      {% endif %}
+                    </div>
                   {% endfor %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for operation in operations %}
-                    {% if not operation.node.is_common %}
-                    <tr>
-                        <td>{{ operation.name }}</td>
-                        {% for sq in size_quantities %}
-                        <td>
-                            {% get_work work_by_op_and_size operation.id sq.id as works %}
-                            {% if works %}
-                                {% for work in works %}
-                                <div style="display: block;">
-                                    <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
-                                    {% if work.end_time %}
-                                      <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
-                                      <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;" enterkeyhint="done">
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endif %}
-                {% endfor %}
-            </tbody>    
-            </table>
-          </div>
-          </form>
+                {% else %}
+                  <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;" enterkeyhint="done">
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endif %}
+        {% endfor %}
+
+        <!-- Add new row for stage buttons -->
+        <tr>
+          <td>{% trans "Stage" %}</td>
+          {% for size in size_quantities %}
+          <td>
+            {% if size.stage == 1 %}
+              <button type="button" class="stage-sewing-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Шитье</button>
+            {% elif size.stage == 2 %}
+              <button type="button" class="stage-sewing-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">ОТК</button>
+            {% else %}
+              <button type="button" class="stage-sewing-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
+                {% if size.stage == 0 %}Резка
+                {% elif size.stage == 3 %}Упаковка
+                {% else %}Готово
+                {% endif %}
+              </button>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</form>
           <div class="form-actions">
             {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
               {% csrf_token %}
@@ -493,5 +514,48 @@
       }
     });
   }  
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var buttons = document.querySelectorAll('.stage-sewing-button');
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function() { // Changed to 'click' event for buttons
+        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
+        if (passportSizeId) {
+          fetch(`/production/technologist/orders/mark-as-qc/${passportSizeId}/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert('Не получилось обновить');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        }
+      });
+    });
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+  });
 </script>
 {% endblock %}

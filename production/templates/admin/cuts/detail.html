@@ -33,7 +33,8 @@
             <div class="card-body">
                 <h3>{% trans "Cut Information" %}</h3>
                 <p><strong>{% trans "Date:" %}</strong> {{ cut.date }}</p>
-                <p><strong>{% trans "Order:" %}</strong> {{ cut.order }}</p>
+                <p><strong>{% trans "Order:" %}</strong> {{ cut.order.client_order }}</p>
+                <p><strong>{% trans "Model:" %}</strong> {{ cut.order.model }}</p>
 
                 <div class="row">
                     <div class="col-md-6" style="margin:auto;">

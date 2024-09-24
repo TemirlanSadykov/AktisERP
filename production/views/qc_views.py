@@ -218,6 +218,19 @@ class CutDetailQcView(DetailView):
         })
 
         return context
+    
+@method_decorator([login_required, qc_required], name='dispatch')
+class PassportDetailQcView(DetailView):
+    model = Passport
+    template_name = 'qc/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'qc_page'
+        return context
 
 @login_required
 @qc_required
