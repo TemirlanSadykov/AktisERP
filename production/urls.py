@@ -267,5 +267,8 @@ urlpatterns = [
     path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
     path('barcode/api/passport_size/<int:passport_size_id>/', BarcodePassportSize.as_view(), name='barcode_passport_size'),
     path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
+    #for whatsapp qr code
+    path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
+    path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
 
 ]
