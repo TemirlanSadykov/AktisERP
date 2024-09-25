@@ -218,6 +218,19 @@ class CutDetailQcView(DetailView):
         })
 
         return context
+    
+@method_decorator([login_required, qc_required], name='dispatch')
+class PassportDetailQcView(DetailView):
+    model = Passport
+    template_name = 'qc/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'qc_page'
+        return context
 
 @login_required
 @qc_required
@@ -232,12 +245,24 @@ def get_piece_info(request, barcode):
         piece = ProductionPiece.objects.get(id=piece_id)  # Fetch the piece using the extracted ID
 
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
-
+        date = piece.passport_size.passport.cut.date
+        cut = piece.passport_size.passport.cut.number
+        model = piece.passport_size.passport.cut.order.model.name
+        color = piece.passport_size.passport.roll.color.name
+        fabrcis = piece.passport_size.passport.roll.fabrics.name
+        size = piece.passport_size.size_quantity.size
+        passport_id = piece.passport_size.passport.id
+        passport_number = piece.passport_size.passport.number
         data = {
             'piece_id': piece.id,
-            'passport': piece.passport_size.passport.id,
-            'order': piece.passport_size.passport.order.model.name,
-            'passport_size': piece.passport_size.id,
+            'piece_number': piece.piece_number,
+            'passport_id': passport_id,
+            'passport_number': passport_number,
+            'date': date,
+            'cut': cut,
+            'model': model,
+            'color': color,
+            'fabrics': fabrcis,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display(),
@@ -278,7 +303,7 @@ def update_piece_qc(request, piece_id):
                     piece=piece,
                     error_type=Error.ErrorType.DEFECT,
                     defaults={
-                        'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
+                        'cost': piece.passport_size.passport.cut.order.payment if piece.passport_size.passport.cut.order.payment else 0,
                         'status': Error.Status.REPORTED,
                         'reported_date': timezone.now()
                     }

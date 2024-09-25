@@ -33,7 +33,8 @@
             <div class="card-body">
                 <h3>{% trans "Cut Information" %}</h3>
                 <p><strong>{% trans "Date:" %}</strong> {{ cut.date }}</p>
-                <p><strong>{% trans "Order:" %}</strong> {{ cut.order }}</p>
+                <p><strong>{% trans "Order:" %}</strong> {{ cut.order.client_order }}</p>
+                <p><strong>{% trans "Model:" %}</strong> {{ cut.order.model }}</p>
 
                 <h3>{% trans "Size Quantities" %}</h3>
                 <table class="table table-striped">
@@ -112,7 +113,11 @@
                     <tbody>
                         {% for passport in passports %}
                             <tr>
-                                <td>{{ passport.number }}</td>
+                                <td>
+                                    <a href={% url 'passport_detail' passport.pk %} style="display: block; width: 100%; height: 100%;">
+                                        {{ passport.number }}
+                                    </a>
+                                </td>
                                 <td>{{ passport.roll }}</td>
                                 <td>{{ passport.meters }}</td>
                                 <td>{{ passport.layers }}</td>

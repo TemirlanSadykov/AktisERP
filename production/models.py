@@ -352,13 +352,6 @@ class ProductionPiece(models.Model):
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
-# class PassportRoll(models.Model):
-#     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Паспорт')
-#     roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон')
-#     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры')
-#     def __str__(self):
-#         return f"{self.meters} метров {self.roll.name}"
-
 class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
@@ -438,3 +431,8 @@ class SalaryPayment(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.username} - {self.payment_date} - {self.amount}"
+    
+    
+class PhoneNumberScaner(models.Model):
+    phone_number = models.CharField(max_length=15)
+    created_at = models.DateTimeField(auto_now_add=True)

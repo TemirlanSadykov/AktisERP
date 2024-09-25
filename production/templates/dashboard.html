@@ -648,30 +648,46 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table rounded-table">
-                <thead>
-                    <tr>
-                        <th>{% trans 'Model Name' %}</th>
-                        <th>{% trans 'Quantity' %}</th>
-                        <th>{% trans 'Price' %}</th>
-                        <th>{% trans 'Assortment' %}</th>
-                        <th>{% trans 'Color' %}</th>
-                        <th>{% trans 'Fabrics' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders_data %}
-                    <tr>
-                        <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
-                        <td>{{ order.quantity }}</td>
-                        <td>{{ order.total_price }}</td>
-                        <td>{{ order.assortment_name }}</td>
-                        <td>{{ order.color }}</td>
-                        <td>{{ order.fabrics }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                <table class="table rounded-table">
+                    <thead>
+                        <tr>
+                            <th>{% trans 'Model Name' %}</th>
+                            <th>{% trans 'Quantity' %}</th>
+                            <th>{% trans 'Price' %}</th>
+                            <th>{% trans 'Assortment' %}</th>
+                            <th>{% trans 'Color' %}</th>
+                            <th>{% trans 'Fabrics' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders_data %}
+                        <tr>
+                            <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
+                            <td>{{ order.quantity }}</td>
+                            <td>{{ order.total_price }}</td>
+                            <td>{{ order.assortment_name }}</td>
+                            <td>
+                                {% if order.colors_list %}
+                                    {% for color in order.colors_list %}
+                                        {{ color }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% trans "No colors" %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.fabrics_list %}
+                                    {% for fabric in order.fabrics_list %}
+                                        {{ fabric }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% trans "No fabrics" %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
         
             <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
@@ -729,8 +745,8 @@
                 <tbody>
                     {% for roll in inventory_data %}
                         <td><a href="#" data-toggle="modal" class="linkset" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
-                        <td>{{ roll.color }}</td>
-                        <td>{{ roll.fabrics }}</td>
+                        <td>{{ roll.color_name }}</td>
+                        <td>{{ roll.fabrics_name }}</td>
                         <td>{{ roll.meters }}</td>
                         <td>{{ roll.used_meters }}</td>
                         <td>{{ roll.available_meters }}</td>
@@ -991,11 +1007,9 @@
                         <div class="passport-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Паспорт:</strong> ${passport.passport_number}<br>
+                                    <strong>Крой:</strong> ${passport.cut_number}<br>
                                     <strong>Размеры:</strong> ${passport.size_range}<br>
-                                    ${passport.rolls.map(roll => `
-                                        <span>${roll.roll_name}: ${roll.meters} метров</span>
-                                    `).join(', ')}
                                 </p>
                             </a>
                         </div>
@@ -1005,7 +1019,7 @@
                         <div class="order-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Модель:</strong> ${data.model_name}</p>
+                                    <p><strong>Модель:</strong> ${data.model_name} - ${data.assortment}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Количество:</strong> ${data.quantity}</p>
@@ -1020,7 +1034,7 @@
                                     <p><strong>Статус:</strong> ${data.status}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Ассортимент:</strong> ${data.assortment}</p>
+                                    <p><strong>Ткань:</strong> ${data.fabrics}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Цвет:</strong> ${data.color}</p>
@@ -1046,7 +1060,8 @@
                         <div class="passport-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Паспорт:</strong> ${passport.passport_number}<br>
+                                    <strong>Крой:</strong> ${passport.cut_number}<br>
                                     <strong>Метров использовано:</strong> ${passport.meters_used}<br>
                                     <strong>Модель:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
                                 </p>

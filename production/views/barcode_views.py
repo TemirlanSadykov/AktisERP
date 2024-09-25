@@ -103,19 +103,22 @@ class BarcodePassportSize(View):
         text_start_height = height - top_margin
 
         # Additional Passport Size data
-        model_name = passport_size.passport.order.model.name
-        color = passport_size.roll.color
-        fabrics = passport_size.passport.order.fabrics
-        roll = passport_size.roll.name
-        passport_number = passport_size.passport.id
+        date = passport_size.passport.cut.date
+        cut = passport_size.passport.cut.number
+        model = passport_size.passport.cut.order.model.name
+        color = passport_size.passport.roll.color
+        tone = passport_size.passport.number
+        fabrcis = passport_size.passport.roll.fabrics
         size = passport_size.size_quantity.size
+        quantity = passport_size.quantity
 
-        p.drawString(10, text_start_height, f"Модель: {model_name}")
-        p.drawString(10, text_start_height - 25, f"Цвет: {color}")
-        p.drawString(10, text_start_height - 50, f"Ткань: {fabrics}")
-        p.drawString(10, text_start_height - 75, f"Рулон: {roll}")
-        p.drawString(10, text_start_height - 100, f"Паспорт: №{passport_number}")
+        p.drawString(10, text_start_height, f"Дата: {date}")
+        p.drawString(10, text_start_height - 25, f"№ кроя: {cut}")
+        p.drawString(10, text_start_height - 50, f"Модель: {model}")
+        p.drawString(10, text_start_height - 75, f"Тон: {color} {tone}")
+        p.drawString(10, text_start_height - 100, f"Ткань: {fabrcis}")
         p.drawString(10, text_start_height - 125, f"Размер: {size}")
+        p.drawString(10, text_start_height - 150, f"Количество: {quantity}")
 
         # Generate and position QR code
         qr_data = f"{passport_size.passport.id}-{passport_size.id}"
@@ -171,28 +174,25 @@ class BarcodePassportSizePerPiece(View):
         # Loop through each ProductionPiece to generate QR codes and add additional information
         top_margin = 40 * 2.83464567  # Convert mm to points (1 mm = 2.83464567 points)
         text_start_height = height - top_margin
-
         for piece in pieces:
-            # Draw additional data about the piece
-            model_name = passport_size.passport.order.model.name
-            color = passport_size.roll.color
-            fabrics = passport_size.passport.order.fabrics
-            roll = passport_size.roll.name
-            passport_number = passport_size.passport.id
+            date = passport_size.passport.cut.date
+            cut = passport_size.passport.cut.number
+            model = passport_size.passport.cut.order.model.name
+            color = passport_size.passport.roll.color
+            tone = passport_size.passport.number
+            fabrcis = passport_size.passport.roll.fabrics
             size = passport_size.size_quantity.size
-            piece_number = piece.piece_number
-
             p.setFont("DejaVuSans", 14)
-            p.drawString(10, text_start_height, f"Модель: {model_name}")
-            p.drawString(10, text_start_height - 25, f"Цвет: {color}")
-            p.drawString(10, text_start_height - 50, f"Ткань: {fabrics}")
-            p.drawString(10, text_start_height - 75, f"Рулон: {roll}")
-            p.drawString(10, text_start_height - 100, f"Паспорт: №{passport_number}")
+            p.drawString(10, text_start_height, f"Дата: {date}")
+            p.drawString(10, text_start_height - 25, f"№ кроя: {cut}")
+            p.drawString(10, text_start_height - 50, f"Модель: {model}")
+            p.drawString(10, text_start_height - 75, f"Тон: {color} {tone}")
+            p.drawString(10, text_start_height - 100, f"Ткань: {fabrcis}")
             p.drawString(10, text_start_height - 125, f"Размер: {size}")
-            p.drawString(10, text_start_height - 150, f"Единица: {piece_number}")
+            p.drawString(10, text_start_height - 150, f"Единица: {piece.piece_number}/{passport_size.quantity}")
 
             # Generate QR code
-            qr_data = f"{passport_number}-{passport_size.id}-{piece.id}"
+            qr_data = f"{passport_size.passport.id}-{passport_size.id}-{piece.id}"
             qr = qrcode.QRCode(
                 version=1,
                 box_size=10,

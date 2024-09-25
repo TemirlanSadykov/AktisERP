@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="{% static 'css/clients.css' %}">
     <link rel="stylesheet" href="{% static 'css/pop_up.css' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+   
+
     <style>
         .collapsesidebarset {
             display: flex;
@@ -235,6 +237,14 @@
                         <i class="fas fa-calendar  fa-fw"></i><span class="sidetext">{% trans 'Calendar' %}</span>
 
                     </a>
+
+                    <a href="{% url 'whatsapp-qr' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="whatsapp_qrcode">
+                        <i class="fab fa-whatsapp fa-fw"></i>
+                        <span class="sidetext">{% trans 'WhatsApp' %}</span>
+                    </a>
+                 
                 </div>
                 {% endif %}
             </div>

@@ -163,8 +163,9 @@ urlpatterns = [
 
     path('cutter/orders/', OrderListCutterView.as_view(), name='order_list_cutter'),
     path('cutter/orders/<int:pk>/', OrderDetailCutterView.as_view(), name='order_detail_cutter'),
-    # path('cutter/orders/<int:pk>/passport', PassportDetailView.as_view(), name='passport_detail'),
-    # path('cutter/orders/<int:pk>/passport/create', PassportCreateView.as_view(), name='passport_create'),
+    path('cutter/orders/<int:pk>/passport/', PassportDetailView.as_view(), name='passport_detail'),
+    path('qc/orders/<int:pk>/passport/', PassportDetailQcView.as_view(), name='passport_detail_qc'),
+    path('packer/orders/<int:pk>/passport/', PassportDetailPackerView.as_view(), name='passport_detail_packer'),
 
     path('cutter/orders/<int:pk>/cut/create/', CutCreateView.as_view(), name='cut_create'),
     path('cutter/orders/<int:pk>/cut/detail/', CutDetailView.as_view(), name='cut_detail'),
@@ -266,5 +267,8 @@ urlpatterns = [
     path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
     path('barcode/api/passport_size/<int:passport_size_id>/', BarcodePassportSize.as_view(), name='barcode_passport_size'),
     path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
+    #for whatsapp qr code
+    path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
+    path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
 
 ]

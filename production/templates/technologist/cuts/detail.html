@@ -33,7 +33,8 @@
             <div class="card-body">
                 <h3>{% trans "Cut Information" %}</h3>
                 <p><strong>{% trans "Date:" %}</strong> {{ cut.date }}</p>
-                <p><strong>{% trans "Order:" %}</strong> {{ cut.order }}</p>
+                <p><strong>{% trans "Order:" %}</strong> {{ cut.order.client_order }}</p>
+                <p><strong>{% trans "Model:" %}</strong> {{ cut.order.model }}</p>
 
                 <h3>{% trans "Size Quantities" %}</h3>
                 <table class="table table-striped">
@@ -116,8 +117,171 @@
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <h3>{% trans "Errors" %}</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Passport Number" %}</th>
+                            <th>{% trans "Production Piece" %}</th>
+                            <th>{% trans "Error Type" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Reported Date" %}</th>
+                            <th>{% trans "Resolved Date" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for error in errors %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'assign_operations' error.piece.passport_size.passport.pk %}" style="display: block; width: 100%; height: 100%;">
+                                      {{ error.piece.passport_size.passport.number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="#" class="open-error-modal" data-error-id="{{ error.pk }}" style="display: block; width: 100%; height: 100%;">
+                                        {{ error.piece.piece_number }}
+                                    </a>
+                                </td>
+                                <td>{{ error.get_error_type_display }}</td>
+                                <td>{{ error.get_status_display }}</td>
+                                <td>{{ error.reported_date }}</td>
+                                <td>{{ error.resolved_date|default:"--" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6">{% trans "No errors reported." %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal for displaying error details with buttons -->
+<div id="errorModal" class="modal fade" data-backdrop="false" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog"> <!-- Changed to 'modal-lg' for larger modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">{% trans "Error Details" %}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="errorDetails"></div>
+                <form id="errorStatusForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="errorStatus" id="errorStatusInput">
+                    <input type="hidden" name="errorId" id="errorIdInput">
+                    <div class="form-actions" style="display: flex; justify-content: center; gap: 10px;"> <!-- Ensure buttons have space and are centered -->
+                        <button type="submit" onclick="updateErrorStatus('RESOLVED')" class="btn complete-btn"  style="margin: 0">{% trans "Resolved" %}</button>
+                        <button type="submit" onclick="updateErrorStatus('UNRESOLVABLE')" class="btn delete-btn" style="margin: 0">{% trans "Unresolvable" %}</button>
+                        <button type="button" class="btn create-btn" data-dismiss="modal">{% trans "Close" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateErrorStatus(status) {
+    document.getElementById('errorStatusInput').value = status;
+}
+document.addEventListener("DOMContentLoaded", function() {
+    // Function to fetch and display error details in the modal
+    function fetchErrorDetails(errorId) {
+        fetch(`/production/technologist/orders/error/${errorId}/`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                const errorDetails = document.getElementById('errorDetails');
+                errorDetails.innerHTML = `
+                    <p><strong>{% trans "Error Type:" %}</strong> ${data.error.error_type === 'DEFECT' ? '{% trans "Defect" %}' : '{% trans "Discrepancy" %}'}</p>
+                    <p><strong>{% trans "Piece:" %}</strong> ${data.error.piece__piece_number}</p>
+                    <p><strong>{% trans "Passport:" %}</strong> ${data.error.piece__passport_size__passport__number}</p>
+                    <p><strong>{% trans "Cut:" %}</strong> ${data.error.piece__passport_size__passport__cut}</p>
+                    <p><strong>{% trans "Model:" %}</strong> ${data.error.piece__passport_size__passport__cut__order__model}</p>
+                    <p><strong>{% trans "Size:" %}</strong> ${data.error.piece__passport_size__size_quantity__size}</p>
+                    <p><strong>{% trans "Status:" %}</strong> ${data.error.status}</p>
+                    <p><strong>{% trans "Reported Date:" %}</strong> ${data.error.reported_date}</p>
+                    <p><strong>{% trans "Resolved Date:" %}</strong> ${data.error.resolved_date || '{% trans "N/A" %}'}</p>
+                `;
+                document.getElementById('errorIdInput').value = errorId; // Set the errorId for the form
+                $('#errorModal').modal('show');
+            } else {
+                alert('{% trans "Error details not found." %}');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching error details:', error);
+            alert('{% trans "Error occurred while fetching details." %}');
+        });
+    }
+
+    // Attach click event to error links
+    document.querySelectorAll('.open-error-modal').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const errorId = this.getAttribute('data-error-id');
+            fetchErrorDetails(errorId);
+        });
+    });
+
+    // Handle the form submission to update error status
+    document.getElementById('errorStatusForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const errorId = document.getElementById('errorIdInput').value;
+        const status = document.getElementById('errorStatusInput').value;
+
+        fetch(`/production/technologist/orders/error/${errorId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status == 'success') {
+                alert('{% trans "Status updated successfully." %}');
+                $('#errorModal').modal('hide');
+                window.location.reload(); // Optionally reload to reflect changes
+            } else {
+                alert('{% trans "Failed to update status." %}');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating status:', error);
+            alert('{% trans "Error occurred while updating status." %}');
+        });
+    });
+
+    // Utility function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+
 {% endblock %}

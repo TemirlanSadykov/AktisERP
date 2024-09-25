@@ -216,6 +216,19 @@ class CutDetailPackerView(DetailView):
 
         return context
     
+@method_decorator([login_required, packer_required], name='dispatch')
+class PassportDetailPackerView(DetailView):
+    model = Passport
+    template_name = 'packer/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'packer'
+        return context
+
 @require_POST
 @login_required
 @packer_required
@@ -236,15 +249,24 @@ def update_piece_packer(request, piece_id):
         Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
 
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
-
+        cut = piece.passport_size.passport.cut.number
+        model = piece.passport_size.passport.cut.order.model.name
+        color = piece.passport_size.passport.roll.color.name
+        fabrcis = piece.passport_size.passport.roll.fabrics.name
+        passport_id = piece.passport_size.passport.id
+        passport_number = piece.passport_size.passport.number
         # Forming the response with piece details
         data = {
             'success': True,
             'message': 'Piece status updated to Packed.',
             'piece_id': piece.id,
-            'passport': piece.passport_size.passport.id,
-            'order': piece.passport_size.passport.order.model.name,
-            'passport_size': piece.passport_size.id,
+            'piece_number': piece.piece_number,
+            'passport_id': passport_id,
+            'passport_number': passport_number,
+            'cut': cut,
+            'model': model,
+            'color': color,
+            'fabrics': fabrcis,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display()
