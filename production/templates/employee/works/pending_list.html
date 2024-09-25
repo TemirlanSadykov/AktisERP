@@ -49,8 +49,24 @@
             <div class="employee-details">
               <div class="employee-passport">
                 {% trans "Passport:" %}
-                {% if assigned_work.work.passport %}
-                  <strong>{{ assigned_work.work.passport }} - {{ assigned_work.work.passport.order.model.name }}</strong>
+                {% if assigned_work.work.passport_size.passport %}
+                  <strong>{{ assigned_work.work.passport_size.passport.number }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-passport">
+                {% trans "Cut:" %}
+                {% if assigned_work.work.passport_size.passport.cut %}
+                  <strong>{{ assigned_work.work.passport_size.passport.cut.number }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-passport">
+                {% trans "Model:" %}
+                {% if assigned_work.work.passport_size.passport.cut.order.model %}
+                  <strong>{{ assigned_work.work.passport_size.passport.cut.order.model }}</strong>
                 {% else %}
                   --
                 {% endif %}
