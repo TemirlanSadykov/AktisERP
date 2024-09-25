@@ -115,7 +115,7 @@ def checked_pieces(passport_size):
 @register.filter
 def packed_pieces(passport_size):
     # Count the number of pieces with the stage 'CHECKED'
-    return passport_size.pieces.filter(stage='DONE').count()
+    return passport_size.pieces.filter(stage='PACKED').count()
 
 @register.filter
 def defective_pieces(passport_size):

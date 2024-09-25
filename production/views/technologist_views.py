@@ -192,11 +192,18 @@ class CutDetailTechnologistView(DetailView):
         context = super().get_context_data(**kwargs)
         cut_pk = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_pk)
+
         # Get all consumptions related to the cut
         consumptions = cut.consumptions.all()
 
         # Get all passports related to the cut
         passports = cut.passports.all()
+
+        # Get all production pieces related to the cut
+        production_pieces = ProductionPiece.objects.filter(passport_size__passport__cut=cut)
+
+        # Get all errors related to the production pieces
+        errors = Error.objects.filter(piece__in=production_pieces)
 
         # Prepare the total quantities for each size in the cut
         total_quantity_per_size = defaultdict(int)
@@ -211,6 +218,7 @@ class CutDetailTechnologistView(DetailView):
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
+            'errors': errors,  # Add the errors to the context
             'sidebar_type': 'technology'
         })
 
@@ -221,20 +229,19 @@ class CutDetailTechnologistView(DetailView):
 def error_detail(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         error = Error.objects.filter(pk=pk).values(
-            'pk', 'piece__passport_size__passport__id', 'piece__passport_size__size_quantity__size', 'piece__id', 'piece__passport_size__size_quantity__id',
+            'pk', 'piece_id', 'piece__piece_number', 'piece__passport_size__passport_id', 'piece__passport_size__passport__number', 
+            'piece__passport_size__passport__cut', 'piece__passport_size__passport__cut__order__model',
+            'piece__passport_size__size_quantity__size', 'piece__id', 'piece__passport_size__size_quantity_id',
             'error_type', 'piece__defect_type', 'cost', 'status',
             'reported_date', 'resolved_date'
         ).first()
-
         if error:
             error['reported_date'] = error['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
             error['resolved_date'] = error['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if error['resolved_date'] else None
             error['status'] = Error.Status(error['status']).label
-
             if error['error_type'] == 'DEFECT':
                 works = AssignedWork.objects.filter(
-                    work__passport_id=error['piece__passport_size__passport__id'],
-                    work__passport_size__size_quantity_id=error['piece__passport_size__size_quantity__id']
+                    work__passport_size__size_quantity_id=error['piece__passport_size__size_quantity_id']
                 ).select_related('employee')
                 employee_ids = [work.employee.employee_id for work in works]
                 error['responsible_employees'] = employee_ids

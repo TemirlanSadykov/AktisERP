@@ -39,8 +39,12 @@
         </button>
       </div>
       <div class="modal-body">
-        <p><strong>Заказ:</strong> <span id="modal-order"></span></p>
+        <p><strong>Единица:</strong> <span id="modal-piece"></span></p>
         <p><strong>Паспорт:</strong> <span id="modal-passport"></span></p>
+        <p><strong>Крой:</strong> <span id="modal-cut"></span></p>
+        <p><strong>Модель:</strong> <span id="modal-model"></span></p>
+        <p><strong>Цвет:</strong> <span id="modal-color"></span></p>
+        <p><strong>Ткань:</strong> <span id="modal-fabrics"></span></p>
         <p><strong>Размер:</strong> <span id="modal-size"></span></p>
         <p><strong>Статус:</strong> <span id="modal-stage"></span></p>
         <p><strong>Дефект:</strong> <span id="modal-defect"></span></p>
@@ -80,11 +84,23 @@
                     var listItem = document.createElement('li');
                     listItem.className = 'list-group-item';
                     listItem.style.padding = '18px';
-                    listItem.textContent = `${data.piece_id} - ${data.order} - Паспорт №${data.passport} - Размер ${data.size}`;
-                    document.getElementById('scanned-items-list').appendChild(listItem);
+                    // Create a link
+                    var link = document.createElement('a');
+                    link.href = `/production/qc/orders/${data.passport_id}/passport/`; // Use the passport ID from data.passport
+                    link.textContent = `${data.piece_number} (ед) - ${data.passport_number} (пс) - ${data.cut} (кр) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (размер)`;
+                    link.style.textDecoration = 'none'; // Optional: Remove underline
+                    link.setAttribute('target', '_blank');
 
-                    document.getElementById('modal-order').textContent = data.order;
-                    document.getElementById('modal-passport').textContent = data.passport;
+                    // Append link to list item
+                    listItem.appendChild(link);
+                    document.getElementById('scanned-items-list').appendChild(listItem);
+                    
+                    document.getElementById('modal-piece').textContent = data.piece_number;
+                    document.getElementById('modal-model').textContent = data.model;
+                    document.getElementById('modal-cut').textContent = data.cut;
+                    document.getElementById('modal-passport').textContent = data.passport_number;
+                    document.getElementById('modal-color').textContent = data.color;
+                    document.getElementById('modal-fabrics').textContent = data.fabrics;
                     document.getElementById('modal-size').textContent = data.size;
                     document.getElementById('modal-stage').textContent = data.stage;
                     document.getElementById('modal-defect').textContent = data.defect;
@@ -142,16 +158,23 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                console.log(`Status updated to ${status}:`, data.message);
-                $('#scanModal').modal('hide');
-                let lastListItem = document.querySelector('#scanned-items-list li:last-child');
-                if (lastListItem) {
-                    lastListItem.textContent += ` - ${status}`;
-                }
-            } else {
-                alert(`Failed to update status to ${status}:`, data.message);
-            }
+          if (data.success) {
+              $('#scanModal').modal('hide');
+              
+              // Find the last scanned item, which is the <li> element
+              let lastListItem = document.querySelector('#scanned-items-list li:last-child');
+              
+              if (lastListItem) {
+                  // Find the <a> inside the <li>
+                  let link = lastListItem.querySelector('a');
+                  if (link) {
+                      // Append the status to the link's textContent without altering the link
+                      link.textContent += ` - ${status}`;
+                  }
+              }
+          } else {
+              alert(`Failed to update status to ${status}:`, data.message);
+          }
         })
         .catch(error => console.error('Error updating status:', error));
     }

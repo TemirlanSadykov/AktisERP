@@ -71,7 +71,14 @@
             var listItem = document.createElement('li');
             listItem.className = 'list-group-item';
             listItem.style.padding = '18px';
-            listItem.textContent = `${data.piece_id} - ${data.order} - Паспорт №${data.passport} - Размер ${data.size} - ${data.stage}`;
+            var link = document.createElement('a');
+            link.href = `/production/packer/orders/${data.passport_id}/passport/`; // Use the passport ID from data.passport
+            link.textContent = `${data.piece_number} (ед) - ${data.passport_number} (пс) - ${data.cut} (кр) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (размер) - ${data.stage}`;
+            link.style.textDecoration = 'none'; // Optional: Remove underline
+            link.setAttribute('target', '_blank');
+
+            // Append link to list item
+            listItem.appendChild(link);
             document.getElementById('scanned-items-list').appendChild(listItem);
           } else {
             document.getElementById('errorModalMessage').textContent = data.message;
