@@ -24,6 +24,8 @@ def user_redirect(request):
         return redirect('qc_page')
     elif user_profile.type == UserProfile.PACKER:
         return redirect('packer_page')
+    elif user_profile.type == UserProfile.KEEPER:
+        return redirect('keeper_page')
     else:
         return redirect('index')
 

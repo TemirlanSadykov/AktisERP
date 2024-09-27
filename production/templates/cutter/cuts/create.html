@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Cutter Dashboard' %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+        <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+            <li class="nav-item dropdown" style="margin: 10px;">
+                {{ request.user.username }}
+            </li>
+            <li class="nav-item dropdown">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container maincontr">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card-header">
+                <h2 class="card-title">{% trans "Create New Cut for Order:" %} #{{ order.pk }}</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">{% trans "Create Cut" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

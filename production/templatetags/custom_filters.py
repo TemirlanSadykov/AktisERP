@@ -98,3 +98,26 @@ def display_over(value):
         return value
     except (ValueError, TypeError):
         return value
+    
+@register.filter
+def split_part(value, arg):
+    try:
+        part_index = int(arg)
+        return value.split(" - ")[part_index]
+    except (IndexError, ValueError):
+        return None
+    
+@register.filter
+def checked_pieces(passport_size):
+    # Count the number of pieces with the stage 'CHECKED'
+    return passport_size.pieces.filter(stage='CHECKED').count()
+
+@register.filter
+def packed_pieces(passport_size):
+    # Count the number of pieces with the stage 'CHECKED'
+    return passport_size.pieces.filter(stage='PACKED').count()
+
+@register.filter
+def defective_pieces(passport_size):
+    # Count the number of pieces with a defect type defined
+    return passport_size.pieces.filter(defect_type__isnull=False).count()

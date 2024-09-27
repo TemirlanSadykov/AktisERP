@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Admin Dashboard" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+        <li class="nav-item dropdown" style="margin: 10px;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+              <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+</nav>
+
+<!-- Main QR Code Section -->
+<div class="container mt-5 text-center">
+    <h3 class="mb-4 text-center ">Scan the QR Code to Join WhatsApp Sandbox</h3>
+    <div class="d-flex justify-content-center mb-4">
+        <img src="{% static 'img/whatsapp_qr_integration.png' %}" alt="Twilio Sandbox QR Code" class="img-fluid shadow-lg" style="max-width: 400px; border-radius: 10px;" />
+    </div>
+
+    <!-- Form Section -->
+    <form id="mobileForm" class="form-container mx-auto shadow p-4 bg-light rounded" style="max-width: 500px;" action="{% url 'submit_mobile_number' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="col-md-4 mb-3">
+                <label for="country_code" class="font-weight-bold"><font size="4">Country Code:</font></label>
+                <input type="text" class="form-control form-control-lg mt-2" id="country_code" name="country_code" placeholder="+91" required />
+            </div>
+            <div class="col-md-8 mb-3">
+                <label for="phone_number" class="font-weight-bold"><font size="4">Phone Number:</font></label>
+                <input type="text" class="form-control form-control-lg mt-2" id="phone_number" name="phone_number" placeholder="1234567890" required />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block shadow-sm">Submit</button>
+    </form>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="alert alert-success mt-4" role="alert" style="display:none;"></div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    h3 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #232323;
+    }
+    .form-container {
+        background: #f9f9f9;
+        border-radius: 10px;
+    }
+    .form-control-lg {
+        border: 2px solid #ced4da;
+        border-radius: 5px;
+    }
+    .form-control-lg:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    .btn-outline-danger {
+        border: 2px solid #dc3545;
+        color: #dc3545;
+    }
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    .qr-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+</style>
+
+<!-- JavaScript for form submission -->
+<script>
+    document.getElementById('mobileForm').addEventListener('submit', function(event) {
+        event.preventDefault(); 
+    
+        var countryCode = document.getElementById('country_code').value;
+        var phoneNumber = document.getElementById('phone_number').value;
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch("{% url 'submit_mobile_number' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                'country_code': countryCode,
+                'phone_number': phoneNumber
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('successMessage').innerText = data.message;
+                document.getElementById('successMessage').style.display = 'block'; 
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+                document.getElementById('mobileForm').reset(); 
+            } else {
+                alert(data.message); 
+                document.getElementById('mobileForm').reset(); 
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+</script>
+
+{% endblock %}

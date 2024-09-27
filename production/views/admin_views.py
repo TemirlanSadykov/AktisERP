@@ -4,6 +4,7 @@ import json
 import openpyxl
 import pandas as pd
 from urllib.parse import urlencode
+from collections import defaultdict
 
 from django.conf import settings
 from django.contrib import messages
@@ -22,6 +23,7 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
+from django.contrib.postgres.aggregates import ArrayAgg
 
 from django.db.models.functions import TruncMonth
 
@@ -115,11 +117,13 @@ def get_client_orders_data(start_date, end_date):
 
 def get_inventory_data(start_date, end_date):
     rolls_data = Roll.objects.annotate(
-        available_meters=F('meters') - F('used_meters')
+        available_meters=F('meters') - F('used_meters'),
+        color_name=F('color__name'),  # Get the color name
+        fabrics_name=F('fabrics__name')  # Get the fabrics name
     ).values(
-        'id', 'name', 'color', 'fabrics', 'meters', 'used_meters', 'available_meters'
+        'id', 'name', 'color_name', 'fabrics_name', 'meters', 'used_meters', 'available_meters'
     )
-    
+
     return list(rolls_data)
 
 def get_orders_data(start_date, end_date):
@@ -127,10 +131,12 @@ def get_orders_data(start_date, end_date):
         client_order__created_at__range=[start_date, end_date]
     ).select_related('model').annotate(
         model_name=F('model__name'),
-        assortment_name=F('assortment__name'),
-        total_price=F('quantity') * F('payment')
+        assortment_name=F('model__assortment__name'),
+        total_price=F('quantity') * F('payment'),
+        colors_list=ArrayAgg('colors__name', distinct=True),  # Group colors into a list
+        fabrics_list=ArrayAgg('fabrics__name', distinct=True)  # Group fabrics into a list
     ).values(
-        'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'color', 'fabrics'
+        'id', 'model_name', 'quantity', 'total_price', 'status', 'assortment_name', 'colors_list', 'fabrics_list'
     ).order_by('assortment_name')
 
     return list(orders_data)
@@ -162,8 +168,9 @@ def get_production_data(start_date, end_date):
         reported_date__range=[start_date, end_date]
     ).count()
 
-    total_rolls_used = PassportRoll.objects.filter(
-        passport__order__client_order__created_at__range=[start_date, end_date]
+    total_rolls_used = Passport.objects.filter(
+        cut__date__range=[start_date, end_date],
+        roll__isnull=False  # Ensures only Passports with associated rolls are counted
     ).aggregate(total_meters=Sum('meters'))['total_meters'] or 0
 
     return {
@@ -378,11 +385,13 @@ class EmployeeListView(ListView):
     template_name = 'admin/employees/list.html'
     context_object_name = 'employees'
     paginate_by = 10
+
     def get_queryset(self):
         return UserProfile.objects.filter(
             branch=self.request.user.userprofile.branch,
             is_archived=False
-        ).order_by('employee_id')
+        ).exclude(user__username='admin').order_by('employee_id')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['upload_form'] = UploadFileForm()
@@ -516,30 +525,30 @@ def employee_upload(request):
         messages.error(request, 'Invalid file format.')
         return redirect(reverse_lazy('employee_list'))
 
-@login_required
-@admin_required
-def passport_detail_admin(request, pk):
-    passport = get_object_or_404(Passport, pk=pk)
-    operations = passport.order.model.operations.all() 
-    size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
-    passport_rolls = PassportRoll.objects.filter(passport=passport)
+# @login_required
+# @admin_required
+# def passport_detail_admin(request, pk):
+#     passport = get_object_or_404(Passport, pk=pk)
+#     operations = passport.order.model.operations.all() 
+#     size_quantities = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
+#     passport_rolls = PassportRoll.objects.filter(passport=passport)
 
-    work_by_op_and_size = {}
-    for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
-        # Key as a tuple of operation_id and passport_size_id
-        key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
-        if key not in work_by_op_and_size:
-            work_by_op_and_size[key] = [assigned_work]
-        else:
-            work_by_op_and_size[key].append(assigned_work)
+#     work_by_op_and_size = {}
+#     for assigned_work in AssignedWork.objects.filter(work__passport=passport).select_related('employee', 'work__operation', 'work__passport_size'):
+#         # Key as a tuple of operation_id and passport_size_id
+#         key = (assigned_work.work.operation_id, assigned_work.work.passport_size_id)
+#         if key not in work_by_op_and_size:
+#             work_by_op_and_size[key] = [assigned_work]
+#         else:
+#             work_by_op_and_size[key].append(assigned_work)
 
-    return render(request, 'admin/passports/detail.html', {
-        'passport': passport,
-        'passport_rolls': passport_rolls,
-        'operations': operations,
-        'size_quantities': size_quantities,
-        'work_by_op_and_size': work_by_op_and_size
-    })
+#     return render(request, 'admin/passports/detail.html', {
+#         'passport': passport,
+#         'passport_rolls': passport_rolls,
+#         'operations': operations,
+#         'size_quantities': size_quantities,
+#         'work_by_op_and_size': work_by_op_and_size
+#     })
 
 @login_required
 @admin_required
@@ -557,13 +566,13 @@ def salary_list(request):
                 end_time__range=(start_date, end_date),
                 end_time__isnull=False,
                 is_success=True,
-                work__passport__order__client_order__branch=request.user.userprofile.branch
+                work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             ).select_related('work__operation', 'employee')
 
             reassigned_works = ReassignedWork.objects.filter(
                 original_assigned_work__end_time__range=(start_date, end_date),
                 is_success=True,
-                original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
+                original_assigned_work__work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             ).select_related('original_assigned_work__work__operation', 'new_employee')
 
             for work_group in [assigned_works, reassigned_works]:
@@ -648,12 +657,12 @@ def process_payments(request):
             # Process Non-Fixed Salary Payments (Existing logic)
             assigned_works = AssignedWork.objects.filter(
                 end_time__range=(start_date, end_date),
-                work__passport__order__client_order__branch=request.user.userprofile.branch
+                work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             )
 
             reassigned_works = ReassignedWork.objects.filter(
                 original_assigned_work__end_time__range=(start_date, end_date),
-                original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
+                original_assigned_work__work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             )
 
             for work in assigned_works:
@@ -749,24 +758,34 @@ def salary_detail(request, pk):
                 employee=employee,
                 end_time__range=(start_date, end_date),
                 is_success=True,
-                work__passport__order__client_order__branch=request.user.userprofile.branch
-            ).select_related('work__operation', 'work__passport_size__size_quantity')
+                work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('work__operation', 'work__passport_size__size_quantity', 'work__passport_size__passport__cut__order__model')
 
             reassigned_works = ReassignedWork.objects.filter(
                 new_employee=employee,
                 original_assigned_work__end_time__range=(start_date, end_date),
                 is_success=True,
-                original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
-            ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
+                original_assigned_work__work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity', 'original_assigned_work__work__passport_size__passport__cut__order__model')
 
             for work in assigned_works:
                 work_salary, work_details = calculate_salary_and_details(work)
                 total_salary += work_salary
+
+                # Add model and passport/cut information
+                work_details['model'] = work.work.passport_size.passport.cut.order.model.name
+                work_details['passport_cut'] = f"{work.work.passport_size.passport.number} / {work.work.passport_size.passport.cut.number}"
+
                 assigned_work_details.append(work_details)
 
             for work in reassigned_works:
                 work_salary, work_details = calculate_salary_and_details(work.original_assigned_work, reassigned_quantity=work.reassigned_quantity)
                 total_salary += work_salary
+
+                # Add model and passport/cut information
+                work_details['model'] = work.original_assigned_work.work.passport_size.passport.cut.order.model.name
+                work_details['passport_cut'] = f"{work.original_assigned_work.work.passport_size.passport.number} / {work.original_assigned_work.work.passport_size.passport.cut.number}"
+
                 assigned_work_details.append(work_details)
 
             # Calculate errors only if the employee is of type EMPLOYEE
@@ -803,7 +822,9 @@ def salary_detail(request, pk):
                                 'clock_in': clock_in_local,
                                 'clock_out': clock_out_local,
                                 'hours_worked': f"{int(hours)}h {int(minutes)}m",
-                                'daily_salary': fixed_salary.salary
+                                'daily_salary': fixed_salary.salary,
+                                'model': 'N/A',  # Fixed salary doesn't involve specific models
+                                'passport_cut': 'N/A'
                             })
 
                 # Calculate errors for all employees on fixed salary
@@ -1307,22 +1328,71 @@ class OrderDetailView(DetailView):
     context_object_name = 'order'
 
     def get_context_data(self, **kwargs):
-        context = super(OrderDetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        if passport:
-            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport).order_by('error_type')
-        else:
-            context['errors'] = Error.objects.none()
-        context['passports'] = order.passports.all()
-        context['size_quantities'] = order.size_quantities.all().order_by('size')
-        context['size_quantity_form'] = SizeQuantityForm()
+
+        # Data for the "Required Quantities" table
+        required_data = []
+
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
+
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
+
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
+
+        # Calculate days left
         today = timezone.localdate()
-        if order.client_order.term >= today:
-            days_left = (order.client_order.term - today).days
-        else:
-            days_left = 0
-        context['days_left'] = days_left
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
+
+        context.update({
+            'required_data': required_data,  # Data for the "Required Quantities" table
+            'days_left': days_left,          # Days left for the order deadline
+            'associated_cuts': associated_cuts,  # Send associated cuts to the template
+            'sidebar_type': 'admin'
+        })
+
+        return context
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class CutDetailAdminView(DetailView):
+    model = Cut
+    template_name = 'admin/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
+            'sidebar_type': 'admin'
+        })
+
         return context
 
 @method_decorator([login_required, admin_required], name='dispatch')
@@ -1344,22 +1414,23 @@ class OrderDeleteView(DeleteView):
 class SizeQuantityCreateView(View):
     def get(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
-        form = SizeQuantityForm()
+        form = SizeQuantityForm(order=order)  # Pass the order to the form
         size_quantities = order.size_quantities.all()
         return render(request, 'admin/orders/create_size_quantity.html', {
             'form': form,
             'size_quantities': size_quantities,
             'order': order
         })
+
     def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            form = SizeQuantityForm(request.POST)
+            form = SizeQuantityForm(request.POST, order=order)  # Pass the order to the form
             if form.is_valid():
                 new_size_quantity = form.save(commit=False)
                 new_size_quantity.save()
-                order = get_object_or_404(Order, pk=pk)
                 order.size_quantities.add(new_size_quantity)
-                size_quantities = order.size_quantities.values('id', 'size', 'quantity', 'color')
+                size_quantities = order.size_quantities.values('id', 'size', 'quantity', 'color')  # Pass color field
                 
                 return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
             else:

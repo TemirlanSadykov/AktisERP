@@ -78,6 +78,74 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         context['sidebar_type'] = 'packer'
         return context
 
+# @method_decorator([login_required, packer_required], name='dispatch')
+# class OrderDetailPackerView(DetailView):
+#     model = Order
+#     template_name = 'packer/orders/detail.html'
+#     context_object_name = 'order'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         order = context['order']
+#         passport = Passport.objects.filter(order=order).first()
+        
+#         if passport:
+#             context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DISCREPANCY)
+#         else:
+#             context['errors'] = Error.objects.none()
+
+#         today = timezone.localdate()
+#         days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
+#         context['days_left'] = days_left
+
+#         passports = order.passports.all()
+
+#         # Initialize data structures to track quantity and packed quantities
+#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0, 'extra': None}))
+#         total_per_size = defaultdict(int)
+
+#         for passport in passports:
+#             for passport_size in passport.passport_sizes.all():
+#                 size = passport_size.size_quantity.size
+#                 color = passport_size.size_quantity.color
+#                 extra_key = f'{size} - {color}'
+#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
+#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
+#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
+#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
+
+#                 # Count packed pieces only
+#                 packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
+#                 size_data[extra_key][passport.id]['packed_quantity'] += packed_pieces
+                
+#                 total_per_size[size] += passport_size.quantity
+
+#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+#                             for sq in order.size_quantities.all().order_by('size')}
+
+#         for size in total_per_size:
+#             if size not in required_missing:
+#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+#         # Sorting size_data keys
+#         def sort_key(x):
+#             parts = x.split('-')
+#             try:
+#                 return int(parts[0]), x
+#             except ValueError:
+#                 return float('inf'), x
+
+#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+
+#         context.update({
+#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+#             'total_per_size': dict(total_per_size),
+#             'required_missing': required_missing,
+#             'passports': passports,
+#             'sidebar_type' : 'packer',
+#         })
+#         return context
+
 @method_decorator([login_required, packer_required], name='dispatch')
 class OrderDetailPackerView(DetailView):
     model = Order
@@ -87,65 +155,80 @@ class OrderDetailPackerView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
-        passport = Passport.objects.filter(order=order).first()
-        
-        if passport:
-            context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DISCREPANCY)
-        else:
-            context['errors'] = Error.objects.none()
 
-        today = timezone.localdate()
-        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
-        context['days_left'] = days_left
+        # Data for the "Required Quantities" table
+        required_data = []
 
-        passports = order.passports.all()
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f'{sq.size} - {sq.color}'
+            required = sq.quantity
 
-        # Initialize data structures to track quantity and packed quantities
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0, 'extra': None}))
-        total_per_size = defaultdict(int)
+            # Add to required_data for the "Required Quantities" table
+            required_data.append({
+                'size': sq.size,
+                'color': sq.color,
+                'required': required,
+            })
 
-        for passport in passports:
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                color = passport_size.size_quantity.color
-                extra_key = f'{size} - {color}'
-                size_data[extra_key][passport.id]['stage'] = passport_size.stage
-                size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport.id]['extra'] = passport_size.extra
-
-                # Count packed pieces only
-                packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
-                size_data[extra_key][passport.id]['packed_quantity'] += packed_pieces
-                
-                total_per_size[size] += passport_size.quantity
-
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-        # Sorting size_data keys
-        def sort_key(x):
-            parts = x.split('-')
-            try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
-
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        # Get associated cuts for the order
+        associated_cuts = order.cuts.all().order_by('-date')
 
         context.update({
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
-            'passports': passports,
-            'sidebar_type' : 'packer',
+            'required_data': required_data,  # Data for the "Required Quantities" table
+            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'sidebar_type': 'packer'
         })
+
         return context
     
+@method_decorator([login_required, packer_required], name='dispatch')
+class CutDetailPackerView(DetailView):
+    model = Cut
+    template_name = 'packer/cuts/detail.html'
+    context_object_name = 'cut'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cut_pk = self.kwargs.get('pk')
+        cut = get_object_or_404(Cut, pk=cut_pk)
+        # Get all consumptions related to the cut
+        consumptions = cut.consumptions.all()
+
+        # Get all passports related to the cut
+        passports = cut.passports.all()
+
+        # Prepare the total quantities for each size in the cut
+        total_quantity_per_size = defaultdict(int)
+        for size_quantity in cut.size_quantities.all():
+            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+
+        # Total quantity of layers (sum layers for all passports)
+        total_layers = sum(passport.layers for passport in passports if passport.layers)
+
+        context.update({
+            'consumptions': consumptions,
+            'passports': passports,
+            'total_quantity_per_size': dict(total_quantity_per_size),
+            'total_layers': total_layers,
+            'sidebar_type': 'packer'
+        })
+
+        return context
+    
+@method_decorator([login_required, packer_required], name='dispatch')
+class PassportDetailPackerView(DetailView):
+    model = Passport
+    template_name = 'packer/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'packer'
+        return context
+
 @require_POST
 @login_required
 @packer_required
@@ -166,15 +249,24 @@ def update_piece_packer(request, piece_id):
         Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
 
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
-
+        cut = piece.passport_size.passport.cut.number
+        model = piece.passport_size.passport.cut.order.model.name
+        color = piece.passport_size.passport.roll.color.name
+        fabrcis = piece.passport_size.passport.roll.fabrics.name
+        passport_id = piece.passport_size.passport.id
+        passport_number = piece.passport_size.passport.number
         # Forming the response with piece details
         data = {
             'success': True,
             'message': 'Piece status updated to Packed.',
             'piece_id': piece.id,
-            'passport': piece.passport_size.passport.id,
-            'order': piece.passport_size.passport.order.model.name,
-            'passport_size': piece.passport_size.id,
+            'piece_number': piece.piece_number,
+            'passport_id': passport_id,
+            'passport_number': passport_number,
+            'cut': cut,
+            'model': model,
+            'color': color,
+            'fabrics': fabrcis,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display()

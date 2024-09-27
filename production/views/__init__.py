@@ -5,5 +5,7 @@ from .common_views import *
 from .cutter_views import *
 from .qc_views import *
 from .packer_views import *
+from .keeper_views import *
 from .dashboard_views import *
 from .barcode_views import *
+from .whatsapp_qr_views import *

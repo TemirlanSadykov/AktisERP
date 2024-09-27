@@ -144,23 +144,31 @@ def order_api(request, order_id):
         passports_data = [
             {
                 'passport_id': passport.id,
-                'size_range': f"{passport.passport_sizes.first().size_quantity.size} - {passport.passport_sizes.last().size_quantity.size}",
+                'passport_number': passport.number,
+                'cut_number': passport.cut.number,
+                'size_range': f"{passport.size_quantities.first().size} - {passport.size_quantities.last().size}",
                 'rolls': [
                     {
-                        'roll_name': pr.roll.name,
-                        'meters': pr.meters
-                    } for pr in passport.passport_rolls.all()
+                        'roll_name': passport.roll.name,
+                        'meters': passport.meters
+                    }
                 ]
-            } for passport in order.passports.all()
+            } for cut in order.cuts.all() for passport in cut.passports.all()
         ]
+
+        # Convert the ManyToMany 'colors' field to a list of color names
+        colors = list(order.colors.values_list('name', flat=True))
+        fabrics = list(order.fabrics.values_list('name', flat=True))
+
         response_data = {
             'model_name': order.model.name,
             'quantity': order.quantity,
             'price_per_piece': float(order.payment),
             'production_cost_per_piece': float(production_cost_per_piece),
             'status': order.get_status_display(),
-            'assortment': order.assortment.name if order.assortment else 'N/A',
-            'color': order.color,
+            'assortment': order.model.assortment.name if order.model.assortment else 'N/A',
+            'color': colors,  # Colors is now a list of names
+            'fabrics': fabrics,
             'passports': passports_data
         }
 
@@ -174,26 +182,28 @@ def order_api(request, order_id):
 def roll_api(request, roll_id):
     try:
         roll = Roll.objects.get(pk=roll_id)
-        passport_rolls_data = [
+        passport_data = [
             {
-                'passport_id': passport_roll.passport.id,
-                'meters_used': float(passport_roll.meters),
+                'passport_id': passport.id,
+                'passport_number': passport.number,
+                'cut_number': passport.cut.number,
+                'meters_used': float(passport.meters),
                 'passport_details': {
-                    'date': passport_roll.passport.date,
-                    'is_completed': passport_roll.passport.is_completed,
-                    'order': passport_roll.passport.order.model.name if passport_roll.passport.order else None
+                    'date': passport.cut.date,
+                    'is_completed': passport.is_completed,
+                    'order': passport.cut.order.model.name if passport.cut.order else None
                 }
-            } for passport_roll in roll.passport_rolls.all()
+            } for passport in roll.passport_rolls.all()
         ]
         
         data = {
             'name': roll.name,
-            'color': roll.color,
-            'fabrics': roll.fabrics,
+            'color': roll.color.name,
+            'fabrics': roll.fabrics.name,
             'meters': float(roll.meters),
             'used_meters': float(roll.used_meters),
             'available_meters': float(roll.available_meters),
-            'passports_used': passport_rolls_data
+            'passports_used': passport_data
         }
         
         return JsonResponse(data)
@@ -206,11 +216,11 @@ def roll_api(request, roll_id):
 def client_order_api(request, client_order_id):
     try:
         order = ClientOrder.objects.get(pk=client_order_id)
-        orders = order.orders.all().select_related('model', 'assortment')
+        orders = order.orders.all().select_related('model')
         orders_list = [{
             'order_id': ord.id,
             'model_name': ord.model.name,
-            'assortment': ord.assortment.name,
+            'assortment': ord.model.assortment.name,
             'completed_percentage': (ord.completed_quantity / ord.quantity) * 100 if ord.quantity else 0
         } for ord in orders]
 
