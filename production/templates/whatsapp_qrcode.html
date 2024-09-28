@@ -25,7 +25,7 @@
 
 <!-- Main QR Code Section -->
 <div class="container mt-5 text-center">
-    <h3 class="mb-4 text-center ">Scan the QR Code to Join WhatsApp Sandbox</h3>
+    <h3 class="mb-4 text-center ">Введите Номер и Отсанируйте QR код</h3>
     <div class="d-flex justify-content-center mb-4">
         <img src="{% static 'img/whatsapp_qr_integration.png' %}" alt="Twilio Sandbox QR Code" class="img-fluid shadow-lg" style="max-width: 400px; border-radius: 10px;" />
     </div>
@@ -35,15 +35,15 @@
         {% csrf_token %}
         <div class="form-row">
             <div class="col-md-4 mb-3">
-                <label for="country_code" class="font-weight-bold"><font size="4">Country Code:</font></label>
+                <label for="country_code" class="font-weight-bold"><font size="4">Код страны:</font></label>
                 <input type="text" class="form-control form-control-lg mt-2" id="country_code" name="country_code" placeholder="+91" required />
             </div>
             <div class="col-md-8 mb-3">
-                <label for="phone_number" class="font-weight-bold"><font size="4">Phone Number:</font></label>
+                <label for="phone_number" class="font-weight-bold"><font size="4">Номер телефона:</font></label>
                 <input type="text" class="form-control form-control-lg mt-2" id="phone_number" name="phone_number" placeholder="1234567890" required />
             </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-lg btn-block shadow-sm">Submit</button>
+        <button type="submit" class="btn btn-primary btn-lg btn-block shadow-sm">Сохранить</button>
     </form>
 
     <!-- Success Message -->
