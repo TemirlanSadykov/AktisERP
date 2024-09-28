@@ -90,12 +90,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('PROD_ARITEX_DB_ENGINE'),
-        'NAME': config('PROD_ARITEX_DB_NAME'),
-        'USER': config('PROD_ARITEX_DB_USER'),
-        'PASSWORD': config('PROD_ARITEX_DB_PASSWORD'),
-        'HOST': config('PROD_ARITEX_DB_HOST'),
-        'PORT': config('PROD_ARITEX_DB_PORT'),
+        'ENGINE': config('PROD_AKTIS_DB_ENGINE'),
+        'NAME': config('PROD_AKTIS_DB_NAME'),
+        'USER': config('PROD_AKTIS_DB_USER'),
+        'PASSWORD': config('PROD_AKTIS_DB_PASSWORD'),
+        'HOST': config('PROD_AKTIS_DB_HOST'),
+        'PORT': config('PROD_AKTIS_DB_PORT'),
     }
 }
 
@@ -190,12 +190,12 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://prod-aritex.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://prod-aktis.up.railway.app']
 
 # Load the environment variables
-WORKPLACE_LAT = config('PROD_ARITEX_WORKPLACE_LAT', cast=float)
-WORKPLACE_LON = config('PROD_ARITEX_WORKPLACE_LON', cast=float)
-ALLOWED_RADIUS = config('PROD_ARITEX_ALLOWED_RADIUS', cast=int)
+WORKPLACE_LAT = config('PROD_AKTIS_WORKPLACE_LAT', cast=float)
+WORKPLACE_LON = config('PROD_AKTIS_WORKPLACE_LON', cast=float)
+ALLOWED_RADIUS = config('PROD_AKTIS_ALLOWED_RADIUS', cast=int)
 
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
