@@ -152,7 +152,6 @@ def get_production_data(start_date, end_date):
 
     total_salary = AssignedWork.objects.filter(
         end_time__range=[start_date, end_date],
-        is_success=True
     ).aggregate(total=Sum(F('quantity') * F('work__operation__payment')))['total'] or 0
 
     total_errors = Error.objects.filter(
@@ -220,7 +219,6 @@ def get_client_data(start_date, end_date):
 def get_employee_data(start_date, end_date):
     # Aggregating units produced by each employee from AssignedWork within the date range
     employee_units = AssignedWork.objects.filter(
-        is_success=True, 
         end_time__range=[start_date, end_date]
     ).values('employee__id').annotate(
         total_units=Sum('quantity')
@@ -656,14 +654,12 @@ def salary_detail(request, pk):
             assigned_works = AssignedWork.objects.filter(
                 employee=employee,
                 end_time__range=(start_date, end_date),
-                is_success=True,
                 work__passport__order__client_order__branch=request.user.userprofile.branch
             ).select_related('work__operation', 'work__passport_size__size_quantity')
 
             reassigned_works = ReassignedWork.objects.filter(
                 new_employee=employee,
                 original_assigned_work__end_time__range=(start_date, end_date),
-                is_success=True,
                 original_assigned_work__work__passport__order__client_order__branch=request.user.userprofile.branch
             ).select_related('original_assigned_work__work__operation', 'original_assigned_work__work__passport_size__size_quantity')
 
@@ -773,12 +769,10 @@ def export_salaries_to_excel(request):
         if salary_type == 'non_fixed':
             assigned_works = AssignedWork.objects.filter(
                 end_time__range=(start_date, end_date),
-                is_success=True
             ).select_related('work__operation', 'work__passport', 'work__passport__order', 'employee', 'work__passport_size')
 
             reassigned_works = ReassignedWork.objects.filter(
                 original_assigned_work__end_time__range=(start_date, end_date),
-                is_success=True
             ).select_related('original_assigned_work', 'new_employee', 'original_assigned_work__work__passport_size')
 
             for work in assigned_works:
