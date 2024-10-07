@@ -344,13 +344,30 @@ class DefectDeleteView(DeleteView):
     
 @login_required
 @qc_required
+def mark_as_qc(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        with transaction.atomic():
+            if passport_size.stage == PassportSize.QC:
+                passport_size.stage = PassportSize.SEWING
+            else:
+                passport_size.stage = PassportSize.QC
+            passport_size.save()
+
+        return JsonResponse({'success': True})
+
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)
+ 
+@login_required
+@qc_required
 def mark_as_packing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
         operations = Operation.objects.filter(node__type=Node.QC, node__is_common=True)
         with transaction.atomic():
             if passport_size.stage == PassportSize.PACKING:
-                passport_size.stage = PassportSize.QC
+                passport_size.stage = PassportSize.SEWING
                 for operation in operations:
                     work = Work.objects.filter(passport_size=passport_size, operation=operation)
                     work.delete()

@@ -1308,24 +1308,6 @@ class EquipmentDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
-
-
-@login_required
-@technologist_required
-def mark_as_qc(request, passport_size_id):
-    try:
-        passport_size = PassportSize.objects.get(id=passport_size_id)
-        with transaction.atomic():
-            if passport_size.stage == PassportSize.QC:
-                passport_size.stage = PassportSize.SEWING
-            else:
-                passport_size.stage = PassportSize.QC
-            passport_size.save()
-
-        return JsonResponse({'success': True})
-
-    except PassportSize.DoesNotExist:
-        return JsonResponse({'error': 'PassportSize not found'}, status=404)
     
 @login_required
 @technologist_required

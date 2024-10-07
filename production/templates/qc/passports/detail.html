@@ -81,15 +81,18 @@
                 </td>
                 <td>
                   {% if size.stage == 2 %}
-                  <button type="button" class="stage-qc-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">ОТК</button>
+                    <button type="button" class="stage-qc-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">ОТК</button>
                   {% elif size.stage == 3 %}
-                  <button type="button" class="stage-qc-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Упаковка</button>
+                    <button type="button" class="stage-qc-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Упаковка</button>
+                  {% elif size.stage == 1 %}
+                    <button type="button" class="stage-sewing-button btn back-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Шитье</button>
                   {% else %}
-                  <button type="button" class="stage-qc-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
-                    {% if size.stage == 0 %}Резка
-                    {% elif size.stage == 1 %}Шитье
-                    {% else %}Готово
-                    {% endif %}
+                    <button type="button" class="stage-qc-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
+                  {% if size.stage == 0 %}
+                    Резка
+                  {% else %}
+                    Готово
+                  {% endif %}
                   </button>
                   {% endif %}
                 </td>
@@ -111,6 +114,31 @@
         var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
         if (passportSizeId) {
           fetch(`/production/qc/orders/mark-as-packing/${passportSizeId}/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert('Не получилось обновить');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        }
+      });
+    });
+    var buttons = document.querySelectorAll('.stage-sewing-button');
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function() { // Changed to 'click' event for buttons
+        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
+        if (passportSizeId) {
+          fetch(`/production/qc/orders/mark-as-qc/${passportSizeId}/`, {
             method: 'POST',
             headers: {
               'X-CSRFToken': getCookie('csrftoken')

@@ -248,7 +248,7 @@ urlpatterns = [
     
     path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
     path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
-    path('technologist/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
+    path('qc/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
     path('qc/orders/mark-as-packing/<int:passport_size_id>/', mark_as_packing, name='mark-as-packing'),
 
     # For name changes

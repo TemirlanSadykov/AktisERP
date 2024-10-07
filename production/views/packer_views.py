@@ -297,10 +297,15 @@ class DiscrepancyDeleteView(DeleteView):
 def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.order
+        order = passport_size.passport.cut.order
         operations = Operation.objects.filter(node__type=Node.PACKING, node__is_common=True)
+        assigned_works = AssignedWork.objects.filter(work__passport_size=passport_size)
+
         with transaction.atomic():
             if passport_size.stage == PassportSize.DONE:
+
+                assigned_works.update(is_success=False)
+
                 passport_size.stage = PassportSize.PACKING
                 for operation in operations:
                     work = Work.objects.filter(passport_size=passport_size, operation=operation)
@@ -322,6 +327,9 @@ def mark_as_done(request, passport_size_id):
                         end_time=timezone.now(),
                         is_success=True
                     )
+
+                assigned_works.update(is_success=True)
+
                 passport_size.stage = PassportSize.DONE
                 order.completed_quantity += passport_size.quantity
                 order.save()
