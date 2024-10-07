@@ -441,11 +441,10 @@ class OrderForm(forms.ModelForm):
 class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['name', 'number', 'is_common', 'type']
+        fields = ['name', 'number', 'type']
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
                 'number': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter number'}),
-                'is_common': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
                 'type': forms.Select(attrs={'class': 'form-control'}),
             }
     

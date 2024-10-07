@@ -129,7 +129,6 @@ class Equipment(models.Model):
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
-    is_common = models.BooleanField(default=False, verbose_name='Общий')
     SEWING = 0
     CUTTING = 1
     QC = 2

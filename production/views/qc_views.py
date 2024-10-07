@@ -296,7 +296,7 @@ def update_piece_qc(request, piece_id):
         # Only assign work if the initial status is NOT_CHECKED
         if piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
             # Fetch the QC operation
-            qc_operation = Operation.objects.filter(node__type=Node.QC, node__is_common=True).first()
+            qc_operation = Operation.objects.filter(node__type=Node.QC).first()
 
             if qc_operation:
                 work, created = Work.objects.get_or_create(
@@ -414,7 +414,7 @@ def mark_as_packing(request, passport_size_id):
 # def mark_as_packing(request, passport_size_id):
 #     try:
 #         passport_size = PassportSize.objects.get(id=passport_size_id)
-#         operations = Operation.objects.filter(node__type=Node.QC, node__is_common=True)
+#         operations = Operation.objects.filter(node__type=Node.QC)
 #         with transaction.atomic():
 #             if passport_size.stage == PassportSize.PACKING:
 #                 passport_size.stage = PassportSize.SEWING

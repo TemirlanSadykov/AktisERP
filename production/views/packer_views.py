@@ -252,7 +252,7 @@ def update_piece_packer(request, piece_id):
         Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
 
         # Fetch the Packing operation
-        packing_operation = Operation.objects.filter(node__type=Node.PACKING, node__is_common=True).first()
+        packing_operation = Operation.objects.filter(node__type=Node.PACKING).first()
         
         if packing_operation:
             # Create or update the assigned work entry
