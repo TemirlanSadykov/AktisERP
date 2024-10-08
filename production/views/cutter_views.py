@@ -488,7 +488,7 @@ def mark_as_sewing(request, passport_size_id):
                         quantity=passport_size.quantity,
                         start_time=timezone.now(),
                         end_time=timezone.now(),
-                        is_success=True
+                        is_success=False
                     )
                 passport_size.stage = PassportSize.SEWING
             passport_size.save()
