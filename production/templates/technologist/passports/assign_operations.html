@@ -67,7 +67,7 @@
       </thead>
       <tbody>
         {% for operation in operations %}
-          {% if not operation.node.is_common %}
+          {% if operation.node.type == 0 %}
           <tr>
             <td>{{ operation.name }}</td>
             {% for sq in size_quantities %}
@@ -77,10 +77,10 @@
                   {% for work in works %}
                     <div style="display: block;">
                       <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
-                      {% if work.end_time %}
+                      {% comment %} {% if work.end_time %}
                         <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
                         <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
-                      {% endif %}
+                      {% endif %} {% endcomment %}
                     </div>
                   {% endfor %}
                 {% else %}
@@ -91,42 +91,21 @@
           </tr>
           {% endif %}
         {% endfor %}
-
-        <!-- Add new row for stage buttons -->
-        <tr>
-          <td>{% trans "Stage" %}</td>
-          {% for size in size_quantities %}
-          <td>
-            {% if size.stage == 1 %}
-              <button type="button" class="stage-sewing-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Шитье</button>
-            {% elif size.stage == 2 %}
-              <button type="button" class="stage-sewing-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">ОТК</button>
-            {% else %}
-              <button type="button" class="stage-sewing-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
-                {% if size.stage == 0 %}Резка
-                {% elif size.stage == 3 %}Упаковка
-                {% else %}Готово
-                {% endif %}
-              </button>
-            {% endif %}
-          </td>
-          {% endfor %}
-        </tr>
       </tbody>
     </table>
   </div>
 </form>
-          <div class="form-actions">
-            {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
+          {% comment %} <div class="form-actions">
+             <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
               {% csrf_token %}
               {% if passport.is_completed %}
                 <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">{% trans "Reopen" %}</button>
               {% else %}
                 <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
               {% endif %}
-            </form> {% endcomment %}
-            {% comment %} <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
-            <a href="{% url 'order_detail_technologist' passport.cut.order.pk %}" class="btn back-btn">{% trans "Back" %}</a> {% endcomment %}
+            </form> 
+             <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
+            <a href="{% url 'order_detail_technologist' passport.cut.order.pk %}" class="btn back-btn">{% trans "Back" %}</a> 
           </div>
           <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
             <div id="reassignPopup" class="reassign-popup" style="display: none;">
@@ -157,7 +136,7 @@
                 <span class="close" id="closeMessageBtn">&times;</span>
                 <p id="messageModalContent"></p>
             </div>
-        </div>
+        </div> {% endcomment %}
 </div>
       <!-- </div> -->
 </div>
@@ -236,15 +215,15 @@
       }
     });
   
-    document.querySelectorAll('.success-checkbox').forEach(checkbox => {
+    /* document.querySelectorAll('.success-checkbox').forEach(checkbox => {
       checkbox.addEventListener('change', function() {
         const workId = this.getAttribute('data-work');
         const isChecked = this.checked;
         updateWorkSuccess(workId, isChecked);
       });
-    });
+    });*/
     
-    document.querySelectorAll('.reassign-icon').forEach(icon => {
+    /*document.querySelectorAll('.reassign-icon').forEach(icon => {
       icon.addEventListener('click', function() {
           const assignedWorkId = this.getAttribute('data-work');
           document.getElementById('reassignWorkId').value = assignedWorkId;
@@ -294,9 +273,9 @@
               showPopup();
           });
       });
-    });
+    });*/
   
-    document.getElementById('reassignForm').addEventListener('submit', function(event) {
+    /*document.getElementById('reassignForm').addEventListener('submit', function(event) {
       event.preventDefault();
     
       const workId = document.getElementById('reassignWorkId').value;
@@ -329,7 +308,7 @@
       };
     
       xhr.send(JSON.stringify(data));
-    });
+    });*/
     
   });
   
@@ -394,7 +373,7 @@
     xhr.send(JSON.stringify(data));
   }
   
-  function updateWorkSuccess(workId, isSuccess) {
+  /*function updateWorkSuccess(workId, isSuccess) {
     const xhr = new XMLHttpRequest();
     const url = `/production/technologist/passports/update_work_success/`;
     xhr.open('POST', url, true);
@@ -423,7 +402,7 @@
   function closePopup() {
     document.getElementById('reassignPopup').style.display = 'none';
     document.getElementById('reassignPopupOverlay').style.display = 'none';
-  }
+  }*/
 </script>
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -514,48 +493,5 @@
       }
     });
   }  
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var buttons = document.querySelectorAll('.stage-sewing-button');
-    buttons.forEach(function(button) {
-      button.addEventListener('click', function() { // Changed to 'click' event for buttons
-        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
-        if (passportSizeId) {
-          fetch(`/production/technologist/orders/mark-as-qc/${passportSizeId}/`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              window.location.reload();
-            } else {
-              alert('Не получилось обновить');
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-          });
-        }
-      });
-    });
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
-          }
-      }
-      return cookieValue;
-    }
-  });
 </script>
 {% endblock %}

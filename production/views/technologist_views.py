@@ -48,6 +48,8 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
         search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
+        queryset = queryset.filter(client_order__is_archived=False)
+
         if status:
             try:
                 status = int(status)
@@ -1308,24 +1310,6 @@ class EquipmentDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
-
-
-@login_required
-@technologist_required
-def mark_as_qc(request, passport_size_id):
-    try:
-        passport_size = PassportSize.objects.get(id=passport_size_id)
-        with transaction.atomic():
-            if passport_size.stage == PassportSize.QC:
-                passport_size.stage = PassportSize.SEWING
-            else:
-                passport_size.stage = PassportSize.QC
-            passport_size.save()
-
-        return JsonResponse({'success': True})
-
-    except PassportSize.DoesNotExist:
-        return JsonResponse({'error': 'PassportSize not found'}, status=404)
     
 @login_required
 @technologist_required

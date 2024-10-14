@@ -109,13 +109,6 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="id_common">{% trans "Is common" %}:</label>
-                    <div class="custom-control custom-switch custom-switch-md">
-                      <input class="custom-control-input" type="checkbox" id="id_common" name="is_common" {% if form.is_common.value %}checked{% endif %}>
-                      <label class="custom-control-label" for="id_common"></label>
-                    </div>
-                  </div>
-                  <div class="form-group">
                     <label for="id_type">{% trans "Type" %}:</label>
                     {{ form.type }}
                   </div>

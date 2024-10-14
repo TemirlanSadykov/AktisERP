@@ -41,6 +41,8 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
+        queryset = queryset.filter(client_order__is_archived=False)
+
         if status:
             try:
                 status = int(status)
@@ -236,25 +238,61 @@ def update_piece_packer(request, piece_id):
     try:
         piece = ProductionPiece.objects.get(id=piece_id)
         
+        # Check conditions for packing
         if piece.stage == ProductionPiece.StageChoices.PACKED:
-            return JsonResponse({'success': False, 'message': 'Piece is already packed.'}, status=409)
+            return JsonResponse({'success': False, 'message': 'Единица уже упакована.'}, status=409)
         elif piece.stage == ProductionPiece.StageChoices.DEFECT:
-            return JsonResponse({'success': False, 'message': 'Piece is marked as defect.'}, status=409)
+            return JsonResponse({'success': False, 'message': 'Единица бракована.'}, status=409)
         elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
-            return JsonResponse({'success': False, 'message': 'Piece is not checked and cannot be packed.'}, status=409)
+            return JsonResponse({'success': False, 'message': 'Единица еще не проверена.'}, status=409)
 
+        # Update piece status to PACKED
         piece.stage = ProductionPiece.StageChoices.PACKED
         piece.save()
 
+        # Delete discrepancy errors related to this piece
         Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
 
+        # Fetch the Packing operation
+        packing_operation = Operation.objects.filter(node__type=Node.PACKING).first()
+        
+        if packing_operation:
+            # Create or update the assigned work entry
+            work, created = Work.objects.get_or_create(
+                passport_size=piece.passport_size,
+                operation=packing_operation
+            )
+
+            # Check if an AssignedWork already exists for the user and work
+            assigned_work = AssignedWork.objects.filter(
+                work=work,
+                employee=request.user.userprofile
+            ).first()
+
+            if assigned_work:
+                # Increment quantity if assigned work already exists
+                assigned_work.quantity += 1
+                assigned_work.save()
+            else:
+                # Create a new assigned work with quantity 1
+                AssignedWork.objects.create(
+                    work=work,
+                    employee=request.user.userprofile,
+                    quantity=1,
+                    start_time=timezone.now(),
+                    end_time=timezone.now(),
+                    is_success=False
+                )
+
+        # Prepare response data
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
         color = piece.passport_size.passport.roll.color.name
-        fabrcis = piece.passport_size.passport.roll.fabrics.name
+        fabrics = piece.passport_size.passport.roll.fabrics.name
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
+        
         # Forming the response with piece details
         data = {
             'success': True,
@@ -266,7 +304,7 @@ def update_piece_packer(request, piece_id):
             'cut': cut,
             'model': model,
             'color': color,
-            'fabrics': fabrcis,
+            'fabrics': fabrics,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display()
@@ -297,35 +335,28 @@ class DiscrepancyDeleteView(DeleteView):
 def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.order
-        operations = Operation.objects.filter(node__type=Node.PACKING, node__is_common=True)
+        order = passport_size.passport.cut.order
+        assigned_works = AssignedWork.objects.filter(work__passport_size=passport_size)
+
         with transaction.atomic():
             if passport_size.stage == PassportSize.DONE:
+                # Change the status to PACKING and update assigned_work is_success to False
                 passport_size.stage = PassportSize.PACKING
-                for operation in operations:
-                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
-                    work.delete()
+                assigned_works.update(is_success=False)
+                
+                # Decrement the completed_quantity for the order
                 order.completed_quantity -= passport_size.quantity
-                order.save()
             else:
-                for operation in operations:
-                    work = Work.objects.create(
-                        operation=operation,
-                        passport=passport_size.passport,
-                        passport_size=passport_size
-                    )
-                    AssignedWork.objects.create(
-                        work=work,
-                        employee=operation.employee,
-                        quantity=passport_size.quantity,
-                        start_time=timezone.now(),
-                        end_time=timezone.now(),
-                        is_success=True
-                    )
+                # Change the status to DONE and update assigned_work is_success to True
                 passport_size.stage = PassportSize.DONE
+                assigned_works.update(is_success=True)
+                
+                # Increment the completed_quantity for the order
                 order.completed_quantity += passport_size.quantity
-                order.save()
+
+            # Save the updated stage and order
             passport_size.save()
+            order.save()
 
         return JsonResponse({'success': True})
 

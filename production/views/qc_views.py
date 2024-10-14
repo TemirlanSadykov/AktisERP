@@ -46,6 +46,8 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
+        queryset = queryset.filter(client_order__is_archived=False)
+
         if status:
             try:
                 status = int(status)
@@ -292,8 +294,41 @@ def update_piece_qc(request, piece_id):
             return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
 
         piece = ProductionPiece.objects.get(id=piece_id)
-        piece.stage = valid_statuses[status]
+        
+        # Only assign work if the initial status is NOT_CHECKED
+        if piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
+            # Fetch the QC operation
+            qc_operation = Operation.objects.filter(node__type=Node.QC).first()
 
+            if qc_operation:
+                work, created = Work.objects.get_or_create(
+                    passport_size=piece.passport_size,
+                    operation=qc_operation
+                )
+
+                # Check if an AssignedWork already exists for the user and work
+                assigned_work = AssignedWork.objects.filter(
+                    work=work,
+                    employee=request.user.userprofile
+                ).first()
+
+                if assigned_work:
+                    # Increment quantity if assigned work already exists
+                    assigned_work.quantity += 1
+                    assigned_work.save()
+                else:
+                    # Create a new assigned work with quantity 1
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=request.user.userprofile,
+                        quantity=1,
+                        start_time=timezone.now(),
+                        end_time=timezone.now(),
+                        is_success=False
+                    )
+
+        # Now update the piece status and defect_type if applicable
+        piece.stage = valid_statuses[status]
         if status == 'Defect':
             if defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
                 piece.defect_type = defect_type
@@ -310,8 +345,6 @@ def update_piece_qc(request, piece_id):
                 )
 
                 message = f'Piece status updated to {status} with defect type {defect_type}. {"Error record created." if created else "Error record updated."}'
-                return JsonResponse({'success': True, 'message': message})
-
             else:
                 return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
         
@@ -319,8 +352,10 @@ def update_piece_qc(request, piece_id):
             piece.defect_type = None
             piece.save()
             Error.objects.filter(piece=piece, error_type=Error.ErrorType.DEFECT).delete()
-            return JsonResponse({'success': True, 'message': f'Piece status updated to {status}. Any related error records have been removed.'})
-        
+            message = f'Piece status updated to {status}. Any related error records have been removed.'
+
+        return JsonResponse({'success': True, 'message': message})
+
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
     except KeyError:
@@ -344,31 +379,30 @@ class DefectDeleteView(DeleteView):
     
 @login_required
 @qc_required
+def mark_as_qc(request, passport_size_id):
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+        with transaction.atomic():
+            if passport_size.stage == PassportSize.QC:
+                passport_size.stage = PassportSize.SEWING
+            else:
+                passport_size.stage = PassportSize.QC
+            passport_size.save()
+
+        return JsonResponse({'success': True})
+
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    
+@login_required
+@qc_required
 def mark_as_packing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.QC, node__is_common=True)
         with transaction.atomic():
             if passport_size.stage == PassportSize.PACKING:
                 passport_size.stage = PassportSize.QC
-                for operation in operations:
-                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
-                    work.delete()
             else:
-                for operation in operations:
-                    work = Work.objects.create(
-                        operation=operation,
-                        passport=passport_size.passport,
-                        passport_size=passport_size
-                    )
-                    AssignedWork.objects.create(
-                        work=work,
-                        employee=operation.employee,
-                        quantity=passport_size.quantity,
-                        start_time=timezone.now(),
-                        end_time=timezone.now(),
-                        is_success=True
-                    )
                 passport_size.stage = PassportSize.PACKING
             passport_size.save()
 
@@ -376,6 +410,41 @@ def mark_as_packing(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
+ 
+# @login_required
+# @qc_required
+# def mark_as_packing(request, passport_size_id):
+#     try:
+#         passport_size = PassportSize.objects.get(id=passport_size_id)
+#         operations = Operation.objects.filter(node__type=Node.QC)
+#         with transaction.atomic():
+#             if passport_size.stage == PassportSize.PACKING:
+#                 passport_size.stage = PassportSize.SEWING
+#                 for operation in operations:
+#                     work = Work.objects.filter(passport_size=passport_size, operation=operation)
+#                     work.delete()
+#             else:
+#                 for operation in operations:
+#                     work = Work.objects.create(
+#                         operation=operation,
+#                         passport=passport_size.passport,
+#                         passport_size=passport_size
+#                     )
+#                     AssignedWork.objects.create(
+#                         work=work,
+#                         employee=operation.employee,
+#                         quantity=passport_size.quantity,
+#                         start_time=timezone.now(),
+#                         end_time=timezone.now(),
+#                         is_success=True
+#                     )
+#                 passport_size.stage = PassportSize.PACKING
+#             passport_size.save()
+
+#         return JsonResponse({'success': True})
+
+#     except PassportSize.DoesNotExist:
+#         return JsonResponse({'error': 'PassportSize not found'}, status=404)
 
 @login_required
 @qc_required

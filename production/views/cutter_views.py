@@ -46,6 +46,8 @@ class OrderListCutterView(RestrictOrderBranchMixin, ListView):
         search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
+        queryset = queryset.filter(client_order__is_archived=False)
+
         if status:
             try:
                 status = int(status)
@@ -468,7 +470,7 @@ def delete_passport(request, pk):
 def mark_as_sewing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.CUTTING, node__is_common=True) # Work for Employees type Cutter
+        operations = Operation.objects.filter(node__type=Node.CUTTING) # Work for Employees type Cutter
         with transaction.atomic():
             if passport_size.stage == PassportSize.SEWING:
                 passport_size.stage = PassportSize.CUTTING
@@ -488,7 +490,7 @@ def mark_as_sewing(request, passport_size_id):
                         quantity=passport_size.quantity,
                         start_time=timezone.now(),
                         end_time=timezone.now(),
-                        is_success=True
+                        is_success=False
                     )
                 passport_size.stage = PassportSize.SEWING
             passport_size.save()

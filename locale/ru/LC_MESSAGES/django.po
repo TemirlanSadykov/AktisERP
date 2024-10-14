@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-30 15:23+0900\n"
+"POT-Creation-Date: 2024-09-28 21:58+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,9 +22,11 @@ msgstr ""
 
 #: .\production\templates\admin\attendances\list.html:8
 #: .\production\templates\admin\branches\list.html:8
+#: .\production\templates\admin\calendar\calendar.html:8
 #: .\production\templates\admin\client\orders\detail.html:11
-#: .\production\templates\admin\client\orders\list.html:9
+#: .\production\templates\admin\client\orders\list.html:6
 #: .\production\templates\admin\clients\list.html:8
+#: .\production\templates\admin\cuts\detail.html:9
 #: .\production\templates\admin\employees\list.html:10
 #: .\production\templates\admin\errors\detail.html:10
 #: .\production\templates\admin\fixed_salaries\list.html:8
@@ -33,29 +35,32 @@ msgstr ""
 #: .\production\templates\admin\passports\detail.html:10
 #: .\production\templates\admin\salaries\list.html:8
 #: .\production\templates\admin_page.html:10
+#: .\production\templates\whatsapp_qrcode.html:10
 msgid "Admin Dashboard"
 msgstr "Панель Администратора"
 
 #: .\production\templates\admin\attendances\list.html:17
 #: .\production\templates\admin\branches\create.html:17
-#: .\production\templates\admin\branches\detail.html:18
+#: .\production\templates\admin\branches\detail.html:14
 #: .\production\templates\admin\branches\edit.html:17
 #: .\production\templates\admin\branches\list.html:17
+#: .\production\templates\admin\calendar\calendar.html:17
 #: .\production\templates\admin\client\orders\create.html:17
 #: .\production\templates\admin\client\orders\detail.html:20
 #: .\production\templates\admin\client\orders\edit.html:17
-#: .\production\templates\admin\client\orders\list.html:18
+#: .\production\templates\admin\client\orders\list.html:13
 #: .\production\templates\admin\clients\create.html:17
 #: .\production\templates\admin\clients\detail.html:18
 #: .\production\templates\admin\clients\edit.html:17
 #: .\production\templates\admin\clients\list.html:17
+#: .\production\templates\admin\cuts\detail.html:18
 #: .\production\templates\admin\employees\create.html:17
-#: .\production\templates\admin\employees\detail.html:19
+#: .\production\templates\admin\employees\detail.html:14
 #: .\production\templates\admin\employees\edit.html:20
 #: .\production\templates\admin\employees\list.html:19
 #: .\production\templates\admin\errors\detail.html:19
 #: .\production\templates\admin\fixed_salaries\create.html:17
-#: .\production\templates\admin\fixed_salaries\detail.html:19
+#: .\production\templates\admin\fixed_salaries\detail.html:14
 #: .\production\templates\admin\fixed_salaries\edit.html:18
 #: .\production\templates\admin\fixed_salaries\list.html:17
 #: .\production\templates\admin\orders\create.html:18
@@ -65,59 +70,96 @@ msgstr "Панель Администратора"
 #: .\production\templates\admin\passports\detail.html:19
 #: .\production\templates\admin\salaries\list.html:17
 #: .\production\templates\admin_page.html:20
+#: .\production\templates\cutter\consumptions\create.html:18
+#: .\production\templates\cutter\cuts\create.html:18
+#: .\production\templates\cutter\cuts\detail.html:18
 #: .\production\templates\cutter\orders\detail.html:20
-#: .\production\templates\cutter\orders\list.html:17
+#: .\production\templates\cutter\orders\list.html:18
+#: .\production\templates\cutter\passports\create.html:18
 #: .\production\templates\cutter\passports\create_passport_roll.html:19
 #: .\production\templates\cutter\passports\create_passport_size_quantity.html:19
 #: .\production\templates\cutter\passports\detail.html:19
 #: .\production\templates\cutter_page.html:19
 #: .\production\templates\dashboard.html:275
-#: .\production\templates\dashboard.html:448
-#: .\production\templates\dashboard.html:494
-#: .\production\templates\dashboard.html:567
-#: .\production\templates\dashboard.html:635
-#: .\production\templates\dashboard.html:702
-#: .\production\templates\dashboard.html:769
+#: .\production\templates\dashboard.html:458
+#: .\production\templates\dashboard.html:504
+#: .\production\templates\dashboard.html:577
+#: .\production\templates\dashboard.html:645
+#: .\production\templates\dashboard.html:728
+#: .\production\templates\dashboard.html:795
 #: .\production\templates\employee\works\done_list.html:43
 #: .\production\templates\employee\works\pending_list.html:19
 #: .\production\templates\employee\works\reassigned_list.html:20
 #: .\production\templates\employee_page.html:19
+#: .\production\templates\keeper\accessory\create.html:21
+#: .\production\templates\keeper\accessory\detail.html:17
+#: .\production\templates\keeper\accessory\edit.html:18
+#: .\production\templates\keeper\accessory\list.html:19
+#: .\production\templates\keeper\color\create.html:21
+#: .\production\templates\keeper\color\detail.html:17
+#: .\production\templates\keeper\color\edit.html:18
+#: .\production\templates\keeper\color\list.html:19
+#: .\production\templates\keeper\fabrics\create.html:21
+#: .\production\templates\keeper\fabrics\detail.html:17
+#: .\production\templates\keeper\fabrics\edit.html:18
+#: .\production\templates\keeper\fabrics\list.html:19
+#: .\production\templates\keeper\rolls\create.html:18
+#: .\production\templates\keeper\rolls\detail.html:20
+#: .\production\templates\keeper\rolls\edit.html:19
+#: .\production\templates\keeper\rolls\list.html:19
+#: .\production\templates\keeper_page.html:19
+#: .\production\templates\packer\cuts\detail.html:18
 #: .\production\templates\packer\discrepancies\create.html:18
 #: .\production\templates\packer\orders\detail.html:20
-#: .\production\templates\packer\orders\list.html:24
+#: .\production\templates\packer\orders\list.html:19
+#: .\production\templates\packer\passports\detail.html:20
+#: .\production\templates\packer\scans\detail.html:18
 #: .\production\templates\packer_page.html:19
+#: .\production\templates\qc\cuts\detail.html:18
 #: .\production\templates\qc\defects\create.html:19
 #: .\production\templates\qc\orders\detail.html:20
-#: .\production\templates\qc\orders\list.html:18
+#: .\production\templates\qc\orders\list.html:19
+#: .\production\templates\qc\passports\detail.html:20
+#: .\production\templates\qc\scans\detail.html:18
 #: .\production\templates\qc_page.html:20
 #: .\production\templates\technologist\assortments\create.html:19
-#: .\production\templates\technologist\assortments\detail.html:20
+#: .\production\templates\technologist\assortments\detail.html:19
 #: .\production\templates\technologist\assortments\edit.html:19
 #: .\production\templates\technologist\assortments\list.html:18
+#: .\production\templates\technologist\color\create.html:21
+#: .\production\templates\technologist\color\detail.html:17
+#: .\production\templates\technologist\color\edit.html:18
+#: .\production\templates\technologist\color\list.html:19
+#: .\production\templates\technologist\cuts\detail.html:18
 #: .\production\templates\technologist\equipment\create.html:21
-#: .\production\templates\technologist\equipment\detail.html:20
+#: .\production\templates\technologist\equipment\detail.html:17
 #: .\production\templates\technologist\equipment\edit.html:18
 #: .\production\templates\technologist\equipment\list.html:19
+#: .\production\templates\technologist\fabrics\create.html:21
+#: .\production\templates\technologist\fabrics\detail.html:17
+#: .\production\templates\technologist\fabrics\edit.html:18
+#: .\production\templates\technologist\fabrics\list.html:19
 #: .\production\templates\technologist\models\create.html:81
-#: .\production\templates\technologist\models\detail.html:19
+#: .\production\templates\technologist\models\detail.html:14
 #: .\production\templates\technologist\models\edit.html:83
 #: .\production\templates\technologist\models\list.html:19
 #: .\production\templates\technologist\nodes\create.html:17
-#: .\production\templates\technologist\nodes\detail.html:21
+#: .\production\templates\technologist\nodes\detail.html:19
 #: .\production\templates\technologist\nodes\edit.html:19
 #: .\production\templates\technologist\nodes\list.html:19
 #: .\production\templates\technologist\operations\create.html:17
-#: .\production\templates\technologist\operations\detail.html:21
+#: .\production\templates\technologist\operations\detail.html:19
 #: .\production\templates\technologist\operations\edit.html:19
-#: .\production\templates\technologist\operations\list.html:84
+#: .\production\templates\technologist\operations\list.html:77
 #: .\production\templates\technologist\orders\detail.html:20
-#: .\production\templates\technologist\orders\list.html:18
+#: .\production\templates\technologist\orders\list.html:19
 #: .\production\templates\technologist\passports\assign_operations.html:20
 #: .\production\templates\technologist\rolls\create.html:18
-#: .\production\templates\technologist\rolls\detail.html:22
+#: .\production\templates\technologist\rolls\detail.html:20
 #: .\production\templates\technologist\rolls\edit.html:19
 #: .\production\templates\technologist\rolls\list.html:19
 #: .\production\templates\technologist_page.html:18
+#: .\production\templates\whatsapp_qrcode.html:19
 msgid "Logout"
 msgstr "Выйти"
 
@@ -126,13 +168,14 @@ msgid "Attendance Records:"
 msgstr "Записи о Посещаемости"
 
 #: .\production\templates\admin\attendances\list.html:40
-#: .\production\templates\admin\client\orders\list.html:70
+#: .\production\templates\admin\client\orders\list.html:67
 #: .\production\templates\admin\salaries\detail.html:10
 #: .\production\templates\admin\salaries\list.html:36
+#: .\production\templates\dashboard.html:292
 msgid "Filter"
 msgstr "Фильтр"
 
-#: .\production\templates\admin\attendances\list.html:56
+#: .\production\templates\admin\attendances\list.html:73
 msgid "No attendance records found."
 msgstr "Записи о посещаемости не найдены."
 
@@ -148,27 +191,39 @@ msgstr "Создать Новый Филиал"
 #: .\production\templates\admin\branches\create.html:39
 #: .\production\templates\admin\branches\list.html:28
 #: .\production\templates\admin\client\orders\create.html:39
-#: .\production\templates\admin\client\orders\list.html:50
+#: .\production\templates\admin\client\orders\list.html:47
 #: .\production\templates\admin\clients\create.html:40
 #: .\production\templates\admin\clients\list.html:27
 #: .\production\templates\admin\employees\create.html:79
 #: .\production\templates\admin\employees\list.html:28
 #: .\production\templates\admin\fixed_salaries\create.html:40
 #: .\production\templates\admin\fixed_salaries\list.html:29
+#: .\production\templates\keeper\accessory\create.html:66
+#: .\production\templates\keeper\accessory\list.html:30
+#: .\production\templates\keeper\color\create.html:44
+#: .\production\templates\keeper\color\list.html:30
+#: .\production\templates\keeper\fabrics\create.html:44
+#: .\production\templates\keeper\fabrics\list.html:30
+#: .\production\templates\keeper\rolls\create.html:42
+#: .\production\templates\keeper\rolls\list.html:32
 #: .\production\templates\packer\discrepancies\create.html:42
 #: .\production\templates\qc\defects\create.html:43
 #: .\production\templates\technologist\assortments\create.html:42
-#: .\production\templates\technologist\assortments\list.html:29
+#: .\production\templates\technologist\assortments\list.html:30
+#: .\production\templates\technologist\color\create.html:44
+#: .\production\templates\technologist\color\list.html:30
 #: .\production\templates\technologist\equipment\create.html:44
-#: .\production\templates\technologist\equipment\list.html:29
+#: .\production\templates\technologist\equipment\list.html:30
+#: .\production\templates\technologist\fabrics\create.html:44
+#: .\production\templates\technologist\fabrics\list.html:30
 #: .\production\templates\technologist\models\create.html:116
 #: .\production\templates\technologist\nodes\create.html:123
-#: .\production\templates\technologist\nodes\list.html:31
+#: .\production\templates\technologist\nodes\list.html:32
 #: .\production\templates\technologist\operations\create.html:40
-#: .\production\templates\technologist\operations\list.html:119
+#: .\production\templates\technologist\operations\list.html:108
 #: .\production\templates\technologist\passports\create.html:12
 #: .\production\templates\technologist\rolls\create.html:42
-#: .\production\templates\technologist\rolls\list.html:31
+#: .\production\templates\technologist\rolls\list.html:32
 msgid "Create"
 msgstr "Создать"
 
@@ -179,18 +234,24 @@ msgstr "Создать"
 #: .\production\templates\admin\fixed_salaries\create.html:43
 #: .\production\templates\admin\orders\create.html:44
 #: .\production\templates\admin\passports\detail.html:87
-#: .\production\templates\admin\salaries\detail.html:90
+#: .\production\templates\admin\salaries\detail.html:94
 #: .\production\templates\cutter\passports\create_passport_roll.html:57
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:57
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:62
+#: .\production\templates\keeper\accessory\create.html:69
+#: .\production\templates\keeper\color\create.html:47
+#: .\production\templates\keeper\fabrics\create.html:47
+#: .\production\templates\keeper\rolls\create.html:45
+#: .\production\templates\keeper\rolls\edit.html:46
 #: .\production\templates\packer\discrepancies\create.html:45
 #: .\production\templates\packer\discrepancies\detail.html:21
 #: .\production\templates\qc\defects\create.html:46
 #: .\production\templates\qc\defects\detail.html:22
-#: .\production\templates\qc\orders\detail.html:64
+#: .\production\templates\qc\scans\detail.html:68
 #: .\production\templates\technologist\assortments\create.html:45
+#: .\production\templates\technologist\color\create.html:47
 #: .\production\templates\technologist\equipment\create.html:47
+#: .\production\templates\technologist\fabrics\create.html:47
 #: .\production\templates\technologist\nodes\create.html:126
-#: .\production\templates\technologist\passports\assign_operations.html:113
 #: .\production\templates\technologist\passports\create.html:13
 #: .\production\templates\technologist\passports\create_size_quantity.html:38
 #: .\production\templates\technologist\passports\detail.html:40
@@ -199,60 +260,126 @@ msgstr "Создать"
 msgid "Back"
 msgstr "Назад"
 
-#: .\production\templates\admin\branches\detail.html:9
-#: .\production\templates\admin\branches\detail.html:28
+#: .\production\templates\admin\branches\detail.html:7
+#: .\production\templates\admin\branches\detail.html:23
 #: .\production\templates\admin\branches\list.html:26
-#: .\production\templates\base.html:139
+#: .\production\templates\base.html:222
 msgid "Branches"
 msgstr "Филиалы"
 
-#: .\production\templates\admin\branches\detail.html:33
+#: .\production\templates\admin\branches\detail.html:25
+#: .\production\templates\admin\clients\detail.html:30
+#: .\production\templates\admin\employees\detail.html:24
+#: .\production\templates\admin\fixed_salaries\detail.html:25
+#: .\production\templates\keeper\accessory\detail.html:29
+#: .\production\templates\keeper\color\detail.html:29
+#: .\production\templates\keeper\fabrics\detail.html:29
+#: .\production\templates\keeper\rolls\detail.html:32
+#: .\production\templates\technologist\assortments\detail.html:31
+#: .\production\templates\technologist\color\detail.html:29
+#: .\production\templates\technologist\equipment\detail.html:29
+#: .\production\templates\technologist\fabrics\detail.html:29
+#: .\production\templates\technologist\models\detail.html:26
+#: .\production\templates\technologist\nodes\detail.html:31
+#: .\production\templates\technologist\rolls\detail.html:32
+msgid "Un Archive"
+msgstr "Разархивировать"
+
+#: .\production\templates\admin\branches\detail.html:32
 msgid "Branch Details:"
 msgstr "Детали Филиала"
 
-#: .\production\templates\admin\branches\detail.html:48
-#: .\production\templates\cutter\passports\detail.html:110
-#: .\production\templates\technologist\assortments\detail.html:50
-#: .\production\templates\technologist\equipment\detail.html:49
-#: .\production\templates\technologist\nodes\detail.html:82
-#: .\production\templates\technologist\rolls\detail.html:58
+#: .\production\templates\admin\branches\detail.html:56
+msgid "Are you sure you want to unarchive this branch?"
+msgstr "Вы уверены, что хотите разархивировать этот филиал?"
+
+#: .\production\templates\admin\branches\detail.html:58
 msgid "Are you sure you want to delete this branch?"
 msgstr "Вы уверены, что хотите удалить этот филиал?"
 
-#: .\production\templates\admin\branches\detail.html:50
-#: .\production\templates\admin\employees\detail.html:49
-#: .\production\templates\admin\fixed_salaries\detail.html:57
-#: .\production\templates\cutter\passports\detail.html:112
-#: .\production\templates\technologist\assortments\detail.html:52
-#: .\production\templates\technologist\equipment\detail.html:51
-#: .\production\templates\technologist\nodes\detail.html:84
-#: .\production\templates\technologist\rolls\detail.html:60
+#: .\production\templates\admin\branches\detail.html:62
+#: .\production\templates\admin\client\orders\detail.html:126
+#: .\production\templates\admin\employees\detail.html:62
+#: .\production\templates\admin\employees\detail.html:74
+#: .\production\templates\admin\fixed_salaries\detail.html:58
+#: .\production\templates\admin\fixed_salaries\detail.html:68
+#: .\production\templates\keeper\accessory\detail.html:60
+#: .\production\templates\keeper\accessory\detail.html:70
+#: .\production\templates\keeper\color\detail.html:56
+#: .\production\templates\keeper\color\detail.html:66
+#: .\production\templates\keeper\fabrics\detail.html:56
+#: .\production\templates\keeper\fabrics\detail.html:66
+#: .\production\templates\keeper\rolls\detail.html:59
+#: .\production\templates\keeper\rolls\detail.html:69
+#: .\production\templates\technologist\assortments\detail.html:59
+#: .\production\templates\technologist\assortments\detail.html:69
+#: .\production\templates\technologist\color\detail.html:56
+#: .\production\templates\technologist\color\detail.html:66
+#: .\production\templates\technologist\equipment\detail.html:56
+#: .\production\templates\technologist\equipment\detail.html:66
+#: .\production\templates\technologist\fabrics\detail.html:56
+#: .\production\templates\technologist\fabrics\detail.html:66
+#: .\production\templates\technologist\models\detail.html:77
+#: .\production\templates\technologist\models\detail.html:89
+#: .\production\templates\technologist\nodes\detail.html:61
+#: .\production\templates\technologist\nodes\detail.html:71
+#: .\production\templates\technologist\operations\detail.html:91
+#: .\production\templates\technologist\operations\detail.html:101
+#: .\production\templates\technologist\rolls\detail.html:59
+#: .\production\templates\technologist\rolls\detail.html:69
 msgid "Confirm"
 msgstr "Подтвердить"
 
-#: .\production\templates\admin\branches\detail.html:51
+#: .\production\templates\admin\branches\detail.html:63
 #: .\production\templates\admin\branches\edit.html:42
+#: .\production\templates\admin\client\orders\detail.html:127
 #: .\production\templates\admin\client\orders\edit.html:43
 #: .\production\templates\admin\clients\edit.html:42
-#: .\production\templates\admin\employees\detail.html:50
+#: .\production\templates\admin\employees\detail.html:63
+#: .\production\templates\admin\employees\detail.html:75
 #: .\production\templates\admin\employees\edit.html:84
-#: .\production\templates\admin\fixed_salaries\detail.html:58
+#: .\production\templates\admin\fixed_salaries\detail.html:59
+#: .\production\templates\admin\fixed_salaries\detail.html:69
 #: .\production\templates\admin\fixed_salaries\edit.html:44
 #: .\production\templates\admin\orders\edit.html:43
-#: .\production\templates\cutter\passports\detail.html:113
+#: .\production\templates\keeper\accessory\detail.html:61
+#: .\production\templates\keeper\accessory\detail.html:71
+#: .\production\templates\keeper\accessory\edit.html:65
+#: .\production\templates\keeper\color\detail.html:57
+#: .\production\templates\keeper\color\detail.html:67
+#: .\production\templates\keeper\color\edit.html:43
+#: .\production\templates\keeper\fabrics\detail.html:57
+#: .\production\templates\keeper\fabrics\detail.html:67
+#: .\production\templates\keeper\fabrics\edit.html:43
+#: .\production\templates\keeper\rolls\detail.html:60
+#: .\production\templates\keeper\rolls\detail.html:70
 #: .\production\templates\packer\discrepancies\edit.html:12
 #: .\production\templates\qc\defects\edit.html:12
-#: .\production\templates\technologist\assortments\detail.html:53
+#: .\production\templates\technologist\assortments\detail.html:60
+#: .\production\templates\technologist\assortments\detail.html:70
 #: .\production\templates\technologist\assortments\edit.html:45
-#: .\production\templates\technologist\equipment\detail.html:52
+#: .\production\templates\technologist\color\detail.html:57
+#: .\production\templates\technologist\color\detail.html:67
+#: .\production\templates\technologist\color\edit.html:43
+#: .\production\templates\technologist\equipment\detail.html:57
+#: .\production\templates\technologist\equipment\detail.html:67
 #: .\production\templates\technologist\equipment\edit.html:43
-#: .\production\templates\technologist\nodes\detail.html:85
+#: .\production\templates\technologist\fabrics\detail.html:57
+#: .\production\templates\technologist\fabrics\detail.html:67
+#: .\production\templates\technologist\fabrics\edit.html:43
+#: .\production\templates\technologist\models\detail.html:78
+#: .\production\templates\technologist\models\detail.html:90
+#: .\production\templates\technologist\nodes\detail.html:62
+#: .\production\templates\technologist\nodes\detail.html:72
 #: .\production\templates\technologist\nodes\edit.html:130
+#: .\production\templates\technologist\operations\detail.html:92
+#: .\production\templates\technologist\operations\detail.html:102
 #: .\production\templates\technologist\operations\edit.html:46
 #: .\production\templates\technologist\orders\edit.html:12
-#: .\production\templates\technologist\passports\assign_operations.html:134
+#: .\production\templates\technologist\passports\assign_operations.html:152
 #: .\production\templates\technologist\passports\edit.html:12
-#: .\production\templates\technologist\rolls\detail.html:61
+#: .\production\templates\technologist\rolls\detail.html:60
+#: .\production\templates\technologist\rolls\detail.html:70
 msgid "Cancel"
 msgstr "Отмена"
 
@@ -266,10 +393,16 @@ msgstr "Редактировать Филиал"
 #: .\production\templates\admin\employees\edit.html:81
 #: .\production\templates\admin\fixed_salaries\edit.html:41
 #: .\production\templates\admin\orders\edit.html:40
+#: .\production\templates\keeper\accessory\edit.html:62
+#: .\production\templates\keeper\color\edit.html:40
+#: .\production\templates\keeper\fabrics\edit.html:40
+#: .\production\templates\keeper\rolls\edit.html:43
 #: .\production\templates\packer\discrepancies\edit.html:11
 #: .\production\templates\qc\defects\edit.html:11
 #: .\production\templates\technologist\assortments\edit.html:42
+#: .\production\templates\technologist\color\edit.html:40
 #: .\production\templates\technologist\equipment\edit.html:40
+#: .\production\templates\technologist\fabrics\edit.html:40
 #: .\production\templates\technologist\nodes\edit.html:127
 #: .\production\templates\technologist\operations\edit.html:43
 #: .\production\templates\technologist\orders\edit.html:11
@@ -277,6 +410,25 @@ msgstr "Редактировать Филиал"
 #: .\production\templates\technologist\rolls\edit.html:43
 msgid "Update"
 msgstr "Обновить"
+
+#: .\production\templates\admin\branches\list.html:29
+#: .\production\templates\admin\client\orders\list.html:48
+#: .\production\templates\admin\clients\list.html:28
+#: .\production\templates\admin\employees\list.html:29
+#: .\production\templates\admin\fixed_salaries\list.html:30
+#: .\production\templates\keeper\accessory\list.html:31
+#: .\production\templates\keeper\color\list.html:31
+#: .\production\templates\keeper\fabrics\list.html:31
+#: .\production\templates\keeper\rolls\list.html:33
+#: .\production\templates\technologist\assortments\list.html:31
+#: .\production\templates\technologist\color\list.html:31
+#: .\production\templates\technologist\equipment\list.html:31
+#: .\production\templates\technologist\fabrics\list.html:31
+#: .\production\templates\technologist\nodes\list.html:33
+#: .\production\templates\technologist\operations\list.html:111
+#: .\production\templates\technologist\rolls\list.html:33
+msgid "Archived"
+msgstr "Архив"
 
 #: .\production\templates\admin\client\orders\create.html:8
 #: .\production\templates\admin\client\orders\edit.html:8
@@ -289,127 +441,161 @@ msgstr "Заказы"
 msgid "Create New Client Order"
 msgstr "Создать Новый Заказ"
 
-#: .\production\templates\admin\client\orders\detail.html:33
+#: .\production\templates\admin\client\orders\detail.html:32
 msgid "Client Order Details:"
 msgstr "Детали Заказа"
 
-#: .\production\templates\admin\client\orders\detail.html:39
-#: .\production\templates\employee\works\reassigned_list.html:77
+#: .\production\templates\admin\client\orders\detail.html:38
+#: .\production\templates\employee\works\reassigned_list.html:97
 #: .\production\templates\technologist\operations\create.html:43
 #: .\production\templates\technologist\passports\detail.html:25
 msgid "Complete"
 msgstr "Завершить"
 
-#: .\production\templates\admin\client\orders\detail.html:49
-#: .\production\templates\admin\orders\detail.html:69
+#: .\production\templates\admin\client\orders\detail.html:42
+#: .\production\templates\technologist\operations\detail.html:31
+msgid "Unarchive"
+msgstr "Разархивировать"
+
+#: .\production\templates\admin\client\orders\detail.html:50
+#: .\production\templates\admin\orders\detail.html:42
 #: .\production\templates\admin\passports\detail.html:37
-#: .\production\templates\packer\orders\detail.html:54
-#: .\production\templates\qc\orders\detail.html:72
-#: .\production\templates\technologist\orders\detail.html:68
-#: .\production\templates\technologist\passports\assign_operations.html:40
 msgid "Client:"
 msgstr "Клиент"
 
-#: .\production\templates\admin\client\orders\detail.html:50
-#: .\production\templates\admin\orders\detail.html:78
-#: .\production\templates\cutter\orders\detail.html:41
-#: .\production\templates\packer\orders\detail.html:62
-#: .\production\templates\qc\orders\detail.html:80
-#: .\production\templates\technologist\orders\detail.html:76
+#: .\production\templates\admin\client\orders\detail.html:51
+#: .\production\templates\admin\orders\detail.html:62
+#: .\production\templates\cutter\orders\detail.html:52
+#: .\production\templates\packer\orders\detail.html:52
+#: .\production\templates\qc\orders\detail.html:52
+#: .\production\templates\technologist\orders\detail.html:52
 msgid "Term:"
 msgstr "Срок"
 
-#: .\production\templates\admin\client\orders\detail.html:51
-#: .\production\templates\admin\orders\detail.html:79
-#: .\production\templates\cutter\orders\detail.html:42
-#: .\production\templates\packer\orders\detail.html:63
-#: .\production\templates\qc\orders\detail.html:81
-#: .\production\templates\technologist\orders\detail.html:77
+#: .\production\templates\admin\client\orders\detail.html:52
+#: .\production\templates\admin\orders\detail.html:63
+#: .\production\templates\cutter\orders\detail.html:53
+#: .\production\templates\packer\orders\detail.html:53
+#: .\production\templates\qc\orders\detail.html:53
+#: .\production\templates\technologist\orders\detail.html:53
 msgid "Days Left:"
 msgstr "Дней Осталось"
 
-#: .\production\templates\admin\client\orders\detail.html:52
-#: .\production\templates\admin\orders\detail.html:74
-#: .\production\templates\packer\orders\detail.html:59
-#: .\production\templates\qc\orders\detail.html:77
-#: .\production\templates\technologist\orders\detail.html:73
+#: .\production\templates\admin\client\orders\detail.html:53
+#: .\production\templates\admin\orders\detail.html:58
+#: .\production\templates\technologist\cuts\detail.html:213
 msgid "Status:"
 msgstr "Статус"
 
-#: .\production\templates\admin\client\orders\detail.html:67
-#: .\production\templates\admin\orders\detail.html:130
-#: .\production\templates\technologist\orders\detail.html:140
+#: .\production\templates\admin\client\orders\detail.html:78
 msgid "Associated Models"
 msgstr "Связанные Модели"
 
-#: .\production\templates\admin\client\orders\detail.html:70
+#: .\production\templates\admin\client\orders\detail.html:81
 #: .\production\templates\admin\orders\create.html:30
 msgid "Create New Task"
 msgstr "Создать Новую Задачу"
 
-#: .\production\templates\admin\client\orders\detail.html:79
+#: .\production\templates\admin\client\orders\detail.html:93
+#: .\production\templates\admin\orders\detail.html:48
+#: .\production\templates\cutter\orders\detail.html:40
+#: .\production\templates\cutter\orders\list.html:67
+#: .\production\templates\packer\orders\detail.html:40
+#: .\production\templates\packer\orders\list.html:69
+#: .\production\templates\qc\orders\detail.html:40
+#: .\production\templates\qc\orders\list.html:67
+#: .\production\templates\technologist\orders\detail.html:40
+#: .\production\templates\technologist\orders\list.html:69
+msgid "No colors selected"
+msgstr "Цвета не выбраны"
+
+#: .\production\templates\admin\client\orders\detail.html:98
+#: .\production\templates\admin\orders\detail.html:55
+#: .\production\templates\cutter\orders\detail.html:47
+#: .\production\templates\cutter\orders\list.html:72
+#: .\production\templates\packer\orders\detail.html:47
+#: .\production\templates\packer\orders\list.html:74
+#: .\production\templates\qc\orders\detail.html:47
+#: .\production\templates\qc\orders\list.html:72
+#: .\production\templates\technologist\orders\detail.html:47
+#: .\production\templates\technologist\orders\list.html:74
+msgid "No fabrics selected"
+msgstr "Ткани не выбраны"
+
+#: .\production\templates\admin\client\orders\detail.html:99
+#: .\production\templates\cutter\orders\list.html:73
+#: .\production\templates\packer\orders\list.html:75
+#: .\production\templates\qc\orders\list.html:73
+#: .\production\templates\technologist\orders\list.html:75
 msgid "pcs"
 msgstr "шт"
 
-#: .\production\templates\admin\client\orders\detail.html:86
+#: .\production\templates\admin\client\orders\detail.html:106
 msgid "No associated models."
 msgstr "Нет связанных моделей."
 
-#: .\production\templates\admin\client\orders\detail.html:94
-#: .\production\templates\admin\clients\detail.html:49
-#: .\production\templates\technologist\models\detail.html:67
-#: .\production\templates\technologist\operations\detail.html:99
+#: .\production\templates\admin\client\orders\detail.html:114
+#: .\production\templates\admin\clients\detail.html:57
 msgid "Are you sure you want to delete this client?"
 msgstr "Вы уверены, что хотите удалить этого клиента?"
+
+#: .\production\templates\admin\client\orders\detail.html:124
+msgid "Are you sure you want to unarchive this client order?"
+msgstr "Вы уверены, что хотите разархивировать этого клиента?"
 
 #: .\production\templates\admin\client\orders\edit.html:29
 msgid "Edit Client Order:"
 msgstr "Редактировать заказ"
 
-#: .\production\templates\admin\client\orders\list.html:28
-#: .\production\templates\cutter\orders\list.html:28
-#: .\production\templates\packer\orders\list.html:37
-#: .\production\templates\qc\orders\list.html:28
-#: .\production\templates\technologist\operations\list.html:99
-#: .\production\templates\technologist\orders\list.html:29
+#: .\production\templates\admin\client\orders\list.html:25
+#: .\production\templates\cutter\orders\list.html:29
+#: .\production\templates\packer\orders\list.html:30
+#: .\production\templates\qc\orders\list.html:29
+#: .\production\templates\technologist\operations\list.html:91
+#: .\production\templates\technologist\orders\list.html:30
 msgid "All"
 msgstr "Все"
 
-#: .\production\templates\admin\client\orders\list.html:32
-#: .\production\templates\cutter\orders\list.html:32
-#: .\production\templates\packer\orders\list.html:41
-#: .\production\templates\qc\orders\list.html:32
-#: .\production\templates\technologist\orders\list.html:33
+#: .\production\templates\admin\client\orders\list.html:28
+#: .\production\templates\cutter\orders\list.html:33
+#: .\production\templates\packer\orders\list.html:34
+#: .\production\templates\qc\orders\list.html:33
+#: .\production\templates\technologist\orders\list.html:34
 msgid "New"
 msgstr "Новые"
 
-#: .\production\templates\admin\client\orders\list.html:36
-#: .\production\templates\cutter\orders\list.html:36
-#: .\production\templates\packer\orders\list.html:45
-#: .\production\templates\qc\orders\list.html:36
-#: .\production\templates\technologist\orders\list.html:37
+#: .\production\templates\admin\client\orders\list.html:31
+#: .\production\templates\cutter\orders\list.html:37
+#: .\production\templates\packer\orders\list.html:38
+#: .\production\templates\qc\orders\list.html:37
+#: .\production\templates\technologist\orders\list.html:38
 msgid "In Progress"
 msgstr "В Работе"
 
-#: .\production\templates\admin\client\orders\list.html:40
-#: .\production\templates\cutter\orders\list.html:40
-#: .\production\templates\packer\orders\list.html:49
-#: .\production\templates\qc\orders\list.html:40
-#: .\production\templates\technologist\orders\list.html:41
+#: .\production\templates\admin\client\orders\list.html:34
+#: .\production\templates\admin\cuts\detail.html:103
+#: .\production\templates\cutter\cuts\detail.html:110
+#: .\production\templates\cutter\orders\list.html:41
+#: .\production\templates\packer\cuts\detail.html:96
+#: .\production\templates\packer\orders\list.html:42
+#: .\production\templates\qc\cuts\detail.html:96
+#: .\production\templates\qc\orders\list.html:41
+#: .\production\templates\technologist\cuts\detail.html:96
+#: .\production\templates\technologist\orders\list.html:42
 msgid "Completed"
 msgstr "Завершенные"
 
-#: .\production\templates\admin\client\orders\list.html:47
-#: .\production\templates\dashboard.html:465
+#: .\production\templates\admin\client\orders\list.html:45
+#: .\production\templates\dashboard.html:475
 msgid "Client Orders"
 msgstr "Заказы"
 
-#: .\production\templates\admin\client\orders\list.html:82
+#: .\production\templates\admin\client\orders\list.html:84
 #: .\production\templates\admin\orders\list.html:16
-#: .\production\templates\cutter\orders\list.html:57
-#: .\production\templates\packer\orders\list.html:70
-#: .\production\templates\qc\orders\list.html:57
-#: .\production\templates\technologist\orders\list.html:60
+#: .\production\templates\cutter\orders\list.html:74
+#: .\production\templates\packer\orders\list.html:76
+#: .\production\templates\qc\orders\list.html:74
+#: .\production\templates\technologist\orders\list.html:76
 msgid "Days left:"
 msgstr "Дней Осталось"
 
@@ -423,29 +609,303 @@ msgid "Create New Client"
 msgstr "Создать Нового Клиента"
 
 #: .\production\templates\admin\clients\detail.html:9
-#: .\production\templates\admin\employees\detail.html:10
-#: .\production\templates\admin\salaries\list.html:57
-msgid "Employee"
-msgstr "Сотрудник"
+#: .\production\templates\admin\clients\detail.html:28
+#: .\production\templates\dashboard.html:515
+#: .\production\templates\dashboard.html:587
+msgid "Client"
+msgstr "Клиент"
 
-#: .\production\templates\admin\clients\detail.html:33
+#: .\production\templates\admin\clients\detail.html:36
 msgid "Client Details:"
 msgstr "Детали клиента"
 
-#: .\production\templates\admin\clients\detail.html:34
+#: .\production\templates\admin\clients\detail.html:37
 msgid "Contact Info:"
 msgstr "Контактная Информация"
+
+#: .\production\templates\admin\clients\detail.html:67
+msgid "Are you sure you want to unarchive this client?"
+msgstr "Вы уверены, что хотите разархивировать этого клиента?"
 
 #: .\production\templates\admin\clients\edit.html:28
 msgid "Edit Client:"
 msgstr "Редактировать Клиента"
 
 #: .\production\templates\admin\clients\list.html:26
-#: .\production\templates\base.html:133
+#: .\production\templates\base.html:213
 #: .\production\templates\dashboard.html:242
-#: .\production\templates\dashboard.html:458
+#: .\production\templates\dashboard.html:468
 msgid "Clients"
 msgstr "Клиенты"
+
+#: .\production\templates\admin\cuts\detail.html:30
+#: .\production\templates\cutter\cuts\detail.html:30
+#: .\production\templates\packer\cuts\detail.html:30
+#: .\production\templates\qc\cuts\detail.html:30
+#: .\production\templates\technologist\cuts\detail.html:30
+msgid "Cut Details for Cut:"
+msgstr "Детали кроя:"
+
+#: .\production\templates\admin\cuts\detail.html:34
+#: .\production\templates\cutter\cuts\detail.html:34
+#: .\production\templates\packer\cuts\detail.html:34
+#: .\production\templates\qc\cuts\detail.html:34
+#: .\production\templates\technologist\cuts\detail.html:34
+msgid "Cut Information"
+msgstr "Информация о крое"
+
+#: .\production\templates\admin\cuts\detail.html:35
+#: .\production\templates\admin\orders\detail.html:121
+#: .\production\templates\admin\passports\detail.html:43
+#: .\production\templates\cutter\cuts\detail.html:35
+#: .\production\templates\cutter\orders\detail.html:107
+#: .\production\templates\cutter\passports\detail.html:44
+#: .\production\templates\packer\cuts\detail.html:35
+#: .\production\templates\packer\orders\detail.html:104
+#: .\production\templates\packer\passports\detail.html:45
+#: .\production\templates\qc\cuts\detail.html:35
+#: .\production\templates\qc\orders\detail.html:104
+#: .\production\templates\qc\passports\detail.html:45
+#: .\production\templates\technologist\cuts\detail.html:35
+#: .\production\templates\technologist\orders\detail.html:104
+#: .\production\templates\technologist\passports\assign_operations.html:42
+msgid "Date:"
+msgstr "Дата"
+
+#: .\production\templates\admin\cuts\detail.html:36
+#: .\production\templates\cutter\cuts\detail.html:36
+#: .\production\templates\cutter\passports\detail.html:45
+#: .\production\templates\packer\cuts\detail.html:36
+#: .\production\templates\packer\passports\detail.html:46
+#: .\production\templates\qc\cuts\detail.html:36
+#: .\production\templates\qc\passports\detail.html:46
+#: .\production\templates\technologist\cuts\detail.html:36
+msgid "Order:"
+msgstr "Заказы"
+
+#: .\production\templates\admin\cuts\detail.html:37
+#: .\production\templates\admin\orders\detail.html:43
+#: .\production\templates\admin\passports\detail.html:36
+#: .\production\templates\cutter\cuts\detail.html:37
+#: .\production\templates\cutter\orders\detail.html:35
+#: .\production\templates\cutter\passports\detail.html:46
+#: .\production\templates\employee\works\pending_list.html:67
+#: .\production\templates\employee\works\reassigned_list.html:68
+#: .\production\templates\packer\cuts\detail.html:37
+#: .\production\templates\packer\orders\detail.html:35
+#: .\production\templates\packer\passports\detail.html:47
+#: .\production\templates\qc\cuts\detail.html:37
+#: .\production\templates\qc\orders\detail.html:35
+#: .\production\templates\qc\passports\detail.html:47
+#: .\production\templates\technologist\cuts\detail.html:37
+#: .\production\templates\technologist\cuts\detail.html:211
+#: .\production\templates\technologist\orders\detail.html:35
+#: .\production\templates\technologist\passports\assign_operations.html:39
+msgid "Model:"
+msgstr "Модель"
+
+#: .\production\templates\admin\cuts\detail.html:41
+#: .\production\templates\cutter\cuts\detail.html:39
+#: .\production\templates\packer\cuts\detail.html:39
+#: .\production\templates\qc\cuts\detail.html:39
+#: .\production\templates\technologist\cuts\detail.html:39
+msgid "Size Quantities"
+msgstr "Размер и Количество"
+
+#: .\production\templates\admin\cuts\detail.html:44
+#: .\production\templates\admin\errors\detail.html:68
+#: .\production\templates\admin\errors\detail.html:130
+#: .\production\templates\admin\errors\detail.html:234
+#: .\production\templates\admin\orders\create_size_quantity.html:73
+#: .\production\templates\admin\orders\detail.html:86
+#: .\production\templates\cutter\consumptions\create.html:80
+#: .\production\templates\cutter\cuts\detail.html:64
+#: .\production\templates\cutter\cuts\detail.html:99
+#: .\production\templates\cutter\passports\create.html:72
+#: .\production\templates\cutter\passports\create_passport_roll.html:50
+#: .\production\templates\cutter\passports\create_passport_roll.html:102
+#: .\production\templates\cutter\passports\create_passport_roll.html:203
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:55
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:108
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:208
+#: .\production\templates\packer\discrepancies\detail.html:19
+#: .\production\templates\qc\defects\detail.html:20
+#: .\production\templates\technologist\passports\create_size_quantity.html:30
+#: .\production\templates\technologist\passports\create_size_quantity.html:46
+#: .\production\templates\technologist\passports\detail.html:38
+msgid "Edit"
+msgstr "Редактировать"
+
+#: .\production\templates\admin\cuts\detail.html:50
+#: .\production\templates\admin\errors\detail.html:36
+#: .\production\templates\admin\orders\detail.html:93
+#: .\production\templates\admin\salaries\detail.html:71
+#: .\production\templates\cutter\cuts\detail.html:43
+#: .\production\templates\cutter\orders\detail.html:70
+#: .\production\templates\cutter\passports\detail.html:62
+#: .\production\templates\employee\works\done_list.html:74
+#: .\production\templates\packer\cuts\detail.html:43
+#: .\production\templates\packer\discrepancies\detail.html:11
+#: .\production\templates\packer\orders\detail.html:70
+#: .\production\templates\packer\passports\detail.html:63
+#: .\production\templates\qc\cuts\detail.html:43
+#: .\production\templates\qc\defects\detail.html:11
+#: .\production\templates\qc\orders\detail.html:70
+#: .\production\templates\qc\passports\detail.html:63
+#: .\production\templates\technologist\cuts\detail.html:43
+#: .\production\templates\technologist\orders\detail.html:70
+msgid "Size"
+msgstr "Размер"
+
+#: .\production\templates\admin\cuts\detail.html:51
+#: .\production\templates\admin\orders\detail.html:94
+#: .\production\templates\base.html:152
+#: .\production\templates\cutter\cuts\detail.html:44
+#: .\production\templates\cutter\orders\detail.html:71
+#: .\production\templates\dashboard.html:659
+#: .\production\templates\dashboard.html:739
+#: .\production\templates\keeper\color\list.html:29
+#: .\production\templates\packer\cuts\detail.html:44
+#: .\production\templates\packer\orders\detail.html:71
+#: .\production\templates\qc\cuts\detail.html:44
+#: .\production\templates\qc\orders\detail.html:71
+#: .\production\templates\technologist\cuts\detail.html:44
+#: .\production\templates\technologist\orders\detail.html:71
+msgid "Color"
+msgstr "Цвет"
+
+#: .\production\templates\admin\cuts\detail.html:52
+#: .\production\templates\cutter\cuts\detail.html:45
+#: .\production\templates\packer\cuts\detail.html:45
+#: .\production\templates\qc\cuts\detail.html:45
+#: .\production\templates\technologist\cuts\detail.html:45
+msgid "Required Quantity"
+msgstr "Необходимое Количество"
+
+#: .\production\templates\admin\cuts\detail.html:66
+#: .\production\templates\cutter\cuts\detail.html:61
+#: .\production\templates\packer\cuts\detail.html:59
+#: .\production\templates\qc\cuts\detail.html:59
+#: .\production\templates\technologist\cuts\detail.html:59
+msgid "Consumptions"
+msgstr "Расход"
+
+#: .\production\templates\admin\cuts\detail.html:70
+#: .\production\templates\cutter\cuts\detail.html:70
+#: .\production\templates\packer\cuts\detail.html:63
+#: .\production\templates\qc\cuts\detail.html:63
+#: .\production\templates\technologist\cuts\detail.html:63
+msgid "Fabric"
+msgstr "Ткани"
+
+#: .\production\templates\admin\cuts\detail.html:71
+#: .\production\templates\cutter\cuts\detail.html:71
+#: .\production\templates\packer\cuts\detail.html:64
+#: .\production\templates\qc\cuts\detail.html:64
+#: .\production\templates\technologist\cuts\detail.html:64
+msgid "Width"
+msgstr "Ширина"
+
+#: .\production\templates\admin\cuts\detail.html:72
+#: .\production\templates\cutter\cuts\detail.html:72
+#: .\production\templates\packer\cuts\detail.html:65
+#: .\production\templates\qc\cuts\detail.html:65
+#: .\production\templates\technologist\cuts\detail.html:65
+msgid "Length"
+msgstr "Длина"
+
+#: .\production\templates\admin\cuts\detail.html:73
+#: .\production\templates\cutter\cuts\detail.html:73
+#: .\production\templates\packer\cuts\detail.html:66
+#: .\production\templates\qc\cuts\detail.html:66
+#: .\production\templates\technologist\cuts\detail.html:66
+msgid "Factual"
+msgstr "Фактический"
+
+#: .\production\templates\admin\cuts\detail.html:74
+#: .\production\templates\cutter\cuts\detail.html:74
+#: .\production\templates\packer\cuts\detail.html:67
+#: .\production\templates\qc\cuts\detail.html:67
+#: .\production\templates\technologist\cuts\detail.html:67
+msgid "Commerce"
+msgstr "Коммерческий"
+
+#: .\production\templates\admin\cuts\detail.html:88
+#: .\production\templates\cutter\cuts\detail.html:88
+#: .\production\templates\packer\cuts\detail.html:81
+#: .\production\templates\qc\cuts\detail.html:81
+#: .\production\templates\technologist\cuts\detail.html:81
+msgid "No consumptions available."
+msgstr "Нет доступных расходов"
+
+#: .\production\templates\admin\cuts\detail.html:94
+#: .\production\templates\cutter\cuts\detail.html:96
+#: .\production\templates\dashboard.html:478
+#: .\production\templates\packer\cuts\detail.html:87
+#: .\production\templates\qc\cuts\detail.html:87
+#: .\production\templates\technologist\cuts\detail.html:87
+#: .\production\templates\technologist\passports\list.html:7
+msgid "Passports"
+msgstr "Паспорта"
+
+#: .\production\templates\admin\cuts\detail.html:98
+#: .\production\templates\cutter\cuts\detail.html:105
+#: .\production\templates\packer\cuts\detail.html:91
+#: .\production\templates\qc\cuts\detail.html:91
+#: .\production\templates\technologist\cuts\detail.html:91
+msgid "Number"
+msgstr "Номер"
+
+#: .\production\templates\admin\cuts\detail.html:99
+#: .\production\templates\cutter\cuts\detail.html:106
+#: .\production\templates\packer\cuts\detail.html:92
+#: .\production\templates\qc\cuts\detail.html:92
+#: .\production\templates\technologist\cuts\detail.html:92
+#: .\production\templates\technologist\passports\detail.html:11
+msgid "Roll"
+msgstr "Рулон"
+
+#: .\production\templates\admin\cuts\detail.html:100
+#: .\production\templates\cutter\cuts\detail.html:107
+#: .\production\templates\packer\cuts\detail.html:93
+#: .\production\templates\qc\cuts\detail.html:93
+#: .\production\templates\technologist\cuts\detail.html:93
+msgid "Meters"
+msgstr "Метров"
+
+#: .\production\templates\admin\cuts\detail.html:101
+#: .\production\templates\cutter\cuts\detail.html:108
+#: .\production\templates\packer\cuts\detail.html:94
+#: .\production\templates\qc\cuts\detail.html:94
+#: .\production\templates\technologist\cuts\detail.html:94
+msgid "Layers"
+msgstr "Слои"
+
+#: .\production\templates\admin\cuts\detail.html:102
+#: .\production\templates\admin\salaries\detail.html:21
+#: .\production\templates\admin\salaries\detail.html:72
+#: .\production\templates\cutter\cuts\detail.html:109
+#: .\production\templates\cutter\passports\detail.html:63
+#: .\production\templates\dashboard.html:656
+#: .\production\templates\employee\works\done_list.html:75
+#: .\production\templates\packer\cuts\detail.html:95
+#: .\production\templates\packer\discrepancies\detail.html:12
+#: .\production\templates\packer\passports\detail.html:64
+#: .\production\templates\qc\cuts\detail.html:95
+#: .\production\templates\qc\defects\detail.html:12
+#: .\production\templates\qc\passports\detail.html:64
+#: .\production\templates\technologist\cuts\detail.html:95
+#: .\production\templates\technologist\passports\assign_operations.html:142
+msgid "Quantity"
+msgstr "Количество"
+
+#: .\production\templates\admin\cuts\detail.html:122
+#: .\production\templates\cutter\cuts\detail.html:129
+#: .\production\templates\packer\cuts\detail.html:115
+#: .\production\templates\qc\cuts\detail.html:115
+#: .\production\templates\technologist\cuts\detail.html:115
+msgid "No passports available."
+msgstr "Нет доступных паспортов."
 
 #: .\production\templates\admin\employees\create.html:8
 #: .\production\templates\admin\employees\edit.html:11
@@ -459,7 +919,7 @@ msgstr "Создать Нового Пользователя"
 
 #: .\production\templates\admin\employees\create.html:35
 #: .\production\templates\admin\employees\edit.html:38
-#: .\production\templates\registration\login.html:94
+#: .\production\templates\login.html:94
 msgid "Username"
 msgstr "Имя Пользователя"
 
@@ -474,7 +934,7 @@ msgid "Last Name"
 msgstr "Фамилия"
 
 #: .\production\templates\admin\employees\create.html:48
-#: .\production\templates\registration\login.html:107
+#: .\production\templates\login.html:107
 msgid "Password"
 msgstr "Пароль"
 
@@ -484,13 +944,13 @@ msgstr "Подтвердить Пароль"
 
 #: .\production\templates\admin\employees\create.html:58
 #: .\production\templates\admin\employees\edit.html:51
-#: .\production\templates\dashboard.html:779
+#: .\production\templates\dashboard.html:805
 msgid "Employee ID"
 msgstr "ID Сотрудника"
 
 #: .\production\templates\admin\employees\create.html:62
 #: .\production\templates\admin\employees\edit.html:55
-#: .\production\templates\admin\salaries\detail.html:65
+#: .\production\templates\admin\salaries\detail.html:69
 #: .\production\templates\technologist\nodes\create.html:116
 #: .\production\templates\technologist\nodes\edit.html:120
 msgid "Type"
@@ -499,9 +959,10 @@ msgstr "Тип"
 #: .\production\templates\admin\employees\create.html:66
 #: .\production\templates\admin\employees\edit.html:59
 #: .\production\templates\admin\errors\detail.html:39
-#: .\production\templates\dashboard.html:506
+#: .\production\templates\dashboard.html:516
 #: .\production\templates\packer\discrepancies\detail.html:13
 #: .\production\templates\qc\defects\detail.html:14
+#: .\production\templates\technologist\cuts\detail.html:128
 msgid "Status"
 msgstr "Статус"
 
@@ -510,36 +971,44 @@ msgstr "Статус"
 msgid "Station"
 msgstr "Станция"
 
-#: .\production\templates\admin\employees\detail.html:28
+#: .\production\templates\admin\employees\detail.html:7
+#: .\production\templates\admin\salaries\list.html:57
+msgid "Employee"
+msgstr "Сотрудник"
+
+#: .\production\templates\admin\employees\detail.html:22
 msgid "Employee Details:"
 msgstr "Детали Сотрудника"
 
-#: .\production\templates\admin\employees\detail.html:33
+#: .\production\templates\admin\employees\detail.html:30
 #: .\production\templates\admin\errors\detail.html:53
 msgid "Employee ID:"
 msgstr "ID Сотрудника"
 
-#: .\production\templates\admin\employees\detail.html:34
+#: .\production\templates\admin\employees\detail.html:31
 msgid "Full Name:"
 msgstr "ФИО"
 
-#: .\production\templates\admin\employees\detail.html:35
+#: .\production\templates\admin\employees\detail.html:32
 msgid "Username:"
 msgstr "Имя Пользователя"
 
-#: .\production\templates\admin\employees\detail.html:36
-#: .\production\templates\technologist\nodes\detail.html:66
+#: .\production\templates\admin\employees\detail.html:33
+#: .\production\templates\technologist\nodes\detail.html:39
 msgid "Type:"
 msgstr "Тип"
 
-#: .\production\templates\admin\employees\detail.html:37
+#: .\production\templates\admin\employees\detail.html:34
 msgid "Station:"
 msgstr "Станция"
 
-#: .\production\templates\admin\employees\detail.html:47
-#: .\production\templates\admin\fixed_salaries\detail.html:55
-msgid "Are you sure you want to delete this Emplyees?"
+#: .\production\templates\admin\employees\detail.html:59
+msgid "Are you sure you want to delete this employee?"
 msgstr "Вы уверены, что хотите удалить этого сотрудника?"
+
+#: .\production\templates\admin\employees\detail.html:71
+msgid "Are you sure you want to unarchive this employee?"
+msgstr "Вы уверены, что хотите разархивировать этого сотрудника?"
 
 #: .\production\templates\admin\employees\edit.html:32
 msgid "Edit Employee Details"
@@ -554,35 +1023,34 @@ msgid "New Password"
 msgstr "Новый Пароль"
 
 #: .\production\templates\admin\employees\list.html:27
-#: .\production\templates\base.html:130
+#: .\production\templates\base.html:209
 #: .\production\templates\dashboard.html:251
 msgid "Employees"
 msgstr "Сотрудники"
 
-#: .\production\templates\admin\employees\list.html:29
+#: .\production\templates\admin\employees\list.html:30
 msgid "Upload"
 msgstr "Загрузить"
 
-#: .\production\templates\admin\employees\list.html:43
-#: .\production\templates\technologist\operations\list.html:133
+#: .\production\templates\admin\employees\list.html:44
+#: .\production\templates\technologist\operations\list.html:120
 msgid "Upload Employees"
 msgstr "Загрузить Сотрудников"
 
-#: .\production\templates\admin\employees\list.html:50
-#: .\production\templates\technologist\operations\list.html:140
+#: .\production\templates\admin\employees\list.html:51
+#: .\production\templates\technologist\operations\list.html:127
 msgid "Choose Excel file"
 msgstr "Выбрать Excel файл"
 
-#: .\production\templates\admin\employees\list.html:56
-#: .\production\templates\technologist\operations\list.html:146
-#: .\production\templates\technologist\passports\assign_operations.html:133
+#: .\production\templates\admin\employees\list.html:57
+#: .\production\templates\technologist\operations\list.html:133
+#: .\production\templates\technologist\passports\assign_operations.html:151
 msgid "Submit"
 msgstr "Сохранить"
 
-#: .\production\templates\admin\employees\list.html:57
-#: .\production\templates\admin\orders\detail.html:60
-#: .\production\templates\technologist\operations\list.html:147
-#: .\production\templates\technologist\orders\detail.html:59
+#: .\production\templates\admin\employees\list.html:58
+#: .\production\templates\technologist\cuts\detail.html:182
+#: .\production\templates\technologist\operations\list.html:134
 msgid "Close"
 msgstr "Закрыть"
 
@@ -595,7 +1063,8 @@ msgid "Discrepancy Details"
 msgstr "Детали Несоответствия"
 
 #: .\production\templates\admin\errors\detail.html:34
-#: .\production\templates\cutter\passports\detail.html:43
+#: .\production\templates\admin\salaries\detail.html:18
+#: .\production\templates\employee\works\done_list.html:71
 #: .\production\templates\packer\discrepancies\detail.html:9
 #: .\production\templates\qc\defects\detail.html:9
 #: .\production\templates\technologist\passports\detail.html:9
@@ -604,40 +1073,33 @@ msgid "Model"
 msgstr "Модель"
 
 #: .\production\templates\admin\errors\detail.html:35
-#: .\production\templates\admin\salaries\detail.html:66
+#: .\production\templates\admin\salaries\detail.html:70
 #: .\production\templates\packer\discrepancies\detail.html:10
 #: .\production\templates\qc\defects\detail.html:10
 msgid "Passport"
 msgstr "Паспорт"
-
-#: .\production\templates\admin\errors\detail.html:36
-#: .\production\templates\admin\salaries\detail.html:67
-#: .\production\templates\cutter\passports\detail.html:85
-#: .\production\templates\employee\works\done_list.html:72
-#: .\production\templates\packer\discrepancies\detail.html:11
-#: .\production\templates\qc\defects\detail.html:11
-msgid "Size"
-msgstr "Размер"
 
 #: .\production\templates\admin\errors\detail.html:37
 msgid "Piece"
 msgstr "Единица"
 
 #: .\production\templates\admin\errors\detail.html:38
-#: .\production\templates\admin\salaries\detail.html:70
+#: .\production\templates\admin\salaries\detail.html:74
 msgid "Cost"
 msgstr "Стоимость"
 
 #: .\production\templates\admin\errors\detail.html:40
-#: .\production\templates\admin\salaries\detail.html:69
+#: .\production\templates\admin\salaries\detail.html:73
 #: .\production\templates\packer\discrepancies\detail.html:14
 #: .\production\templates\qc\defects\detail.html:15
+#: .\production\templates\technologist\cuts\detail.html:129
 msgid "Reported Date"
 msgstr "Дата Сообщения"
 
 #: .\production\templates\admin\errors\detail.html:41
 #: .\production\templates\packer\discrepancies\detail.html:15
 #: .\production\templates\qc\defects\detail.html:16
+#: .\production\templates\technologist\cuts\detail.html:130
 msgid "Resolved Date"
 msgstr "Дата Разрешения"
 
@@ -658,36 +1120,15 @@ msgstr "Назначить"
 msgid "Employee:"
 msgstr "Сотрудник"
 
-#: .\production\templates\admin\errors\detail.html:68
-#: .\production\templates\admin\errors\detail.html:130
-#: .\production\templates\admin\errors\detail.html:234
-#: .\production\templates\admin\orders\create_size_quantity.html:50
-#: .\production\templates\admin\orders\create_size_quantity.html:67
-#: .\production\templates\admin\orders\detail.html:120
-#: .\production\templates\admin\orders\detail.html:184
-#: .\production\templates\cutter\passports\create_passport_roll.html:50
-#: .\production\templates\cutter\passports\create_passport_roll.html:102
-#: .\production\templates\cutter\passports\create_passport_roll.html:203
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:50
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:103
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:203
-#: .\production\templates\cutter\passports\detail.html:61
-#: .\production\templates\cutter\passports\detail.html:81
-#: .\production\templates\packer\discrepancies\detail.html:19
-#: .\production\templates\qc\defects\detail.html:20
-#: .\production\templates\technologist\passports\create_size_quantity.html:30
-#: .\production\templates\technologist\passports\create_size_quantity.html:46
-#: .\production\templates\technologist\passports\detail.html:38
-msgid "Edit"
-msgstr "Редактировать"
-
 #: .\production\templates\admin\errors\detail.html:69
-#: .\production\templates\admin\orders\create_size_quantity.html:51
-#: .\production\templates\admin\orders\create_size_quantity.html:66
-#: .\production\templates\admin\orders\detail.html:121
-#: .\production\templates\admin\orders\detail.html:183
+#: .\production\templates\admin\orders\create_size_quantity.html:57
+#: .\production\templates\admin\orders\create_size_quantity.html:72
+#: .\production\templates\cutter\consumptions\create.html:66
+#: .\production\templates\cutter\consumptions\create.html:79
+#: .\production\templates\cutter\passports\create.html:58
+#: .\production\templates\cutter\passports\create.html:71
 #: .\production\templates\cutter\passports\create_passport_roll.html:51
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:51
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:56
 #: .\production\templates\packer\discrepancies\detail.html:20
 #: .\production\templates\qc\defects\detail.html:21
 #: .\production\templates\technologist\passports\create_size_quantity.html:31
@@ -699,15 +1140,18 @@ msgstr "Удалить"
 #: .\production\templates\admin\errors\detail.html:127
 #: .\production\templates\admin\errors\detail.html:231
 #: .\production\templates\admin\orders\create.html:41
-#: .\production\templates\admin\orders\create_size_quantity.html:68
-#: .\production\templates\admin\orders\detail.html:185
+#: .\production\templates\admin\orders\create_size_quantity.html:74
+#: .\production\templates\cutter\consumptions\create.html:71
+#: .\production\templates\cutter\consumptions\create.html:81
+#: .\production\templates\cutter\passports\create.html:63
+#: .\production\templates\cutter\passports\create.html:73
 #: .\production\templates\cutter\passports\create_passport_roll.html:56
 #: .\production\templates\cutter\passports\create_passport_roll.html:99
 #: .\production\templates\cutter\passports\create_passport_roll.html:200
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:56
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:100
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:200
-#: .\production\templates\qc\orders\detail.html:63
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:61
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:105
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:205
+#: .\production\templates\qc\scans\detail.html:67
 #: .\production\templates\technologist\models\edit.html:126
 #: .\production\templates\technologist\passports\create_size_quantity.html:47
 msgid "Save"
@@ -726,28 +1170,36 @@ msgstr "Оклад"
 msgid "Create New Fixed Salary"
 msgstr "Создать Новую Оклад"
 
-#: .\production\templates\admin\fixed_salaries\detail.html:10
-#: .\production\templates\admin\fixed_salaries\list.html:27
-#: .\production\templates\base.html:145
+#: .\production\templates\admin\fixed_salaries\detail.html:7
+#: .\production\templates\admin\fixed_salaries\list.html:28
+#: .\production\templates\base.html:231
 msgid "Fixed Salaries"
 msgstr "Оклад"
 
-#: .\production\templates\admin\fixed_salaries\detail.html:28
+#: .\production\templates\admin\fixed_salaries\detail.html:23
 msgid "Fixed Salary Details:"
 msgstr "Детали Оклада"
 
-#: .\production\templates\admin\fixed_salaries\detail.html:33
+#: .\production\templates\admin\fixed_salaries\detail.html:31
 msgid "Salary:"
 msgstr "Зарплата"
 
-#: .\production\templates\admin\fixed_salaries\detail.html:34
+#: .\production\templates\admin\fixed_salaries\detail.html:32
 msgid "Employees:"
 msgstr "Сотрудники"
 
-#: .\production\templates\admin\fixed_salaries\detail.html:44
-#: .\production\templates\technologist\models\detail.html:48
+#: .\production\templates\admin\fixed_salaries\detail.html:40
+#: .\production\templates\technologist\models\detail.html:46
 msgid "No operations associated with this model."
 msgstr "С этой моделью не связано операций."
+
+#: .\production\templates\admin\fixed_salaries\detail.html:56
+msgid "Are you sure you want to delete this salary?"
+msgstr "Вы уверены, что хотите удалить эту зарплату?"
+
+#: .\production\templates\admin\fixed_salaries\detail.html:66
+msgid "Are you sure you want to unarchive this salary?"
+msgstr "Вы уверены, что хотите разархивировать этот паспорт?"
 
 #: .\production\templates\admin\fixed_salaries\edit.html:30
 msgid "Edit Fixed Salary:"
@@ -758,15 +1210,13 @@ msgid "Add Size and Quantity for Order:"
 msgstr "Добавить Размер и Количество для Заказа"
 
 #: .\production\templates\admin\orders\create_size_quantity.html:36
-#: .\production\templates\admin\orders\create_size_quantity.html:48
-#: .\production\templates\admin\orders\create_size_quantity.html:70
-#: .\production\templates\admin\orders\detail.html:105
-#: .\production\templates\admin\orders\detail.html:118
-#: .\production\templates\admin\orders\detail.html:187
+#: .\production\templates\admin\orders\create_size_quantity.html:52
+#: .\production\templates\admin\orders\create_size_quantity.html:76
 #: .\production\templates\cutter\passports\create_passport_size_quantity.html:36
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:48
-#: .\production\templates\employee\works\pending_list.html:59
-#: .\production\templates\employee\works\reassigned_list.html:60
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:52
+#: .\production\templates\employee\works\pending_list.html:75
+#: .\production\templates\employee\works\reassigned_list.html:76
+#: .\production\templates\technologist\cuts\detail.html:212
 #: .\production\templates\technologist\passports\create_size_quantity.html:13
 #: .\production\templates\technologist\passports\create_size_quantity.html:28
 #: .\production\templates\technologist\passports\create_size_quantity.html:49
@@ -774,165 +1224,159 @@ msgid "Size:"
 msgstr "Размер"
 
 #: .\production\templates\admin\orders\create_size_quantity.html:40
-#: .\production\templates\admin\orders\create_size_quantity.html:49
-#: .\production\templates\admin\orders\create_size_quantity.html:71
-#: .\production\templates\admin\orders\detail.html:75
-#: .\production\templates\admin\orders\detail.html:109
-#: .\production\templates\admin\orders\detail.html:119
-#: .\production\templates\admin\orders\detail.html:188
-#: .\production\templates\cutter\orders\detail.html:39
+#: .\production\templates\admin\orders\create_size_quantity.html:53
+#: .\production\templates\admin\orders\create_size_quantity.html:77
+#: .\production\templates\admin\orders\detail.html:59
+#: .\production\templates\cutter\orders\detail.html:50
+#: .\production\templates\cutter\passports\create.html:55
+#: .\production\templates\cutter\passports\create.html:78
 #: .\production\templates\cutter\passports\create_passport_size_quantity.html:40
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:49
-#: .\production\templates\packer\orders\detail.html:60
-#: .\production\templates\qc\orders\detail.html:78
-#: .\production\templates\technologist\orders\detail.html:74
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:53
+#: .\production\templates\keeper\accessory\detail.html:36
+#: .\production\templates\packer\orders\detail.html:50
+#: .\production\templates\qc\orders\detail.html:50
+#: .\production\templates\technologist\orders\detail.html:50
 #: .\production\templates\technologist\passports\create_size_quantity.html:17
 #: .\production\templates\technologist\passports\create_size_quantity.html:29
 #: .\production\templates\technologist\passports\create_size_quantity.html:50
 msgid "Quantity:"
 msgstr "Количество"
 
-#: .\production\templates\admin\orders\create_size_quantity.html:43
-#: .\production\templates\admin\orders\detail.html:112
+#: .\production\templates\admin\orders\create_size_quantity.html:44
+#: .\production\templates\admin\orders\create_size_quantity.html:54
+#: .\production\templates\admin\orders\create_size_quantity.html:78
+#: .\production\templates\admin\orders\detail.html:44
+#: .\production\templates\admin\passports\detail.html:41
+#: .\production\templates\cutter\orders\detail.html:36
+#: .\production\templates\cutter\passports\detail.html:47
+#: .\production\templates\keeper\rolls\detail.html:38
+#: .\production\templates\packer\orders\detail.html:36
+#: .\production\templates\packer\passports\detail.html:48
+#: .\production\templates\qc\orders\detail.html:36
+#: .\production\templates\qc\passports\detail.html:48
+#: .\production\templates\technologist\orders\detail.html:36
+#: .\production\templates\technologist\rolls\detail.html:38
+msgid "Color:"
+msgstr "Цвет"
+
+#: .\production\templates\admin\orders\create_size_quantity.html:47
+#: .\production\templates\cutter\consumptions\create.html:53
+#: .\production\templates\cutter\passports\create.html:46
 #: .\production\templates\cutter\passports\create_passport_roll.html:43
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:43
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:47
 #: .\production\templates\technologist\passports\create_size_quantity.html:20
 msgid "Add"
 msgstr "Добавить"
 
-#: .\production\templates\admin\orders\create_size_quantity.html:56
-#: .\production\templates\employee\works\pending_list.html:95
+#: .\production\templates\admin\orders\create_size_quantity.html:62
+#: .\production\templates\employee\works\pending_list.html:115
 msgid "Finish"
 msgstr "Завершить"
 
-#: .\production\templates\admin\orders\create_size_quantity.html:69
-#: .\production\templates\admin\orders\detail.html:186
+#: .\production\templates\admin\orders\create_size_quantity.html:75
+#: .\production\templates\cutter\consumptions\create.html:82
+#: .\production\templates\cutter\passports\create.html:74
 #: .\production\templates\cutter\passports\create_passport_roll.html:130
-#: .\production\templates\cutter\passports\create_passport_size_quantity.html:131
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:136
 #: .\production\templates\technologist\passports\create_size_quantity.html:48
 msgid "Are you sure you want to delete this item?"
 msgstr "Вы уверены, что хотите удалить этот элемент?"
 
-#: .\production\templates\admin\orders\detail.html:28
+#: .\production\templates\admin\orders\detail.html:29
 #: .\production\templates\cutter\orders\detail.html:29
 #: .\production\templates\packer\orders\detail.html:29
 #: .\production\templates\qc\orders\detail.html:29
-#: .\production\templates\technologist\models\detail.html:30
+#: .\production\templates\technologist\models\detail.html:24
 #: .\production\templates\technologist\orders\detail.html:29
 msgid "Model Details:"
 msgstr "Детали модели"
 
-#: .\production\templates\admin\orders\detail.html:44
-#: .\production\templates\qc\orders\detail.html:60
-#: .\production\templates\qc\orders\detail.html:151
-#: .\production\templates\technologist\orders\detail.html:42
-msgid "Defect"
-msgstr "Дефект"
-
-#: .\production\templates\admin\orders\detail.html:44
-#: .\production\templates\packer\orders\detail.html:137
-#: .\production\templates\technologist\orders\detail.html:42
-msgid "Discrepancy"
-msgstr "Несоответствие"
-
-#: .\production\templates\admin\orders\detail.html:59
-msgid "Details"
-msgstr "Детали"
-
-#: .\production\templates\admin\orders\detail.html:70
-#: .\production\templates\admin\passports\detail.html:36
-#: .\production\templates\cutter\orders\detail.html:35
-#: .\production\templates\packer\orders\detail.html:55
-#: .\production\templates\qc\orders\detail.html:73
-#: .\production\templates\technologist\orders\detail.html:69
-#: .\production\templates\technologist\passports\assign_operations.html:39
-msgid "Model:"
-msgstr "Модель"
-
-#: .\production\templates\admin\orders\detail.html:71
-#: .\production\templates\admin\passports\detail.html:38
-#: .\production\templates\cutter\orders\detail.html:36
-#: .\production\templates\packer\orders\detail.html:56
-#: .\production\templates\qc\orders\detail.html:74
-#: .\production\templates\technologist\models\detail.html:35
-#: .\production\templates\technologist\orders\detail.html:70
-#: .\production\templates\technologist\passports\assign_operations.html:41
-msgid "Assortment:"
-msgstr "Ассортимент"
-
-#: .\production\templates\admin\orders\detail.html:72
-#: .\production\templates\admin\passports\detail.html:41
-#: .\production\templates\cutter\orders\detail.html:37
-#: .\production\templates\packer\orders\detail.html:57
-#: .\production\templates\qc\orders\detail.html:75
-#: .\production\templates\technologist\orders\detail.html:71
-#: .\production\templates\technologist\passports\assign_operations.html:44
-#: .\production\templates\technologist\rolls\detail.html:39
-msgid "Color:"
-msgstr "Цвет"
-
-#: .\production\templates\admin\orders\detail.html:73
+#: .\production\templates\admin\orders\detail.html:51
 #: .\production\templates\admin\passports\detail.html:42
-#: .\production\templates\cutter\orders\detail.html:38
-#: .\production\templates\packer\orders\detail.html:58
-#: .\production\templates\qc\orders\detail.html:76
-#: .\production\templates\technologist\orders\detail.html:72
-#: .\production\templates\technologist\passports\assign_operations.html:45
-#: .\production\templates\technologist\rolls\detail.html:40
+#: .\production\templates\cutter\consumptions\create.html:34
+#: .\production\templates\cutter\consumptions\create.html:59
+#: .\production\templates\cutter\consumptions\create.html:83
+#: .\production\templates\cutter\orders\detail.html:43
+#: .\production\templates\cutter\passports\detail.html:48
+#: .\production\templates\keeper\rolls\detail.html:39
+#: .\production\templates\packer\orders\detail.html:43
+#: .\production\templates\packer\passports\detail.html:49
+#: .\production\templates\qc\orders\detail.html:43
+#: .\production\templates\qc\passports\detail.html:49
+#: .\production\templates\technologist\orders\detail.html:43
+#: .\production\templates\technologist\rolls\detail.html:39
 msgid "Fabrics:"
 msgstr "Ткани"
 
-#: .\production\templates\admin\orders\detail.html:76
-#: .\production\templates\cutter\orders\detail.html:40
-#: .\production\templates\packer\orders\detail.html:61
-#: .\production\templates\qc\orders\detail.html:79
-#: .\production\templates\technologist\orders\detail.html:75
+#: .\production\templates\admin\orders\detail.html:60
+#: .\production\templates\cutter\orders\detail.html:51
+#: .\production\templates\packer\orders\detail.html:51
+#: .\production\templates\qc\orders\detail.html:51
+#: .\production\templates\technologist\orders\detail.html:51
 msgid "Completed Quantity:"
 msgstr "Выполненное Количество"
 
-#: .\production\templates\admin\orders\detail.html:77
-#: .\production\templates\technologist\operations\detail.html:44
+#: .\production\templates\admin\orders\detail.html:61
+#: .\production\templates\technologist\operations\detail.html:38
 msgid "Payment:"
 msgstr "Оплата"
 
-#: .\production\templates\admin\orders\detail.html:101
-#: .\production\templates\cutter\orders\detail.html:51
-#: .\production\templates\packer\orders\detail.html:75
-#: .\production\templates\qc\orders\detail.html:90
-#: .\production\templates\technologist\orders\detail.html:85
-msgid "Size Quantities"
-msgstr "Размер и Количество"
+#: .\production\templates\admin\orders\detail.html:83
+#: .\production\templates\cutter\orders\detail.html:63
+#: .\production\templates\packer\orders\detail.html:63
+#: .\production\templates\qc\orders\detail.html:63
+#: .\production\templates\technologist\orders\detail.html:63
+msgid "Required Quantities"
+msgstr "Необходимое Количество"
 
-#: .\production\templates\admin\orders\detail.html:138
-#: .\production\templates\cutter\orders\detail.html:121
-#: .\production\templates\technologist\orders\detail.html:149
-msgid "Passport ID:"
-msgstr "ID Паспорта"
+#: .\production\templates\admin\orders\detail.html:95
+#: .\production\templates\cutter\orders\detail.html:72
+#: .\production\templates\packer\orders\detail.html:72
+#: .\production\templates\qc\orders\detail.html:72
+#: .\production\templates\technologist\orders\detail.html:72
+msgid "Required"
+msgstr "Требуются"
 
-#: .\production\templates\admin\orders\detail.html:138
-#: .\production\templates\cutter\orders\detail.html:121
-#: .\production\templates\technologist\orders\detail.html:149
-msgid "Created on:"
-msgstr "Создано"
+#: .\production\templates\admin\orders\detail.html:107
+#: .\production\templates\cutter\orders\detail.html:84
+#: .\production\templates\packer\orders\detail.html:84
+#: .\production\templates\qc\orders\detail.html:84
+#: .\production\templates\technologist\orders\detail.html:84
+msgid "No required sizes available."
+msgstr "Нет доступных размеров"
 
-#: .\production\templates\admin\orders\detail.html:145
-#: .\production\templates\cutter\orders\detail.html:128
-#: .\production\templates\technologist\orders\detail.html:156
-msgid "No associated passports."
-msgstr "Нет связанных паспортов."
+#: .\production\templates\admin\orders\detail.html:115
+#: .\production\templates\cutter\orders\detail.html:95
+#: .\production\templates\packer\orders\detail.html:95
+#: .\production\templates\qc\orders\detail.html:95
+#: .\production\templates\technologist\orders\detail.html:95
+msgid "Associated Cuts"
+msgstr "Связанный Раскрой"
 
-#: .\production\templates\admin\orders\detail.html:176
-msgid "Are you sure you want to delete this order?"
-msgstr "Вы уверены, что хотите удалить этот заказ?"
+#: .\production\templates\admin\orders\detail.html:121
+#: .\production\templates\cutter\orders\detail.html:107
+#: .\production\templates\packer\orders\detail.html:104
+#: .\production\templates\qc\orders\detail.html:104
+#: .\production\templates\technologist\orders\detail.html:104
+msgid "Cut Number:"
+msgstr "Номер Кроя:"
+
+#: .\production\templates\admin\orders\detail.html:128
+#: .\production\templates\cutter\orders\detail.html:114
+#: .\production\templates\packer\orders\detail.html:111
+#: .\production\templates\qc\orders\detail.html:111
+#: .\production\templates\technologist\orders\detail.html:111
+msgid "No associated cuts."
+msgstr "Нет связанных кроев."
 
 #: .\production\templates\admin\orders\edit.html:29
 msgid "Edit Model:"
 msgstr "Редактировать Модель"
 
 #: .\production\templates\admin\orders\list.html:7
-#: .\production\templates\base.html:127
+#: .\production\templates\base.html:204
 #: .\production\templates\dashboard.html:239
-#: .\production\templates\dashboard.html:466
+#: .\production\templates\dashboard.html:476
 msgid "Orders"
 msgstr "Заказы"
 
@@ -942,28 +1386,38 @@ msgstr "Создать Новый Заказ"
 
 #: .\production\templates\admin\passports\detail.html:28
 #: .\production\templates\cutter\passports\detail.html:32
+#: .\production\templates\packer\passports\detail.html:33
+#: .\production\templates\qc\passports\detail.html:33
 msgid "Passport Details"
 msgstr "Детали Паспорта"
 
+#: .\production\templates\admin\passports\detail.html:38
+#: .\production\templates\technologist\models\detail.html:33
+msgid "Assortment:"
+msgstr "Ассортимент"
+
 #: .\production\templates\admin\passports\detail.html:39
+#: .\production\templates\cutter\passports\create.html:35
+#: .\production\templates\cutter\passports\create.html:52
+#: .\production\templates\cutter\passports\create.html:75
 #: .\production\templates\cutter\passports\create_passport_roll.html:36
 #: .\production\templates\cutter\passports\create_passport_roll.html:48
-#: .\production\templates\technologist\passports\assign_operations.html:42
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:44
+#: .\production\templates\cutter\passports\create_passport_size_quantity.html:54
+#: .\production\templates\cutter\passports\detail.html:49
+#: .\production\templates\packer\passports\detail.html:50
+#: .\production\templates\qc\passports\detail.html:50
+#: .\production\templates\technologist\passports\assign_operations.html:40
 msgid "Roll:"
 msgstr "Рулон"
 
 #: .\production\templates\admin\passports\detail.html:40
-#: .\production\templates\technologist\passports\assign_operations.html:43
+#: .\production\templates\technologist\passports\assign_operations.html:41
 msgid "Usage:"
 msgstr "Используется"
 
-#: .\production\templates\admin\passports\detail.html:43
-#: .\production\templates\technologist\passports\assign_operations.html:46
-msgid "Date:"
-msgstr "Дата"
-
 #: .\production\templates\admin\passports\detail.html:53
-#: .\production\templates\technologist\passports\assign_operations.html:63
+#: .\production\templates\technologist\passports\assign_operations.html:59
 msgid "Operation \\ Size"
 msgstr "Операция \\ Размер"
 
@@ -972,8 +1426,7 @@ msgid "Qty:"
 msgstr "Кол-во"
 
 #: .\production\templates\admin\passports\detail.html:86
-#: .\production\templates\technologist\operations\list.html:121
-#: .\production\templates\technologist\passports\assign_operations.html:112
+#: .\production\templates\technologist\operations\list.html:110
 msgid "Download Excel"
 msgstr "Загрузить Excel"
 
@@ -981,65 +1434,58 @@ msgstr "Загрузить Excel"
 msgid "Work Details for"
 msgstr "Детали Работы для"
 
-#: .\production\templates\admin\salaries\detail.html:18
+#: .\production\templates\admin\salaries\detail.html:19
+#: .\production\templates\employee\works\done_list.html:72
+msgid "Passport/Cut"
+msgstr "Паспорт/Крой"
+
+#: .\production\templates\admin\salaries\detail.html:20
 msgid "Operation (Size)"
 msgstr "Операция (Размер)"
 
-#: .\production\templates\admin\salaries\detail.html:19
-#: .\production\templates\admin\salaries\detail.html:68
-#: .\production\templates\cutter\passports\detail.html:86
-#: .\production\templates\dashboard.html:646
-#: .\production\templates\employee\works\done_list.html:73
-#: .\production\templates\packer\discrepancies\detail.html:12
-#: .\production\templates\qc\defects\detail.html:12
-#: .\production\templates\technologist\passports\assign_operations.html:124
-msgid "Quantity"
-msgstr "Количество"
-
-#: .\production\templates\admin\salaries\detail.html:20
+#: .\production\templates\admin\salaries\detail.html:22
 msgid "Payment per Unit"
 msgstr "Оплата за Единицу"
 
-#: .\production\templates\admin\salaries\detail.html:21
+#: .\production\templates\admin\salaries\detail.html:23
 msgid "Time Spent (seconds)"
 msgstr "Время, Затраченное (секунды)"
 
-#: .\production\templates\admin\salaries\detail.html:22
+#: .\production\templates\admin\salaries\detail.html:24
 msgid "Salary for Work"
 msgstr "Зарплата за Работу"
 
-#: .\production\templates\admin\salaries\detail.html:32
-#: .\production\templates\admin\salaries\detail.html:55
-#: .\production\templates\admin\salaries\detail.html:81
-#: .\production\templates\admin\salaries\detail.html:87
+#: .\production\templates\admin\salaries\detail.html:36
+#: .\production\templates\admin\salaries\detail.html:59
+#: .\production\templates\admin\salaries\detail.html:85
+#: .\production\templates\admin\salaries\detail.html:91
 #: .\production\templates\admin\salaries\list.html:58
 msgid "Som"
 msgstr "Сом"
 
-#: .\production\templates\admin\salaries\detail.html:41
-#: .\production\templates\cutter\passports\detail.html:45
+#: .\production\templates\admin\salaries\detail.html:45
 #: .\production\templates\technologist\passports\detail.html:12
 msgid "Date"
 msgstr "Дата"
 
-#: .\production\templates\admin\salaries\detail.html:42
+#: .\production\templates\admin\salaries\detail.html:46
 msgid "Clock-in Time"
 msgstr "Время Входа"
 
-#: .\production\templates\admin\salaries\detail.html:43
+#: .\production\templates\admin\salaries\detail.html:47
 msgid "Clock-out Time"
 msgstr "Время Выхода"
 
-#: .\production\templates\admin\salaries\detail.html:44
-#: .\production\templates\dashboard.html:782
+#: .\production\templates\admin\salaries\detail.html:48
+#: .\production\templates\dashboard.html:808
 msgid "Hours Worked"
 msgstr "Часы Работы"
 
-#: .\production\templates\admin\salaries\detail.html:45
+#: .\production\templates\admin\salaries\detail.html:49
 msgid "Salary for Day"
 msgstr "Зарплата за День"
 
-#: .\production\templates\admin\salaries\detail.html:87
+#: .\production\templates\admin\salaries\detail.html:91
 msgid "Total Salary (after errors):"
 msgstr "Полная Зарплата (после ошибок)"
 
@@ -1052,7 +1498,7 @@ msgid "Download"
 msgstr "Загрузить"
 
 #: .\production\templates\admin\salaries\list.html:58
-#: .\production\templates\dashboard.html:395
+#: .\production\templates\dashboard.html:405
 msgid "Salary"
 msgstr "Зарплата"
 
@@ -1062,6 +1508,7 @@ msgstr "Стоимость Ошибки"
 
 #: .\production\templates\admin_page.html:40
 #: .\production\templates\cutter_page.html:36
+#: .\production\templates\keeper_page.html:36
 #: .\production\templates\packer_page.html:36
 #: .\production\templates\qc_page.html:37
 #: .\production\templates\technologist_page.html:33
@@ -1070,6 +1517,7 @@ msgstr "Технолог"
 
 #: .\production\templates\admin_page.html:56
 #: .\production\templates\cutter_page.html:52
+#: .\production\templates\keeper_page.html:52
 #: .\production\templates\packer_page.html:52
 #: .\production\templates\qc_page.html:53
 #: .\production\templates\technologist_page.html:49
@@ -1078,6 +1526,7 @@ msgstr "Закройщик"
 
 #: .\production\templates\admin_page.html:74
 #: .\production\templates\cutter_page.html:70
+#: .\production\templates\keeper_page.html:70
 #: .\production\templates\packer_page.html:70
 #: .\production\templates\qc_page.html:71
 #: .\production\templates\technologist_page.html:67
@@ -1086,92 +1535,134 @@ msgstr "ОТК"
 
 #: .\production\templates\admin_page.html:90
 #: .\production\templates\cutter_page.html:86
+#: .\production\templates\keeper_page.html:86
 #: .\production\templates\packer_page.html:86
 #: .\production\templates\qc_page.html:87
 #: .\production\templates\technologist_page.html:83
 msgid "Packer"
 msgstr "Упаковщик"
 
-#: .\production\templates\base.html:47 .\production\templates\base.html:62
-#: .\production\templates\base.html:69 .\production\templates\base.html:74
-#: .\production\templates\base.html:81 .\production\templates\base.html:86
-#: .\production\templates\base.html:93 .\production\templates\base.html:98
-#: .\production\templates\base.html:105 .\production\templates\base.html:115
-#: .\production\templates\base.html:121
+#: .\production\templates\admin_page.html:108
+#: .\production\templates\cutter_page.html:104
+#: .\production\templates\keeper_page.html:104
+#: .\production\templates\packer_page.html:104
+#: .\production\templates\qc_page.html:105
+#: .\production\templates\technologist_page.html:101
+msgid "Keeper"
+msgstr "Кладовщик"
+
+#: .\production\templates\base.html:60 .\production\templates\base.html:80
+#: .\production\templates\base.html:89 .\production\templates\base.html:97
+#: .\production\templates\base.html:106 .\production\templates\base.html:117
+#: .\production\templates\base.html:126 .\production\templates\base.html:137
+#: .\production\templates\base.html:146 .\production\templates\base.html:163
+#: .\production\templates\base.html:172 .\production\templates\base.html:187
+#: .\production\templates\base.html:195
 msgid "Navigation"
 msgstr "Навигация"
 
-#: .\production\templates\base.html:49 .\production\templates\base.html:71
-#: .\production\templates\base.html:83 .\production\templates\base.html:95
-#: .\production\templates\cutter\orders\list.html:47
-#: .\production\templates\dashboard.html:464
-#: .\production\templates\packer\orders\list.html:58
-#: .\production\templates\qc\orders\list.html:47
-#: .\production\templates\technologist\orders\list.html:48
+#: .\production\templates\base.html:63 .\production\templates\base.html:92
+#: .\production\templates\base.html:109 .\production\templates\base.html:129
+#: .\production\templates\cutter\orders\list.html:48
+#: .\production\templates\dashboard.html:474
+#: .\production\templates\packer\orders\list.html:49
+#: .\production\templates\qc\orders\list.html:48
+#: .\production\templates\technologist\orders\list.html:49
 msgid "Models"
 msgstr "Модели"
 
-#: .\production\templates\base.html:51
-#: .\production\templates\dashboard.html:378
-#: .\production\templates\dashboard.html:459
-#: .\production\templates\technologist\rolls\list.html:29
-msgid "Rolls"
-msgstr "Рулоны"
-
-#: .\production\templates\base.html:53
-#: .\production\templates\dashboard.html:463
-#: .\production\templates\technologist\assortments\list.html:28
+#: .\production\templates\base.html:66
+#: .\production\templates\dashboard.html:473
+#: .\production\templates\technologist\assortments\list.html:29
 msgid "Assortments"
 msgstr "Ассортименты"
 
-#: .\production\templates\base.html:55
-#: .\production\templates\dashboard.html:462
-#: .\production\templates\technologist\operations\list.html:116
+#: .\production\templates\base.html:69
+#: .\production\templates\dashboard.html:472
+#: .\production\templates\technologist\operations\list.html:107
 #: .\production\templates\technologist\passports\create_size_quantity.html:37
 #: .\production\templates\technologist\passports\detail.html:18
 msgid "Operations"
 msgstr "База Операций"
 
-#: .\production\templates\base.html:57
-#: .\production\templates\dashboard.html:461
+#: .\production\templates\base.html:72
+#: .\production\templates\dashboard.html:471
 #: .\production\templates\technologist\nodes\edit.html:10
-#: .\production\templates\technologist\nodes\list.html:29
+#: .\production\templates\technologist\nodes\list.html:30
 msgid "Nodes"
 msgstr "Узлы"
 
-#: .\production\templates\base.html:59
-#: .\production\templates\dashboard.html:460
+#: .\production\templates\base.html:75
+#: .\production\templates\dashboard.html:470
 #: .\production\templates\technologist\equipment\create.html:12
-#: .\production\templates\technologist\equipment\list.html:28
+#: .\production\templates\technologist\equipment\list.html:29
 msgid "Equipment"
 msgstr "Оборудование"
 
-#: .\production\templates\base.html:107
+#: .\production\templates\base.html:112 .\production\templates\base.html:132
+#: .\production\templates\packer\scans\detail.html:9
+#: .\production\templates\qc\scans\detail.html:9
+msgid "Scan"
+msgstr "Скан"
+
+#: .\production\templates\base.html:149
+#: .\production\templates\dashboard.html:388
+#: .\production\templates\dashboard.html:469
+#: .\production\templates\keeper\rolls\list.html:30
+#: .\production\templates\technologist\rolls\list.html:30
+msgid "Rolls"
+msgstr "Рулоны"
+
+#: .\production\templates\base.html:155
+#: .\production\templates\dashboard.html:660
+#: .\production\templates\dashboard.html:740
+#: .\production\templates\keeper\fabrics\list.html:29
+msgid "Fabrics"
+msgstr "Ткани"
+
+#: .\production\templates\base.html:158
+#: .\production\templates\keeper\accessory\list.html:29
+msgid "Accessory"
+msgstr "Фурнитура"
+
+#: .\production\templates\base.html:175
 msgid "Done Work"
 msgstr "Выполненная Работа"
 
-#: .\production\templates\base.html:109
+#: .\production\templates\base.html:178
 msgid "Pending Work"
 msgstr "Ожидающая Работа"
 
-#: .\production\templates\base.html:111
+#: .\production\templates\base.html:182
 msgid "Reassigned Work"
 msgstr "Переназначенные Работы"
 
-#: .\production\templates\base.html:124
+#: .\production\templates\base.html:200
 msgid "Dashboard"
 msgstr "Основная Панель"
 
-#: .\production\templates\base.html:136
+#: .\production\templates\base.html:218
 msgid "Attendances"
 msgstr "Посещаемость"
 
-#: .\production\templates\base.html:142
+#: .\production\templates\base.html:226
 msgid "Salaries"
 msgstr "Зарплаты"
 
+#: .\production\templates\base.html:237
+msgid "Calendar"
+msgstr "Календарь"
+
+#: .\production\templates\base.html:245
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+#: .\production\templates\cutter\consumptions\create.html:9
+#: .\production\templates\cutter\cuts\create.html:9
+#: .\production\templates\cutter\cuts\detail.html:9
 #: .\production\templates\cutter\orders\detail.html:11
-#: .\production\templates\cutter\orders\list.html:8
+#: .\production\templates\cutter\orders\list.html:9
+#: .\production\templates\cutter\passports\create.html:9
 #: .\production\templates\cutter\passports\create_passport_roll.html:10
 #: .\production\templates\cutter\passports\create_passport_size_quantity.html:10
 #: .\production\templates\cutter\passports\detail.html:10
@@ -1179,144 +1670,140 @@ msgstr "Зарплаты"
 msgid "Cutter Dashboard"
 msgstr "Панель Закройщика"
 
-#: .\production\templates\cutter\orders\detail.html:58
-#: .\production\templates\packer\orders\detail.html:81
-#: .\production\templates\qc\orders\detail.html:95
-#: .\production\templates\technologist\orders\detail.html:91
-msgid "Size\\Passport"
-msgstr "Размер\\Паспорт"
+#: .\production\templates\cutter\consumptions\create.html:28
+msgid "Add Consumption for Cut:"
+msgstr "Добавить расход:"
 
-#: .\production\templates\cutter\orders\detail.html:62
-#: .\production\templates\packer\orders\detail.html:85
-#: .\production\templates\qc\orders\detail.html:99
-#: .\production\templates\technologist\orders\detail.html:95
-msgid "Sum"
-msgstr "Сумма"
+#: .\production\templates\cutter\consumptions\create.html:38
+#: .\production\templates\cutter\consumptions\create.html:60
+#: .\production\templates\cutter\consumptions\create.html:84
+#: .\production\templates\keeper\rolls\detail.html:40
+#: .\production\templates\technologist\rolls\detail.html:40
+msgid "Width:"
+msgstr "Ширина:"
 
-#: .\production\templates\cutter\orders\detail.html:63
-#: .\production\templates\packer\orders\detail.html:86
-#: .\production\templates\qc\orders\detail.html:100
-#: .\production\templates\technologist\orders\detail.html:96
-msgid "Required"
-msgstr "Требуются"
+#: .\production\templates\cutter\consumptions\create.html:42
+#: .\production\templates\cutter\consumptions\create.html:61
+#: .\production\templates\cutter\consumptions\create.html:85
+msgid "Length:"
+msgstr "Длина:"
 
-#: .\production\templates\cutter\orders\detail.html:64
-#: .\production\templates\packer\orders\detail.html:87
-#: .\production\templates\qc\orders\detail.html:101
-#: .\production\templates\technologist\orders\detail.html:97
-msgid "Missing"
-msgstr "Недостают"
+#: .\production\templates\cutter\consumptions\create.html:46
+#: .\production\templates\cutter\consumptions\create.html:62
+#: .\production\templates\cutter\consumptions\create.html:86
+msgid "Factual:"
+msgstr "Фактический:"
 
-#: .\production\templates\cutter\orders\detail.html:96
-#: .\production\templates\packer\orders\detail.html:120
-#: .\production\templates\qc\orders\detail.html:134
-#: .\production\templates\technologist\orders\detail.html:129
-msgid "No size quantities available."
-msgstr "Нет доступных размеров"
+#: .\production\templates\cutter\consumptions\create.html:50
+#: .\production\templates\cutter\consumptions\create.html:63
+#: .\production\templates\cutter\consumptions\create.html:87
+msgid "Commerce:"
+msgstr "Коммерческий:"
 
-#: .\production\templates\cutter\orders\detail.html:106
-msgid "Associated Passports"
-msgstr "Связанные Паспорта"
+#: .\production\templates\cutter\cuts\create.html:29
+msgid "Create New Cut for Order:"
+msgstr "Создать Новый Крой для Заказа:"
 
-#: .\production\templates\cutter\orders\detail.html:111
-#: .\production\templates\technologist\passports\create.html:5
-msgid "Create New Passport"
-msgstr "Создать Новый Паспорт"
+#: .\production\templates\cutter\cuts\create.html:35
+msgid "Create Cut"
+msgstr "Создать"
 
-#: .\production\templates\cutter\orders\detail.html:121
-#: .\production\templates\technologist\orders\detail.html:149
-msgid "Completed:"
-msgstr "Завершено"
+#: .\production\templates\cutter\orders\detail.html:98
+msgid "Create New Cut"
+msgstr "Создать Крой"
+
+#: .\production\templates\cutter\orders\list.html:53
+#: .\production\templates\dashboard.html:236
+#: .\production\templates\dashboard.html:449
+#: .\production\templates\employee\works\done_list.html:62
+#: .\production\templates\packer\orders\list.html:54
+#: .\production\templates\qc\orders\list.html:53
+#: .\production\templates\technologist\orders\list.html:54
+msgid "Search"
+msgstr "Поиск"
+
+#: .\production\templates\cutter\passports\create.html:29
+msgid "Create New Passport for Cut:"
+msgstr "Создать Новый Паспорт для Кроя:"
+
+#: .\production\templates\cutter\passports\create.html:39
+#: .\production\templates\cutter\passports\create.html:53
+#: .\production\templates\cutter\passports\create.html:76
+#: .\production\templates\cutter\passports\create_passport_roll.html:40
+#: .\production\templates\cutter\passports\create_passport_roll.html:49
+#: .\production\templates\cutter\passports\detail.html:50
+#: .\production\templates\packer\passports\detail.html:51
+#: .\production\templates\qc\passports\detail.html:51
+msgid "Meters:"
+msgstr "Метров"
+
+#: .\production\templates\cutter\passports\create.html:43
+#: .\production\templates\cutter\passports\create.html:54
+#: .\production\templates\cutter\passports\create.html:77
+#: .\production\templates\cutter\passports\detail.html:51
+#: .\production\templates\packer\passports\detail.html:52
+#: .\production\templates\qc\passports\detail.html:52
+msgid "Layers:"
+msgstr "Слои:"
 
 #: .\production\templates\cutter\passports\create_passport_roll.html:30
 msgid "Add Roll and Meters for Passport:"
 msgstr "Добавить Рулон для Паспорта"
-
-#: .\production\templates\cutter\passports\create_passport_roll.html:40
-#: .\production\templates\cutter\passports\create_passport_roll.html:49
-msgid "Meters:"
-msgstr "Метров"
 
 #: .\production\templates\cutter\passports\create_passport_size_quantity.html:30
 #: .\production\templates\technologist\passports\create_size_quantity.html:9
 msgid "Add Size and Quantity for Passport:"
 msgstr "Добавить Размер и Количество для Паспорта"
 
-#: .\production\templates\cutter\passports\detail.html:36
-msgid "QR Code"
-msgstr "QR Код"
-
-#: .\production\templates\cutter\passports\detail.html:44
-#: .\production\templates\dashboard.html:648
-#: .\production\templates\technologist\assortments\detail.html:30
-#: .\production\templates\technologist\passports\detail.html:10
-msgid "Assortment"
-msgstr "Ассортимент"
-
-#: .\production\templates\cutter\passports\detail.html:56
-#: .\production\templates\cutter\passports\detail.html:60
-msgid "Rolls Used"
-msgstr "Использованные Рулоны"
-
-#: .\production\templates\cutter\passports\detail.html:65
-msgid "Roll Name"
-msgstr "Название Рулона"
-
-#: .\production\templates\cutter\passports\detail.html:66
-msgid "Meters Used"
-msgstr "Метров Использовано"
-
-#: .\production\templates\cutter\passports\detail.html:75
-msgid "No rolls available."
-msgstr "Нет доступных рулонов."
-
-#: .\production\templates\cutter\passports\detail.html:80
+#: .\production\templates\cutter\passports\detail.html:59
+#: .\production\templates\packer\passports\detail.html:60
+#: .\production\templates\qc\passports\detail.html:60
 msgid "Sizes Used"
 msgstr "Размеры Использованы"
 
-#: .\production\templates\cutter\passports\detail.html:99
+#: .\production\templates\cutter\passports\detail.html:64
+#: .\production\templates\packer\passports\detail.html:66
+#: .\production\templates\qc\passports\detail.html:67
+#: .\production\templates\technologist\passports\assign_operations.html:97
+msgid "Stage"
+msgstr "Стадия"
+
+#: .\production\templates\cutter\passports\detail.html:91
+#: .\production\templates\packer\passports\detail.html:96
+#: .\production\templates\qc\passports\detail.html:100
 msgid "No sizes available."
 msgstr "Нет доступных размеров"
 
-#: .\production\templates\cutter_page.html:106
-#: .\production\templates\cutter_page.html:125
-#: .\production\templates\employee_page.html:27
-#: .\production\templates\packer_page.html:104
-#: .\production\templates\packer_page.html:122
-#: .\production\templates\qc_page.html:108
-#: .\production\templates\technologist_page.html:100
+#: .\production\templates\cutter_page.html:121
+#: .\production\templates\employee_page.html:28
+#: .\production\templates\keeper_page.html:119
+#: .\production\templates\packer_page.html:119
+#: .\production\templates\qc_page.html:123
+#: .\production\templates\technologist_page.html:118
 msgid "Clock In/Out"
 msgstr "Начать/Завершить Рабочий День"
 
-#: .\production\templates\cutter_page.html:110
-#: .\production\templates\cutter_page.html:129
-#: .\production\templates\employee_page.html:31
-#: .\production\templates\packer_page.html:108
-#: .\production\templates\packer_page.html:126
-#: .\production\templates\qc_page.html:112
-#: .\production\templates\technologist_page.html:104
+#: .\production\templates\cutter_page.html:123
+#: .\production\templates\employee_page.html:30
+#: .\production\templates\keeper_page.html:121
+#: .\production\templates\packer_page.html:121
+#: .\production\templates\qc_page.html:125
+#: .\production\templates\technologist_page.html:120
 msgid "Clock Out"
 msgstr "Завершить Рабочий День"
 
-#: .\production\templates\cutter_page.html:110
-#: .\production\templates\cutter_page.html:129
-#: .\production\templates\employee_page.html:31
-#: .\production\templates\packer_page.html:108
-#: .\production\templates\packer_page.html:126
-#: .\production\templates\qc_page.html:112
-#: .\production\templates\technologist_page.html:104
+#: .\production\templates\cutter_page.html:123
+#: .\production\templates\employee_page.html:30
+#: .\production\templates\keeper_page.html:121
+#: .\production\templates\packer_page.html:121
+#: .\production\templates\qc_page.html:125
+#: .\production\templates\technologist_page.html:120
 msgid "Clock In"
 msgstr "Начать Рабочий День"
 
 #: .\production\templates\dashboard.html:233
 msgid "Overview"
 msgstr "Основная"
-
-#: .\production\templates\dashboard.html:236
-#: .\production\templates\dashboard.html:439
-#: .\production\templates\employee\works\done_list.html:62
-msgid "Search"
-msgstr "Поиск"
 
 #: .\production\templates\dashboard.html:245
 msgid "Production"
@@ -1334,158 +1821,163 @@ msgstr "Домой"
 msgid "ERP Dashboard"
 msgstr "Панель ERP"
 
-#: .\production\templates\dashboard.html:293
+#: .\production\templates\dashboard.html:284
+#: .\production\templates\employee\works\done_list.html:56
+msgid "Start Date"
+msgstr "Дата Начала"
+
+#: .\production\templates\dashboard.html:288
+#: .\production\templates\employee\works\done_list.html:59
+msgid "End Date"
+msgstr "Дата Окончания"
+
+#: .\production\templates\dashboard.html:303
 msgid "Total Production"
 msgstr "Полная продукция"
 
-#: .\production\templates\dashboard.html:308
+#: .\production\templates\dashboard.html:318
 msgid "Completed Units"
 msgstr "Завершенное Количество"
 
-#: .\production\templates\dashboard.html:326
+#: .\production\templates\dashboard.html:336
 msgid "Orders in Progress"
 msgstr "Заказы В Работе"
 
-#: .\production\templates\dashboard.html:341
+#: .\production\templates\dashboard.html:351
 msgid "Models in Progress"
 msgstr "Модели В Работе"
 
-#: .\production\templates\dashboard.html:363
+#: .\production\templates\dashboard.html:373
+#: .\production\templates\technologist\cuts\detail.html:121
 msgid "Errors"
 msgstr "Ошибки"
 
-#: .\production\templates\dashboard.html:410
+#: .\production\templates\dashboard.html:420
 msgid "Total Revenue"
 msgstr "Заработок"
 
-#: .\production\templates\dashboard.html:456
+#: .\production\templates\dashboard.html:466
 msgid "Select Model..."
 msgstr "Выбрать Модель..."
 
-#: .\production\templates\dashboard.html:457
+#: .\production\templates\dashboard.html:467
 msgid "User Profiles"
 msgstr "Сотрудники"
 
-#: .\production\templates\dashboard.html:467
+#: .\production\templates\dashboard.html:477
 msgid "Error"
 msgstr "Ошибка"
 
-#: .\production\templates\dashboard.html:468
-#: .\production\templates\technologist\passports\list.html:7
-msgid "Passports"
-msgstr "Паспорта"
-
-#: .\production\templates\dashboard.html:469
+#: .\production\templates\dashboard.html:479
 msgid "Production Pieces"
 msgstr "Производственная Единица"
 
-#: .\production\templates\dashboard.html:485
+#: .\production\templates\dashboard.html:495
 msgid "Orders Overview"
 msgstr "Заказы"
 
-#: .\production\templates\dashboard.html:504
+#: .\production\templates\dashboard.html:514
 msgid "Order Name"
 msgstr "Заказ"
 
-#: .\production\templates\dashboard.html:505
-#: .\production\templates\dashboard.html:577
-msgid "Client"
-msgstr "Клиент"
-
-#: .\production\templates\dashboard.html:507
+#: .\production\templates\dashboard.html:517
 msgid "Due Date"
 msgstr "Дата"
 
-#: .\production\templates\dashboard.html:536
+#: .\production\templates\dashboard.html:546
 msgid "Order Details"
 msgstr "Детали Заказа"
 
-#: .\production\templates\dashboard.html:671
-msgid "Model Details"
-msgstr "Детали Модели"
-
-#: .\production\templates\dashboard.html:558
+#: .\production\templates\dashboard.html:568
 msgid "Client Rankings"
 msgstr "Клиенты"
 
-#: .\production\templates\dashboard.html:578
+#: .\production\templates\dashboard.html:588
 msgid "Client Orders (Number - Income)"
 msgstr "Заказ"
 
-#: .\production\templates\dashboard.html:579
+#: .\production\templates\dashboard.html:589
 msgid "Total Value"
 msgstr "Цена"
 
-#: .\production\templates\dashboard.html:580
+#: .\production\templates\dashboard.html:590
 msgid "Total Ordered Amount"
 msgstr "Заказанное Количество"
 
-#: .\production\templates\dashboard.html:603
+#: .\production\templates\dashboard.html:613
 msgid "Client Details"
 msgstr "Детали Клиента"
 
-#: .\production\templates\dashboard.html:626
+#: .\production\templates\dashboard.html:636
 msgid "Production Overview"
 msgstr "Продукция"
 
-#: .\production\templates\dashboard.html:645
+#: .\production\templates\dashboard.html:655
 msgid "Model Name"
 msgstr "Модель"
 
-#: .\production\templates\dashboard.html:647
+#: .\production\templates\dashboard.html:657
 msgid "Price"
 msgstr "Цена"
 
-#: .\production\templates\dashboard.html:649
-#: .\production\templates\dashboard.html:713
-msgid "Color"
-msgstr "Цвет"
+#: .\production\templates\dashboard.html:658
+#: .\production\templates\technologist\assortments\detail.html:29
+#: .\production\templates\technologist\passports\detail.html:10
+msgid "Assortment"
+msgstr "Ассортимент"
 
-#: .\production\templates\dashboard.html:650
-#: .\production\templates\dashboard.html:714
-msgid "Fabrics"
-msgstr "Ткани"
+#: .\production\templates\dashboard.html:676
+msgid "No colors"
+msgstr "Нет цветов"
 
-#: .\production\templates\dashboard.html:693
+#: .\production\templates\dashboard.html:685
+msgid "No fabrics"
+msgstr "Нет тканей"
+
+#: .\production\templates\dashboard.html:697
+msgid "Model Details"
+msgstr "Детали Модели"
+
+#: .\production\templates\dashboard.html:719
 msgid "Inventory Overview"
 msgstr "Инвентарь"
 
-#: .\production\templates\dashboard.html:712
+#: .\production\templates\dashboard.html:738
 #: .\production\templates\technologist\models\edit_operations.html:34
 #: .\production\templates\technologist\nodes\create.html:98
 #: .\production\templates\technologist\nodes\edit.html:102
 msgid "Name"
 msgstr "Название"
 
-#: .\production\templates\dashboard.html:715
+#: .\production\templates\dashboard.html:741
 msgid "Total Meters"
 msgstr "Метров Всего"
 
-#: .\production\templates\dashboard.html:716
+#: .\production\templates\dashboard.html:742
 msgid "Used Meters"
 msgstr "Метров Использовано"
 
-#: .\production\templates\dashboard.html:717
+#: .\production\templates\dashboard.html:743
 msgid "Available Meters"
 msgstr "Доступные Метры"
 
-#: .\production\templates\dashboard.html:737
+#: .\production\templates\dashboard.html:763
 msgid "Roll Details"
 msgstr "Детали Рулона"
 
-#: .\production\templates\dashboard.html:760
+#: .\production\templates\dashboard.html:786
 msgid "Employee Rankings"
 msgstr "Сотрудники"
 
-#: .\production\templates\dashboard.html:780
+#: .\production\templates\dashboard.html:806
 msgid "Full Name"
 msgstr "ФИО"
 
-#: .\production\templates\dashboard.html:781
+#: .\production\templates\dashboard.html:807
 msgid "Units Produced"
 msgstr "Единиц Произведено"
 
-#: .\production\templates\dashboard.html:801
+#: .\production\templates\dashboard.html:827
 msgid "Employee Details"
 msgstr "Детали Сотрудника"
 
@@ -1500,39 +1992,31 @@ msgstr "Панель Сотрудника"
 msgid "Completed Jobs"
 msgstr "Завершенные Работы"
 
-#: .\production\templates\employee\works\done_list.html:56
-msgid "Start Date"
-msgstr "Дата Начала"
-
-#: .\production\templates\employee\works\done_list.html:59
-msgid "End Date"
-msgstr "Дата Окончания"
-
-#: .\production\templates\employee\works\done_list.html:71
+#: .\production\templates\employee\works\done_list.html:73
 msgid "Operation"
 msgstr "Операция"
 
-#: .\production\templates\employee\works\done_list.html:74
+#: .\production\templates\employee\works\done_list.html:76
 msgid "Completed At"
 msgstr "Завершено В"
 
-#: .\production\templates\employee\works\done_list.html:75
+#: .\production\templates\employee\works\done_list.html:77
 msgid "Verified"
 msgstr "Проверено"
 
-#: .\production\templates\employee\works\done_list.html:76
+#: .\production\templates\employee\works\done_list.html:78
 msgid "Completion Time"
 msgstr "Время Завершения"
 
-#: .\production\templates\employee\works\done_list.html:86
+#: .\production\templates\employee\works\done_list.html:90
 msgid "Yes"
 msgstr "Да"
 
-#: .\production\templates\employee\works\done_list.html:86
+#: .\production\templates\employee\works\done_list.html:90
 msgid "No"
 msgstr "Нет"
 
-#: .\production\templates\employee\works\done_list.html:97
+#: .\production\templates\employee\works\done_list.html:101
 msgid "No completed jobs found within the selected period."
 msgstr "В выбранный период завершенных работ не найдено."
 
@@ -1542,8 +2026,7 @@ msgstr "Мои Работы"
 
 #: .\production\templates\employee\works\pending_list.html:44
 #: .\production\templates\employee\works\reassigned_list.html:45
-#: .\production\templates\technologist\operations\detail.html:36
-#: .\production\templates\technologist\operations\detail.html:63
+#: .\production\templates\technologist\operations\detail.html:58
 msgid "Operation Photo"
 msgstr "Фото Операции"
 
@@ -1553,26 +2036,34 @@ msgid "No photo"
 msgstr "Нет фото"
 
 #: .\production\templates\employee\works\pending_list.html:51
+#: .\production\templates\employee\works\reassigned_list.html:52
+#: .\production\templates\technologist\cuts\detail.html:209
 msgid "Passport:"
 msgstr "Паспорт"
 
-#: .\production\templates\employee\works\pending_list.html:67
+#: .\production\templates\employee\works\pending_list.html:59
+#: .\production\templates\employee\works\reassigned_list.html:60
+#: .\production\templates\technologist\cuts\detail.html:210
+msgid "Cut:"
+msgstr "Крой:"
+
+#: .\production\templates\employee\works\pending_list.html:87
 msgid "Assigned Quantity:"
 msgstr "Назначенное Количество"
 
-#: .\production\templates\employee\works\pending_list.html:70
+#: .\production\templates\employee\works\pending_list.html:90
 msgid "Start:"
 msgstr "Начало"
 
-#: .\production\templates\employee\works\pending_list.html:78
+#: .\production\templates\employee\works\pending_list.html:98
 msgid "End:"
 msgstr "Конец"
 
-#: .\production\templates\employee\works\pending_list.html:89
+#: .\production\templates\employee\works\pending_list.html:109
 msgid "Start"
 msgstr "Начать"
 
-#: .\production\templates\employee\works\pending_list.html:107
+#: .\production\templates\employee\works\pending_list.html:127
 msgid "No works found."
 msgstr "Работы не найдены."
 
@@ -1580,21 +2071,173 @@ msgstr "Работы не найдены."
 msgid "My Reassigned Works"
 msgstr "Переназначенные Работы"
 
-#: .\production\templates\employee\works\reassigned_list.html:68
+#: .\production\templates\employee\works\reassigned_list.html:88
 msgid "Reassigned Quantity:"
 msgstr "Переназазначенное Количество"
 
-#: .\production\templates\employee\works\reassigned_list.html:71
+#: .\production\templates\employee\works\reassigned_list.html:91
 msgid "Reason:"
 msgstr "Причина"
 
-#: .\production\templates\employee\works\reassigned_list.html:88
+#: .\production\templates\employee\works\reassigned_list.html:108
 msgid "No reassigned works found."
 msgstr "Переназначенные работы не найдены."
 
+#: .\production\templates\keeper\accessory\create.html:12
+#: .\production\templates\keeper\accessory\detail.html:10
+#: .\production\templates\keeper\accessory\edit.html:9
+#: .\production\templates\keeper\accessory\list.html:10
+#: .\production\templates\keeper\color\create.html:12
+#: .\production\templates\keeper\color\detail.html:10
+#: .\production\templates\keeper\color\edit.html:9
+#: .\production\templates\keeper\color\list.html:10
+#: .\production\templates\keeper\fabrics\create.html:12
+#: .\production\templates\keeper\fabrics\detail.html:10
+#: .\production\templates\keeper\fabrics\edit.html:9
+#: .\production\templates\keeper\fabrics\list.html:10
+#: .\production\templates\keeper\rolls\create.html:9
+#: .\production\templates\keeper\rolls\detail.html:11
+#: .\production\templates\keeper\rolls\edit.html:10
+#: .\production\templates\keeper\rolls\list.html:10
+#: .\production\templates\keeper_page.html:10
+msgid "Keeper Dashboard"
+msgstr "Панель Кладовщика"
+
+#: .\production\templates\keeper\accessory\create.html:32
+msgid "Create New Accessory"
+msgstr "Создать Новую Фурнитуру"
+
+#: .\production\templates\keeper\accessory\detail.html:27
+msgid "Accessory Details:"
+msgstr "Детали Фурнитуры:"
+
+#: .\production\templates\keeper\accessory\detail.html:35
+msgid "Name:"
+msgstr "Название"
+
+#: .\production\templates\keeper\accessory\detail.html:38
+msgid "Additional Info:"
+msgstr "Контактная Информация"
+
+#: .\production\templates\keeper\accessory\detail.html:58
+msgid "Are you sure you want to delete this accessory?"
+msgstr "Вы уверены, что хотите удалить эту фурнитуру?"
+
+#: .\production\templates\keeper\accessory\detail.html:68
+msgid "Are you sure you want to unarchive this accessory?"
+msgstr "Вы уверены, что хотите разархивировать эту фурнитуру?"
+
+#: .\production\templates\keeper\accessory\edit.html:28
+msgid "Edit Accessory:"
+msgstr "Редактировать Фурнитуру:"
+
+#: .\production\templates\keeper\color\create.html:12
+#: .\production\templates\technologist\color\create.html:12
+#: .\production\templates\technologist\color\list.html:29
+msgid "color"
+msgstr "Цвет"
+
+#: .\production\templates\keeper\color\create.html:33
+#: .\production\templates\technologist\color\create.html:33
+msgid "Create New color"
+msgstr "Создать Новый Рулон"
+
+#: .\production\templates\keeper\color\detail.html:27
+#: .\production\templates\technologist\color\detail.html:27
+msgid "color Details:"
+msgstr "Детали Цвета:"
+
+#: .\production\templates\keeper\color\detail.html:54
+#: .\production\templates\technologist\color\detail.html:54
+msgid "Are you sure you want to delete this color?"
+msgstr "Вы уверены, что хотите удалить этот цвет?"
+
+#: .\production\templates\keeper\color\detail.html:64
+#: .\production\templates\technologist\color\detail.html:64
+msgid "Are you sure you want to unarchive this color?"
+msgstr "Вы уверены, что хотите разархивировать этот цвет?"
+
+#: .\production\templates\keeper\color\edit.html:29
+#: .\production\templates\technologist\color\edit.html:29
+msgid "Edit color:"
+msgstr "Редактировать Цвет:"
+
+#: .\production\templates\keeper\fabrics\create.html:12
+#: .\production\templates\technologist\fabrics\create.html:12
+#: .\production\templates\technologist\fabrics\list.html:29
+msgid "fabrics"
+msgstr "Ткани"
+
+#: .\production\templates\keeper\fabrics\create.html:33
+#: .\production\templates\technologist\fabrics\create.html:33
+msgid "Create New fabrics"
+msgstr "Создать Новую Ткань"
+
+#: .\production\templates\keeper\fabrics\detail.html:27
+#: .\production\templates\technologist\fabrics\detail.html:27
+msgid "fabrics Details:"
+msgstr "Детали Ткани:"
+
+#: .\production\templates\keeper\fabrics\detail.html:54
+#: .\production\templates\technologist\fabrics\detail.html:54
+msgid "Are you sure you want to delete this fabrics?"
+msgstr "Вы уверены, что хотите удалить эту ткань?"
+
+#: .\production\templates\keeper\fabrics\detail.html:64
+#: .\production\templates\technologist\fabrics\detail.html:64
+msgid "Are you sure you want to unarchive this fabrics?"
+msgstr "Вы уверены, что хотите разархивировать этот ткань?"
+
+#: .\production\templates\keeper\fabrics\edit.html:29
+#: .\production\templates\technologist\fabrics\edit.html:29
+msgid "Edit fabrics:"
+msgstr "Редактировать Ткань:"
+
+#: .\production\templates\keeper\rolls\create.html:30
+#: .\production\templates\technologist\rolls\create.html:30
+msgid "Create New Roll"
+msgstr "Создать Новый Рулон"
+
+#: .\production\templates\keeper\rolls\detail.html:30
+#: .\production\templates\technologist\rolls\detail.html:30
+msgid "Roll Details:"
+msgstr "Детали Рулона"
+
+#: .\production\templates\keeper\rolls\detail.html:41
+#: .\production\templates\technologist\rolls\detail.html:41
+msgid "Meters Available:"
+msgstr "Метров Доступно"
+
+#: .\production\templates\keeper\rolls\detail.html:42
+#: .\production\templates\technologist\rolls\detail.html:42
+msgid "Meters Used:"
+msgstr "Метров Использовано"
+
+#: .\production\templates\keeper\rolls\detail.html:57
+#: .\production\templates\technologist\rolls\detail.html:57
+msgid "Are you sure you want to delete this roll?"
+msgstr "Вы уверены, что хотите удалить этот рулон?"
+
+#: .\production\templates\keeper\rolls\detail.html:67
+#: .\production\templates\technologist\rolls\detail.html:67
+msgid "Are you sure you want to unarchive this roll?"
+msgstr "Вы уверены, что хотите разархивировать этот рулон?"
+
+#: .\production\templates\keeper\rolls\edit.html:31
+#: .\production\templates\technologist\rolls\edit.html:31
+msgid "Edit Roll:"
+msgstr "Редактировать Рулон"
+
+#: .\production\templates\login.html:8 .\production\templates\login.html:83
+#: .\production\templates\login.html:119
+msgid "Login"
+msgstr "Вход"
+
+#: .\production\templates\packer\cuts\detail.html:9
 #: .\production\templates\packer\discrepancies\create.html:9
 #: .\production\templates\packer\orders\detail.html:11
-#: .\production\templates\packer\orders\list.html:14
+#: .\production\templates\packer\orders\list.html:10
+#: .\production\templates\packer\passports\detail.html:11
 #: .\production\templates\packer_page.html:10
 msgid "Packer Dashboard"
 msgstr "Панель Упаковщика"
@@ -1615,21 +2258,20 @@ msgstr "Вы уверены, что хотите удалить это несо�
 msgid "Edit Discrepancy:"
 msgstr "Редактировать Несоответствие"
 
-#: .\production\templates\packer\orders\detail.html:68
-msgid "Calculate Discrepancies"
-msgstr "Посчитать Несоответствия"
+#: .\production\templates\packer\passports\detail.html:65
+msgid "Packed"
+msgstr "Упаковано"
 
-#: .\production\templates\packer\orders\detail.html:129
-msgid "Associated Discrepancies"
-msgstr "Связанные Несоответствия"
+#: .\production\templates\packer\scans\detail.html:26
+#: .\production\templates\qc\scans\detail.html:26
+msgid "Scanned Items"
+msgstr "Отсканированные единицы"
 
-#: .\production\templates\packer\orders\detail.html:144
-msgid "No associated discrepancies."
-msgstr "Нет связанных несоответствий."
-
+#: .\production\templates\qc\cuts\detail.html:9
 #: .\production\templates\qc\defects\create.html:10
 #: .\production\templates\qc\orders\detail.html:11
-#: .\production\templates\qc\orders\list.html:9
+#: .\production\templates\qc\orders\list.html:10
+#: .\production\templates\qc\passports\detail.html:11
 msgid "QC Dashboard"
 msgstr "Панель ОТК"
 
@@ -1653,53 +2295,55 @@ msgstr "Вы уверены, что хотите удалить этот деф�
 msgid "Edit Defect:"
 msgstr "Редактировать Дефект"
 
-#: .\production\templates\qc\orders\detail.html:59
+#: .\production\templates\qc\passports\detail.html:65
+#: .\production\templates\qc\scans\detail.html:63
 msgid "Checked"
 msgstr "Проверено"
 
-#: .\production\templates\qc\orders\detail.html:143
-msgid "Associated Defects"
-msgstr "Связанные Дефекты"
-
-#: .\production\templates\qc\orders\detail.html:158
-msgid "No associated defects."
-msgstr "Нет связанных дефектов."
+#: .\production\templates\qc\passports\detail.html:66
+#: .\production\templates\qc\scans\detail.html:64
+#: .\production\templates\technologist\cuts\detail.html:207
+msgid "Defect"
+msgstr "Дефект"
 
 #: .\production\templates\qc_page.html:11
 msgid "QC Dashboards"
 msgstr "Панель ОТК"
 
-#: .\production\templates\registration\login.html:8
-#: .\production\templates\registration\login.html:83
-#: .\production\templates\registration\login.html:119
-msgid "Login"
-msgstr "Вход"
-
 #: .\production\templates\technologist\assortments\create.html:10
-#: .\production\templates\technologist\assortments\detail.html:11
+#: .\production\templates\technologist\assortments\detail.html:10
 #: .\production\templates\technologist\assortments\edit.html:10
 #: .\production\templates\technologist\assortments\list.html:8
+#: .\production\templates\technologist\color\create.html:12
+#: .\production\templates\technologist\color\detail.html:10
+#: .\production\templates\technologist\color\edit.html:9
+#: .\production\templates\technologist\color\list.html:10
+#: .\production\templates\technologist\cuts\detail.html:9
 #: .\production\templates\technologist\equipment\create.html:12
-#: .\production\templates\technologist\equipment\detail.html:11
+#: .\production\templates\technologist\equipment\detail.html:10
 #: .\production\templates\technologist\equipment\edit.html:9
 #: .\production\templates\technologist\equipment\list.html:10
+#: .\production\templates\technologist\fabrics\create.html:12
+#: .\production\templates\technologist\fabrics\detail.html:10
+#: .\production\templates\technologist\fabrics\edit.html:9
+#: .\production\templates\technologist\fabrics\list.html:10
 #: .\production\templates\technologist\models\create.html:72
-#: .\production\templates\technologist\models\detail.html:10
+#: .\production\templates\technologist\models\detail.html:7
 #: .\production\templates\technologist\models\edit.html:74
 #: .\production\templates\technologist\models\list.html:10
 #: .\production\templates\technologist\nodes\create.html:8
-#: .\production\templates\technologist\nodes\detail.html:12
+#: .\production\templates\technologist\nodes\detail.html:10
 #: .\production\templates\technologist\nodes\edit.html:10
 #: .\production\templates\technologist\nodes\list.html:10
 #: .\production\templates\technologist\operations\create.html:8
-#: .\production\templates\technologist\operations\detail.html:12
+#: .\production\templates\technologist\operations\detail.html:10
 #: .\production\templates\technologist\operations\edit.html:10
-#: .\production\templates\technologist\operations\list.html:75
+#: .\production\templates\technologist\operations\list.html:70
 #: .\production\templates\technologist\orders\detail.html:11
-#: .\production\templates\technologist\orders\list.html:9
+#: .\production\templates\technologist\orders\list.html:10
 #: .\production\templates\technologist\passports\assign_operations.html:11
 #: .\production\templates\technologist\rolls\create.html:9
-#: .\production\templates\technologist\rolls\detail.html:13
+#: .\production\templates\technologist\rolls\detail.html:11
 #: .\production\templates\technologist\rolls\edit.html:10
 #: .\production\templates\technologist\rolls\list.html:10
 #: .\production\templates\technologist_page.html:9
@@ -1710,21 +2354,109 @@ msgstr "Панель Технолога"
 msgid "Create New Assortment"
 msgstr "Создать Новый Ассортимент"
 
-#: .\production\templates\technologist\assortments\detail.html:35
+#: .\production\templates\technologist\assortments\detail.html:37
 msgid "Assortment Details:"
 msgstr "Детали ассортимента"
+
+#: .\production\templates\technologist\assortments\detail.html:57
+msgid "Are you sure you want to delete this assortment?"
+msgstr "Вы уверены, что хотите удалить этот ассортимент?"
+
+#: .\production\templates\technologist\assortments\detail.html:67
+msgid "Are you sure you want to unarchive this assortment?"
+msgstr "Вы уверены, что хотите разархивировать этот паспорт?"
 
 #: .\production\templates\technologist\assortments\edit.html:31
 msgid "Edit Assortment:"
 msgstr "Редактировать Ассортимент"
 
+#: .\production\templates\technologist\cuts\detail.html:125
+msgid "Passport Number"
+msgstr "Паспорт Номер"
+
+#: .\production\templates\technologist\cuts\detail.html:126
+msgid "Production Piece"
+msgstr "Производственная Единица"
+
+#: .\production\templates\technologist\cuts\detail.html:127
+msgid "Error Type"
+msgstr "Тип Ошибки"
+
+#: .\production\templates\technologist\cuts\detail.html:153
+msgid "No errors reported."
+msgstr "Нет ошибок."
+
+#: .\production\templates\technologist\cuts\detail.html:168
+msgid "Error Details"
+msgstr "Детали Ошибки"
+
+#: .\production\templates\technologist\cuts\detail.html:180
+msgid "Resolved"
+msgstr "Разрешить"
+
+#: .\production\templates\technologist\cuts\detail.html:181
+msgid "Unresolvable"
+msgstr "Неразрешимо"
+
+#: .\production\templates\technologist\cuts\detail.html:207
+msgid "Error Type:"
+msgstr "Тип Ошибки:"
+
+#: .\production\templates\technologist\cuts\detail.html:207
+msgid "Discrepancy"
+msgstr "Несоответствие"
+
+#: .\production\templates\technologist\cuts\detail.html:208
+msgid "Piece:"
+msgstr "Единица"
+
+#: .\production\templates\technologist\cuts\detail.html:214
+msgid "Reported Date:"
+msgstr "Дата Сообщения"
+
+#: .\production\templates\technologist\cuts\detail.html:215
+msgid "Resolved Date:"
+msgstr "Дата Разрешения"
+
+#: .\production\templates\technologist\cuts\detail.html:215
+msgid "N/A"
+msgstr "N/A"
+
+#: .\production\templates\technologist\cuts\detail.html:220
+msgid "Error details not found."
+msgstr "Детали Работы не найдены"
+
+#: .\production\templates\technologist\cuts\detail.html:225
+msgid "Error occurred while fetching details."
+msgstr "Произошла ошибка при получении данных."
+
+#: .\production\templates\technologist\cuts\detail.html:256
+msgid "Status updated successfully."
+msgstr "Статус успешно обновлен."
+
+#: .\production\templates\technologist\cuts\detail.html:260
+msgid "Failed to update status."
+msgstr "Не удалось обновить статус."
+
+#: .\production\templates\technologist\cuts\detail.html:265
+msgid "Error occurred while updating status."
+msgstr "Произошла ошибка при обновлении статуса."
+
 #: .\production\templates\technologist\equipment\create.html:33
 msgid "Create New Equipment"
 msgstr "Создать Новое Оборудование"
 
-#: .\production\templates\technologist\equipment\detail.html:30
+#: .\production\templates\technologist\equipment\detail.html:27
 msgid "Equipment Details:"
 msgstr "Детали Оборудования"
+
+#: .\production\templates\technologist\equipment\detail.html:54
+msgid "Are you sure you want to delete this equipment?"
+msgstr "Вы уверены, что хотите удалить это оборудование?"
+
+#: .\production\templates\technologist\equipment\detail.html:64
+msgid "Are you sure you want to unarchive this equipment?"
+msgstr "Вы уверены, что хотите разархивировать это оборудование?"
 
 #: .\production\templates\technologist\equipment\edit.html:29
 msgid "Edit Equipment:"
@@ -1736,7 +2468,7 @@ msgstr "Создать Новую Модель"
 
 #: .\production\templates\technologist\models\create.html:101
 #: .\production\templates\technologist\models\edit.html:108
-#: .\production\templates\technologist\operations\list.html:127
+#: .\production\templates\technologist\operations\list.html:115
 msgid "Search operations by number..."
 msgstr "Искать операции по номеру..."
 
@@ -1752,6 +2484,14 @@ msgstr "Операции"
 #: .\production\templates\technologist\models\detail.html:53
 msgid "Copy"
 msgstr "Скопировать"
+
+#: .\production\templates\technologist\models\detail.html:74
+msgid "Are you sure you want to delete this model?"
+msgstr "Вы уверены, что хотите удалить эту модель?"
+
+#: .\production\templates\technologist\models\detail.html:86
+msgid "Are you sure you want to unarchive this model?"
+msgstr "Вы уверены, что хотите разархивировать эту модель?"
 
 #: .\production\templates\technologist\models\edit.html:93
 msgid "Copying Model:"
@@ -1789,6 +2529,10 @@ msgstr "Детали Ассортимента"
 msgid "Create Model"
 msgstr "Создать Модель"
 
+#: .\production\templates\technologist\models\list.html:38
+msgid "Archived Models"
+msgstr "Архивированные Модели"
+
 #: .\production\templates\technologist\nodes\create.html:104
 #: .\production\templates\technologist\nodes\edit.html:108
 msgid "Node No"
@@ -1799,18 +2543,26 @@ msgstr "Узлы"
 msgid "Is common"
 msgstr "Общаяя"
 
-#: .\production\templates\technologist\nodes\detail.html:59
+#: .\production\templates\technologist\nodes\detail.html:29
 msgid "Node Details:"
 msgstr "Детали Узла"
 
-#: .\production\templates\technologist\nodes\detail.html:64
-#: .\production\templates\technologist\operations\detail.html:43
+#: .\production\templates\technologist\nodes\detail.html:37
+#: .\production\templates\technologist\operations\detail.html:37
 msgid "Number:"
 msgstr "Номер"
 
-#: .\production\templates\technologist\nodes\detail.html:65
+#: .\production\templates\technologist\nodes\detail.html:38
 msgid "Is common:"
 msgstr "Общаяя"
+
+#: .\production\templates\technologist\nodes\detail.html:59
+msgid "Are you sure you want to delete this node?"
+msgstr "Вы уверены, что хотите удалить этот узел?"
+
+#: .\production\templates\technologist\nodes\detail.html:69
+msgid "Are you sure you want to unarchive this node?"
+msgstr "Вы уверены, что хотите разархивировать этот узел?"
 
 #: .\production\templates\technologist\nodes\edit.html:96
 msgid "Edit Node:"
@@ -1820,62 +2572,58 @@ msgstr "Редактировать Узел"
 msgid "Create New Operation"
 msgstr "Создать Новую Операцию"
 
-#: .\production\templates\technologist\operations\detail.html:33
+#: .\production\templates\technologist\operations\detail.html:29
 msgid "Operation Details:"
 msgstr "Детали операции"
 
-#: .\production\templates\technologist\operations\detail.html:45
+#: .\production\templates\technologist\operations\detail.html:39
 msgid "Equipment:"
 msgstr "Оборудование"
 
-#: .\production\templates\technologist\operations\detail.html:46
+#: .\production\templates\technologist\operations\detail.html:40
 msgid "Node:"
 msgstr "Узел"
 
-#: .\production\templates\technologist\operations\detail.html:47
+#: .\production\templates\technologist\operations\detail.html:41
 msgid "Preferred Completion Time:"
 msgstr "Предпочтительное Время Завершения"
 
-#: .\production\templates\technologist\operations\detail.html:47
-#: .\production\templates\technologist\operations\detail.html:48
+#: .\production\templates\technologist\operations\detail.html:41
+#: .\production\templates\technologist\operations\detail.html:42
 msgid "seconds"
 msgstr "секунд"
 
-#: .\production\templates\technologist\operations\detail.html:48
+#: .\production\templates\technologist\operations\detail.html:42
 msgid "Average Completion Time:"
 msgstr "Среднее Время Завершения"
 
-#: .\production\templates\technologist\operations\detail.html:49
+#: .\production\templates\technologist\operations\detail.html:43
 msgid "Calculate Average"
 msgstr "Рассчитать Среднее"
 
-#: .\production\templates\technologist\operations\detail.html:51
-msgid "Assigned Employee:"
-msgstr "Назначенный Сотрудник"
-
-#: .\production\templates\technologist\operations\detail.html:74
+#: .\production\templates\technologist\operations\detail.html:69
 msgid "Used in Models:"
 msgstr "Редактировать Модель"
 
-#: .\production\templates\technologist\operations\detail.html:89
+#: .\production\templates\technologist\operations\detail.html:81
 msgid "This operation is not used in any models."
 msgstr "С этой моделью не связано операций."
+
+#: .\production\templates\technologist\operations\detail.html:89
+msgid "Are you sure you want to delete this operation?"
+msgstr "Вы уверены, что хотите удалить эту операцию?"
+
+#: .\production\templates\technologist\operations\detail.html:99
+msgid "Are you sure you want to unarchive this operation?"
+msgstr "Вы уверены, что хотите разархивировать эту операцию?"
 
 #: .\production\templates\technologist\operations\edit.html:31
 msgid "Edit Operation:"
 msgstr "Операция"
 
-#: .\production\templates\technologist\operations\list.html:120
+#: .\production\templates\technologist\operations\list.html:109
 msgid "Upload from Excel"
 msgstr "Загрузить с Excel"
-
-#: .\production\templates\technologist\orders\detail.html:57
-msgid "Resolved"
-msgstr "Разрешить"
-
-#: .\production\templates\technologist\orders\detail.html:58
-msgid "Unresolvable"
-msgstr "Неразрешимо"
 
 #: .\production\templates\technologist\orders\edit.html:6
 msgid "Edit Order:"
@@ -1885,29 +2633,29 @@ msgstr "Редактировать Заказ"
 msgid "Assign Operations for Passport"
 msgstr "Назначить Операции для Паспорта"
 
-#: .\production\templates\technologist\passports\assign_operations.html:86
+#: .\production\templates\technologist\passports\assign_operations.html:82
 msgid "Reassign Work"
 msgstr "Переназначенная Работа"
 
-#: .\production\templates\technologist\passports\assign_operations.html:91
+#: .\production\templates\technologist\passports\assign_operations.html:87
 msgid "ID (Quan.)"
 msgstr "ID (Кол.)"
 
-#: .\production\templates\technologist\passports\assign_operations.html:121
+#: .\production\templates\technologist\passports\assign_operations.html:139
 msgid "New Employee ID"
 msgstr "ID Нового Сотрудника"
 
-#: .\production\templates\technologist\passports\assign_operations.html:127
+#: .\production\templates\technologist\passports\assign_operations.html:145
 msgid "Reason"
 msgstr "Причина"
+
+#: .\production\templates\technologist\passports\create.html:5
+msgid "Create New Passport"
+msgstr "Создать Новый Паспорт"
 
 #: .\production\templates\technologist\passports\detail.html:6
 msgid "Passport Details for"
 msgstr "Детали Паспорта для"
-
-#: .\production\templates\technologist\passports\detail.html:11
-msgid "Roll"
-msgstr "Рулон"
 
 #: .\production\templates\technologist\passports\detail.html:17
 msgid "Size and Quantity"
@@ -1940,23 +2688,3 @@ msgstr "Создать Паспорт"
 #: .\production\templates\technologist\passports\list.html:15
 msgid "Passport for"
 msgstr "Паспорт для"
-
-#: .\production\templates\technologist\rolls\create.html:30
-msgid "Create New Roll"
-msgstr "Создать Новый Рулон"
-
-#: .\production\templates\technologist\rolls\detail.html:34
-msgid "Roll Details:"
-msgstr "Детали Рулона"
-
-#: .\production\templates\technologist\rolls\detail.html:41
-msgid "Meters Available:"
-msgstr "Метров Доступно"
-
-#: .\production\templates\technologist\rolls\detail.html:42
-msgid "Meters Used:"
-msgstr "Метров Использовано"
-
-#: .\production\templates\technologist\rolls\edit.html:31
-msgid "Edit Roll:"
-msgstr "Редактировать Рулон"
