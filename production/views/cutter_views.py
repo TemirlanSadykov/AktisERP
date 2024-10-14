@@ -46,6 +46,8 @@ class OrderListCutterView(RestrictOrderBranchMixin, ListView):
         search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
 
+        queryset = queryset.filter(client_order__is_archived=False)
+
         if status:
             try:
                 status = int(status)
