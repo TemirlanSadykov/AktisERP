@@ -334,10 +334,11 @@ class ModelCustomForm(forms.ModelForm):
 
     class Meta:
         model = Model
-        fields = ['name', 'operations']  # Ensure 'operations' is handled by the form
+        fields = ['name', 'operations', 'photo']  # Ensure 'operations' is handled by the form
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'operations': forms.Select(attrs={'class': 'form-control'}),
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
         
     def __init__(self, *args, **kwargs):
@@ -359,6 +360,9 @@ class ModelCustomForm(forms.ModelForm):
 
     def save(self, commit=True):
         model_instance = super().save(commit=False)
+        if 'photo' not in self.changed_data:
+            model_instance.photo = self.instance.photo
+
         if self.assortment_id:
             model_instance.assortment = Assortment.objects.get(pk=self.assortment_id)
         

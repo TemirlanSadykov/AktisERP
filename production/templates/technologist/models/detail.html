@@ -29,6 +29,13 @@
       <div class="card-body">
         <div class="row">
           <div class="col-md-12">
+            <div class="operation-photo">
+              {% if model.photo %}
+                <img src="{{ model.photo.url }}" alt="{% trans 'Model Photo' %}">
+              {% else %}
+                <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
+              {% endif %}
+            </div>
             <p>
               <strong>{% trans 'Assortment:' %}</strong> {{ model.assortment.name }}
             </p>

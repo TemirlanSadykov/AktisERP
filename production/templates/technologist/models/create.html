@@ -90,12 +90,17 @@
     <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Model" %}</h2>
   </div>    
   <div class="col-md-12">
-    <form method="post" id="modelForm" class="crud-form">
+    <form method="post" id="modelForm" class="crud-form" enctype="multipart/form-data">
         {% csrf_token %}
         <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
         {{ form.name }}
         {% if form.name.errors %}
             <div class="error">{{ form.name.errors }}</div>
+        {% endif %}
+        <label for="{{ form.photo.id_for_label }}">{{ form.photo.label }}</label>
+        {{ form.photo }}
+        {% if form.photo.errors %}
+            <div class="error">{{ form.photo.errors }}</div>
         {% endif %}
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">

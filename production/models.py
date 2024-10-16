@@ -192,6 +192,7 @@ class Model(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
     operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
+    photo = models.ImageField(upload_to='model_photos/', null=True, blank=True, verbose_name='Фото')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     def __str__(self):
         return self.name

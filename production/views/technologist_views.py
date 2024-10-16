@@ -1043,7 +1043,7 @@ def model_create(request, a_id, pk=None):
     original = get_object_or_404(Model, pk=copy_id) if copy_id else None
 
     if request.method == 'POST':
-        form = ModelCustomForm(request.POST, instance=None, a_id=a_id, copy_id=copy_id)
+        form = ModelCustomForm(request.POST, request.FILES, instance=None, a_id=a_id, copy_id=copy_id)
         if form.is_valid():
             form.save()
             return redirect('model_list', a_id=a_id)
@@ -1084,7 +1084,7 @@ class ModelDetailView(DetailView):
 def model_edit(request, a_id, pk):
     model_instance = get_object_or_404(Model, pk=pk)
     if request.method == 'POST':
-        form = ModelCustomForm(request.POST, instance=model_instance)
+        form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
             form.save()
             return redirect('model_list', a_id=a_id)

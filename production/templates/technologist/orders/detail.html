@@ -53,7 +53,13 @@
           <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
         </div>
         <div class="col-md-5 text-center">
-          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+          {% if order.model.photo %}
+            <div class="operation-photo">
+              <img src="{{ order.model.photo.url }}" alt="{% trans 'Model Photo' %}">
+            </div>
+          {% else %}
+            <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
+          {% endif %}
         </div>
       </div>
     </div>
