@@ -1558,24 +1558,32 @@ msgstr "Кладовщик"
 #: .\production\templates\base.html:146 .\production\templates\base.html:163
 #: .\production\templates\base.html:172 .\production\templates\base.html:187
 #: .\production\templates\base.html:195
-msgid "Navigation"
-msgstr "Навигация"
+#: .\production\templates\dashboard.html:254
+msgid "Home"
+msgstr "Главная"
 
-#: .\production\templates\base.html:63 .\production\templates\base.html:92
-#: .\production\templates\base.html:109 .\production\templates\base.html:129
-#: .\production\templates\cutter\orders\list.html:48
 #: .\production\templates\dashboard.html:474
-#: .\production\templates\packer\orders\list.html:49
-#: .\production\templates\qc\orders\list.html:48
-#: .\production\templates\technologist\orders\list.html:49
 msgid "Models"
 msgstr "Модели"
 
-#: .\production\templates\base.html:66
+#: .\production\templates\base.html:63 .\production\templates\base.html:92
+#: .\production\templates\base.html:109 .\production\templates\base.html:129
+#: .\production\templates\base.html:178
+#: .\production\templates\cutter\orders\list.html:48
+#: .\production\templates\packer\orders\list.html:49
+#: .\production\templates\qc\orders\list.html:48
+#: .\production\templates\technologist\orders\list.html:49
+msgid "Work"
+msgstr "Работа"
+
 #: .\production\templates\dashboard.html:473
 #: .\production\templates\technologist\assortments\list.html:29
 msgid "Assortments"
 msgstr "Ассортименты"
+
+#: .\production\templates\base.html:66
+msgid "Model Base"
+msgstr "База Моделей"
 
 #: .\production\templates\base.html:69
 #: .\production\templates\dashboard.html:472
@@ -1629,17 +1637,14 @@ msgstr "Фурнитура"
 msgid "Done Work"
 msgstr "Выполненная Работа"
 
-#: .\production\templates\base.html:178
-msgid "Pending Work"
-msgstr "Ожидающая Работа"
-
 #: .\production\templates\base.html:182
 msgid "Reassigned Work"
 msgstr "Переназначенные Работы"
 
 #: .\production\templates\base.html:200
+#: .\production\templates\dashboard.html:233
 msgid "Dashboard"
-msgstr "Основная Панель"
+msgstr "Дашборд"
 
 #: .\production\templates\base.html:218
 msgid "Attendances"
@@ -1801,10 +1806,6 @@ msgstr "Завершить Рабочий День"
 msgid "Clock In"
 msgstr "Начать Рабочий День"
 
-#: .\production\templates\dashboard.html:233
-msgid "Overview"
-msgstr "Основная"
-
 #: .\production\templates\dashboard.html:245
 msgid "Production"
 msgstr "Продукция"
@@ -1812,10 +1813,6 @@ msgstr "Продукция"
 #: .\production\templates\dashboard.html:248
 msgid "Inventory"
 msgstr "Инвентарь"
-
-#: .\production\templates\dashboard.html:254
-msgid "Home"
-msgstr "Домой"
 
 #: .\production\templates\dashboard.html:266
 msgid "ERP Dashboard"

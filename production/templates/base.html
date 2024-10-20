@@ -57,13 +57,13 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_technologist' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Models'%}</span></a>
+                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work'%}</span></a>
                     <a href="{% url 'assortment_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
-                        data-id="Assortments"><i class="fas fa-table fa-fw"></i><span class="sidetext">{% trans 'Assortments' %}</span></a>
+                        data-id="Assortments"><i class="fas fa-table fa-fw"></i><span class="sidetext">{% trans 'Model Base' %}</span></a>
                     <a href="{% url 'operation_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="Operations"><i class="fas fa-users fa-fw"></i><span class="sidetext">{% trans 'Operations' %}</span></a>
@@ -77,7 +77,7 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
                 {% elif sidebar_type == 'cutter' %}
@@ -86,15 +86,15 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_cutter' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Models' %}</span></a>
+                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
                     {% else %}
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
                 {% elif sidebar_type == 'qc_page' %}
@@ -103,10 +103,10 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_qc' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Models' %}</span></a>
+                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
                     <a href="{% url 'scan_qc_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
@@ -114,7 +114,7 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
                 {% elif sidebar_type == 'packer' %}
@@ -123,10 +123,10 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_packer' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Models' %}</span></a>
+                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
                     <a href="{% url 'scan_packer_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
@@ -134,7 +134,7 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
                 {% elif sidebar_type == 'keeper' %}
@@ -143,7 +143,7 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'roll_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Rolls"><i
                         class="fas fa-clipboard fa-fw"></i><span class="sidetext">{% trans 'Rolls' %}</span></a>
@@ -160,7 +160,7 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
                 {% elif sidebar_type == 'emp' %}
@@ -169,22 +169,18 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'done_works_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="work">
                         <i class="fas fa-check fa-fw"></i><span class="sidetext">{% trans 'Done Work' %}</span></a>
                     <a href="{% url 'pending_works_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Pending">
-                        <i class="fas fa-tasks fa-fw"></i> <span class="sidetext">{% trans 'Pending Work' %}</span></a>
-                    <a href="{% url 'reassigned_works_list' %}"
-                        class="list-group-item list-group-item-action text-black collapsesidebarset"
-                        data-id="Reassigned">
-                        <i class="fas fa-redo fa-fw"></i><span class="sidetext">{% trans 'Reassigned Work' %}</span></a>
+                        <i class="fas fa-tasks fa-fw"></i> <span class="sidetext">{% trans 'Work' %}</span></a>
 
                     {% else %}
                     <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span></a>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
                 {% else %}
@@ -192,12 +188,12 @@
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
-                        <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Navigation' %}</span>
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
                     </a>
                     <a href="{% url 'dashboard_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="dashboard">
-                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Dashboard' %}</span>
+                        <i class="fas fa-sitemap fa-fw"></i><span class="sidetext">{% trans 'Dashboard' %}</span>
                     </a>
                     <a href="{% url 'client_order_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="orders">
