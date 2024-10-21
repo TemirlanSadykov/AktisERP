@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 
@@ -188,6 +188,37 @@ class CutDetailView(DetailView):
         })
 
         return context
+    
+@method_decorator([login_required, cutter_required], name='dispatch')
+class CutEditView(UpdateView):
+    model = Cut
+    form_class = CutForm
+    template_name = 'cutter/cuts/edit.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        order_id = self.object.order.pk  # Get order from the existing cut object
+        order = get_object_or_404(Order, pk=order_id)
+        kwargs['order'] = order  # Pass the order to the form
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order_id = self.object.order.pk  # Get order from the existing cut object
+        order = get_object_or_404(Order, pk=order_id)
+        context['order'] = order
+        context['sidebar_type'] = 'cutter'
+        return context
+
+    def get_success_url(self):
+        return reverse('cut_detail', kwargs={'pk': self.object.pk})
+    
+@method_decorator([login_required, cutter_required], name='dispatch')
+class CutDeleteView(DeleteView):
+    model = Cut
+    def get_success_url(self):
+        return reverse('order_detail_cutter', kwargs={'pk': self.object.order.pk})
+
     
 @method_decorator([login_required, cutter_required], name='dispatch')
 class ConsumptionCreateView(CreateView):
