@@ -7,8 +7,11 @@ from datetime import date
 
 
 class Branch(models.Model):
-    name = models.CharField(max_length=100) 
+    name = models.CharField(max_length=100)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    latitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Latitude', null=True, blank=True)
+    longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
+    radius = models.IntegerField(verbose_name='Allowed Radius (meters)', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -67,6 +70,8 @@ class EmployeeAttendance(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     is_clock_in = models.BooleanField(default=False)
     distance = models.FloatField(null=True, blank=True, verbose_name='Distance from Workplace (meters)')
+    latitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Latitude', null=True, blank=True)
+    longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
     fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"

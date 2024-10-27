@@ -13,9 +13,12 @@ from django.db.models import F
 class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
-        fields = ['name']
+        fields = ['name', 'latitude', 'longitude', 'radius']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'})
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
+            'radius': forms.HiddenInput(attrs={'value': 200}),
         }
 
 class UserWithProfileForm(UserCreationForm):
