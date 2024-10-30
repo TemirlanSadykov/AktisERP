@@ -1015,6 +1015,7 @@ msgid "Edit Employee Details"
 msgstr "Редактировать Данные Сотрудника"
 
 #: .\production\templates\admin\employees\edit.html:70
+#: .\production\templates\admin_page.html:129
 msgid "Branch"
 msgstr "Филиал"
 
