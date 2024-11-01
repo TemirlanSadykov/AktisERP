@@ -192,11 +192,6 @@ LOCALE_PATHS = [
 
 CSRF_TRUSTED_ORIGINS = ['https://prod-aktis.up.railway.app']
 
-# Load the environment variables
-WORKPLACE_LAT = config('PROD_AKTIS_WORKPLACE_LAT', cast=float)
-WORKPLACE_LON = config('PROD_AKTIS_WORKPLACE_LON', cast=float)
-ALLOWED_RADIUS = config('PROD_AKTIS_ALLOWED_RADIUS', cast=int)
-
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
     

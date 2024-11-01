@@ -181,7 +181,7 @@ class BarcodePassportSizePerPiece(View):
             color = passport_size.passport.roll.color
             tone = passport_size.passport.number
             fabrcis = passport_size.passport.roll.fabrics
-            size = passport_size.size_quantity.size
+            size = f"{passport_size.size_quantity.size} - {passport_size.extra}" if passport_size.extra else passport_size.size_quantity.size
             p.setFont("DejaVuSans", 14)
             p.drawString(10, text_start_height, f"Дата: {date}")
             p.drawString(10, text_start_height - 25, f"№ кроя: {cut}")

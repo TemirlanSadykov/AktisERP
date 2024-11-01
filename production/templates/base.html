@@ -185,6 +185,7 @@
                 </div>
                 {% else %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">
+                    {% if request.user.userprofile.status %}
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
@@ -240,7 +241,11 @@
                         <i class="fab fa-whatsapp fa-fw"></i>
                         <span class="sidetext">{% trans 'WhatsApp' %}</span>
                     </a>
-                 
+                    {% else %}
+                    <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black"
+                        data-id="user_redirect">
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

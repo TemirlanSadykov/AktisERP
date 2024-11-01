@@ -13,9 +13,12 @@ from django.db.models import F
 class BranchForm(forms.ModelForm):
     class Meta:
         model = Branch
-        fields = ['name']
+        fields = ['name', 'latitude', 'longitude', 'radius']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'})
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
+            'radius': forms.HiddenInput(attrs={'value': 200}),
         }
 
 class UserWithProfileForm(UserCreationForm):
@@ -129,17 +132,38 @@ class CutForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple,
         label="Выберите размеры"
     )
+    quantities = forms.CharField(widget=forms.HiddenInput(), required=False)  # Hidden field to store quantities as JSON
 
     class Meta:
         model = Cut
         exclude = ['order', 'date', 'number']
 
     def __init__(self, *args, **kwargs):
-        order = kwargs.pop('order', None)  # Get order from the view
+        order = kwargs.pop('order', None)
         super().__init__(*args, **kwargs)
 
         if order:
             self.fields['size_quantities'].queryset = order.size_quantities.all()
+        
+    def clean_quantities(self):
+        import json
+        try:
+            quantities = json.loads(self.cleaned_data['quantities'])
+            return {int(k): int(v) for k, v in quantities.items()}
+        except (TypeError, ValueError):
+            raise forms.ValidationError("Invalid quantities format.")
+
+    def save_cut_sizes(self, cut):
+        quantities = self.cleaned_data['quantities']
+        for size_quantity in self.cleaned_data['size_quantities']:
+            count = quantities.get(size_quantity.id, 1)
+            extras = [""] + [chr(65 + i) for i in range(count - 1)]  # "", "A", "B", etc.
+            for extra in extras:
+                CutSize.objects.create(
+                    cut=cut,
+                    size_quantity=size_quantity,
+                    extra=extra
+                )
 
 class ConsumptionForm(forms.ModelForm):
     class Meta:

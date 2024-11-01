@@ -23,30 +23,48 @@
 <div class="container maincontr">
   <div class="row justify-content-center">
     <div class="col-md-12">
-      <!-- <div class="card"> -->
-        <div class="card-header">
-          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Branch:" %} {{ branch.name }}</h2>
-        </div>
-        <div class="card-body">
-          <form method="post">
-            {% csrf_token %}
-            <div class="form-group">
-              {{ form.as_p }}
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Branch:" %} {{ branch.name }}</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" id="branch-update-form">
+          {% csrf_token %}
+          <div class="form-group">
+            {{ form.as_p }}
+          </div>
+          <div class="form-group">
+            <div class="row">
+              <div class="col text-left">
+                <button type="button" class="btn btn-create btnset buttonsetting" onclick="getLocationForUpdate()">{% trans "Update" %}</button>
+              </div>
+              <div class="col text-right">
+                <a href="{% url 'branch_detail' branch.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
+              </div>
             </div>
-            <div class="form-group">
-              <div class="row">
-                <div class="col text-left">
-                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
-                </div>
-                <div class="col text-right">
-                  <a href="{% url 'branch_detail' branch.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
-                </div>
-            </div>
-            </div>
-          </form>
-        </div>
-      <!-- </div> -->
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  function getLocationForUpdate() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        // Set latitude and longitude
+        document.getElementById('id_latitude').value = position.coords.latitude;
+        document.getElementById('id_longitude').value = position.coords.longitude;
+
+        // Submit the form after setting values
+        document.getElementById('branch-update-form').submit();
+      }, function(error) {
+        alert("Unable to retrieve location. Please check location settings.");
+      });
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+</script>
+
 {% endblock %}

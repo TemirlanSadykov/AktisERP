@@ -28,7 +28,7 @@
 
   <!-- </div> -->
 <!-- </div> -->
-
+{% if request.user.userprofile.status %}
     <div class="container-fluid ">
       <div class="row mt-4">
         <div class="col-md-6 col-sm-6 mb-4">
@@ -117,21 +117,110 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4 mt-4">
-      <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
-        {% csrf_token %}
-        <div class="form-group d-flex align-items-center">
-          <h4 class="mb-0 mr-3">Филиал:</h4>
-          <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
+    <div>
+      <div class="w-100 mt-4 d-flex align-items-center justify-content-start" style="padding-left: 15px;">
+        <!-- Clock In/Out Section -->
+        <h4 class="mb-0 mr-3">{% trans 'Clock In/Out' %}</h4>
+        <button id="clock-btn" class="clock-btn mr-5">
+          {% trans 'Clock Out' %}
+        </button>
+      
+        <!-- Branch Section -->
+        <h4 class="mb-0 mr-3">{% trans 'Branch' %}</h4>
+        <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form d-inline">
+          {% csrf_token %}
+          <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();" style="width: auto;">
             {% for branch in branches %}
-            {% if not branch.is_archived %}
-              <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
-                {{ branch.name }}
-              </option>
+              {% if not branch.is_archived %}
+                <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
+                  {{ branch.name }}
+                </option>
               {% endif %}
             {% endfor %}
           </select>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
+    
+    {% else %}
+    <div class="clock-container">
+      <h1 class="clock-heading">{% trans 'Clock In/Out' %}</h1>
+      <button id="clock-btn" class="clock-btn">
+        {% trans 'Clock In' %}
+      </button>
+    </div>
+    {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <script>
+      // Function to get location
+      function getLocation(callback) {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            callback({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          }, function(error) {
+            alert("Unable to retrieve your location. Please check location settings.");
+            callback(null);
+          });
+        } else {
+          alert("Geolocation is not supported by this browser.");
+          callback(null);
+        }
+      }
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      // Function to get browser fingerprint and submit clock-in data
+      async function clockInOut() {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        const fingerprint = result.visitorId;
+        // Get location
+        getLocation(function(location) {
+          if (location) {
+            // Send fingerprint and location to the backend
+            fetch("{% url 'clock_in_out' %}", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken'),
+              },
+              body: JSON.stringify({
+                fingerprint: fingerprint,
+                latitude: location.latitude,
+                longitude: location.longitude
+              })
+            }).then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                window.location.href = "{% url 'user_redirect' %}";
+              } else if (data.error) {
+                alert(`Clock-in/out failed: ${data.error}. You are ${data.distance.toFixed(2)} meters away from the workplace.`);
+              }
+            }).catch(error => {
+              console.error("Error:", error);
+              alert("Clock-in/out failed due to an error.");
+            });
+          }
+        });
+      }
+    
+      // Attach event listener to clock-in/out button
+      document.getElementById("clock-btn").addEventListener("click", function() {
+        clockInOut();
+      });
+    </script>        
 {% endblock %}

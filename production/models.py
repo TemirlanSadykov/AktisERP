@@ -7,8 +7,11 @@ from datetime import date
 
 
 class Branch(models.Model):
-    name = models.CharField(max_length=100) 
+    name = models.CharField(max_length=100)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    latitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Latitude', null=True, blank=True)
+    longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
+    radius = models.IntegerField(verbose_name='Allowed Radius (meters)', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -67,6 +70,8 @@ class EmployeeAttendance(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     is_clock_in = models.BooleanField(default=False)
     distance = models.FloatField(null=True, blank=True, verbose_name='Distance from Workplace (meters)')
+    latitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Latitude', null=True, blank=True)
+    longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
     fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
@@ -255,10 +260,10 @@ class Order(models.Model):
         return f"{self.model}"
     
 class Cut(models.Model):
-    number = models.IntegerField(verbose_name='Номер', editable=False)  # Remove AutoField and use IntegerField
+    number = models.IntegerField(verbose_name='Номер', editable=False)
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
-    size_quantities = models.ManyToManyField(SizeQuantity, related_name='cuts', verbose_name='Размеры и количества')
+    size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
 
     def __str__(self):
         return f"Cut {self.number} for Order {self.order}"
@@ -273,6 +278,26 @@ class Cut(models.Model):
                 self.number = 1
 
         super().save(*args, **kwargs)
+        
+class CutSize(models.Model):
+    extra = models.CharField(max_length=5, blank=True, null=True, verbose_name='Дополнительно')
+    cut = models.ForeignKey(Cut, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Резка')
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Размер и количество')
+    CUTTING = 0
+    SEWING = 1
+    QC = 2
+    PACKING = 3
+    DONE = 4
+    STAGE_CHOICES = [
+        (CUTTING, 'Резка'),
+        (SEWING, 'Шитье'),
+        (QC, 'ОТК'),
+        (PACKING, 'Упаковка'),
+        (DONE, 'Готово'),
+    ]
+    stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
+    def __str__(self):
+        return f"{self.size_quantity.size} - {self.extra}"
 
 class Consumption(models.Model):
     cut = models.ForeignKey(Cut, on_delete=models.CASCADE, related_name='consumptions', verbose_name='Крой')
@@ -305,9 +330,9 @@ class Passport(models.Model):
     def delete(self, *args, **kwargs):
         # Return the meters back to the associated roll when passport is deleted
         if self.roll and self.meters:
-            self.roll.used_meters = max(0, self.roll.used_meters - self.meters)  # Reduce the used meters
-            self.roll.save()  # Save the roll with updated used meters
-        super(Passport, self).delete(*args, **kwargs)  # Call the superclass delete method
+            self.roll.used_meters = max(0, self.roll.used_meters - self.meters)
+            self.roll.save()
+        super(Passport, self).delete(*args, **kwargs)
 
     
 class PassportSize(models.Model):
