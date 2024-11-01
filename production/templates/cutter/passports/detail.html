@@ -65,7 +65,7 @@
               {% for size in passport_sizes %}
               <tr>
                 <td>
-                  <a href="{% url 'barcode_passport_size' size.id %}" style="display: block; width: 100%; height: 100%;">{{ size.size_quantity.size }}</a>
+                  <a href="{% url 'barcode_passport_size' size.id %}" style="display: block; width: 100%; height: 100%;">{% if size.extra %} {{ size.size_quantity.size }} - {{ size.extra }} {% else %} {{ size.size_quantity.size }} {% endif %}</a>
                 </td>
                 <td>
                   <a href="{% url 'barcode_passport_size_per_piece' size.id %}" style="display: block; width: 100%; height: 100%;">{{ size.quantity }}</a>

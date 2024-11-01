@@ -132,7 +132,7 @@ class CutCreateView(CreateView):
         kwargs = super().get_form_kwargs()
         order_id = self.kwargs.get('pk')
         order = get_object_or_404(Order, pk=order_id)
-        kwargs['order'] = order  # Pass order to the form
+        kwargs['order'] = order
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -149,7 +149,7 @@ class CutCreateView(CreateView):
         cut = form.save(commit=False)
         cut.order = order
         cut.save()
-        form.save_m2m()
+        form.save_cut_sizes(cut)  # Save sizes and quantities to CutSize
         return redirect('consumption_create', pk=cut.pk)
 
     def get_success_url(self):
@@ -291,7 +291,7 @@ class PassportCreateView(CreateView):
         last_passport = Passport.objects.filter(cut=cut).order_by('number').last()
         passport.number = last_passport.number + 1 if last_passport else 1
 
-        passport.cut = cut
+        passport.cut = cut  # Link passport directly to the cut
 
         # Fetch the selected roll and reduce its available meters
         roll = passport.roll
@@ -304,19 +304,18 @@ class PassportCreateView(CreateView):
 
             passport.save()  # Save the passport instance
 
-            # Automatically create PassportSize for each size_quantity in the cut
-            for size_quantity in cut.size_quantities.filter(color=roll.color):
+            # Automatically create PassportSize for each unique CutSize in the cut
+            for cut_size in cut.cut_sizes.filter(size_quantity__color=roll.color):
                 passport_size = PassportSize.objects.create(
                     passport=passport,
-                    size_quantity=size_quantity,
+                    size_quantity=cut_size.size_quantity,
                     quantity=form.cleaned_data['layers'],  # Layers from form input
                     stage=0,  # Default to CUTTING
-                    extra=''  # Extra left empty
+                    extra=cut_size.extra  # Use `extra` from CutSize
                 )
-                
-                quantity = int(passport_size.quantity)
 
                 # Generate ProductionPiece for each PassportSize based on quantity
+                quantity = int(passport_size.quantity)
                 for i in range(1, quantity + 1):
                     ProductionPiece.objects.create(
                         passport_size=passport_size,

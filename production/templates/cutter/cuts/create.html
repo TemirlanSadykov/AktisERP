@@ -29,13 +29,76 @@
                 <h2 class="card-title">{% trans "Create New Cut for Order:" %} #{{ order.pk }}</h2>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" id="cut-form">
                     {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary">{% trans "Create Cut" %}</button>
+                    {{ form.size_quantities }}
+                    <div id="quantity-fields" style="margin-top: 20px;">
+                        <!-- Quantity input fields with size labels will be added here dynamically -->
+                    </div>
+                    <input type="hidden" name="quantities" id="id_quantities">
+                    <button type="submit" class="btn btn-primary mt-3">{% trans "Create Cut" %}</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    const quantities = {};
+
+    document.querySelectorAll('input[name="size_quantities"]').forEach(sizeCheckbox => {
+        sizeCheckbox.addEventListener('change', () => {
+            const quantityFields = document.getElementById('quantity-fields');
+            const sizeId = sizeCheckbox.value;
+
+            // Use `id` to find the associated label
+            const sizeLabelElement = document.querySelector(`label[for="${sizeCheckbox.id}"]`);
+            const sizeLabel = sizeLabelElement ? sizeLabelElement.textContent.trim() : 'Size';
+
+            if (sizeCheckbox.checked) {
+                // Create a new container for the size and input field
+                const container = document.createElement('div');
+                container.classList.add('d-flex', 'align-items-center', 'mb-2');
+                container.dataset.sizeId = sizeId;
+
+                // Label displaying the size name
+                const label = document.createElement('span');
+                label.textContent = `${sizeLabel}: `;
+                label.classList.add('mr-2');
+
+                // Quantity input field
+                const quantityInput = document.createElement('input');
+                quantityInput.type = 'number';
+                quantityInput.name = `quantity_${sizeId}`;
+                quantityInput.min = 1;
+                quantityInput.value = 1;
+                quantityInput.classList.add('form-control', 'form-control-sm');
+                quantityInput.style.width = '80px';
+
+                // Append label and input to the container, then add to the form
+                container.appendChild(label);
+                container.appendChild(quantityInput);
+                quantityFields.appendChild(container);
+
+                // Initialize quantity in the JSON object
+                quantities[sizeId] = 1;
+                document.getElementById('id_quantities').value = JSON.stringify(quantities);
+
+                // Update the quantities JSON as the input value changes
+                quantityInput.addEventListener('input', (e) => {
+                    quantities[sizeId] = parseInt(e.target.value) || 1;
+                    document.getElementById('id_quantities').value = JSON.stringify(quantities);
+                });
+            } else {
+                // Remove the quantity input and label for this size if unchecked
+                const containerToRemove = document.querySelector(`div[data-size-id="${sizeId}"]`);
+                if (containerToRemove) {
+                    containerToRemove.remove();
+                    delete quantities[sizeId];
+                    document.getElementById('id_quantities').value = JSON.stringify(quantities);
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}
