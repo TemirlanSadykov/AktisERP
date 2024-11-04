@@ -30,7 +30,7 @@
         <div class="card-header">
           <div class="row">
             <div class="col-md-9">
-            {% trans "Passport Details" %} №{{ passport.number }}
+            {% trans "Passport Details" %} №{{ passport.cut.number }} - №{{ passport.number }} 
             </div>
             {% comment %} <div class="col-md-3" >
             <!-- <div class="col-md-6 text-center"> -->
@@ -67,7 +67,7 @@
               {% for size in passport_sizes %}
               <tr>
                 <td>
-                  {{ size.size_quantity.size }}
+                  {% if size.extra %} {{ size.size_quantity.size }} - {{ size.extra }} {% else %} {{ size.size_quantity.size }} {% endif %}
                 </td>
                 <td>
                   {{ size.quantity }}

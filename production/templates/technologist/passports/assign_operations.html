@@ -27,7 +27,7 @@
 
 <div class="container maincontr" style="max-width: 100%;">
   <div class="card-header">
-    {% trans "Assign Operations for Passport" %} №{{ passport.id }}        
+    {% trans "Assign Operations for Passport" %} №{{ passport.cut.number }} - №{{ passport.number }}    
   </div>
   <div class="container" style="max-width: 100%;">
     <!-- <div class="card"> -->
@@ -59,7 +59,7 @@
           <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
           {% for ps in size_quantities %}
             <th>
-              {{ ps.size_quantity.size }}<br>
+              {% if ps.extra %}{{ ps.size_quantity.size }} - {{ ps.extra }}{% else %}{{ ps.size_quantity.size }}{% endif %}<br>
               ({{ ps.quantity }})
             </th>
           {% endfor %}
