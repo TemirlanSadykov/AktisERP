@@ -32,12 +32,10 @@
                 {% trans "Client Order Details:" %} {{ client_order.order_number }}
               </div>
               <div class="col-md-3 text-right">
-                {% if client_order.status != client_order.COMPLETED %}
                   <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-success completebutton">{% trans "Complete" %}</button>
+                    <button type="submit" class="btn completebutton">{% if client_order.status == client_order.NEW %}{% trans "In progress" %}{% elif client_order.status == client_order.IN_PROGRESS %}{% trans "Complete" %}{% else %}{% trans "Initiate" %}{% endif %}</button>
                   </form>
-                {% endif %}
                 {% if client_order.is_archived %}
                   <a href="javascript:void(0);" id="unArchiveBtn" class="btn btn-warning unarchive-btn">{% trans "Unarchive" %}</a>
                 {% endif %}
@@ -52,7 +50,7 @@
                     <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
                     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
                     <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
-                    <p><strong>{% trans "Info:" %}</strong> {% if client_order.info %} {{ client_order.info }} {% else %} {% endif %} </p>
+                    <p><strong>{% trans "Info:" %}</strong> {% if client_order.info %} {{ client_order.info }} {% endif %} </p>
                     {% if not client_order.is_archived %}  
                       <a href="{% url 'client_order_edit' client_order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
                     {% endif %} 
