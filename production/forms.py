@@ -426,19 +426,21 @@ class ClientForm(forms.ModelForm):
 class ClientOrderForm(forms.ModelForm):
     class Meta:
         model = ClientOrder
-        fields = ['order_number', 'client', 'term', 'status']
+        fields = ['order_number', 'client', 'launch', 'term', 'info']
         widgets = {
             'order_number': forms.TextInput(attrs={'class': 'form-control','placeholder':'Order number'}),
             'client': forms.Select(attrs={'class': 'form-control'}),
+            'launch': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
             'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-control'}),
+            'info': forms.TextInput(attrs={'class': 'form-control','placeholder':'Additional Info'}),
         }
 
     def clean_term(self):
         term = self.cleaned_data.get('term')
+        launch = self.cleaned_data.get('launch')
         today = timezone.localdate()
-        if term < today:
-            raise ValidationError("The term date cannot be earlier than today.")
+        if term < today or term < launch:
+            raise ValidationError("The term date cannot be earlier than today or the launch date.")
         return term
 
 class OrderForm(forms.ModelForm):

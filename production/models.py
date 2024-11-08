@@ -259,7 +259,11 @@ class ClientOrder(models.Model):
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
+    def default_launch():
+        return timezone.now()
+    launch = models.DateField(default=default_launch, verbose_name='Начало выполнения', blank=True, null=True)
     term = models.DateField(default=default_term, verbose_name='Срок выполнения')
+    info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
     def __str__(self):
         return self.order_number
 

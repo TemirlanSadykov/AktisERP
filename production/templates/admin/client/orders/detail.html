@@ -48,9 +48,11 @@
               <div class="row">
                   <div class="col-md-6 details">
                     <p><strong>{% trans "Client:" %}</strong> {{ client_order.client.name }}</p>
+                    <p><strong>{% trans "Launch:" %}</strong> {{ client_order.launch|date:"Y-m-d" }}</p>
                     <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
                     <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
                     <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
+                    <p><strong>{% trans "Info:" %}</strong> {% if client_order.info %} {{ client_order.info }} {% else %} {% endif %} </p>
                     {% if not client_order.is_archived %}  
                       <a href="{% url 'client_order_edit' client_order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
                     {% endif %} 
