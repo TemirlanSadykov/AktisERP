@@ -426,19 +426,21 @@ class ClientForm(forms.ModelForm):
 class ClientOrderForm(forms.ModelForm):
     class Meta:
         model = ClientOrder
-        fields = ['order_number', 'client', 'term', 'status']
+        fields = ['order_number', 'client', 'launch', 'term', 'info']
         widgets = {
             'order_number': forms.TextInput(attrs={'class': 'form-control','placeholder':'Order number'}),
             'client': forms.Select(attrs={'class': 'form-control'}),
+            'launch': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
             'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-control'}),
+            'info': forms.TextInput(attrs={'class': 'form-control','placeholder':'Additional Info'}),
         }
 
     def clean_term(self):
         term = self.cleaned_data.get('term')
+        launch = self.cleaned_data.get('launch')
         today = timezone.localdate()
-        if term < today:
-            raise ValidationError("The term date cannot be earlier than today.")
+        if term < today or term < launch:
+            raise ValidationError("The term date cannot be earlier than today or the launch date.")
         return term
 
 class OrderForm(forms.ModelForm):
@@ -501,17 +503,13 @@ class FabricsForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
         }
 
-class AccessoryForm(forms.ModelForm):
+class AbstractAccessoryForm(forms.ModelForm):
     class Meta:
-        model = Accessory
-        fields = ['name', 'quantity', 'unit', 'key', 'value', 'info']
+        model = AbstractAccessory
+        fields = ['name', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter accessory name'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter unit of measurement'}),
-            'key': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter key characteristic'}),
-            'value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter characteristic value'}),
-            'info': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter additional information', 'rows': 3}),
         }
 
 class SizeQuantityChoiceField(forms.ModelChoiceField):

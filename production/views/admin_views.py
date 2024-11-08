@@ -1215,43 +1215,55 @@ class ArchivedClientOrderListView(RestrictBranchMixin, ListView):
 @require_POST
 def client_order_complete(request, pk):
     client_order = get_object_or_404(ClientOrder, pk=pk)
-    if client_order.status != ClientOrder.COMPLETED:
-    # Retrieve all orders linked to this client order
-        orders = Order.objects.filter(client_order=client_order)
+    STATUSES = [ClientOrder.NEW, ClientOrder.IN_PROGRESS, ClientOrder.COMPLETED]
 
-        # Begin a transaction to ensure all or nothing is saved
-        with transaction.atomic():
-            for order in orders:
-                # Retrieve all passports linked to each order
-                passports = Passport.objects.filter(order=order)
-                for passport in passports:
-                    # Retrieve all passport sizes linked to each passport
-                    passport_sizes = PassportSize.objects.filter(passport=passport)
-                    for passport_size in passport_sizes:
-                        # Assume operations need to be created for QC and Packing stages
-                        operations = Operation.objects.filter(node__type=Node.QC)
-                        for operation in operations:
-                            # Create work for each operation
-                            work = Work.objects.create(
-                                operation=operation,
-                                passport=passport,
-                                passport_size=passport_size
-                            )
-                            # Create assigned work assuming quantity and success need handling
-                            AssignedWork.objects.create(
-                                work=work,
-                                employee=operation.employee,
-                                quantity=passport_size.quantity,
-                                start_time=timezone.now(),
-                                end_time=timezone.now(),
-                                is_success=True  # Assuming work is successful for demonstration
-                            )
+    # Get the index of the current status
+    current_index = STATUSES.index(client_order.status)
 
-            # Set the client order status to completed
-            client_order.status = ClientOrder.COMPLETED
-            client_order.save()
+    # Calculate the next index, cycling back to 0 if at the end
+    next_index = (current_index + 1) % len(STATUSES)
 
-    return redirect('client_order_list')
+    # Set the status to the next one
+    client_order.status = STATUSES[next_index]
+
+    client_order.save()
+    # if client_order.status != ClientOrder.COMPLETED:
+    # # Retrieve all orders linked to this client order
+    #     orders = Order.objects.filter(client_order=client_order)
+
+    #     # Begin a transaction to ensure all or nothing is saved
+    #     with transaction.atomic():
+    #         for order in orders:
+    #             # Retrieve all passports linked to each order
+    #             passports = Passport.objects.filter(cut__order=order)
+    #             for passport in passports:
+    #                 # Retrieve all passport sizes linked to each passport
+    #                 passport_sizes = PassportSize.objects.filter(passport=passport)
+    #                 for passport_size in passport_sizes:
+    #                     # Assume operations need to be created for QC and Packing stages
+    #                     operations = Operation.objects.filter(node__type=Node.QC)
+    #                     for operation in operations:
+    #                         # Create work for each operation
+    #                         work = Work.objects.create(
+    #                             operation=operation,
+    #                             passport_size=passport_size
+    #                         )
+    #                         # Create assigned work assuming quantity and success need handling
+    #                         AssignedWork.objects.create(
+    #                             work=work,
+    #                             employee=operation.employee,
+    #                             quantity=passport_size.quantity,
+    #                             start_time=timezone.now(),
+    #                             end_time=timezone.now(),
+    #                             is_success=True  # Assuming work is successful for demonstration
+    #                         )
+
+    #         # Set the client order status to completed
+    #         client_order.status = ClientOrder.COMPLETED
+    #         client_order.save()
+
+    return redirect('client_order_detail', pk=client_order.pk)
+
 
 
 

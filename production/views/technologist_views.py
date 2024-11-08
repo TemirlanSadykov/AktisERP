@@ -1045,8 +1045,8 @@ def model_create(request, a_id, pk=None):
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=None, a_id=a_id, copy_id=copy_id)
         if form.is_valid():
-            form.save()
-            return redirect('model_list', a_id=a_id)
+            model_instance = form.save()  # Save the model instance
+            return redirect('model_add_accessories', model_id=model_instance.id)  # Redirect to accessories view
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
 
@@ -1062,9 +1062,33 @@ def model_create(request, a_id, pk=None):
         'is_copying': bool(copy_id),
         'copy_model': original if copy_id else None,
         'operations_order_json': operations_order_json,
-        'sidebar_type' : 'technology',
+        'sidebar_type': 'technology',
     }
     return render(request, template_name, context)
+
+@login_required
+@technologist_required
+def model_add_accessories(request, model_id):
+    model_instance = get_object_or_404(Model, pk=model_id)
+    
+    if request.method == 'POST':
+        accessories_data = json.loads(request.POST.get('accessories_data', '{}'))
+        for accessory_id, quantity in accessories_data.items():
+            accessory = AbstractAccessory.objects.get(pk=accessory_id)
+            ModelAccessory.objects.create(
+                model=model_instance,
+                abstract_accessory=accessory,
+                quantity=quantity
+            )
+        return redirect('model_list', a_id=model_instance.assortment.id)  # Redirect to model list after adding accessories
+
+    accessories = AbstractAccessory.objects.all()
+    context = {
+        'model': model_instance,
+        'accessories': accessories,
+        'sidebar_type': 'technology',
+    }
+    return render(request, 'technologist/models/add_accessories.html', context)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -1076,6 +1100,7 @@ class ModelDetailView(DetailView):
         context = super(ModelDetailView, self).get_context_data(**kwargs)
         model = context['model']
         context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
+        context['model_accessories'] = ModelAccessory.objects.filter(model=model)
         context['sidebar_type'] = 'technology'
         return context
 

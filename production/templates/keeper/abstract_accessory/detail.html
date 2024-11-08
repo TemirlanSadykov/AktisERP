@@ -24,27 +24,25 @@
 <div class="container maincontr" style="padding:60px;">
   <div class="container">
     <div class="card-header d-flex justify-content-between align-items-center">
-      {% trans "Accessory Details:" %} {{ accessory.name }}
-      {% if accessory.is_archived %}
+      {% trans "Abstract Accessory Details:" %} {{ abstract_accessory.name }}
+      {% if abstract_accessory.is_archived %}
         <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans "Un Archive" %}</a>
       {% endif %}
     </div>
     <div class="card-body">
       <div class="row">
         <div class="col-md-6 details">
-          <p><strong>{% trans "Name:" %}</strong> {{ accessory.name }}</p>
-          <p><strong>{% trans "Quantity:" %}</strong> {{ accessory.quantity }} {{ accessory.unit }}</p>
-          <p><strong>{{ accessory.key }}:</strong> {{ accessory.value }}</p>
-          <p><strong>{% trans "Additional Info:" %}</strong> {{ accessory.info }} </p>
-          {% if not accessory.is_archived %}
-            <a href="{% url 'accessory_edit' accessory.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
+          <p><strong>{% trans "Name" %}:</strong> {{ abstract_accessory.name }}</p>
+          <p><strong>{% trans "Unit" %}:</strong> {{ abstract_accessory.unit }}</p>
+          {% if not abstract_accessory.is_archived %}
+            <a href="{% url 'abstract_accessory_edit' abstract_accessory.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
           {% endif %}
           <a href="javascript:void(0);" id="deleteBtn"><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
         </div>
-        <form id="archiveForm" action="{% if accessory.is_archived %}{% url 'accessory_delete' accessory.pk %}{% else %}{% url 'accessory_archive' accessory.pk %}{% endif %}" method="post" style="display:none;">
+        <form id="archiveForm" action="{% if abstract_accessory.is_archived %}{% url 'abstract_accessory_delete' abstract_accessory.pk %}{% else %}{% url 'abstract_accessory_archive' abstract_accessory.pk %}{% endif %}" method="post" style="display:none;">
           {% csrf_token %}
         </form>
-        <form id="unArchiveForm" action="{% url 'accessory_unarchive' accessory.pk %}" method="post" style="display:none;">
+        <form id="unArchiveForm" action="{% url 'abstract_accessory_unarchive' abstract_accessory.pk %}" method="post" style="display:none;">
           {% csrf_token %}
         </form>
         <div class="col-md-5 text-center">
@@ -55,7 +53,7 @@
     <div class="modal" id="deleteModal">
       <div class="modal-content">
         <span class="close" id="closeBtn">&times;</span>
-        <p>{% trans "Are you sure you want to delete this accessory?" %}</p>
+        <p>{% trans "Are you sure you want to delete this abstract_accessory?" %}</p>
         <div class="modal-buttons">
           <button class="btn confirm" id="confirmDeleteBtn">{% trans "Confirm" %}</button>
           <button class="btn cancel" id="cancelBtn">{% trans "Cancel" %}</button>
@@ -65,7 +63,7 @@
     <div class="modal" id="unarchiveModal">
       <div class="modal-content">
         <span class="close" id="closeUnarchiveBtn">&times;</span>
-        <p>{% trans "Are you sure you want to unarchive this accessory?" %}</p>
+        <p>{% trans "Are you sure you want to unarchive this abstract_accessory?" %}</p>
         <div class="modal-buttons">
           <button class="btn confirm" id="confirmUnarchiveBtn">{% trans "Confirm" %}</button>
           <button class="btn cancel" id="cancelUnarchiveBtn">{% trans "Cancel" %}</button>

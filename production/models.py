@@ -98,17 +98,31 @@ class Fabrics(models.Model):
     def __str__(self):
         return self.name
 
-class Accessory(models.Model):
-    name = models.CharField(max_length=100)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+class AbstractAccessory(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     unit = models.CharField(max_length=50)
-    key = models.CharField(max_length=100, blank=True, null=True)
-    value = models.CharField(max_length=100, blank=True, null=True)
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+
+class AccessoryAttribute(models.Model):
+    key = models.CharField(max_length=100, verbose_name='Key')
+    value = models.CharField(max_length=100, verbose_name='Value')
+
+    def __str__(self):
+        return f"{self.key}: {self.value}"
+
+class Accessory(models.Model):
+    abstract = models.ForeignKey(AbstractAccessory, on_delete=models.CASCADE, related_name='accessories', verbose_name='Фурнитура')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    attributes = models.ManyToManyField(AccessoryAttribute, related_name='accessories')
     info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
-        return f"{self.name} ({self.key}: {self.value}) - {self.quantity} {self.unit}"
+        attributes_str = ", ".join([str(attr) for attr in self.attributes.all()])
+        return f"{self.abstract.name} ({attributes_str}) - {self.quantity} {self.abstract.unit}"
 
 class Roll(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='rolls', null=True, blank=True, verbose_name='Филиал')
@@ -199,8 +213,19 @@ class Model(models.Model):
     operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
     photo = models.ImageField(upload_to='model_photos/', null=True, blank=True, verbose_name='Фото')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    abstract_accessories = models.ManyToManyField(AbstractAccessory, through='ModelAccessory', related_name='models', verbose_name='Фурнитура')
+
     def __str__(self):
         return self.name
+
+class ModelAccessory(models.Model):
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='model_accessories')
+    abstract_accessory = models.ForeignKey(AbstractAccessory, on_delete=models.CASCADE, related_name='model_accessories')
+    quantity = models.PositiveIntegerField(verbose_name='Количество')
+
+    def __str__(self):
+        return f"{self.model.name} - {self.abstract_accessory.name} ({self.quantity} {self.abstract_accessory.unit})"
+
     
 class ModelOperation(models.Model):
     model = models.ForeignKey(Model, on_delete=models.CASCADE)
@@ -234,7 +259,11 @@ class ClientOrder(models.Model):
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
     def default_term():
         return timezone.now() + datetime.timedelta(days=30)
+    def default_launch():
+        return timezone.now()
+    launch = models.DateField(default=default_launch, verbose_name='Начало выполнения', blank=True, null=True)
     term = models.DateField(default=default_term, verbose_name='Срок выполнения')
+    info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
     def __str__(self):
         return self.order_number
 
