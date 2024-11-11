@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'storages',
     'django_crontab',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
