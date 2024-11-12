@@ -63,7 +63,7 @@
             <a href="{% url 'order_detail_technologist' order_info.order.pk %}" class="order-link ">
 
             <li class="list-group-item custom-list-item listequal" style="color:#007bff">
-              {{ order_info.order.model.name }} - {% for color in order_info.order.colors.all %}
+              {{ order_info.order.client_order.client }} - {{ order_info.order.model.name }} - {% for color in order_info.order.colors.all %}
                                                       {{ color }}{% if not forloop.last %}, {% endif %}
                                                   {% empty %}
                                                       {% trans "No colors selected" %}
