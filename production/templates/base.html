@@ -60,7 +60,7 @@
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_technologist' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work'%}</span></a>
+                        <i class="fas fa-tasks fa-fw"></i><span class="sidetext">{% trans 'Work'%}</span></a>
                     <a href="{% url 'assortment_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="Assortments"><i class="fas fa-table fa-fw"></i><span class="sidetext">{% trans 'Model Base' %}</span></a>
@@ -89,7 +89,7 @@
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_cutter' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
+                        <i class="fas fa-tasks fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
                     {% else %}
                     <a href="{% url 'user_redirect' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
@@ -106,7 +106,7 @@
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_qc' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
+                        <i class="fas fa-tasks fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
                     <a href="{% url 'scan_qc_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
@@ -126,7 +126,7 @@
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'order_list_packer' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                        <i class="fas fa-window-restore fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
+                        <i class="fas fa-tasks fa-fw"></i><span class="sidetext">{% trans 'Work' %}</span></a>
                     <a href="{% url 'scan_packer_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
@@ -170,13 +170,12 @@
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="user_redirect">
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
-                    <a href="{% url 'done_works_list' %}"
-                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="work">
-                        <i class="fas fa-check fa-fw"></i><span class="sidetext">{% trans 'Done Work' %}</span></a>
                     <a href="{% url 'pending_works_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Pending">
                         <i class="fas fa-tasks fa-fw"></i> <span class="sidetext">{% trans 'Work' %}</span></a>
-
+                    <a href="{% url 'done_works_list' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="work">
+                        <i class="fas fa-check fa-fw"></i><span class="sidetext">{% trans 'Done Work' %}</span></a>
                     {% else %}
                     <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black"
                         data-id="user_redirect">
