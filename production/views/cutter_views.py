@@ -96,27 +96,57 @@ class OrderDetailCutterView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # Data for the "Required Quantities" table
+        # Data for "Required Quantities" table
         required_data = []
-
         for sq in order.size_quantities.all().order_by('size'):
-            key = f'{sq.size} - {sq.color}'
-            required = sq.quantity
-
-            # Add to required_data for the "Required Quantities" table
             required_data.append({
                 'size': sq.size,
                 'color': sq.color,
-                'required': required,
+                'required': sq.quantity,
             })
 
-        # Get associated cuts for the order
-        associated_cuts = order.cuts.all().order_by('-date')
+        # Fetch associated cuts and their passports
+        associated_cuts = order.cuts.all().order_by('number')  # Ascending order by cut number
+        passports = Passport.objects.filter(cut__in=associated_cuts)
+
+        # Initialize size_data as a defaultdict where each cut.number is another defaultdict
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
+        total_per_size = defaultdict(int)
+
+        for passport in passports:
+            cut_number = passport.cut.number  # Use cut number for indexing
+            for passport_size in passport.passport_sizes.all():
+                size = passport_size.size_quantity.size
+                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+                size_data[extra_key][cut_number]['quantity'] += passport_size.quantity
+                size_data[extra_key][cut_number]['passport_size_id'] = passport_size.id
+                size_data[extra_key][cut_number]['stage'] = passport_size.stage
+                size_data[extra_key][cut_number]['extra'] = passport_size.extra
+                total_per_size[size] += passport_size.quantity
+
+        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+                            for sq in order.size_quantities.all().order_by('size')}
+
+        for size in total_per_size:
+            if size not in required_missing:
+                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+
+        def sort_key(x):
+            parts = x.split('-')
+            try:
+                return int(parts[0]), x
+            except ValueError:
+                return float('inf'), x
+
+        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
 
         context.update({
-            'required_data': required_data,  # Data for the "Required Quantities" table
+            'required_data': required_data,
+            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+            'total_per_size': dict(total_per_size),
+            'required_missing': required_missing,
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'associated_cuts': associated_cuts,
             'sidebar_type': 'cutter'
         })
 

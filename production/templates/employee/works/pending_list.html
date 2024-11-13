@@ -56,6 +56,14 @@
                 {% endif %}
               </div>
               <div class="employee-passport">
+                {% trans "Color:" %}
+                {% if assigned_work.work.passport_size.passport %}
+                  <strong>{{ assigned_work.work.passport_size.passport.roll.color }}</strong>
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div class="employee-passport">
                 {% trans "Cut:" %}
                 {% if assigned_work.work.passport_size.passport.cut %}
                   <strong>{{ assigned_work.work.passport_size.passport.cut.number }}</strong>

@@ -56,34 +56,6 @@
                     </tbody>
                 </table>
 
-                <h3>{% trans "Consumptions" %}</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{% trans "Fabric" %}</th>
-                            <th>{% trans "Width" %}</th>
-                            <th>{% trans "Length" %}</th>
-                            <th>{% trans "Factual" %}</th>
-                            <th>{% trans "Commerce" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for consumption in consumptions %}
-                            <tr>
-                                <td>{{ consumption.fabrics }}</td>
-                                <td>{{ consumption.width }}</td>
-                                <td>{{ consumption.length }}</td>
-                                <td>{{ consumption.factual }}</td>
-                                <td>{{ consumption.commerce }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="5">{% trans "No consumptions available." %}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
                 <h3>{% trans "Passports" %}</h3>
                 <table class="table table-striped">
                     <thead>

@@ -446,14 +446,13 @@ class ClientOrderForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['model', 'colors', 'fabrics', 'status', 'quantity', 'completed_quantity', 'payment']
+        fields = ['model', 'colors', 'fabrics', 'status', 'quantity', 'payment']
         widgets = {
             'model': forms.Select(attrs={'class': 'form-control'}),
             'colors': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'fabrics': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'completed_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'payment': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
