@@ -734,14 +734,7 @@ class OperationUpdateView(UpdateView):
     model = Operation
     form_class = OperationForm
     template_name = 'technologist/operations/edit.html'
-    success_url = reverse_lazy('operation_list')
-    def form_valid(self, form):
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        # Print errors if the form is invalid
-        print("Form errors:", form.errors)
-        return super().form_invalid(form)
+    success_url = reverse_lazy('operation_list')  # Update this to your desired success URL
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
