@@ -277,8 +277,8 @@ def update_piece_packer(request, piece_id):
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.passport.roll.color.name
-        fabrics = piece.passport_size.passport.roll.fabrics.name
+        color = piece.passport_size.passport.roll.color.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.colors.first().name
+        fabrics = piece.passport_size.passport.roll.fabrics.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.fabrics.first().name
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
         

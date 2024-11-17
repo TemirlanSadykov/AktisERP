@@ -241,8 +241,8 @@ def get_piece_info(request, barcode):
         date = piece.passport_size.passport.cut.date
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.passport.roll.color.name
-        fabrcis = piece.passport_size.passport.roll.fabrics.name
+        color = piece.passport_size.passport.roll.color.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.colors.first().name
+        fabrics = piece.passport_size.passport.roll.fabrics.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.fabrics.first().name
         size = piece.passport_size.size_quantity.size
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
@@ -255,7 +255,7 @@ def get_piece_info(request, barcode):
             'cut': cut,
             'model': model,
             'color': color,
-            'fabrics': fabrcis,
+            'fabrics': fabrics,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display(),

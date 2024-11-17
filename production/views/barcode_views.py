@@ -106,9 +106,9 @@ class BarcodePassportSize(View):
         date = passport_size.passport.cut.date
         cut = passport_size.passport.cut.number
         model = passport_size.passport.cut.order.model.name
-        color = passport_size.passport.roll.color
+        color = passport_size.passport.roll.color if passport_size.passport.roll else passport_size.passport.cut.order.colors.first()
         tone = passport_size.passport.number
-        fabrcis = passport_size.passport.roll.fabrics
+        fabrcis = passport_size.passport.roll.fabrics if passport_size.passport.roll else passport_size.passport.cut.order.fabrics.first()
         size = passport_size.size_quantity.size
         quantity = passport_size.quantity
 
@@ -178,9 +178,9 @@ class BarcodePassportSizePerPiece(View):
             date = passport_size.passport.cut.date
             cut = passport_size.passport.cut.number
             model = passport_size.passport.cut.order.model.name
-            color = passport_size.passport.roll.color
+            color = passport_size.passport.roll.color if passport_size.passport.roll else passport_size.passport.cut.order.colors.first()
             tone = passport_size.passport.number
-            fabrcis = passport_size.passport.roll.fabrics
+            fabrcis = passport_size.passport.roll.fabrics if passport_size.passport.roll else passport_size.passport.cut.order.fabrics.first()
             size = f"{passport_size.size_quantity.size} - {passport_size.extra}" if passport_size.extra else passport_size.size_quantity.size
             p.setFont("DejaVuSans", 14)
             p.drawString(10, text_start_height, f"Дата: {date}")

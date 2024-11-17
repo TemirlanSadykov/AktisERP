@@ -58,7 +58,7 @@
               <div class="employee-passport">
                 {% trans "Color:" %}
                 {% if assigned_work.work.passport_size.passport %}
-                  <strong>{{ assigned_work.work.passport_size.passport.roll.color }}</strong>
+                  <strong>{% if assigned_work.work.passport_size.passport.roll %}{{ assigned_work.work.passport_size.passport.roll.color }}{% else %}{{ assigned_work.work.passport_size.passport.cut.order.colors.first }}{% endif %}</strong>
                 {% else %}
                   --
                 {% endif %}

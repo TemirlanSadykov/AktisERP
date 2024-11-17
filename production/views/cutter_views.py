@@ -326,39 +326,48 @@ class PassportCreateView(CreateView):
 
         passport.cut = cut  # Link passport directly to the cut
 
-        # Fetch the selected roll and reduce its available meters
-        roll = passport.roll
-        meters_requested = passport.meters
+        roll = passport.roll  # Get the roll from the form (if provided)
 
-        # Check if the roll has enough available meters
-        if roll.available_meters is not None and roll.available_meters >= meters_requested:
-            roll.used_meters += meters_requested  # Update used meters
-            roll.save()  # Save the updated roll
+        if roll:
+            # If a roll is provided, check meters availability and update the roll
+            meters_requested = passport.meters
 
-            passport.save()  # Save the passport instance
+            if roll.available_meters is not None and roll.available_meters >= meters_requested:
+                roll.used_meters += meters_requested  # Update used meters
+                roll.save()  # Save the updated roll
 
-            # Automatically create PassportSize for each unique CutSize in the cut
-            for cut_size in cut.cut_sizes.filter(size_quantity__color=roll.color):
-                passport_size = PassportSize.objects.create(
-                    passport=passport,
-                    size_quantity=cut_size.size_quantity,
-                    quantity=form.cleaned_data['layers'],  # Layers from form input
-                    stage=0,  # Default to CUTTING
-                    extra=cut_size.extra  # Use `extra` from CutSize
+                passport.save()  # Save the passport instance
+            else:
+                # Add an error if not enough meters are available
+                form.add_error('meters', 'Not enough available meters on the selected roll.')
+                return self.form_invalid(form)
+        else:
+            # If no roll is provided, save the passport without roll or meters logic
+            passport.save()
+
+        # Automatically create PassportSize for each unique CutSize in the cut
+        cut_sizes = cut.cut_sizes.all()
+        if roll:
+            cut_sizes = cut_sizes.filter(size_quantity__color=roll.color)
+
+        for cut_size in cut_sizes:
+            passport_size = PassportSize.objects.create(
+                passport=passport,
+                size_quantity=cut_size.size_quantity,
+                quantity=form.cleaned_data['layers'],  # Layers from form input
+                stage=0,  # Default to CUTTING
+                extra=cut_size.extra  # Use `extra` from CutSize
+            )
+
+            # Generate ProductionPiece for each PassportSize based on quantity
+            quantity = int(passport_size.quantity)
+            for i in range(1, quantity + 1):
+                ProductionPiece.objects.create(
+                    passport_size=passport_size,
+                    piece_number=i
                 )
 
-                # Generate ProductionPiece for each PassportSize based on quantity
-                quantity = int(passport_size.quantity)
-                for i in range(1, quantity + 1):
-                    ProductionPiece.objects.create(
-                        passport_size=passport_size,
-                        piece_number=i
-                    )
-
-            return redirect(self.get_success_url())
-        else:
-            form.add_error('meters', 'Not enough available meters on the selected roll.')
-            return self.form_invalid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})
