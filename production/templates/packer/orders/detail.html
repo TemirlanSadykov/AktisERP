@@ -92,18 +92,29 @@
     </div>
 
     <!-- Size Quantities Table -->
-    <h3>{% trans "Size Quantities" %}</h3>
+    <h3>{% trans "Size Quantities by Passports" %}</h3>
     <div class="table-responsive">
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>{% trans "Size\Cut" %}</th>
+            <th rowspan="2">{% trans "Size\Cut" %}</th>
             {% for cut in associated_cuts %}
-              <th>№{{ cut.number }}</th>
+              {% if cut.passports.exists %}
+                <th colspan="{{ cut.passports.count }}">{{ cut.number }}</th>
+              {% endif %}
             {% endfor %}
-            <th>{% trans "Sum" %}</th>
-            <th>{% trans "Required" %}</th>
-            <th>{% trans "Missing" %}</th>
+            <th rowspan="2">{% trans "Sum" %}</th>
+            <th rowspan="2">{% trans "Required" %}</th>
+            <th rowspan="2">{% trans "Missing" %}</th>
+          </tr>
+          <tr>
+            {% for cut in associated_cuts %}
+              {% if cut.passports.exists %}
+                {% for passport in cut.passports.all %}
+                  <th>№{{ passport.number }}</th>
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
           </tr>
         </thead>
         <tbody>
@@ -111,7 +122,14 @@
             <tr>
               <td>{{ size }}</td>
               {% for cut in associated_cuts %}
-                <td>{{ size_data|get_item:size|get_item:cut.number|get_item:"quantity"|default_if_none:"0" }}</td>
+                {% if cut.passports.exists %}
+                  {% for passport in cut.passports.all %}
+                    <td>
+                      {{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}
+                      ({{ size_data|get_item:size|get_item:passport.id|get_item:"packed_quantity"|default_if_none:"0" }})
+                    </td>
+                  {% endfor %}
+                {% endif %}
               {% endfor %}
               <td>{{ total_per_size|get_item:size|default:"0" }}</td>
               <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
@@ -129,20 +147,41 @@
 
   <div class="container-fluid bottomContainer">
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-6" style="margin:auto;">
         <h3>{% trans "Associated Cuts" %}</h3>
+      </div>
+      <div class="col-md-6 text-center">
+        <a href="{% url 'cut_create' order.pk %}" class="btn btn-primary">{% trans "Create New Cut" %}</a>
       </div>
     </div><br>
     {% if associated_cuts %}
-      {% for cut in associated_cuts %}
-        <div class="list-group">
-          <a href="{% url 'cut_detail_packer' cut.pk %}"
-             class="list-group-item list-group-item-action"
-             style="border: 1px solid #ced4da;">
-            {% trans "Cut Number:" %} {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
-          </a>
-        </div>
-      {% endfor %}
+      <div class="accordion" id="cutsAccordion">
+        {% for cut in associated_cuts %}
+          <div class="accordion-item">
+            <a href="{% url 'cut_detail_packer' cut.pk %}" target="_blank" 
+               class="list-group-item list-group-item-action cut-link" 
+               style="border: 1px solid #ced4da;"
+               data-bs-target="#collapse{{ cut.id }}"
+               aria-expanded="false" 
+               aria-controls="collapse{{ cut.id }}">
+              {% trans "Cut" %}: {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
+            </a>
+            <div id="collapse{{ cut.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ cut.id }}" data-bs-parent="#cutsAccordion">
+              <div class="accordion-body">
+                <ul class="list-group">
+                  {% for passport in cut.passports.all %}
+                    <li class="list-group-item">
+                      <a href="{% url 'passport_detail_packer' passport.pk %}" target="_blank">
+                        №{{ passport.number }} - {{ passport.quantity }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     {% else %}
       <div class="list-group">
         <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
@@ -152,5 +191,33 @@
     {% endif %}
   </div>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const accordionLinks = document.querySelectorAll('.cut-link');
+
+    accordionLinks.forEach(link => {
+      const targetId = link.getAttribute('data-bs-target');
+      const target = document.querySelector(targetId);
+      const collapse = new bootstrap.Collapse(target, { toggle: false }); // Initialize without toggling
+      
+      // Expand on hover
+      link.addEventListener('mouseenter', function () {
+        collapse.show(); // Explicitly show
+      });
+
+      // Collapse on hover out
+      link.addEventListener('mouseleave', function () {
+        collapse.hide(); // Explicitly hide
+      });
+
+      // Ensure it collapses if hovered out of the expanded area
+      target.addEventListener('mouseleave', function () {
+        collapse.hide(); // Collapse when the cursor leaves the content
+      });
+    });
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 {% endblock %}
