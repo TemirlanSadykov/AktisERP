@@ -104,6 +104,7 @@
               {% endif %}
             {% endfor %}
             <th rowspan="2">{% trans "Sum" %}</th>
+            <th rowspan="2">{% trans "Packed" %}</th>
             <th rowspan="2">{% trans "Required" %}</th>
             <th rowspan="2">{% trans "Missing" %}</th>
           </tr>
@@ -132,12 +133,13 @@
                 {% endif %}
               {% endfor %}
               <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+              <td>{{ required_missing|get_item:size|get_item:"packed"|default:"0" }}</td>
               <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
               <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-"|display_over }}</td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="{{ associated_cuts|length|add:4 }}">{% trans "No size quantities available." %}</td>
+              <td colspan="{{ associated_cuts|length|add:5 }}">{% trans "No size quantities available." %}</td>
             </tr>
           {% endfor %}
         </tbody>

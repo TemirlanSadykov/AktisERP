@@ -80,74 +80,6 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         context['sidebar_type'] = 'packer'
         return context
 
-# @method_decorator([login_required, packer_required], name='dispatch')
-# class OrderDetailPackerView(DetailView):
-#     model = Order
-#     template_name = 'packer/orders/detail.html'
-#     context_object_name = 'order'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         order = context['order']
-#         passport = Passport.objects.filter(order=order).first()
-        
-#         if passport:
-#             context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DISCREPANCY)
-#         else:
-#             context['errors'] = Error.objects.none()
-
-#         today = timezone.localdate()
-#         days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
-#         context['days_left'] = days_left
-
-#         passports = order.passports.all()
-
-#         # Initialize data structures to track quantity and packed quantities
-#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0, 'extra': None}))
-#         total_per_size = defaultdict(int)
-
-#         for passport in passports:
-#             for passport_size in passport.passport_sizes.all():
-#                 size = passport_size.size_quantity.size
-#                 color = passport_size.size_quantity.color
-#                 extra_key = f'{size} - {color}'
-#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
-#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
-
-#                 # Count packed pieces only
-#                 packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
-#                 size_data[extra_key][passport.id]['packed_quantity'] += packed_pieces
-                
-#                 total_per_size[size] += passport_size.quantity
-
-#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-#                             for sq in order.size_quantities.all().order_by('size')}
-
-#         for size in total_per_size:
-#             if size not in required_missing:
-#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-#         # Sorting size_data keys
-#         def sort_key(x):
-#             parts = x.split('-')
-#             try:
-#                 return int(parts[0]), x
-#             except ValueError:
-#                 return float('inf'), x
-
-#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
-
-#         context.update({
-#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-#             'total_per_size': dict(total_per_size),
-#             'required_missing': required_missing,
-#             'passports': passports,
-#             'sidebar_type' : 'packer',
-#         })
-#         return context
-
 @method_decorator([login_required, packer_required], name='dispatch')
 class OrderDetailPackerView(DetailView):
     model = Order
@@ -182,6 +114,7 @@ class OrderDetailPackerView(DetailView):
             'extra': None
         }))
         total_per_size = defaultdict(int)
+        total_packed_per_size = defaultdict(int)
 
         for passport in passports:
             passport_number = passport.id  # Use passport ID for indexing
@@ -201,13 +134,25 @@ class OrderDetailPackerView(DetailView):
                 size_data[extra_key][passport_number]['packed_quantity'] += packed_pieces
 
                 total_per_size[size] += passport_size.quantity
+                total_packed_per_size[size] += packed_pieces
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
+        # Required, Missing, and Packed per size
+        required_missing = {
+            sq.size: {
+                'required': sq.quantity,
+                'missing': sq.quantity - total_per_size.get(sq.size, 0),
+                'packed': total_packed_per_size.get(sq.size, 0),
+            }
+            for sq in order.size_quantities.all().order_by('size')
+        }
 
         for size in total_per_size:
             if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+                required_missing[size] = {
+                    'required': 0,
+                    'missing': -total_per_size[size],
+                    'packed': total_packed_per_size[size],
+                }
 
         def sort_key(x):
             parts = x.split('-')
