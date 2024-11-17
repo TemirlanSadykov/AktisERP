@@ -105,23 +105,25 @@ class OrderDetailCutterView(DetailView):
                 'required': sq.quantity,
             })
 
-        # Fetch associated cuts and their passports
+        # Fetch associated cuts
         associated_cuts = order.cuts.all().order_by('number')  # Ascending order by cut number
-        passports = Passport.objects.filter(cut__in=associated_cuts)
 
-        # Initialize size_data as a defaultdict where each cut.number is another defaultdict
+        # Fetch associated passports
+        passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
+
+        # Initialize size_data for passports
         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
         total_per_size = defaultdict(int)
 
         for passport in passports:
-            cut_number = passport.cut.number  # Use cut number for indexing
+            passport_number = passport.id  # Use passport ID for indexing
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
                 extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-                size_data[extra_key][cut_number]['quantity'] += passport_size.quantity
-                size_data[extra_key][cut_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][cut_number]['stage'] = passport_size.stage
-                size_data[extra_key][cut_number]['extra'] = passport_size.extra
+                size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport_number]['stage'] = passport_size.stage
+                size_data[extra_key][passport_number]['extra'] = passport_size.extra
                 total_per_size[size] += passport_size.quantity
 
         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
@@ -146,7 +148,8 @@ class OrderDetailCutterView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'associated_cuts': associated_cuts,
+            'associated_passports': passports,
+            'associated_cuts': associated_cuts,  # Added cuts to the context
             'sidebar_type': 'cutter'
         })
 
@@ -323,39 +326,48 @@ class PassportCreateView(CreateView):
 
         passport.cut = cut  # Link passport directly to the cut
 
-        # Fetch the selected roll and reduce its available meters
-        roll = passport.roll
-        meters_requested = passport.meters
+        roll = passport.roll  # Get the roll from the form (if provided)
 
-        # Check if the roll has enough available meters
-        if roll.available_meters is not None and roll.available_meters >= meters_requested:
-            roll.used_meters += meters_requested  # Update used meters
-            roll.save()  # Save the updated roll
+        if roll:
+            # If a roll is provided, check meters availability and update the roll
+            meters_requested = passport.meters
 
-            passport.save()  # Save the passport instance
+            if roll.available_meters is not None and roll.available_meters >= meters_requested:
+                roll.used_meters += meters_requested  # Update used meters
+                roll.save()  # Save the updated roll
 
-            # Automatically create PassportSize for each unique CutSize in the cut
-            for cut_size in cut.cut_sizes.filter(size_quantity__color=roll.color):
-                passport_size = PassportSize.objects.create(
-                    passport=passport,
-                    size_quantity=cut_size.size_quantity,
-                    quantity=form.cleaned_data['layers'],  # Layers from form input
-                    stage=0,  # Default to CUTTING
-                    extra=cut_size.extra  # Use `extra` from CutSize
+                passport.save()  # Save the passport instance
+            else:
+                # Add an error if not enough meters are available
+                form.add_error('meters', 'Not enough available meters on the selected roll.')
+                return self.form_invalid(form)
+        else:
+            # If no roll is provided, save the passport without roll or meters logic
+            passport.save()
+
+        # Automatically create PassportSize for each unique CutSize in the cut
+        cut_sizes = cut.cut_sizes.all()
+        if roll:
+            cut_sizes = cut_sizes.filter(size_quantity__color=roll.color)
+
+        for cut_size in cut_sizes:
+            passport_size = PassportSize.objects.create(
+                passport=passport,
+                size_quantity=cut_size.size_quantity,
+                quantity=form.cleaned_data['layers'],  # Layers from form input
+                stage=0,  # Default to CUTTING
+                extra=cut_size.extra  # Use `extra` from CutSize
+            )
+
+            # Generate ProductionPiece for each PassportSize based on quantity
+            quantity = int(passport_size.quantity)
+            for i in range(1, quantity + 1):
+                ProductionPiece.objects.create(
+                    passport_size=passport_size,
+                    piece_number=i
                 )
 
-                # Generate ProductionPiece for each PassportSize based on quantity
-                quantity = int(passport_size.quantity)
-                for i in range(1, quantity + 1):
-                    ProductionPiece.objects.create(
-                        passport_size=passport_size,
-                        piece_number=i
-                    )
-
-            return redirect(self.get_success_url())
-        else:
-            form.add_error('meters', 'Not enough available meters on the selected roll.')
-            return self.form_invalid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})

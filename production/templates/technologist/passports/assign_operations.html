@@ -37,6 +37,8 @@
                   <!-- <div class="col-md-12 details"> -->
                     <p>
                       <strong>{% trans "Model:" %}</strong> {{ passport.cut.order.model.name }},
+                      <strong>{% trans "Color:" %}</strong> {% if passport.roll %}{{ passport.roll.color }}{% else %}{{ passport.cut.order.colors.first }}{% endif %}
+                      <strong>{% trans "Fabrics:" %}</strong> {% if passport.roll %}{{ passport.roll.fabrics }}{% else %}{{ passport.cut.order.fabrics.first }}{% endif %}  
                       <strong>{% trans "Roll:" %}</strong> {{ passport.roll }},
                       <strong>{% trans "Usage:" %}</strong> {{ passport.meters }}м,
                       <strong>{% trans "Date:" %}</strong> {{ passport.cut.date|date:"Y-m-d" }}

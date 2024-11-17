@@ -85,72 +85,6 @@ class OrderListQcView(RestrictOrderBranchMixin, ListView):
         context['sidebar_type'] = 'qc_page'
         return context
 
-# @method_decorator([login_required, qc_required], name='dispatch')
-# class OrderDetailQcView(DetailView):
-#     model = Order
-#     template_name = 'qc/orders/detail.html'
-#     context_object_name = 'order'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         order = context['order']
-#         passport = Passport.objects.filter(order=order).first()
-#         if passport:
-#             context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DEFECT)
-#         else:
-#             context['errors'] = Error.objects.none()
-        
-#         passports = order.passports.all()
-
-#         # Extended defaultdict to track checked quantity
-#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'checked_quantity': 0, 'extra': None}))
-#         total_per_size = defaultdict(int)
-
-#         for passport in passports:
-#             for passport_size in passport.passport_sizes.all():
-#                 size = passport_size.size_quantity.size
-#                 color = passport_size.size_quantity.color
-#                 extra_key = f'{size} - {color}'
-#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
-#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
-
-#                 # Counting checked pieces
-#                 checked_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
-#                 size_data[extra_key][passport.id]['checked_quantity'] += checked_pieces
-                
-#                 total_per_size[size] += passport_size.quantity
-
-#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-#                             for sq in order.size_quantities.all().order_by('size')}
-
-#         # Adjusting for sizes in passports not in order sizes
-#         for size in total_per_size:
-#             if size not in required_missing:
-#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-#         # Sorting size_data keys
-#         def sort_key(x):
-#             parts = x.split('-')
-#             try:
-#                 return int(parts[0]), x
-#             except ValueError:
-#                 return float('inf'), x
-
-#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
-
-#         context.update({
-#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-#             'total_per_size': dict(total_per_size),
-#             'required_missing': required_missing,
-#             'passports': passports,
-#             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-#             'sidebar_type' : 'qc_page'
-#         })
-
-#         return context
-    
 @method_decorator([login_required, qc_required], name='dispatch')
 class OrderDetailQcView(DetailView):
     model = Order
@@ -170,31 +104,60 @@ class OrderDetailQcView(DetailView):
                 'required': sq.quantity,
             })
 
-        # Get associated cuts and their passports
-        associated_cuts = order.cuts.all().order_by('number')
-        passports = Passport.objects.filter(cut__in=associated_cuts)
+        # Fetch associated cuts
+        associated_cuts = order.cuts.all().order_by('number')  # Ascending order by cut number
 
-        # Initialize size_data as a defaultdict where each cut.number is another defaultdict
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
+        # Fetch associated passports
+        passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
+
+        # Initialize size_data for passports
+        size_data = defaultdict(lambda: defaultdict(lambda: {
+            'quantity': 0,
+            'checked_quantity': 0,
+            'passport_size_id': None,
+            'stage': None,
+            'extra': None
+        }))
         total_per_size = defaultdict(int)
+        total_checked_per_size = defaultdict(int)
 
         for passport in passports:
-            cut_number = passport.cut.number
+            passport_number = passport.id  # Use passport ID for indexing
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
                 extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-                size_data[extra_key][cut_number]['quantity'] += passport_size.quantity
-                size_data[extra_key][cut_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][cut_number]['stage'] = passport_size.stage
-                size_data[extra_key][cut_number]['extra'] = passport_size.extra
-                total_per_size[size] += passport_size.quantity
+                size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
+                size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
+                size_data[extra_key][passport_number]['stage'] = passport_size.stage
+                size_data[extra_key][passport_number]['extra'] = passport_size.extra
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
+                # Calculate checked pieces
+                checked_pieces = ProductionPiece.objects.filter(
+                    passport_size=passport_size,
+                    stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
+                ).count()
+                size_data[extra_key][passport_number]['checked_quantity'] += checked_pieces
+
+                total_per_size[size] += passport_size.quantity
+                total_checked_per_size[size] += checked_pieces
+
+        # Required, Missing, and Checked per size
+        required_missing = {
+            sq.size: {
+                'required': sq.quantity,
+                'missing': sq.quantity - total_per_size.get(sq.size, 0),
+                'checked': total_checked_per_size.get(sq.size, 0),
+            }
+            for sq in order.size_quantities.all().order_by('size')
+        }
 
         for size in total_per_size:
             if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+                required_missing[size] = {
+                    'required': 0,
+                    'missing': -total_per_size[size],
+                    'checked': total_checked_per_size[size],
+                }
 
         def sort_key(x):
             parts = x.split('-')
@@ -211,6 +174,7 @@ class OrderDetailQcView(DetailView):
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'associated_passports': passports,
             'associated_cuts': associated_cuts,
             'sidebar_type': 'qc_page'
         })
@@ -277,8 +241,8 @@ def get_piece_info(request, barcode):
         date = piece.passport_size.passport.cut.date
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.passport.roll.color.name
-        fabrcis = piece.passport_size.passport.roll.fabrics.name
+        color = piece.passport_size.passport.roll.color.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.colors.first().name
+        fabrics = piece.passport_size.passport.roll.fabrics.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.fabrics.first().name
         size = piece.passport_size.size_quantity.size
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
@@ -291,7 +255,7 @@ def get_piece_info(request, barcode):
             'cut': cut,
             'model': model,
             'color': color,
-            'fabrics': fabrcis,
+            'fabrics': fabrics,
             'size': size,
             'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display(),

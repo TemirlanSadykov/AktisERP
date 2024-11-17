@@ -43,8 +43,8 @@
                     <p><strong>{% trans "Date:" %}</strong> {{ passport.cut.date }}</p>
                     <p><strong>{% trans "Order:" %}</strong> {{ passport.cut.order.client_order }}</p>
                     <p><strong>{% trans "Model:" %}</strong> {{ passport.cut.order.model }}</p>
-                    <p><strong>{% trans "Color:" %}</strong> {{ passport.roll.color }}</p>
-                    <p><strong>{% trans "Fabrics:" %}</strong> {{ passport.roll.fabrics }}</p>
+                    <p><strong>{% trans "Color:" %}</strong> {% if passport.roll %}{{ passport.roll.color }}{% else %}{{ passport.cut.order.colors.first }}{% endif %}</p>
+                    <p><strong>{% trans "Fabrics:" %}</strong> {% if passport.roll %}{{ passport.roll.fabrics }}{% else %}{{ passport.cut.order.fabrics.first }}{% endif %}</p>
                     <p><strong>{% trans "Roll:" %}</strong> {{ passport.roll }}</p>
                     <p><strong>{% trans "Meters:" %}</strong> {{ passport.meters }}</p>
                     <p><strong>{% trans "Layers:" %}</strong> {{ passport.layers }}</p>
