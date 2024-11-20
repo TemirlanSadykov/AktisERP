@@ -30,6 +30,75 @@ def packer_page(request):
     return render(request, 'packer_page.html' , context)
 
 @method_decorator([login_required, packer_required], name='dispatch')
+class ClientOrderListPackerView(RestrictBranchMixin, ListView):
+    model = ClientOrder
+    template_name = 'packer/client/orders/list.html'
+    context_object_name = 'orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=False).order_by('term')
+        status = self.request.GET.get('status', None)
+        form = self.form_class(self.request.GET)
+
+        if status:
+            try:
+                status = int(status)
+                if status in dict(self.model.TYPE_CHOICES):
+                    queryset = queryset.filter(status=status)
+            except ValueError:
+                pass
+
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+
+            if start_date and end_date:
+                queryset = queryset.filter(created_at__date__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(created_at__date__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(created_at__date__lte=end_date)
+
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None) 
+        today = timezone.localdate()
+        orders_with_days_left = []
+        for order in context['orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+
+        context['orders_with_days_left'] = sorted(orders_with_days_left, key=lambda x: x['days_left'])
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['ClientOrder'] = ClientOrder 
+        context['sidebar_type'] = 'packer'
+        return context
+    
+@method_decorator([login_required, packer_required], name='dispatch')
+class ClientOrderDetailPackerView(DetailView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'packer/client/orders/detail.html'
+    context_object_name = 'client_order'
+
+    def get_context_data(self, **kwargs):
+        context = super(ClientOrderDetailPackerView, self).get_context_data(**kwargs)
+        client_order = context['client_order']
+        context['orders'] = client_order.orders.all()
+        today = timezone.localdate()
+        if client_order.term >= today:
+            days_left = (client_order.term - today).days
+        else:
+            days_left = 0
+        context['days_left'] = days_left
+        context['sidebar_type'] = 'packer'
+        return context
+
+@method_decorator([login_required, packer_required], name='dispatch')
 class OrderListPackerView(RestrictOrderBranchMixin, ListView):
     model = Order
     template_name = 'packer/orders/list.html'

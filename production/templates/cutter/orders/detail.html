@@ -154,7 +154,7 @@
       <div class="accordion" id="cutsAccordion">
         {% for cut in associated_cuts %}
           <div class="accordion-item">
-            <a href="{% url 'cut_detail' cut.pk %}" target="_blank" 
+            <a href="{% url 'cut_detail' cut.pk %}"
                class="list-group-item list-group-item-action cut-link" 
                style="border: 1px solid #ced4da;"
                data-bs-target="#collapse{{ cut.id }}"
@@ -167,7 +167,7 @@
                 <ul class="list-group">
                   {% for passport in cut.passports.all %}
                     <li class="list-group-item">
-                      <a href="{% url 'passport_detail' passport.pk %}" target="_blank">
+                      <a href="{% url 'passport_detail' passport.pk %}">
                         №{{ passport.number }} - {{ passport.quantity }}
                       </a>
                     </li>
