@@ -59,6 +59,18 @@ urlpatterns = [
     path('admin/client/orders/<int:pk>/unarchive/', ClientOrderUnArchiveView.as_view(), name='client_order_unarchive'),
     path('admin/client/orders/<int:pk>/complete/', client_order_complete, name='client_order_complete'),
 
+    path('technologist/client/orders/', ClientOrderListTechnologistView.as_view(), name='client_order_list_technologist'),
+    path('technologist/client/orders/<int:pk>/', ClientOrderDetailTechnologistView.as_view(), name='client_order_detail_technologist'),
+
+    path('cutter/client/orders/', ClientOrderListCutterView.as_view(), name='client_order_list_cutter'),
+    path('cutter/client/orders/<int:pk>/', ClientOrderDetailCutterView.as_view(), name='client_order_detail_cutter'),
+
+    path('qc/client/orders/', ClientOrderListQcView.as_view(), name='client_order_list_qc'),
+    path('qc/client/orders/<int:pk>/', ClientOrderDetailQcView.as_view(), name='client_order_detail_qc'),
+
+    path('packer/client/orders/', ClientOrderListPackerView.as_view(), name='client_order_list_packer'),
+    path('packer/client/orders/<int:pk>/', ClientOrderDetailPackerView.as_view(), name='client_order_detail_packer'),
+
         # calendar
     path('admin/calendar/', OrderCalendarView.as_view(), name='order_calendar'),
     path('admin/calendar/events/', OrderCalendarEventsView.as_view(), name='order_calendar_events'),
