@@ -81,32 +81,36 @@
             fetch(`/production/qc/orders/api/get-piece-info/${barcode}/`)
                 .then(response => response.json())
                 .then(data => {
-                    var listItem = document.createElement('li');
-                    listItem.className = 'list-group-item';
-                    listItem.style.padding = '18px';
-                    // Create a link
-                    var link = document.createElement('a');
-                    link.href = `/production/qc/orders/${data.passport_id}/passport/`; // Use the passport ID from data.passport
-                    link.textContent = `${data.piece_number} (ед) - ${data.passport_number} (пс) - ${data.cut} (кр) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (размер)`;
-                    link.style.textDecoration = 'none'; // Optional: Remove underline
-                    link.setAttribute('target', '_blank');
-
-                    // Append link to list item
-                    listItem.appendChild(link);
-                    document.getElementById('scanned-items-list').appendChild(listItem);
-                    
-                    document.getElementById('modal-piece').textContent = data.piece_number;
-                    document.getElementById('modal-model').textContent = data.model;
-                    document.getElementById('modal-cut').textContent = data.cut;
-                    document.getElementById('modal-passport').textContent = data.passport_number;
-                    document.getElementById('modal-color').textContent = data.color;
-                    document.getElementById('modal-fabrics').textContent = data.fabrics;
-                    document.getElementById('modal-size').textContent = data.size;
-                    document.getElementById('modal-stage').textContent = data.stage;
-                    document.getElementById('modal-defect').textContent = data.defect;
-                    currentPieceId = data.piece_id;
-                    $('#scanModal').modal('show');
-                })
+                  var listItem = document.createElement('li');
+                  listItem.className = 'list-group-item';
+                  listItem.style.padding = '18px';
+                  listItem.setAttribute('data-piece-id', data.piece_id); // Add a unique identifier
+                  // Create a link
+                  var link = document.createElement('a');
+                  link.href = `/production/qc/orders/${data.passport_id}/passport/`; // Use the passport ID from data.passport
+                  link.textContent = `${data.piece_number} (ед) - ${data.passport_number} (пс) - ${data.cut} (кр) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (размер)`;
+                  link.style.textDecoration = 'none'; // Optional: Remove underline
+                  link.setAttribute('target', '_blank');
+              
+                  // Append link to list item
+                  listItem.appendChild(link);
+              
+                  // Prepend the new item to the list to show it on top
+                  var scannedItemsList = document.getElementById('scanned-items-list');
+                  scannedItemsList.prepend(listItem); // Use prepend instead of appendChild
+              
+                  document.getElementById('modal-piece').textContent = data.piece_number;
+                  document.getElementById('modal-model').textContent = data.model;
+                  document.getElementById('modal-cut').textContent = data.cut;
+                  document.getElementById('modal-passport').textContent = data.passport_number;
+                  document.getElementById('modal-color').textContent = data.color;
+                  document.getElementById('modal-fabrics').textContent = data.fabrics;
+                  document.getElementById('modal-size').textContent = data.size;
+                  document.getElementById('modal-stage').textContent = data.stage;
+                  document.getElementById('modal-defect').textContent = data.defect;
+                  currentPieceId = data.piece_id;
+                  $('#scanModal').modal('show');
+                })              
                 .catch(error => console.error('Error fetching item details:', error))
                 .finally(() => {
                     barcodeInput.value = '';
@@ -143,41 +147,44 @@
     });
 
     function updatePieceStatus(status, defectType = null) {
-        let updateData = { status: status };
-        if (defectType) {
-            updateData.defectType = defectType;
-        }
-
-        fetch(`/production/qc/orders/update-piece-status/${currentPieceId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updateData)
-        })
-        .then(response => response.json())
-        .then(data => {
+      let updateData = { status: status };
+      if (defectType) {
+          updateData.defectType = defectType;
+      }
+  
+      fetch(`/production/qc/orders/update-piece-status/${currentPieceId}/`, {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+      })
+      .then(response => response.json())
+      .then(data => {
           if (data.success) {
               $('#scanModal').modal('hide');
+  
+              // Find the <li> with the corresponding piece ID
+              let listItem = document.querySelector(`#scanned-items-list li[data-piece-id="${currentPieceId}"]`);
               
-              // Find the last scanned item, which is the <li> element
-              let lastListItem = document.querySelector('#scanned-items-list li:last-child');
-              
-              if (lastListItem) {
-                  // Find the <a> inside the <li>
-                  let link = lastListItem.querySelector('a');
+              if (listItem) {
+                  // Update the <a> inside the <li>
+                  let link = listItem.querySelector('a');
                   if (link) {
-                      // Append the status to the link's textContent without altering the link
-                      link.textContent += ` - ${status}`;
+                      // Append the status to the link's textContent without duplicating
+                      if (!link.textContent.includes(status)) {
+                          link.textContent += ` - ${status}`;
+                      }
                   }
               }
           } else {
               alert(`Failed to update status to ${status}:`, data.message);
           }
-        })
-        .catch(error => console.error('Error updating status:', error));
+      })
+      .catch(error => console.error('Error updating status:', error));
     }
+  
 
     function getCookie(name) {
         let cookieValue = null;
