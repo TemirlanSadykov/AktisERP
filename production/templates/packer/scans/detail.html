@@ -52,63 +52,71 @@
     var barcodeInput = document.getElementById('barcode-input');
 
     barcodeInput.addEventListener('change', function() {
-      var barcode = barcodeInput.value.trim();
-      if (barcode) {
-        let ids = barcode.split('-');
-        let pieceId = ids[ids.length - 1];  // Get the piece ID from barcode
+        var barcode = barcodeInput.value.trim();
+        if (barcode) {
+            let ids = barcode.split('-');
+            let pieceId = ids[ids.length - 1];  // Get the piece ID from barcode
 
-        fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({stage: 'Packed'})
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            var listItem = document.createElement('li');
-            listItem.className = 'list-group-item';
-            listItem.style.padding = '18px';
-            var link = document.createElement('a');
-            link.href = `/production/packer/orders/${data.passport_id}/passport/`; // Use the passport ID from data.passport
-            link.textContent = `${data.piece_number} (ед) - ${data.passport_number} (пс) - ${data.cut} (кр) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (размер) - ${data.stage}`;
-            link.style.textDecoration = 'none'; // Optional: Remove underline
-            link.setAttribute('target', '_blank');
+            fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({stage: 'Packed'})
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                  var listItem = document.createElement('li');
+                  listItem.className = 'list-group-item';
+                  listItem.style.padding = '18px';
+                  var link = document.createElement('a');
+                  link.href = `/production/packer/orders/${data.passport_id}/passport/`; // Use the passport ID from data.passport
+                  link.textContent = `${data.piece_number} (ед) - ${data.passport_number} (пс) - ${data.cut} (кр) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (размер) - ${data.stage}`;
+                  link.style.textDecoration = 'none'; // Optional: Remove underline
+                  link.setAttribute('target', '_blank');
+          
+                  // Append link to list item
+                  listItem.appendChild(link);
+          
+                  // Prepend the new item to the list to show it on top
+                  var scannedItemsList = document.getElementById('scanned-items-list');
+                  scannedItemsList.prepend(listItem); // Use prepend instead of appendChild
+              } else {
+                  document.getElementById('errorModalMessage').textContent = data.message;
+                  $('#errorModal').modal('show');
+              }
+            })          
+            .catch(error => {
+                console.error('Error updating piece:', error);
+                document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
+                $('#errorModal').modal('show');
+            });
+        }
+        barcodeInput.value = ''; // Clear the input
+        barcodeInput.focus();   // Refocus the input
+    });
 
-            // Append link to list item
-            listItem.appendChild(link);
-            document.getElementById('scanned-items-list').appendChild(listItem);
-          } else {
-            document.getElementById('errorModalMessage').textContent = data.message;
-            $('#errorModal').modal('show');
-          }
-        })
-        .catch(error => {
-          console.error('Error updating piece:', error);
-          document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
-          $('#errorModal').modal('show');
-        });
-      }
-      barcodeInput.value = ''; // Clear the input
-      barcodeInput.focus();   // Refocus the input
+    // Refocus barcode input when modal is closed
+    $('#errorModal').on('hidden.bs.modal', function () {
+        barcodeInput.focus();
     });
 
     function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
         }
-      }
-      return cookieValue;
+        return cookieValue;
     }
-  });
+});
 </script> 
 {% endblock %}
