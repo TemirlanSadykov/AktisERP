@@ -8,6 +8,7 @@ from django.views.decorators.cache import cache_page
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 from ..decorators import employee_required
 from ..models import AssignedWork, ReassignedWork
@@ -77,7 +78,12 @@ def start_work(request, assigned_work_id):
     if assigned_work.start_time is None:
         assigned_work.start_time = timezone.now()
         assigned_work.save()
-    return redirect('pending_works_list') 
+        return JsonResponse({
+            'status': 'success',
+            'start_time': assigned_work.start_time.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    return JsonResponse({'status': 'error', 'message': 'Work already started or invalid request.'}, status=400)
+
 
 @login_required
 @employee_required
