@@ -91,12 +91,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
-        'NAME': config('MERPS_TEST_DB_NAME'),
-        'USER': config('MERPS_TEST_DB_USER'),
-        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
-        'HOST': config('MERPS_TEST_DB_HOST'),
-        'PORT': config('MERPS_TEST_DB_PORT'),
+        'ENGINE': config('PROD_BAZIKOSTYLE_DB_ENGINE'),
+        'NAME': config('PROD_BAZIKOSTYLE_DB_NAME'),
+        'USER': config('PROD_BAZIKOSTYLE_DB_USER'),
+        'PASSWORD': config('PROD_BAZIKOSTYLE_DB_PASSWORD'),
+        'HOST': config('PROD_BAZIKOSTYLE_DB_HOST'),
+        'PORT': config('PROD_BAZIKOSTYLE_DB_PORT'),
     }
 }
 
@@ -191,7 +191,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://merps-test.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://prod-bazikostyle.up.railway.app']
 
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
