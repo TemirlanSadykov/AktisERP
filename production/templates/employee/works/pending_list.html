@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load custom_filters %}
 {% block content %}
-
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323;  margin:auto;" class="navfont" >{% trans "Employee Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Employee Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -16,128 +15,219 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
   </div>
 </nav>
 
-
-
 <div class="container clients-wrapper maincontr">
   <div class="clients-container">
-
-
-      <div class="clients-header">
-        <span class="operation-text">        {% trans "My Works" %}
-        </span>
-        </div>
-
-        {% if assigned_works %}
-        <div class="employee-cards-container">
-          {% for assigned_work in assigned_works %}
-          <div class="employee-card">
-            <div class="employee-operation-name">{{ assigned_work.work.operation.number }} - {{ assigned_work.work.operation.name }}</div>
-            <div class="employee-operation-photo">
-              {% if assigned_work.work.operation.photo %}
-                <img src="{{ assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
-              {% else %}
-                {% trans "No photo" %}
-              {% endif %}
-            </div>
-            <div class="employee-details">
-              <div class="employee-passport">
-                {% trans "Passport:" %}
-                {% if assigned_work.work.passport_size.passport %}
-                  <strong>{{ assigned_work.work.passport_size.passport.number }}</strong>
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-passport">
-                {% trans "Color:" %}
-                {% if assigned_work.work.passport_size.passport %}
-                  <strong>{% if assigned_work.work.passport_size.passport.roll %}{{ assigned_work.work.passport_size.passport.roll.color }}{% else %}{{ assigned_work.work.passport_size.passport.cut.order.colors.first }}{% endif %}</strong>
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-passport">
-                {% trans "Cut:" %}
-                {% if assigned_work.work.passport_size.passport.cut %}
-                  <strong>{{ assigned_work.work.passport_size.passport.cut.number }}</strong>
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-passport">
-                {% trans "Model:" %}
-                {% if assigned_work.work.passport_size.passport.cut.order.model %}
-                  <strong>{{ assigned_work.work.passport_size.passport.cut.order.model }}</strong>
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-size">
-                {% trans "Size:" %}
-                {% if assigned_work.work.passport_size.size_quantity %}
-                  {% if assigned_work.work.passport_size.extra %}
-                    <strong>{{ assigned_work.work.passport_size.size_quantity.size }}-{{ assigned_work.work.passport_size.extra }}</strong>
-                  {% else %}
-                    <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
-                  {% endif %}
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-quantity">
-                {% trans "Assigned Quantity:" %} <strong>{{ assigned_work.quantity }}</strong>
-              </div>
-              <div class="employee-start-time">
-                {% trans "Start:" %}
-                {% if assigned_work.start_time %}
-                  <strong>{{ assigned_work.start_time|date:"H:i:s" }}</strong>
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-end-time">
-                {% trans "End:" %}
-                {% if assigned_work.end_time %}
-                  <strong>{{ assigned_work.end_time|date:"H:i:s" }}</strong>
-                {% else %}
-                  --
-                {% endif %}
-              </div>
-              <div class="employee-actions">
-                {% if not assigned_work.start_time %}
-                  <form action="{% url 'start_work' assigned_work.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">{% trans "Start" %}</button>
-                  </form>
-                {% endif %}
-                {% if assigned_work.start_time and not assigned_work.end_time %}
-                  <form action="{% url 'finish_work' assigned_work.id %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">{% trans "Finish" %}</button>
-                  </form>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      {% else %}
-
-      <div class="list-group" >
-        <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da; border-radius: 0px;">
-          {% trans "No works found." %}
-          </a>
+    <div class="clients-header">
+      <span class="operation-text">{% trans "My Works" %}</span>
     </div>
-        {% endif %}
-        </div>
 
+    {% if assigned_works %}
+    <div class="employee-cards-container">
+      {% for assigned_work in assigned_works %}
+      <div class="employee-card" id="employee-card-{{ assigned_work.id }}">
+        <div class="employee-operation-name">
+          {{ assigned_work.work.operation.number }} - {{ assigned_work.work.operation.name }}
+        </div>
+        <div class="employee-operation-photo">
+          {% if assigned_work.work.operation.photo %}
+          <img src="{{ assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+          {% else %}
+          {% trans "No photo" %}
+          {% endif %}
+        </div>
+        <div class="employee-details">
+          <div class="employee-passport">
+            {% trans "Passport:" %}
+            {% if assigned_work.work.passport_size.passport %}
+            <strong>{{ assigned_work.work.passport_size.passport.number }}</strong>
+            {% else %}
+            --
+            {% endif %}
+          </div>
+          <div class="employee-passport">
+            {% trans "Color:" %}
+            {% if assigned_work.work.passport_size.passport %}
+            <strong>{% if assigned_work.work.passport_size.passport.roll %}
+              {{ assigned_work.work.passport_size.passport.roll.color }}
+              {% else %}
+              {{ assigned_work.work.passport_size.passport.cut.order.colors.first }}
+              {% endif %}</strong>
+            {% else %}
+            --
+            {% endif %}
+          </div>
+          <div class="employee-passport">
+            {% trans "Cut:" %}
+            {% if assigned_work.work.passport_size.passport.cut %}
+            <strong>{{ assigned_work.work.passport_size.passport.cut.number }}</strong>
+            {% else %}
+            --
+            {% endif %}
+          </div>
+          <div class="employee-passport">
+            {% trans "Model:" %}
+            {% if assigned_work.work.passport_size.passport.cut.order.model %}
+            <strong>{{ assigned_work.work.passport_size.passport.cut.order.model }}</strong>
+            {% else %}
+            --
+            {% endif %}
+          </div>
+          <div class="employee-size">
+            {% trans "Size:" %}
+            {% if assigned_work.work.passport_size.size_quantity %}
+            {% if assigned_work.work.passport_size.extra %}
+            <strong>{{ assigned_work.work.passport_size.size_quantity.size }}-{{ assigned_work.work.passport_size.extra }}</strong>
+            {% else %}
+            <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
+            {% endif %}
+            {% else %}
+            --
+            {% endif %}
+          </div>
+          <div class="employee-quantity">
+            {% trans "Assigned Quantity:" %} <strong>{{ assigned_work.quantity }}</strong>
+          </div>
+          <div class="employee-start-time">
+            {% trans "Start:" %}
+            {% if assigned_work.start_time %}
+            <strong>{{ assigned_work.start_time|date:"H:i:s" }}</strong>
+            {% else %}
+            --
+            {% endif %}
+          </div>
+          <div class="employee-end-time">
+            {% trans "End:" %}
+            {% if assigned_work.end_time %}
+            <strong>{{ assigned_work.end_time|date:"H:i:s" }}</strong>
+            {% else %}
+            --
+            {% endif %}
+          </div>
+
+          <!-- Countdown Timer -->
+          <div class="employee-timer" id="countdown-{{ assigned_work.id }}" style="display:none; font-size: 1.5em; color: red;">
+            <strong>{% trans "Time Left:" %} <span id="timer-{{ assigned_work.id }}"></span></strong>
+          </div>
+
+          <div class="employee-actions">
+            {% if not assigned_work.start_time %}
+            <button 
+              class="start-button" 
+              data-id="{{ assigned_work.id }}" 
+              data-completion-time="{{ assigned_work.quantity|multiply:assigned_work.work.operation.preferred_completion_time }}">
+              {% trans "Start" %}
+            </button>
+            {% endif %}
+            {% if assigned_work.start_time and not assigned_work.end_time %}
+            <form action="{% url 'finish_work' assigned_work.id %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="start-button" >{% trans "Finish" %}</button>
+            </form>
+            {% endif %}
+          </div>
+          
+          <!-- Countdown Timer -->
+          <div class="employee-timer" id="countdown-{{ assigned_work.id }}" style="display:none; font-size: 1.5em; color: red;">
+            <strong>{% trans "Time Left:" %} <span id="timer-{{ assigned_work.id }}"></span></strong>
+          </div>          
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="list-group">
+      <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da; border-radius: 0px;">
+        {% trans "No works found." %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+  
+    const startButtons = document.querySelectorAll(".start-button");
+  
+    startButtons.forEach(button => {
+      button.addEventListener("click", function (event) {
+        const assignedWorkId = button.getAttribute("data-id");
+        const completionTime = parseInt(button.getAttribute("data-completion-time"));
+        const csrfToken = getCookie('csrftoken');
+  
+        // Send JSON request to start work
+        fetch(`/production/employee/works/${assignedWorkId}/start/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              // Hide the Start button
+              button.style.display = 'none';
+  
+              // Show the Finish button dynamically
+              const actionsDiv = button.closest(".employee-actions");
+              const finishForm = document.createElement("form");
+              finishForm.setAttribute("action", `/production/employee/works/${assignedWorkId}/finish/`);
+              finishForm.setAttribute("method", "post");
+              finishForm.innerHTML = `
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                <button type="submit" class="start-button">{% trans "Finish" %}</button>
+              `;
+              actionsDiv.appendChild(finishForm);
+  
+              // Show the countdown timer
+              const timerDiv = document.getElementById(`countdown-${assignedWorkId}`);
+              const timerSpan = document.getElementById(`timer-${assignedWorkId}`);
+              timerDiv.style.display = 'block';
+  
+              // Start the countdown
+              let timeLeft = completionTime;
+              function updateTimer() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerSpan.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (timeLeft > 0) {
+                  timeLeft--;
+                } else {
+                  clearInterval(timerInterval);
+                  timerSpan.textContent = "{% trans 'Time is up!' %}";
+                }
+              }
+              updateTimer();
+              const timerInterval = setInterval(updateTimer, 1000);
+            } else {
+              console.error('Error starting work:', data.message);
+            }
+          })
+          .catch(error => console.error('Error:', error));
+      });
+    });
+  });  
+</script>
 {% endblock %}
