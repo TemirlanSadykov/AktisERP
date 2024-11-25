@@ -279,7 +279,7 @@ urlpatterns = [
     path('api/fetch-record-details/', fetch_record_details, name='fetch_record_details'),
 
     # For barcode creation
-    path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
+    # path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
     path('barcode/api/passport_size/<int:passport_size_id>/', BarcodePassportSize.as_view(), name='barcode_passport_size'),
     path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
     #for whatsapp qr code
