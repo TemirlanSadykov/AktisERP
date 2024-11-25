@@ -1080,6 +1080,8 @@ def model_create(request, a_id, pk=None):
             return redirect('model_add_accessories', model_id=model_instance.id)  # Redirect to accessories view
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
+        # Explicitly order the operations queryset by name
+        form.fields['operations'].queryset = Operation.objects.all().order_by('name')
 
     operations_order_json = ""
     if copy_id:
@@ -1103,15 +1105,27 @@ def model_add_accessories(request, model_id):
     model_instance = get_object_or_404(Model, pk=model_id)
     
     if request.method == 'POST':
-        accessories_data = json.loads(request.POST.get('accessories_data', '{}'))
-        for accessory_id, quantity in accessories_data.items():
-            accessory = AbstractAccessory.objects.get(pk=accessory_id)
-            ModelAccessory.objects.create(
-                model=model_instance,
-                abstract_accessory=accessory,
-                quantity=quantity
-            )
-        return redirect('model_list', a_id=model_instance.assortment.id)  # Redirect to model list after adding accessories
+        accessories_data_raw = request.POST.get('accessories_data', '{}')
+        
+        try:
+            # Try to parse the JSON data
+            accessories_data = json.loads(accessories_data_raw)
+        except json.JSONDecodeError:
+            # If parsing fails, set accessories_data to an empty dictionary
+            accessories_data = {}
+
+        # Check if accessories_data is not empty
+        if accessories_data:
+            for accessory_id, quantity in accessories_data.items():
+                accessory = AbstractAccessory.objects.get(pk=accessory_id)
+                ModelAccessory.objects.create(
+                    model=model_instance,
+                    abstract_accessory=accessory,
+                    quantity=quantity
+                )
+        
+        # Redirect to model list after adding accessories
+        return redirect('model_list', a_id=model_instance.assortment.id)
 
     accessories = AbstractAccessory.objects.all()
     context = {
@@ -1147,6 +1161,7 @@ def model_edit(request, a_id, pk):
     else:
         form = ModelCustomForm(instance=model_instance)
         # Fetch and serialize operations order
+        form.fields['operations'].queryset = Operation.objects.all().order_by('name')
         operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
         operations_order_json = json.dumps(operations_order)
 
