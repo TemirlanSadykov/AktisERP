@@ -348,7 +348,7 @@ class Passport(models.Model):
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
 
     def __str__(self):
-        return f"ID {str(self.id)}"
+        return f"{self.cut.number}-{self.number}"
 
     @property
     def quantity(self):

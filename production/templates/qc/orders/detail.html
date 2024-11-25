@@ -112,7 +112,7 @@
             {% for cut in associated_cuts %}
               {% if cut.passports.exists %}
                 {% for passport in cut.passports.all %}
-                  <th>№{{ passport.number }}</th>
+                  <th>№{{ passport }}</th>
                 {% endfor %}
               {% endif %}
             {% endfor %}
@@ -171,7 +171,7 @@
                   {% for passport in cut.passports.all %}
                     <li class="list-group-item">
                       <a href="{% url 'passport_detail_qc' passport.pk %}">
-                        №{{ passport.number }} - {{ passport.quantity }}
+                        №{{ passport }}
                       </a>
                     </li>
                   {% endfor %}

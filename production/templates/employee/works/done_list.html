@@ -82,7 +82,7 @@
                   {% for assigned_work in assigned_works %}
                   <tr>
                     <td>{{ assigned_work.work.passport_size.passport.cut.order.model }}</td>
-                    <td>{{ assigned_work.work.passport_size.passport.number }}/{{ assigned_work.work.passport_size.passport.cut.number }}</td>
+                    <td>{{ assigned_work.work.passport_size.passport }}</td>
                     <td>{{ assigned_work.work.operation.name }} ({{ assigned_work.work.operation.number }})</td>
                     <td>{{ assigned_work.work.passport_size.size_quantity.size }}</td>
                     <td>{{ assigned_work.quantity }}</td>
