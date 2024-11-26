@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load custom_filters %}
 {% block content %}
 <style>
   .assign-operations-container {
@@ -96,36 +96,43 @@
       <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
       <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by name...' %}" aria-label="Search"
         style="margin-bottom: 20px; padding: 8px; width: 100%;">
-      <div id="operationsContainer">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>{% trans 'Select' %}</th>
-              <th>{% trans 'Name' %}</th>
-              <th>{% trans 'Node' %}</th>
-              <th>{% trans 'Equipment' %}</th>
-              <th>{% trans 'Time' %}</th>
-              <th>{% trans 'Payment' %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for operation in form.fields.operations.queryset %}
-            <tr class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
-              <td>
-                <input type="checkbox" name="operations" value="{{ operation.id }}"
-                  {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
-              </td>
-              <td>{{ operation.name }}</td>
-              <td>{{ operation.node.name }}</td>
-              <td>{{ operation.equipment.name }}</td>
-              <td>{{ operation.preferred_completion_time }}</td>
-              <td>{{ operation.payment }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
+        <div id="operationsContainer">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>{% trans 'Node' %}</th>
+                <th>{% trans 'Select' %}</th>
+                <th>{% trans 'Name' %}</th>
+                <th>{% trans 'Equipment' %}</th>
+                <th>{% trans 'Time' %}</th>
+                <th>{% trans 'Payment' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% with form.fields.operations.queryset|group_by_node as grouped_operations %}
+                {% for node, operations in grouped_operations %}
+                  {% for operation in operations %}
+                  <tr class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
+                    {% if forloop.first %} <!-- Merge cells for the first operation under each node -->
+                    <td rowspan="{{ operations|length }}">
+                      {{ node.name }}
+                    </td>
+                    {% endif %}
+                    <td>
+                      <input type="checkbox" name="operations" value="{{ operation.id }}"
+                        {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
+                    </td>
+                    <td>{{ operation.name }}</td>
+                    <td>{{ operation.equipment.name }}</td>
+                    <td>{{ operation.preferred_completion_time }}</td>
+                    <td>{{ operation.payment }}</td>
+                  </tr>
+                  {% endfor %}
+                {% endfor %}
+              {% endwith %}
+            </tbody>
+          </table>
+        </div>        
       {{ form.operations_data }}
 
       <div class="form-actions">

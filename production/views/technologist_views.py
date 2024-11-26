@@ -1080,8 +1080,10 @@ def model_create(request, a_id, pk=None):
             return redirect('model_add_accessories', model_id=model_instance.id)  # Redirect to accessories view
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
-        # Explicitly order the operations queryset by name
-        form.fields['operations'].queryset = Operation.objects.all().order_by('name')
+        # Order the operations queryset by node number (numerically) and operation name
+        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
+            'node__number', 'name'
+        )
 
     operations_order_json = ""
     if copy_id:
@@ -1160,8 +1162,10 @@ def model_edit(request, a_id, pk):
             return redirect('model_list', a_id=a_id)
     else:
         form = ModelCustomForm(instance=model_instance)
-        # Fetch and serialize operations order
-        form.fields['operations'].queryset = Operation.objects.all().order_by('name')
+        # Order the operations queryset by node number (numerically) and operation name
+        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
+            'node__number', 'name'
+        )
         operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
         operations_order_json = json.dumps(operations_order)
 
