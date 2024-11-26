@@ -1,4 +1,5 @@
 from django import template
+from collections import defaultdict
 
 register = template.Library()
 
@@ -128,3 +129,13 @@ def multiply(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return ''
+    
+@register.filter
+def group_by_node(operations):
+    grouped = defaultdict(list)
+    for operation in operations:
+        grouped[operation.node].append(operation)
+
+    # Sort nodes numerically by their `number` field
+    sorted_grouped = sorted(grouped.items(), key=lambda item: int(item[0].number))
+    return sorted_grouped  # Return a sorted list of tuples
