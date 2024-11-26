@@ -117,29 +117,22 @@
               </tr>
             </thead>
             <tbody>
-              {% with form.fields.operations.queryset|group_by_node as grouped_operations %}
-                {% for node, operations in grouped_operations %}
-                  {% for operation in operations %}
-                  <tr class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
-                    {% if forloop.first %} <!-- Merge cells for the first operation under each node -->
-                    <td rowspan="{{ operations|length }}">
-                      {{ node.name }}
-                    </td>
-                    {% endif %}
-                    <td>
-                      <input type="checkbox" name="operations" value="{{ operation.id }}">
-                    </td>
-                    <td>{{ operation.name }}</td>
-                    <td>{{ operation.equipment.name }}</td>
-                    <td>{{ operation.preferred_completion_time }}</td>
-                    <td>{{ operation.payment }}</td>
-                  </tr>
-                  {% endfor %}
-                {% endfor %}
-              {% endwith %}
+              {% for operation in form.fields.operations.queryset %}
+              <tr class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
+                <td>{{ operation.node.name }}</td>
+                <td>
+                  <input type="checkbox" name="operations" value="{{ operation.id }}"
+                    {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
+                </td>
+                <td>{{ operation.name }}</td>
+                <td>{{ operation.equipment.name }}</td>
+                <td>{{ operation.preferred_completion_time }}</td>
+                <td>{{ operation.payment }}</td>
+              </tr>
+              {% endfor %}
             </tbody>
           </table>
-        </div>                
+        </div>                    
         {{ form.operations_data }}
         <div class="form-actions">
             <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
