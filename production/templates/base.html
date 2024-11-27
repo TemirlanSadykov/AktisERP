@@ -167,6 +167,26 @@
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     {% endif %}
                 </div>
+                {% elif sidebar_type == 'manager' %}
+                <div id="sidebar" class="list-group list-group-flush sidenavres">
+                    {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}
+                    <a href="{% url 'user_redirect' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="user_redirect">
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                    <a href="{% url 'warehouse_list' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="Warehouse"><i class="fas fa-warehouse fa-fw"></i><span class="sidetext">{% trans 'Warehouse' %}</span></a>
+                    <a href="{% url 'scan_manager_page' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
+                        <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
+                    {% else %}
+                    <a href="{% url 'user_redirect' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="user_redirect">
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                    {% endif %}
+                </div>
                 {% elif sidebar_type == 'emp' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">
                     {% if request.user.userprofile.status or request.user.userprofile.type == 0 %}

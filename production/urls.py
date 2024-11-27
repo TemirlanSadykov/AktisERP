@@ -15,6 +15,7 @@ urlpatterns = [
     path('qc/', qc_page, name='qc_page'),
     path('packer/', packer_page, name='packer_page'),
     path('keeper/', keeper_page, name='keeper_page'),
+    path('manager/', manager_page, name='manager_page'),
 
     path('admin/dashboard/', dashboard_page, name='dashboard_page'),
 
@@ -83,6 +84,7 @@ urlpatterns = [
     path('admin/orders/<int:pk>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
     path('admin/orders/edit-size-quantity/<int:sq_id>/', edit_size_quantity, name='edit_size_quantity'),
     path('admin/orders/delete-size-quantity/<int:sq_id>/', delete_size_quantity, name='delete_size_quantity'),
+    path('admin/orders/<int:pk>/ship/', OrderShipView.as_view(), name='order_ship'),
 
     path('admin/clients/', ClientListView.as_view(), name='client_list'),
     path('admin/clients/create/', ClientCreateView.as_view(), name='client_create'),
@@ -285,5 +287,17 @@ urlpatterns = [
     #for whatsapp qr code
     path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
     path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
+
+    path('manager/warehouse/', WarehouseListView.as_view(), name='warehouse_list'),
+    path('manager/warehouse/create/', WarehouseCreateView.as_view(), name='warehouse_create'),
+    path('manager/warehouse/<int:pk>/', WarehouseDetailView.as_view(), name='warehouse_detail'),
+    path('manager/warehouse/<int:pk>/edit/', WarehouseUpdateView.as_view(), name='warehouse_edit'),
+    path('manager/warehouse/archived/', ArchivedWarehouseListView.as_view(), name='archived_warehouse_list'),
+    path('manager/warehouse/<int:pk>/archive/', WarehouseArchiveView.as_view(), name='warehouse_archive'),
+    path('manager/warehouse/<int:pk>/unarchive/', WarehouseUnArchiveView.as_view(), name='warehouse_unarchive'),
+    path('manager/warehouse/<int:pk>/delete/', WarehouseDeleteView.as_view(), name='warehouse_delete'),
+
+    path('manager/scan/', scan_manager_page, name='scan_manager_page'),
+    path('manager/orders/update-piece-status/<int:piece_id>/', update_piece_manager, name='update_piece_manager'),
 
 ]

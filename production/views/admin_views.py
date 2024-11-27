@@ -1359,6 +1359,7 @@ class OrderDetailView(DetailView):
 
         # Get associated cuts for the order
         associated_cuts = order.cuts.all().order_by('-date')
+        warehouses = Warehouse.objects.filter(is_archived=False)
 
         # Calculate days left
         today = timezone.localdate()
@@ -1368,10 +1369,42 @@ class OrderDetailView(DetailView):
             'required_data': required_data,  # Data for the "Required Quantities" table
             'days_left': days_left,          # Days left for the order deadline
             'associated_cuts': associated_cuts,  # Send associated cuts to the template
+            'warehouses': warehouses,
             'sidebar_type': 'admin'
         })
 
         return context
+    
+class OrderShipView(View):
+    def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        warehouse_id = request.POST.get('warehouse')
+        warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+
+        # Fill stock and update status
+        try:
+            with transaction.atomic():
+                for size_quantity in order.size_quantities.all():
+                    stock, created = Stock.objects.get_or_create(
+                        warehouse=warehouse,
+                        size_quantity=size_quantity,
+                        model=order.model,
+                        defaults={'available_quantity': size_quantity.quantity, 'sold_quantity': 0}
+                    )
+                    if not created:
+                        stock.available_quantity += size_quantity.quantity
+                        stock.save()
+
+                # Update order status to SHIPPED
+                order.status = Order.SHIPPED
+                order.save()
+
+                messages.success(request, "Order has been shipped and stock updated.")
+                return redirect('order_detail', pk=pk)
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+            return redirect('order_detail', pk=pk)
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class CutDetailAdminView(DetailView):

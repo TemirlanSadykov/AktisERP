@@ -37,6 +37,7 @@ class UserProfile(models.Model):
     QC = 4
     PACKER = 5
     KEEPER = 6
+    MANAGER = 7
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -45,6 +46,7 @@ class UserProfile(models.Model):
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),
         (KEEPER, 'Кладовщик'),
+        (MANAGER, 'Менеджер')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=False, verbose_name='Статус')
@@ -251,10 +253,12 @@ class ClientOrder(models.Model):
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
+    SHIPPED = 3
     TYPE_CHOICES = [
         (NEW, 'Новый'),
         (IN_PROGRESS, 'В процессе'),
         (COMPLETED, 'Завершен'),
+        (SHIPPED, 'Отправлен')
     ]
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
     def default_term():
@@ -275,10 +279,12 @@ class Order(models.Model):
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
+    SHIPPED = 3
     TYPE_CHOICES = [
         (NEW, 'Новый'),
         (IN_PROGRESS, 'В процессе'),
         (COMPLETED, 'Завершен'),
+        (SHIPPED, 'Отправлен')
     ]
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
     quantity = models.IntegerField(verbose_name='Количество')
@@ -391,6 +397,7 @@ class ProductionPiece(models.Model):
         CHECKED = 'CHECKED', 'Проверено'
         PACKED = 'PACKED', 'Упаковано'
         DEFECT = 'DEFECT', 'Брак'
+        SOLD = 'SOLD', 'Продан'
 
     class DefectType(models.TextChoices):
         STITCHING = 'STITCHING', 'Ошибка шитья'
@@ -490,3 +497,30 @@ class SalaryPayment(models.Model):
 class PhoneNumberScaner(models.Model):
     phone_number = models.CharField(max_length=15)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class Warehouse(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Warehouse Name")
+    location = models.TextField(verbose_name="Location", null=True, blank=True)
+    responsible_person = models.ForeignKey(
+        UserProfile, on_delete=models.SET_NULL, null=True, blank=True,
+        limit_choices_to={'type': UserProfile.MANAGER}, verbose_name="Responsible Person"
+    )
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return f"{self.name} - {self.location}"
+
+class Stock(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stocks", verbose_name="Warehouse")
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name="stocks", verbose_name="Model")
+    size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name="stocks", verbose_name="Size Quantity")
+    available_quantity = models.IntegerField(default=0, verbose_name="Available Quantity")
+    sold_quantity = models.IntegerField(default=0, verbose_name="Sold Quantity")
+
+    class Meta:
+        unique_together = ('warehouse', 'size_quantity')
+        verbose_name = "Stock"
+        verbose_name_plural = "Stocks"
+
+    def __str__(self):
+        return f"{self.warehouse.name} - {self.size_quantity.size}: {self.available_quantity} available, {self.sold_quantity} sold"

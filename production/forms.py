@@ -550,3 +550,21 @@ class ErrorResponsibilityForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['employee'].queryset = UserProfile.objects.all().order_by('employee_id')
 
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse
+        fields = ['name', 'location', 'responsible_person']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter warehouse name'
+            }),
+            'location': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter warehouse location',
+                'rows': 3
+            }),
+            'responsible_person': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+        }

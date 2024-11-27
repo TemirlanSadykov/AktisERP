@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Manager Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="padding:60px;">
+  <div class="container">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      {% trans "Warehouse Details:" %} {{ warehouse.name }}
+      {% if warehouse.is_archived %}
+        <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans "Un Archive" %}</a>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Location:" %}</strong> {{ warehouse.location }}</p>
+          <p><strong>{% trans "Responsible Person:" %}</strong> {{ warehouse.responsible_person }}</p>
+          {% if not warehouse.is_archived %}
+            <a href="{% url 'warehouse_edit' warehouse.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
+          {% endif %}
+          <a href="javascript:void(0);" id="deleteBtn"><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+        </div>
+        <div class="col-md-5 text-center">
+          <img src="{% static 'img/client.png' %}" alt="Warehouse Image" class="img-fluid">
+        </div>
+      </div>
+    </div>
+
+    <!-- Associated Stock -->
+    <div class="container-fluid bottomContainer">
+      <div class="row">
+        <div class="col-md-6">
+          <h3>{% trans "Associated Stock" %}</h3>
+        </div>
+      </div>
+      <br>
+      {% if grouped_stocks %}
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th>{% trans "Model" %}</th>
+              <th>{% trans "Size" %}</th>
+              <th>{% trans "Available Quantity" %}</th>
+              <th>{% trans "Sold Quantity" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for model, stocks in grouped_stocks.items %}
+            <tr>
+              <td rowspan="{{ stocks|length }}">{{ model }}</td>
+              <td>{{ stocks.0.size_quantity.size }}</td>
+              <td>{{ stocks.0.available_quantity }}</td>
+              <td>{{ stocks.0.sold_quantity }}</td>
+            </tr>
+            {% for stock in stocks|slice:"1:" %}
+            <tr>
+              <td>{{ stock.size_quantity.size }}</td>
+              <td>{{ stock.available_quantity }}</td>
+              <td>{{ stock.sold_quantity }}</td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+          {% trans "No stock associated with this warehouse." %}
+        </a>
+      </div>
+      {% endif %}
+    </div>    
+  </div>
+</div>
+
+<script>
+  document.getElementById('deleteBtn').onclick = function() {
+    document.getElementById('deleteModal').style.display = 'flex';
+  };
+
+  document.getElementById('closeBtn').onclick = function() {
+    document.getElementById('deleteModal').style.display = 'none';
+  };
+
+  document.getElementById('cancelBtn').onclick = function() {
+    document.getElementById('deleteModal').style.display = 'none';
+  };
+
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+    document.getElementById('archiveForm').submit();
+  };
+
+  document.getElementById('unArchiveBtn').onclick = function() {
+    document.getElementById('unarchiveModal').style.display = 'flex';
+  };
+
+  document.getElementById('closeUnarchiveBtn').onclick = function() {
+    document.getElementById('unarchiveModal').style.display = 'none';
+  };
+
+  document.getElementById('cancelUnarchiveBtn').onclick = function() {
+    document.getElementById('unarchiveModal').style.display = 'none';
+  };
+
+  document.getElementById('confirmUnarchiveBtn').onclick = function() {
+    document.getElementById('unArchiveForm').submit();
+  };
+</script>
+
+{% endblock %}

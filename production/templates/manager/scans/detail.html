@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Manager Dashboard - Sold Items" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container clients-wrapper maincontr">
+  <div class="clients-header">
+    <span class="operation-text">{% trans "Scanned Items - Sold" %}</span>
+    <input type="text" id="barcode-input" autofocus style="padding: 8px;" placeholder="{% trans 'Manual Input' %}" />
+  </div>
+  <ul class="clients-list" id="scanned-items-list">
+  </ul>
+</div>
+
+<div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scanModalLabel">{% trans "Scanned Item Details" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>{% trans "Unit:" %}</strong> <span id="modal-piece"></span></p>
+        <p><strong>{% trans "Passport:" %}</strong> <span id="modal-passport"></span></p>
+        <p><strong>{% trans "Cut:" %}</strong> <span id="modal-cut"></span></p>
+        <p><strong>{% trans "Model:" %}</strong> <span id="modal-model"></span></p>
+        <p><strong>{% trans "Color:" %}</strong> <span id="modal-color"></span></p>
+        <p><strong>{% trans "Fabric:" %}</strong> <span id="modal-fabrics"></span></p>
+        <p><strong>{% trans "Size:" %}</strong> <span id="modal-size"></span></p>
+        <p><strong>{% trans "Stage:" %}</strong> <span id="modal-stage"></span></p>
+        <p><strong>{% trans "Defect:" %}</strong> <span id="modal-defect"></span></p>
+        <div id="defectTypeSelect" style="display: none;">
+          <label for="defectType"><strong>{% trans "Defect Type:" %}</strong></label>
+          <select id="defectType" class="form-control">
+            <option value="STITCHING">{% trans "Stitching Error" %}</option>
+            <option value="CUTTING">{% trans "Cutting Error" %}</option>
+            <option value="FABRIC">{% trans "Fabric Defect" %}</option>
+            <option value="ASSEMBLY">{% trans "Assembly Error" %}</option>
+            <option value="OTHER">{% trans "Other Errors" %}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer form-actions" id="initialButtons">
+        <button type="button" class="btn edit-btn" id="sold-button">{% trans "Sold" %}</button>
+        <button type="button" class="btn btn-danger" id="defect-button">{% trans "Defect" %}</button>
+      </div>
+      <div class="modal-footer form-actions" id="saveBackButtons" style="display: none;">
+        <button type="button" class="btn edit-btn" id="save-button">{% trans "Save" %}</button>
+        <button type="button" class="btn back-btn" id="back-button">{% trans "Back" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var barcodeInput = document.getElementById('barcode-input');
+    var currentPieceId = null;
+
+    function processBarcode() {
+      var barcode = barcodeInput.value.trim();
+      if (barcode) {
+        fetch(`/production/qc/orders/api/get-piece-info/${barcode}/`)
+          .then(response => response.json())
+          .then(data => {
+            var listItem = document.createElement('li');
+            listItem.className = 'list-group-item';
+            listItem.style.padding = '18px';
+            listItem.setAttribute('data-piece-id', data.piece_id);
+            var link = document.createElement('a');
+            link.textContent = `${data.piece_number} (Unit) - ${data.passport_number} (Passport) - ${data.cut} (Cut) - ${data.model} - ${data.color} - ${data.fabrics} - ${data.size} (Size)`;
+            link.style.textDecoration = 'none';
+            listItem.appendChild(link);
+            var scannedItemsList = document.getElementById('scanned-items-list');
+            scannedItemsList.prepend(listItem);
+            document.getElementById('modal-piece').textContent = data.piece_number;
+            document.getElementById('modal-model').textContent = data.model;
+            document.getElementById('modal-cut').textContent = data.cut;
+            document.getElementById('modal-passport').textContent = data.passport_number;
+            document.getElementById('modal-color').textContent = data.color;
+            document.getElementById('modal-fabrics').textContent = data.fabrics;
+            document.getElementById('modal-size').textContent = data.size;
+            document.getElementById('modal-stage').textContent = data.stage;
+            document.getElementById('modal-defect').textContent = data.defect;
+            currentPieceId = data.piece_id;
+            $('#scanModal').modal('show');
+          })
+          .catch(error => console.error('Error fetching item details:', error))
+          .finally(() => {
+            barcodeInput.value = '';
+            barcodeInput.focus();
+          });
+      }
+    }
+
+    barcodeInput.addEventListener('change', processBarcode);
+
+    $('#scanModal').on('hidden.bs.modal', function() {
+      barcodeInput.focus();
+    });
+
+    document.getElementById('defect-button').addEventListener('click', function() {
+      document.getElementById('initialButtons').style.display = 'none';
+      document.getElementById('saveBackButtons').style.display = 'flex';
+      document.getElementById('defectTypeSelect').style.display = 'block';
+    });
+
+    document.getElementById('back-button').addEventListener('click', function() {
+      document.getElementById('initialButtons').style.display = 'flex';
+      document.getElementById('saveBackButtons').style.display = 'none';
+      document.getElementById('defectTypeSelect').style.display = 'none';
+    });
+
+    document.getElementById('save-button').addEventListener('click', function() {
+      let defectType = document.getElementById('defectType').value;
+      updatePieceStatus('Defect', defectType);
+    });
+
+    document.getElementById('sold-button').addEventListener('click', function() {
+      updatePieceStatus('Sold');
+    });
+
+    function updatePieceStatus(status, defectType = null) {
+      let updateData = { status: status };
+      if (defectType) {
+        updateData.defectType = defectType;
+      }
+
+      fetch(`/production/manager/orders/update-piece-status/${currentPieceId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          $('#scanModal').modal('hide');
+          let listItem = document.querySelector(`#scanned-items-list li[data-piece-id="${currentPieceId}"]`);
+          if (listItem) {
+            let link = listItem.querySelector('a');
+            if (link) {
+              if (!link.textContent.includes(status)) {
+                link.textContent += ` - ${status}`;
+              }
+            }
+          }
+        } else {
+          alert(`Failed to update status to ${status}:`, data.message);
+        }
+      })
+      .catch(error => console.error('Error updating status:', error));
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  });
+</script>
+{% endblock %}

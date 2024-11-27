@@ -26,7 +26,35 @@
 
 <div class="container maincontr">
   <div class="card-header">
-    {% trans "Model Details:" %} {{ order.model.name }}
+    <div class="row">
+      <div class="col-md-9" style="margin:auto">
+        {% trans "Model Details:" %} {{ order.model.name }}
+      </div>
+      <div class="col-md-3 text-right">
+        {% if order.status == order.SHIPPED %}
+        <button type="button" class="btn cancel" disabled>{% trans "Shipped" %}</button>
+        {% else %}
+          <button type="button" class="btn completebutton">{% trans "Ship" %}</button>
+        {% endif %}
+      </div>
+      <div class="modal" id="shipModal">
+        <div class="modal-content">
+          <span class="close" id="closeShipBtn">&times;</span>
+          <p style="color: black;">{% trans "Select Warehouse" %}</p>
+          <form id="shipOrderForm" action="{% url 'order_ship' order.pk %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              <select name="warehouse" id="warehouse" class="form-control">
+                {% for warehouse in warehouses %}
+                <option value="{{ warehouse.pk }}">{{ warehouse.name }} - {{ warehouse.location }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Ship" %}</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="container">
     <div class="progress" style="margin-bottom: 20px; height:1.25rem">
@@ -143,6 +171,15 @@
     {% endif %}
   </div>
 </div>
+<script>
+  document.querySelector('.completebutton').onclick = function () {
+    document.getElementById('shipModal').style.display = 'flex';
+  };
+
+  document.getElementById('closeShipBtn').onclick = function () {
+    document.getElementById('shipModal').style.display = 'none';
+  };
+</script>
 <script>
   document.getElementById('deleteBtn').onclick = function() {
       document.getElementById('deleteModal').style.display = 'flex';
