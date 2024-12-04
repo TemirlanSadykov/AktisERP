@@ -564,14 +564,14 @@ def salary_list(request):
         if salary_type == 'non_fixed':
             assigned_works = AssignedWork.objects.filter(
                 end_time__range=(start_date, end_date),
-                end_time__isnull=False,
-                is_success=True,
+                # end_time__isnull=False,
+                # is_success=True,
                 work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             ).select_related('work__operation', 'employee')
 
             reassigned_works = ReassignedWork.objects.filter(
                 original_assigned_work__end_time__range=(start_date, end_date),
-                is_success=True,
+                # is_success=True,
                 original_assigned_work__work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             ).select_related('original_assigned_work__work__operation', 'new_employee')
 
