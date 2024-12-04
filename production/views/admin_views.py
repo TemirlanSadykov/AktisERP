@@ -563,24 +563,28 @@ def salary_list(request):
 
         if salary_type == 'non_fixed':
             assigned_works = AssignedWork.objects.filter(
-                work__passport_size__passport__cut__date__range=(start_date, end_date),
-                # end_time__isnull=False,
-                # is_success=True,
+                end_time__range=(start_date, end_date),
+                end_time__isnull=False,
+                is_success=True,
                 work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
             ).select_related('work__operation', 'employee')
 
-            # reassigned_works = ReassignedWork.objects.filter(
-            #     original_assigned_work__end_time__range=(start_date, end_date),
-            #     # is_success=True,
-            #     original_assigned_work__work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
-            # ).select_related('original_assigned_work__work__operation', 'new_employee')
+            reassigned_works = ReassignedWork.objects.filter(
+                original_assigned_work__end_time__range=(start_date, end_date),
+                is_success=True,
+                original_assigned_work__work__passport_size__passport__cut__order__client_order__branch=request.user.userprofile.branch
+            ).select_related('original_assigned_work__work__operation', 'new_employee')
 
-            for work_group in [assigned_works]:
+            for work_group in [assigned_works, reassigned_works]:
                 for work in work_group:
                     if work_group is assigned_works:
                         employee = work.employee
                         payment = work.work.operation.payment
                         quantity = work.quantity
+                    else:  # This is for reassigned_works
+                        employee = work.new_employee
+                        payment = work.original_assigned_work.work.operation.payment
+                        quantity = work.reassigned_quantity
 
                     if employee not in salaries:
                         salaries[employee] = {'salary': 0, 'status': 0, 'errors': 0, 'error_cost': 0}
