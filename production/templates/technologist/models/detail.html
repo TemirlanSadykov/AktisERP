@@ -68,16 +68,43 @@
               <strong>{% trans 'Operations:' %}</strong>
             </p>
             {% if ordered_operations %}
-              <ul class="list-group">
-                {% for operation in ordered_operations %}
-                  <a href="{% url 'operation_detail' operation.pk %}"><li class="list-group-item" style="color:#007bff">{{ forloop.counter }}. {{ operation }}</li></a>
-                {% endfor %}
-              </ul>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>{% trans 'Name' %}</th>
+                    <th>{% trans 'Node' %}</th>
+                    <th>{% trans 'Equipment' %}</th>
+                    <th>{% trans 'Time' %}</th>
+                    <th>{% trans 'Payment' %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for operation in ordered_operations %}
+                    <tr>
+                      <td>
+                        <a href="{% url 'operation_detail' operation.pk %}" style="color:#007bff;">{{ operation.name }}</a>
+                      </td>
+                      <td>
+                        <a href="{% url 'node_detail' operation.node.pk %}" style="color:#007bff;">{{ operation.node.name }}</a>
+                      </td>
+                      <td>
+                        <a href="{% url 'equipment_detail' operation.equipment.pk %}" style="color:#007bff;">{{ operation.equipment.name }}</a>
+                      </td>
+                      <td>
+                        {{ operation.preferred_completion_time }}
+                      </td>
+                      <td>
+                        {{ operation.payment }}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             {% else %}
               <p>
                 {% trans 'No operations associated with this model.' %}
               </p>
-            {% endif %}
+            {% endif %}            
             {% if not model.is_archived %}
               <a href="{% url 'model_edit' a_id=model.assortment.pk pk=model.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
             {% endif %}

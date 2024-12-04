@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load custom_filters %}
 {% block content %}
 <style>
   .assign-operations-container {
@@ -103,17 +103,36 @@
             <div class="error">{{ form.photo.errors }}</div>
         {% endif %}
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
-        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
+        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by name...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
-            {% for operation in form.fields.operations.queryset %}
-                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
-                    <label>
-                        <input type="checkbox" name="operations" value="{{ operation.id }}">
-                        {{ operation }}
-                    </label>
-                </div>
-            {% endfor %}
-        </div>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>{% trans 'Node' %}</th>
+                <th>{% trans 'Select' %}</th>
+                <th>{% trans 'Name' %}</th>
+                <th>{% trans 'Equipment' %}</th>
+                <th>{% trans 'Time' %}</th>
+                <th>{% trans 'Payment' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for operation in form.fields.operations.queryset %}
+              <tr class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
+                <td>{{ operation.node.name }}</td>
+                <td>
+                  <input type="checkbox" name="operations" value="{{ operation.id }}"
+                    {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
+                </td>
+                <td>{{ operation.name }}</td>
+                <td>{{ operation.equipment.name }}</td>
+                <td>{{ operation.preferred_completion_time }}</td>
+                <td>{{ operation.payment }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>                    
         {{ form.operations_data }}
         <div class="form-actions">
             <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
@@ -129,26 +148,27 @@ let selectedOperations = [];
 
 document.getElementById('searchOperations').addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
-    const operations = document.querySelectorAll('#operationsContainer .checkbox');
+    const operations = document.querySelectorAll('#operationsContainer table tbody tr[data-operation-content]');
 
     operations.forEach(op => {
         const content = op.getAttribute('data-operation-content');
-        const numberPart = content.split('-')[0].trim(); // Assuming the number is always before the first '-'.
-        if (numberPart.includes(searchTerm)) {
-            op.style.display = '';
+        const namePart = content.split('-')[2].trim(); // Assuming the name is always the third part after two dashes.
+        if (namePart.toLowerCase().includes(searchTerm)) {
+            op.style.display = ''; // Show row if the name matches the search term
         } else {
-            op.style.display = 'none';
+            op.style.display = 'none'; // Hide row if the name doesn't match
         }
     });
 });
 
 function prepareOperations() {
-  let checkedBoxes = document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked');
+  let checkedBoxes = document.querySelectorAll('#operationsContainer table tbody input[type="checkbox"]:checked');
   let operationsContainer = document.getElementById('selectedOperations');
   operationsContainer.innerHTML = '';
 
   checkedBoxes.forEach(function(checkbox, index) {
-      let label = checkbox.nextSibling.textContent.trim();
+      let parentRow = checkbox.closest('tr');
+      let label = parentRow.getAttribute('data-operation-content');
       let div = document.createElement('div');
       div.className = 'sortable-item';
       div.setAttribute('data-id', checkbox.value);
