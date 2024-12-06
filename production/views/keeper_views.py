@@ -301,7 +301,7 @@ class FabricsCreateView(CreateView):
 class FabricsDetailView(DetailView):
     model = Fabrics
     template_name = 'keeper/fabrics/detail.html'
-    context_object_name = 'fabric'
+    context_object_name = 'fabrics'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
