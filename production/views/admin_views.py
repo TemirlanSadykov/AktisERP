@@ -24,6 +24,9 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models.functions import Cast
+from django.db.models import IntegerField
+
 
 from django.db.models.functions import TruncMonth
 
@@ -390,7 +393,9 @@ class EmployeeListView(ListView):
         return UserProfile.objects.filter(
             branch=self.request.user.userprofile.branch,
             is_archived=False
-        ).exclude(user__username='admin').order_by('employee_id')
+        ).exclude(user__username='admin').annotate(
+            employee_id_as_int=Cast('employee_id', IntegerField())
+        ).order_by('employee_id_as_int')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
