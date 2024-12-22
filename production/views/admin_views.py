@@ -230,8 +230,7 @@ def get_client_data(start_date, end_date):
 def get_employee_data(start_date, end_date):
     # Aggregating units produced by each employee from AssignedWork within the date range
     employee_units = AssignedWork.objects.filter(
-        is_success=True, 
-        end_time__range=[start_date, end_date]
+        work__passport_size__passport__cut__date__range=[start_date, end_date]
     ).values('employee__id').annotate(
         total_units=Sum('quantity')
     ).order_by('-total_units')
