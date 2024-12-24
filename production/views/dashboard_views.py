@@ -57,73 +57,79 @@ def client_api(request, client_id):
 @login_required
 @admin_required
 def employee_api(request, employee_id):
-    employee = UserProfile.objects.get(pk=employee_id)
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    # Calculate earnings based on assigned works
-    assigned_works = AssignedWork.objects.filter(employee=employee, work__passport_size__passport__cut__date__range=[start_date, end_date])
-    
-    # Group operations and calculate average time spent in seconds
-    operation_summary = {}
-    total_units = 0
-    total_weighted_efficiency = 0
-    for work in assigned_works:
-        operation_name = work.work.operation.name
-        preferred_completion_time = work.work.operation.preferred_completion_time
-        total_time = (work.end_time - work.start_time).total_seconds() if work.end_time and work.start_time else 0
-        if operation_name not in operation_summary:
-            operation_summary[operation_name] = {
-                'operation': operation_name,
-                'quantity': work.quantity,
-                'total_time': total_time,
-                'preferred_completion_time': preferred_completion_time,
-            }
-        else:
-            operation_summary[operation_name]['quantity'] += work.quantity
-            operation_summary[operation_name]['total_time'] += total_time
+    try:
+        employee = UserProfile.objects.get(pk=employee_id)
 
-    operations_details = []
-    for operation in operation_summary.values():
-        average_time_per_unit = operation['total_time'] / operation['quantity'] if operation['quantity'] else 0
-        efficiency = 100 if average_time_per_unit <= operation['preferred_completion_time'] else (operation['preferred_completion_time'] / average_time_per_unit) * 100
-        total_units += operation['quantity']
-        total_weighted_efficiency += efficiency * operation['quantity']
+        # Calculate earnings based on assigned works
+        assigned_works = AssignedWork.objects.filter(employee=employee, is_success=True)
+        earnings = sum(work.quantity * work.work.operation.payment for work in assigned_works)
 
-        operations_details.append({
-            'operation': operation['operation'],
-            'quantity': operation['quantity'],
-            'average_time_per_unit': average_time_per_unit,
-            'preferred_completion_time': operation['preferred_completion_time']
-        })
+        # Group operations and calculate average time spent in seconds
+        operation_summary = {}
+        total_units = 0
+        total_weighted_efficiency = 0
 
-    overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
-
-    # Summarize units produced by day
-    units_by_day = {}
-    for work in assigned_works:
-        date = work.start_time.date() if work.start_time else None
-        if date:
-            if date not in units_by_day:
-                units_by_day[date] = work.quantity
+        for work in assigned_works:
+            operation_name = work.work.operation.name
+            preferred_completion_time = work.work.operation.preferred_completion_time
+            total_time = (work.end_time - work.start_time).total_seconds() if work.end_time and work.start_time else 0
+            if operation_name not in operation_summary:
+                operation_summary[operation_name] = {
+                    'operation': operation_name,
+                    'quantity': work.quantity,
+                    'total_time': total_time,
+                    'preferred_completion_time': preferred_completion_time,
+                }
             else:
-                units_by_day[date] += work.quantity
+                operation_summary[operation_name]['quantity'] += work.quantity
+                operation_summary[operation_name]['total_time'] += total_time
 
-    units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
+        operations_details = []
+        for operation in operation_summary.values():
+            average_time_per_unit = operation['total_time'] / operation['quantity'] if operation['quantity'] else 0
+            efficiency = 100 if average_time_per_unit <= operation['preferred_completion_time'] else (operation['preferred_completion_time'] / average_time_per_unit) * 100
+            total_units += operation['quantity']
+            total_weighted_efficiency += efficiency * operation['quantity']
 
-    # Calculate total defects
-    total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
+            operations_details.append({
+                'operation': operation['operation'],
+                'quantity': operation['quantity'],
+                'average_time_per_unit': average_time_per_unit,
+                'preferred_completion_time': operation['preferred_completion_time']
+            })
 
-    response_data = {
-        'id': employee.id,
-        'full_name': f"{employee.user.first_name} {employee.user.last_name}",
-        'username': employee.user.username,
-        'efficiency': overall_efficiency,
-        'operations': operations_details,
-        'total_defects': total_defects,
-        'units_over_time': units_over_time,
-    }
+        overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
 
-    return JsonResponse(response_data)
+        # Summarize units produced by day
+        units_by_day = {}
+        for work in assigned_works:
+            date = work.start_time.date() if work.start_time else None
+            if date:
+                if date not in units_by_day:
+                    units_by_day[date] = work.quantity
+                else:
+                    units_by_day[date] += work.quantity
+
+        units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
+
+        # Calculate total defects
+        total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
+
+        response_data = {
+            'id': employee.id,
+            'full_name': f"{employee.user.first_name} {employee.user.last_name}",
+            'username': employee.user.username,
+            'earnings': earnings,
+            'efficiency': overall_efficiency,
+            'operations': operations_details,
+            'total_defects': total_defects,
+            'units_over_time': units_over_time,
+        }
+
+        return JsonResponse(response_data)
+
+    except UserProfile.DoesNotExist:
+        return JsonResponse({'error': 'Employee not found'}, status=404)
     
 @login_required
 @admin_required
