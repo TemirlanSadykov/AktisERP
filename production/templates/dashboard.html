@@ -938,7 +938,7 @@
                     const operationsList = data.operations.map(op => `
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             ${op.operation}: ${op.quantity}
-                            <span class="badge badge-primary badge-pill">Трудоемкость (с): ${op.total_time_spent.toFixed(2)}s (${op.preferred_completion_time}s)</span>
+                            <span class="badge badge-primary badge-pill">Трудоемкость: ${op.total_time_spent.toFixed(2)} (${op.preferred_completion_time})</span>
                         </li>
                     `).join('');
     
@@ -960,6 +960,9 @@
                                 <div class="col-12 mb-2">
                                     <p><strong>Работал(-а) над операциями:</strong></p>
                                     <ul class="list-group">${operationsList}</ul>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Время активной работы:</strong> ${data.total_time}с</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Число браков:</strong> ${data.total_defects}</p>
