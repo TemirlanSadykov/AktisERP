@@ -84,6 +84,7 @@ def employee_api(request, employee_id):
 
     operations_details = []
     for operation in operation_summary.values():
+        total_time_spent = operation['preferred_completion_time'] * operation['quantity']
         average_time_per_unit = operation['total_time'] / operation['quantity'] if operation['quantity'] else 0
         efficiency = 100 if average_time_per_unit <= operation['preferred_completion_time'] else (operation['preferred_completion_time'] / average_time_per_unit) * 100
         total_units += operation['quantity']
@@ -92,6 +93,7 @@ def employee_api(request, employee_id):
         operations_details.append({
             'operation': operation['operation'],
             'quantity': operation['quantity'],
+            'total_time_spent': total_time_spent,
             'average_time_per_unit': average_time_per_unit,
             'preferred_completion_time': operation['preferred_completion_time']
         })
