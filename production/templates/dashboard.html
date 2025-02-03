@@ -927,8 +927,11 @@
         }
     </script>
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('start_date');
+        const endDate = urlParams.get('end_date');
         function fetchEmployeeDetails(employeeId) {
-            fetch(`/production/api/employees/${employeeId}/`)
+            fetch(`/production/api/employees/${employeeId}/?start_date=${startDate}&end_date=${endDate}`)
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#employeeModal .modal-body');
