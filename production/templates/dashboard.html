@@ -937,7 +937,7 @@
                     const modalBody = document.querySelector('#employeeModal .modal-body');
                     
                     // Extract unique operations and orders
-                    const operations = data.operations.map(op => op.operation);
+                    const operations = data.operations; // Keep full objects
                     const orders = data.orders.map(order => ({ id: order.id, model_name: order.model_name }));
                     
                     // Ensure operation distribution exists
@@ -950,6 +950,7 @@
                                 <thead class="thead-dark">
                                     <tr>
                                         <th>Операция</th>
+                                        <th>Норма времени (сек)</th>  <!-- New Column -->
                                         ${orders.map(order => `<th>${order.model_name}</th>`).join('')}
                                     </tr>
                                 </thead>
@@ -958,9 +959,12 @@
         
                     // Populate table body with operation quantities per order
                     operations.forEach(op => {
-                        tableHtml += `<tr><td><strong>${op}</strong></td>`;
+                        tableHtml += `<tr>
+                            <td><strong>${op.operation}</strong></td>
+                            <td class="text-center">${op.preferred_completion_time}</td>  <!-- New Column -->                    
+                            `;
                         orders.forEach(order => {
-                            const operationData = operationDistribution.find(d => d.operation === op && d.order === order.id);
+                            const operationData = operationDistribution.find(d => d.operation === op.operation && d.order === order.id);
                             const quantity = operationData ? operationData.quantity : 0;
                             tableHtml += `<td class="text-center">${quantity}</td>`;
                         });
