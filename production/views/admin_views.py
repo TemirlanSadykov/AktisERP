@@ -128,8 +128,8 @@ def get_inventory_data(start_date, end_date):
 
 def get_orders_data(start_date, end_date):
     orders_data = Order.objects.filter(
-        client_order__created_at__range=[start_date, end_date]
-    ).select_related('model').annotate(
+        cuts__date__range=[start_date, end_date]
+    ).distinct().select_related('model').annotate(
         model_name=F('model__name'),
         assortment_name=F('model__assortment__name'),
         total_price=F('quantity') * F('payment'),
@@ -142,7 +142,9 @@ def get_orders_data(start_date, end_date):
     return list(orders_data)
 
 def get_production_data(start_date, end_date):
-    recent_orders = Order.objects.filter(client_order__created_at__range=[start_date, end_date])
+    recent_orders = Order.objects.filter(
+        cuts__date__range=[start_date, end_date]
+    ).distinct()
     
     in_progress_orders_count = recent_orders.filter(status=Order.IN_PROGRESS).count()
 

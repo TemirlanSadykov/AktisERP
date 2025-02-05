@@ -935,13 +935,40 @@
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#employeeModal .modal-body');
-                    const operationsList = data.operations.map(op => `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            ${op.operation}: ${op.quantity}
-                            <span class="badge badge-primary badge-pill">Трудоемкость: ${op.total_time_spent.toFixed(2)} (${op.preferred_completion_time})</span>
-                        </li>
-                    `).join('');
-    
+                    
+                    // Extract unique operations and orders
+                    const operations = data.operations.map(op => op.operation);
+                    const orders = data.orders.map(order => ({ id: order.id, model_name: order.model_name }));
+                    
+                    // Ensure operation distribution exists
+                    const operationDistribution = data.operation_distribution || [];
+        
+                    // Create table header
+                    let tableHtml = `
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Операция</th>
+                                        ${orders.map(order => `<th>${order.model_name}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+        
+                    // Populate table body with operation quantities per order
+                    operations.forEach(op => {
+                        tableHtml += `<tr><td><strong>${op}</strong></td>`;
+                        orders.forEach(order => {
+                            const operationData = operationDistribution.find(d => d.operation === op && d.order === order.id);
+                            const quantity = operationData ? operationData.quantity : 0;
+                            tableHtml += `<td class="text-center">${quantity}</td>`;
+                        });
+                        tableHtml += `</tr>`;
+                    });
+        
+                    tableHtml += `</tbody></table></div>`;
+        
                     modalBody.innerHTML = `
                         <div class="employee-details container-fluid">
                             <div class="row">
@@ -959,7 +986,7 @@
                                 </div>
                                 <div class="col-12 mb-2">
                                     <p><strong>Работал(-а) над операциями:</strong></p>
-                                    <ul class="list-group">${operationsList}</ul>
+                                    ${tableHtml}
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Время активной работы:</strong> ${data.total_time}с</p>
@@ -973,10 +1000,11 @@
                             </div>
                         </div>
                     `;
-    
+        
+                    // Generate production chart
                     const labels = data.units_over_time.map(item => item.date);
                     const unitsProduced = data.units_over_time.map(item => item.units);
-    
+        
                     var ctx = document.getElementById('productionChart').getContext('2d');
                     var productionChart = new Chart(ctx, {
                         type: 'line', 
@@ -991,6 +1019,8 @@
                             }]
                         },
                         options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
                             scales: {
                                 y: {
                                     beginAtZero: true
@@ -1000,7 +1030,7 @@
                     });
                 })
                 .catch(error => console.error('Error loading employee details:', error));
-        }
+        }                
     </script>
 
     <script>

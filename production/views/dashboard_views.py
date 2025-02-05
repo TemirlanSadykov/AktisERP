@@ -60,17 +60,37 @@ def employee_api(request, employee_id):
     employee = UserProfile.objects.get(pk=employee_id)
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
-    # Calculate earnings based on assigned works
-    assigned_works = AssignedWork.objects.filter(employee=employee, work__passport_size__passport__cut__date__range=[start_date, end_date])
-    
+
+    # Fetch assigned works within the date range
+    assigned_works = AssignedWork.objects.filter(
+        employee=employee, 
+        work__passport_size__passport__cut__date__range=[start_date, end_date]
+    )
+
+    # Extract unique orders
+    orders = assigned_works.values_list(
+        "work__passport_size__passport__cut__order__id",
+        "work__passport_size__passport__cut__order__model__name"  # Include model name
+    ).distinct()
+
+    # Convert orders to dictionary format with both ID and model name
+    orders_dict = {order_id: model_name for order_id, model_name in orders}
+
     # Group operations and calculate average time spent in seconds
     operation_summary = {}
     total_units = 0
     total_weighted_efficiency = 0
+
+    # Operation-to-order distribution mapping
+    operation_distribution = {}
+
     for work in assigned_works:
         operation_name = work.work.operation.name
+        order_id = work.work.passport_size.passport.cut.order.id
         preferred_completion_time = work.work.operation.preferred_completion_time
         total_time = (work.end_time - work.start_time).total_seconds() if work.end_time and work.start_time else 0
+
+        # Track total operation stats
         if operation_name not in operation_summary:
             operation_summary[operation_name] = {
                 'operation': operation_name,
@@ -82,8 +102,16 @@ def employee_api(request, employee_id):
             operation_summary[operation_name]['quantity'] += work.quantity
             operation_summary[operation_name]['total_time'] += total_time
 
+        # Track operation distribution across orders
+        key = (operation_name, order_id)
+        if key not in operation_distribution:
+            operation_distribution[key] = work.quantity
+        else:
+            operation_distribution[key] += work.quantity
+
     operations_details = []
     total_time = 0
+
     for operation in operation_summary.values():
         total_time_spent = operation['preferred_completion_time'] * operation['quantity']
         average_time_per_unit = operation['total_time'] / operation['quantity'] if operation['quantity'] else 0
@@ -116,12 +144,20 @@ def employee_api(request, employee_id):
     # Calculate total defects
     total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
 
+    # Convert operation distribution to list format
+    operation_distribution_list = [
+        {'operation': op, 'order': order, 'quantity': quantity}
+        for (op, order), quantity in operation_distribution.items()
+    ]
+
     response_data = {
         'id': employee.id,
         'full_name': f"{employee.user.first_name} {employee.user.last_name}",
         'username': employee.user.username,
         'efficiency': overall_efficiency,
         'operations': operations_details,
+        'orders': [{'id': order_id, 'model_name': model_name} for order_id, model_name in orders_dict.items()],
+        'operation_distribution': operation_distribution_list,
         'total_time': total_time,
         'total_defects': total_defects,
         'units_over_time': units_over_time,
