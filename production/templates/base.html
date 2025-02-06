@@ -244,6 +244,11 @@
                         <i class="fab fa-whatsapp fa-fw"></i>
                         <span class="sidetext">{% trans 'WhatsApp' %}</span>
                     </a>
+                    <a href="{% url 'select_orders' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="fixed_salaries">
+                        <i class="fas fa-file-invoice-dollar  fa-fw"></i><span class="sidetext">Трудоемкость</span>
+                    </a>
                     {% else %}
                     <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black"
                         data-id="user_redirect">

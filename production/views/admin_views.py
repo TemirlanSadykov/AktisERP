@@ -1699,3 +1699,263 @@ def edit_error_cost_admin(request, error_id):
         return JsonResponse({'status': 'success'})
     except Exception as e :
         return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+
+
+@login_required
+@admin_required
+def select_orders_view(request):
+    """
+    1) Displays a form with start_date and end_date (GET).
+    2) On GET with valid date range, fetches Orders that have Cuts within that date range.
+    3) Allows user to select which Orders to analyze (POST).
+    4) Submits to another view (or can compute inline) to get employee calculations.
+    """
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Convert strings to date objects (if provided)
+    orders = []
+    if start_date and end_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+            # Get all Cuts in [start_dt, end_dt]
+            cuts_in_range = Cut.objects.filter(date__range=[start_dt, end_dt])
+
+            # From those Cuts, get their Orders
+            orders_in_range = Order.objects.filter(cuts__in=cuts_in_range).distinct().order_by('model__name')
+
+            orders = orders_in_range
+
+        except ValueError:
+            # If date parsing fails, just ignore or handle error
+            pass
+
+    if request.method == 'POST':
+        # The user has chosen specific order IDs to analyze
+        selected_orders_ids = request.POST.getlist('order_ids')
+
+        # Option A: Do the calculations right here and render a new template:
+        # results = calculate_employee_data(selected_orders_ids)
+        # return render(request, 'employee_calculation.html', {
+        #     'results': results
+        # })
+
+        # Option B: Redirect to another view that does the calculation:
+        return redirect('employee_calculation', order_ids=",".join(selected_orders_ids))
+
+    context = {
+        'orders': orders,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'admin/select_orders.html', context)
+
+
+@login_required
+@admin_required
+def employee_calculation_view(request, order_ids):
+    """
+    Receives selected Orders (by ID), then calculates employees' work details based on:
+      - total units produced
+      - total seconds worked = sum of (quantity * operation.preferred_completion_time)
+    Renders (or returns JSON for) employee data.
+    """
+    # Convert order_ids (comma-separated) into a list of integers
+    order_ids_list = [int(id_str) for id_str in order_ids.split(',') if id_str.isdigit()]
+
+    # Filter AssignedWork by the selected orders
+    # (AssignedWork -> Work -> PassportSize -> Passport -> Cut -> Order)
+    assigned_works = AssignedWork.objects.filter(
+        work__passport_size__passport__cut__order__in=order_ids_list,
+    )
+
+    # We'll store data in a dict keyed by employee object
+    # Example structure:
+    # {
+    #   employee_obj: {
+    #       'units_produced': int,
+    #       'seconds_worked': float,
+    #       'operations': { operation_name: total_quantity_for_that_operation, ... },
+    #   },
+    #   ...
+    # }
+    employee_data_map = {}
+
+    for aw in assigned_works.select_related('employee', 'work__operation'):
+        emp = aw.employee
+        operation = aw.work.operation
+        operation_name = operation.name if operation else "Unknown Operation"
+        
+        # Get preferred completion time in seconds (fallback to 0 if None)
+        preferred_time = operation.preferred_completion_time or 0
+        
+        if emp not in employee_data_map:
+            employee_data_map[emp] = {
+                'units_produced': 0,
+                'seconds_worked': 0.0,
+                'operations': {}
+            }
+
+        # Increase units produced
+        employee_data_map[emp]['units_produced'] += aw.quantity
+
+        # Accumulate seconds worked = quantity * operation's preferred_completion_time
+        employee_data_map[emp]['seconds_worked'] += aw.quantity * preferred_time
+
+        # Track operation-level stats (optional)
+        if operation_name not in employee_data_map[emp]['operations']:
+            employee_data_map[emp]['operations'][operation_name] = 0
+        employee_data_map[emp]['operations'][operation_name] += aw.quantity
+
+    # Convert the dictionary into a list for easy template iteration
+    employee_data_list = []
+    for emp, data in employee_data_map.items():
+        # Build a dictionary that matches what the template expects
+        employee_data_list.append({
+            'id': emp.id,  # For the modal's onclick fetchEmployeeDetails({{ employee.id }})
+            'name': emp.user.username,  # This is the first column in your snippet
+            'employee_id': emp.employee_id,
+            'full_name': f"{emp.user.first_name} {emp.user.last_name}",
+            'units_produced': data['units_produced'],
+            'seconds_worked': int(data['seconds_worked']),  # Round or cast to int if desired
+            'operations': data['operations'],
+        })
+
+    # Sort by units produced, descending (optional)
+    employee_data_list.sort(key=lambda e: e['units_produced'], reverse=True)
+
+    context = {
+        # Your snippet does {% for employee in employee_data %}
+        'employee_data': employee_data_list,
+    }
+    return render(request, 'admin/employee_calculation.html', context)
+
+@login_required
+@admin_required
+def employee_api_by_orders(request, employee_id):
+    # 1) Get the employee
+    employee = get_object_or_404(UserProfile, pk=employee_id)
+
+    # 2) Parse the 'orders' query param (e.g. ?orders=10,12)
+    orders_param = request.GET.get('orders', '')
+    # Split by comma, keep only digits
+    order_ids = [int(x) for x in orders_param.split(',') if x.isdigit()]
+
+    # 3) Fetch assigned works that match the employee AND the selected orders
+    # AssignedWork -> Work -> PassportSize -> Passport -> Cut -> Order
+    assigned_works = AssignedWork.objects.filter(
+        employee=employee,
+        work__passport_size__passport__cut__order__in=order_ids
+    )
+
+    # 4) The rest of the logic is the same as your existing code: 
+    #    building up operation_summary, operation_distribution, etc.
+
+    # Extract unique orders
+    orders = assigned_works.values_list(
+        "work__passport_size__passport__cut__order__id",
+        "work__passport_size__passport__cut__order__model__name"
+    ).distinct()
+
+    orders_dict = {order_id: model_name for order_id, model_name in orders}
+
+    # Group operations and calculate average time spent in seconds
+    operation_summary = {}
+    total_units = 0
+    total_weighted_efficiency = 0
+    operation_distribution = {}
+
+    for work in assigned_works:
+        operation_name = work.work.operation.name
+        order_id = work.work.passport_size.passport.cut.order.id
+        preferred_completion_time = work.work.operation.preferred_completion_time
+        actual_time = 0
+        if work.start_time and work.end_time:
+            actual_time = (work.end_time - work.start_time).total_seconds()
+
+        # If not tracked yet, initialize
+        if operation_name not in operation_summary:
+            operation_summary[operation_name] = {
+                'operation': operation_name,
+                'quantity': work.quantity,
+                'total_time': actual_time,
+                'preferred_completion_time': preferred_completion_time,
+            }
+        else:
+            operation_summary[operation_name]['quantity'] += work.quantity
+            operation_summary[operation_name]['total_time'] += actual_time
+
+        # Operation distribution across orders
+        key = (operation_name, order_id)
+        operation_distribution[key] = operation_distribution.get(key, 0) + work.quantity
+
+    # Build the operations_details list
+    operations_details = []
+    total_time = 0
+    for op_data in operation_summary.values():
+        total_time_spent = op_data['preferred_completion_time'] * op_data['quantity']
+        avg_time_per_unit = (
+            op_data['total_time'] / op_data['quantity']
+            if op_data['quantity'] else 0
+        )
+        # If actual_time_per_unit <= preferred, 100% or more
+        efficiency = (op_data['preferred_completion_time'] / avg_time_per_unit) * 100 \
+            if avg_time_per_unit != 0 and avg_time_per_unit > 0 else 100
+
+        total_units += op_data['quantity']
+        total_weighted_efficiency += (efficiency * op_data['quantity'])
+        total_time += total_time_spent
+
+        operations_details.append({
+            'operation': op_data['operation'],
+            'quantity': op_data['quantity'],
+            'total_time_spent': total_time_spent,
+            'average_time_per_unit': avg_time_per_unit,
+            'preferred_completion_time': op_data['preferred_completion_time']
+        })
+
+    overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
+
+    # Summarize units produced by day
+    units_by_day = {}
+    for work in assigned_works:
+        if work.start_time:
+            day = work.start_time.date()
+            units_by_day[day] = units_by_day.get(day, 0) + work.quantity
+
+    units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
+
+    # Calculate total defects
+    total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
+
+    # Convert operation distribution to list format
+    operation_distribution_list = [
+        {'operation': op, 'order': order, 'quantity': qty}
+        for (op, order), qty in operation_distribution.items()
+    ]
+
+    # Optionally, you can compute "earnings" if you want,
+    # or set data['earnings'] = 0.0 if not used
+
+    response_data = {
+        'id': employee.id,
+        'full_name': f"{employee.user.first_name} {employee.user.last_name}",
+        'username': employee.user.username,
+        'efficiency': overall_efficiency,
+        'operations': operations_details,
+        'orders': [
+            {'id': order_id, 'model_name': model_name}
+            for order_id, model_name in orders_dict.items()
+        ],
+        'operation_distribution': operation_distribution_list,
+        'total_time': total_time,
+        'total_defects': total_defects,
+        'units_over_time': units_over_time,
+        'earnings': 0.0  # or compute your own logic
+    }
+
+    return JsonResponse(response_data)

@@ -286,4 +286,8 @@ urlpatterns = [
     path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
     path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
 
+    path('admin/orders/select/', select_orders_view, name='select_orders'),
+    path('admin/orders/calculate/<str:order_ids>/', employee_calculation_view, name='employee_calculation'),
+    path('api/employees_by_orders/<int:employee_id>/', employee_api_by_orders, name='employee_api_by_orders'),
+
 ]
