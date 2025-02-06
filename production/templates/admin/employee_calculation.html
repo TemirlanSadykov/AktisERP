@@ -43,7 +43,8 @@
                             <th>{% trans 'Employee ID' %}</th>
                             <th>{% trans 'Full Name' %}</th>
                             <th>{% trans 'Units Produced' %}</th>
-                            <th>{% trans 'Трудоемкость' %}</th>
+                            <th>{% trans 'Трудоемкость (сом)' %}</th>
+                            <th>{% trans 'Плата (сом)' %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,7 +59,8 @@
                                 </a>
                             </td>
                             <td>{{ employee.units_produced }}</td>
-                            <td>{{ employee.seconds_worked }} с</td>
+                            <td>{{ employee.seconds_worked }}</td>
+                            <td>{{ employee.payment }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -127,6 +129,7 @@
                                 <tr>
                                     <th>Операция</th>
                                     <th>Норма времени (сек)</th>
+                                    <th>Плата (сом)</th>
                                     ${orders.map(order => `<th>${order.model_name}</th>`).join('')}
                                 </tr>
                             </thead>
@@ -138,6 +141,7 @@
                     tableHtml += `<tr>
                         <td><strong>${op.operation}</strong></td>
                         <td class="text-center">${op.preferred_completion_time}</td>
+                        <td class="text-center">${op.payment}</td>
                     `;
                     orders.forEach(order => {
                         const operationData = operationDistribution.find(d => 
@@ -161,9 +165,6 @@
                                 <p><strong>Имя пользователя:</strong> ${data.username}</p>
                             </div>
                             <div class="col-md-6 mb-2">
-                                <p><strong>Заработок:</strong> ${data.earnings} сом</p>
-                            </div>
-                            <div class="col-md-6 mb-2">
                                 <p><strong>Эффективность:</strong> ${data.efficiency.toFixed(2)}%</p>
                             </div>
                             <div class="col-12 mb-2">
@@ -172,6 +173,9 @@
                             </div>
                             <div class="col-md-6 mb-2">
                                 <p><strong>Время активной работы:</strong> ${data.total_time}с</p>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <p><strong>Общий заработок:</strong> ${data.total_payment}с</p>
                             </div>
                             <div class="col-md-6 mb-2">
                                 <p><strong>Число браков:</strong> ${data.total_defects}</p>

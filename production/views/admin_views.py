@@ -1792,11 +1792,13 @@ def employee_calculation_view(request, order_ids):
         
         # Get preferred completion time in seconds (fallback to 0 if None)
         preferred_time = operation.preferred_completion_time or 0
+        payment_per_operation = operation.payment or 0
         
         if emp not in employee_data_map:
             employee_data_map[emp] = {
                 'units_produced': 0,
                 'seconds_worked': 0.0,
+                'payment': 0,
                 'operations': {}
             }
 
@@ -1805,6 +1807,7 @@ def employee_calculation_view(request, order_ids):
 
         # Accumulate seconds worked = quantity * operation's preferred_completion_time
         employee_data_map[emp]['seconds_worked'] += aw.quantity * preferred_time
+        employee_data_map[emp]['payment'] += aw.quantity * payment_per_operation
 
         # Track operation-level stats (optional)
         if operation_name not in employee_data_map[emp]['operations']:
@@ -1822,6 +1825,7 @@ def employee_calculation_view(request, order_ids):
             'full_name': f"{emp.user.first_name} {emp.user.last_name}",
             'units_produced': data['units_produced'],
             'seconds_worked': int(data['seconds_worked']),  # Round or cast to int if desired
+            'payment': int(data['payment']),
             'operations': data['operations'],
         })
 
@@ -1873,6 +1877,7 @@ def employee_api_by_orders(request, employee_id):
         operation_name = work.work.operation.name
         order_id = work.work.passport_size.passport.cut.order.id
         preferred_completion_time = work.work.operation.preferred_completion_time
+        payment = work.work.operation.payment
         actual_time = 0
         if work.start_time and work.end_time:
             actual_time = (work.end_time - work.start_time).total_seconds()
@@ -1884,6 +1889,7 @@ def employee_api_by_orders(request, employee_id):
                 'quantity': work.quantity,
                 'total_time': actual_time,
                 'preferred_completion_time': preferred_completion_time,
+                'payment': payment,
             }
         else:
             operation_summary[operation_name]['quantity'] += work.quantity
@@ -1896,8 +1902,10 @@ def employee_api_by_orders(request, employee_id):
     # Build the operations_details list
     operations_details = []
     total_time = 0
+    total_payment = 0
     for op_data in operation_summary.values():
         total_time_spent = op_data['preferred_completion_time'] * op_data['quantity']
+        total_payment_spent = op_data['payment'] * op_data['quantity']
         avg_time_per_unit = (
             op_data['total_time'] / op_data['quantity']
             if op_data['quantity'] else 0
@@ -1909,13 +1917,16 @@ def employee_api_by_orders(request, employee_id):
         total_units += op_data['quantity']
         total_weighted_efficiency += (efficiency * op_data['quantity'])
         total_time += total_time_spent
+        total_payment += total_payment_spent
 
         operations_details.append({
             'operation': op_data['operation'],
             'quantity': op_data['quantity'],
             'total_time_spent': total_time_spent,
+            'total_payment_spent': total_payment_spent,
             'average_time_per_unit': avg_time_per_unit,
-            'preferred_completion_time': op_data['preferred_completion_time']
+            'preferred_completion_time': op_data['preferred_completion_time'],
+            'payment': op_data['payment']
         })
 
     overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
@@ -1953,6 +1964,7 @@ def employee_api_by_orders(request, employee_id):
         ],
         'operation_distribution': operation_distribution_list,
         'total_time': total_time,
+        'total_payment': total_payment,
         'total_defects': total_defects,
         'units_over_time': units_over_time,
         'earnings': 0.0  # or compute your own logic

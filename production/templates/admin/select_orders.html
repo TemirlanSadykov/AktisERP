@@ -35,7 +35,6 @@
         <tr>
           <th>{% trans "Select" %}</th>
           <th>{% trans "Model" %}</th>
-          <th>{% trans "Sizes" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -54,7 +53,6 @@
                                         {% empty %}
                                             {% trans "No fabrics selected" %}
                                         {% endfor %} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})</td>
-            <td></td>
           </tr>
         {% endfor %}
       </tbody>
