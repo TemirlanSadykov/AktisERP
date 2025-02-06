@@ -12,6 +12,7 @@ class Branch(models.Model):
     latitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Latitude', null=True, blank=True)
     longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
     radius = models.IntegerField(verbose_name='Allowed Radius (meters)', null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -60,6 +61,7 @@ class UserProfile(models.Model):
         ('others', 'Остальные'),
     ]
     station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station', verbose_name='Станция')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"
     
@@ -73,6 +75,7 @@ class EmployeeAttendance(models.Model):
     latitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Latitude', null=True, blank=True)
     longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
     fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
         return f"{self.employee} - {event_type} at {self.timestamp} (Distance: {self.distance}m)"
@@ -81,12 +84,14 @@ class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
     contact_info = models.TextField(verbose_name='Контактная информация')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return self.name
 
 class Color(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -94,6 +99,7 @@ class Color(models.Model):
 class Fabrics(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -102,6 +108,7 @@ class AbstractAccessory(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     unit = models.CharField(max_length=50)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -109,6 +116,7 @@ class AbstractAccessory(models.Model):
 class AccessoryAttribute(models.Model):
     key = models.CharField(max_length=100, verbose_name='Key')
     value = models.CharField(max_length=100, verbose_name='Value')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return f"{self.key}: {self.value}"
@@ -119,6 +127,7 @@ class Accessory(models.Model):
     attributes = models.ManyToManyField(AccessoryAttribute, related_name='accessories')
     info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         attributes_str = ", ".join([str(attr) for attr in self.attributes.all()])
@@ -133,6 +142,7 @@ class Roll(models.Model):
     meters = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='Метры')
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
     @property
@@ -141,6 +151,7 @@ class Roll(models.Model):
 class Equipment(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -160,6 +171,7 @@ class Node(models.Model):
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return self.name
     
@@ -174,6 +186,7 @@ class Operation(models.Model):
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -203,6 +216,7 @@ class Assortment(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='assortments', null=True, blank=True, verbose_name='Филиал')
     name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -214,6 +228,7 @@ class Model(models.Model):
     photo = models.ImageField(upload_to='model_photos/', null=True, blank=True, verbose_name='Фото')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     abstract_accessories = models.ManyToManyField(AbstractAccessory, through='ModelAccessory', related_name='models', verbose_name='Фурнитура')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return self.name
@@ -222,6 +237,7 @@ class ModelAccessory(models.Model):
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='model_accessories')
     abstract_accessory = models.ForeignKey(AbstractAccessory, on_delete=models.CASCADE, related_name='model_accessories')
     quantity = models.PositiveIntegerField(verbose_name='Количество')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return f"{self.model.name} - {self.abstract_accessory.name} ({self.quantity} {self.abstract_accessory.unit})"
@@ -231,6 +247,7 @@ class ModelOperation(models.Model):
     model = models.ForeignKey(Model, on_delete=models.CASCADE)
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     class Meta:
         ordering = ['order']
 
@@ -238,13 +255,13 @@ class SizeQuantity(models.Model):
     size = models.CharField(max_length=10, verbose_name='Размер')
     quantity = models.IntegerField(verbose_name='Количество')
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return f"Размер: {self.size}, Количество: {self.quantity}, Цвет: {self.color.name if self.color else 'None'}"
     
 class ClientOrder(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')
-    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
@@ -264,6 +281,7 @@ class ClientOrder(models.Model):
     launch = models.DateField(default=default_launch, verbose_name='Начало выполнения', blank=True, null=True)
     term = models.DateField(default=default_term, verbose_name='Срок выполнения')
     info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return self.order_number
 
@@ -285,6 +303,7 @@ class Order(models.Model):
     completed_quantity = models.IntegerField(default=0, verbose_name='Завершенное количество')
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.model}"
     
@@ -293,6 +312,7 @@ class Cut(models.Model):
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
     size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
 
     def __str__(self):
         return f"Cut {self.number} for Order {self.order}"
@@ -325,6 +345,7 @@ class CutSize(models.Model):
         (DONE, 'Готово'),
     ]
     stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.size_quantity.size} - {self.extra}"
 
@@ -335,6 +356,7 @@ class Consumption(models.Model):
     length = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Длина')
     factual = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Фактическое')
     commerce = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Коммерческое')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"Consumption with {self.fabrics} fabric"
 
@@ -346,7 +368,7 @@ class Passport(models.Model):
     layers = models.DecimalField(max_digits=10, decimal_places=0, verbose_name='Слои', null=True, blank=True)
     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры', null=True, blank=True)
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
-
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.cut.number}-{self.number}"
 
@@ -382,6 +404,7 @@ class PassportSize(models.Model):
         (DONE, 'Готово'),
     ]
     stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"
 
@@ -403,6 +426,7 @@ class ProductionPiece(models.Model):
     piece_number = models.IntegerField(verbose_name='Piece Number')
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
     defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
@@ -410,6 +434,7 @@ class Work(models.Model):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True, verbose_name='Размер и количество')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         if self.passport_size:
             return f"{self.operation.name} - {self.passport_size.size_quantity.size}"
@@ -424,6 +449,7 @@ class AssignedWork(models.Model):
     end_time = models.DateTimeField(null=True, blank=True, verbose_name='Время окончания')
     is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
     payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
 
@@ -435,6 +461,7 @@ class ReassignedWork(models.Model):
     is_completed = models.BooleanField(default=False, verbose_name='Завершено')
     is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
     payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"Переназначено {self.reassigned_quantity} от {self.original_assigned_work} к {self.new_employee}"
     
@@ -455,7 +482,7 @@ class Error(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.REPORTED, verbose_name='Статус')
     reported_date = models.DateTimeField(default=timezone.now, verbose_name='Дата сообщения')
     resolved_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата решения')
-
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.error_type}: {self.piece.passport_size.passport.order} - {self.piece.passport_size.passport.id} - {self.piece.passport_size.size_quantity.size} - {self.piece.id}"
     
@@ -463,7 +490,7 @@ class ErrorResponsibility(models.Model):
     error = models.ForeignKey(Error, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Ошибка')
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Сотрудник')
     percentage = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Процент ответственности', help_text="Процент ответственности, приписываемый этому сотруднику.")
-
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.employee.user.username} - {self.percentage}%"
 
@@ -473,7 +500,7 @@ class FixedSalary(models.Model):
     employees = models.ManyToManyField(UserProfile, related_name='fixed_salaries', verbose_name='Сотрудники')
     salary = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Зарплата')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.position} - {self.salary}"
 
@@ -482,11 +509,11 @@ class SalaryPayment(models.Model):
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='salary_payments', verbose_name='Сотрудник')
     payment_date = models.DateField(verbose_name='Дата платежа')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма')
-
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.employee.user.username} - {self.payment_date} - {self.amount}"
     
     
 class PhoneNumberScaner(models.Model):
     phone_number = models.CharField(max_length=15)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
