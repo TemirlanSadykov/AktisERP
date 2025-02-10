@@ -18,6 +18,8 @@ from openpyxl import Workbook
 from openpyxl.styles import  Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 from django.db.models import Q
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -39,7 +41,7 @@ def technologist_page(request):
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeListView(ListView):
     model = UserProfile
-    template_name = 'admin/employees/list.html'
+    template_name = 'technologist/employees/list.html'
     context_object_name = 'employees'
     paginate_by = 10
 
@@ -47,7 +49,9 @@ class EmployeeListView(ListView):
         return UserProfile.objects.filter(
             branch=self.request.user.userprofile.branch,
             is_archived=False
-        ).exclude(user__username='admin').order_by('employee_id')
+        ).exclude(user__username='admin').annotate(
+            employee_id_int=Cast('employee_id', IntegerField())
+        ).order_by('employee_id_int')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,7 +61,7 @@ class EmployeeListView(ListView):
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
-    template_name = 'admin/employees/create.html'
+    template_name = 'technologist/employees/create.html'
     form_class = UserWithProfileForm
     success_url = reverse_lazy('employee_list')
     def get_context_data(self, **kwargs):
@@ -68,7 +72,7 @@ class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeDetailView(DetailView):
     model = UserProfile
-    template_name = 'admin/employees/detail.html'
+    template_name = 'technologist/employees/detail.html'
     context_object_name = 'employee'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -91,12 +95,12 @@ def employee_edit(request, pk):
         user_form = UserEditForm(instance=user)
 
     context = {'user_form': user_form, 'user_profile': user_profile, 'sidebar_type': 'technology'}
-    return render(request, 'admin/employees/edit.html', context)
+    return render(request, 'technologist/employees/edit.html', context)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
     model = UserProfile
-    template_name = 'admin/employees/delete.html'
+    template_name = 'technologist/employees/delete.html'
     success_url = reverse_lazy('employee_list')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -106,7 +110,7 @@ class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeArchiveView(UpdateView):
     model = UserProfile
-    template_name = 'admin/employees/list.html'
+    template_name = 'technologist/employees/list.html'
     success_url = reverse_lazy('employee_list')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -122,7 +126,7 @@ class EmployeeArchiveView(UpdateView):
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeUnArchiveView(UpdateView):
     model = UserProfile
-    template_name = 'admin/employees/list.html'
+    template_name = 'technologist/employees/list.html'
     success_url = reverse_lazy('employee_list')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -137,7 +141,7 @@ class EmployeeUnArchiveView(UpdateView):
      
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ArchivedEmployeeListView(ListView):
-    template_name = 'admin/employees/list.html'
+    template_name = 'technologist/employees/list.html'
     context_object_name = 'employees'
     paginate_by = 10
     def get_context_data(self, **kwargs):
@@ -208,7 +212,7 @@ def employee_upload(request):
         return redirect(reverse_lazy('employee_list'))
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderListTechnologistView(RestrictBranchMixin, ListView):
+class ClientOrderListView(RestrictBranchMixin, ListView):
     model = ClientOrder
     template_name = 'technologist/client/orders/list.html'
     context_object_name = 'orders'
@@ -265,14 +269,33 @@ class ClientOrderListTechnologistView(RestrictBranchMixin, ListView):
         return context
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderDetailTechnologistView(DetailView):
+class ClientOrderCreateView(CreateView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'technologist/client/orders/create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.branch = self.request.user.userprofile.branch
+        self.object.save()
+        form.save_m2m()
+        redirect_url = reverse('client_order_detail', kwargs={'pk': self.object.pk})
+        return HttpResponseRedirect(redirect_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientOrderDetailView(DetailView):
     model = ClientOrder
     form_class = ClientOrderForm
     template_name = 'technologist/client/orders/detail.html'
     context_object_name = 'client_order'
 
     def get_context_data(self, **kwargs):
-        context = super(ClientOrderDetailTechnologistView, self).get_context_data(**kwargs)
+        context = super(ClientOrderDetailView, self).get_context_data(**kwargs)
         client_order = context['client_order']
         context['orders'] = client_order.orders.all()
         today = timezone.localdate()
@@ -283,6 +306,177 @@ class ClientOrderDetailTechnologistView(DetailView):
         context['days_left'] = days_left
         context['sidebar_type'] = 'technology'
         return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientOrderUpdateView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'technologist/client/orders/edit.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+    def get_success_url(self):
+        return reverse('client_order_detail', kwargs={'pk': self.object.pk, 'sidebar_type': 'technology'})
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
+    model = ClientOrder
+    template_name = 'technologist/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientOrderArchiveView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    template_name = 'technologist/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+        
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = True
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientOrderUnArchiveView(RestrictBranchMixin, UpdateView):
+    model = ClientOrder
+    template_name = 'technologist/client/orders/delete.html'
+    success_url = reverse_lazy('client_order_list')
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = False
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedClientOrderListView(RestrictBranchMixin, ListView):
+    model = ClientOrder
+    template_name = 'technologist/client/orders/list.html'  # Use a separate template if necessary
+    context_object_name = 'archived_orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=True)
+        today = timezone.localdate()
+
+        # Read the term filter from GET. Defaults to 'upcoming' if not provided.
+        term_filter = self.request.GET.get('term', 'upcoming').lower()
+
+        if term_filter == 'upcoming':
+            # Upcoming orders: term is today or later; sort ascending (soonest first)
+            queryset = queryset.filter(term__gte=today).order_by('term')
+        elif term_filter == 'passed':
+            # Passed orders: term is before today; sort descending (most recent first)
+            queryset = queryset.filter(term__lt=today).order_by('-term')
+        else:
+            # Default to upcoming if unknown value is provided
+            queryset = queryset.filter(term__gte=today).order_by('term')
+
+        # Apply optional date range filtering
+        form = self.form_class(self.request.GET)
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+            if start_date and end_date:
+                queryset = queryset.filter(launch__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(launch__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(launch__lte=end_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None)
+        today = timezone.localdate()
+
+        # Calculate days_left for display. (Negative values for passed orders.)
+        orders_with_days_left = []
+        for order in context['archived_orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+        context['orders_with_days_left'] = orders_with_days_left
+
+        # Pass the current term filter for use in the template
+        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
+        context['ClientOrder'] = ClientOrder
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@login_required
+@technologist_required
+@require_POST
+def client_order_complete(request, pk):
+    client_order = get_object_or_404(ClientOrder, pk=pk)
+    STATUSES = [ClientOrder.NEW, ClientOrder.IN_PROGRESS, ClientOrder.COMPLETED]
+
+    # Get the index of the current status
+    current_index = STATUSES.index(client_order.status)
+
+    # Calculate the next index, cycling back to 0 if at the end
+    next_index = (current_index + 1) % len(STATUSES)
+
+    # Set the status to the next one
+    client_order.status = STATUSES[next_index]
+
+    client_order.save()
+    # if client_order.status != ClientOrder.COMPLETED:
+    # # Retrieve all orders linked to this client order
+    #     orders = Order.objects.filter(client_order=client_order)
+
+    #     # Begin a transaction to ensure all or nothing is saved
+    #     with transaction.atomic():
+    #         for order in orders:
+    #             # Retrieve all passports linked to each order
+    #             passports = Passport.objects.filter(cut__order=order)
+    #             for passport in passports:
+    #                 # Retrieve all passport sizes linked to each passport
+    #                 passport_sizes = PassportSize.objects.filter(passport=passport)
+    #                 for passport_size in passport_sizes:
+    #                     # Assume operations need to be created for QC and Packing stages
+    #                     operations = Operation.objects.filter(node__type=Node.QC)
+    #                     for operation in operations:
+    #                         # Create work for each operation
+    #                         work = Work.objects.create(
+    #                             operation=operation,
+    #                             passport_size=passport_size
+    #                         )
+    #                         # Create assigned work assuming quantity and success need handling
+    #                         AssignedWork.objects.create(
+    #                             work=work,
+    #                             employee=operation.employee,
+    #                             quantity=passport_size.quantity,
+    #                             start_time=timezone.now(),
+    #                             end_time=timezone.now(),
+    #                             is_success=True  # Assuming work is successful for demonstration
+    #                         )
+
+    #         # Set the client order status to completed
+    #         client_order.status = ClientOrder.COMPLETED
+    #         client_order.save()
+
+    return redirect('client_order_detail', pk=client_order.pk)
+
+
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):

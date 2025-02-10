@@ -64,7 +64,7 @@
 
                 {% if sidebar_type == 'technology' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">
-                    <a href="{% url 'client_order_list_technologist' %}"
+                    <a href="{% url 'client_order_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                     <a href="{% url 'assortment_list' %}"
@@ -180,7 +180,7 @@
                         data-id="fixed_salaries">
                         <i class="fas fa-cut  fa-fw"></i><span class="sidetext">{% trans 'Cutter' %}</span>
                     </a>
-                    <a href="{% url 'client_order_list_technologist' %}"
+                    <a href="{% url 'client_order_list' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="fixed_salaries">
                         <i class="fas fa-clipboard-list  fa-fw"></i><span class="sidetext">{% trans 'Technologist' %}</span>

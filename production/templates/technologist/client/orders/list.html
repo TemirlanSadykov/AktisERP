@@ -38,6 +38,12 @@
 
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="orders" role="tabpanel">
+        <div class="clients-header">
+          <span class="operation-text">{% trans "Client Orders" %}</span>
+
+            <a href="{% url 'client_order_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+            <a href="{% url 'archived_client_order_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+          </div>
         <br/>
         <div class="form-row align-items-center">
           <form method="get" class="date-filter-form">
@@ -57,7 +63,7 @@
         <br /><br />
         <ul class="list-group custom-list-group">
           {% for order_info in orders_with_days_left %}
-            <a href="{% url 'client_order_detail_technologist' order_info.order.pk %}" class="order-link">
+            <a href="{% url 'client_order_detail' order_info.order.pk %}" class="order-link">
               <li class="list-group-item custom-list-item" style="color:#007bff; padding:18px;">
                 {{ order_info.order.order_number }} - {{ order_info.order.client.name }} 
                 ({{ order_info.order.launch }} - {{ order_info.order.term }})

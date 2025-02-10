@@ -49,18 +49,15 @@ urlpatterns = [
 
     path('admin/attendances/', attendance_list, name='attendance_list'),
 
-    path('admin/client/orders/', ClientOrderListView.as_view(), name='client_order_list'),
-    path('admin/client/orders/create/', ClientOrderCreateView.as_view(), name='client_order_create'),
-    path('admin/client/orders/<int:pk>/', ClientOrderDetailView.as_view(), name='client_order_detail'),
-    path('admin/client/orders/<int:pk>/edit/', ClientOrderUpdateView.as_view(), name='client_order_edit'),
-    path('admin/client/orders/<int:pk>/delete/', ClientOrderDeleteView.as_view(), name='client_order_delete'),
-    path('admin/client/orders/archived/', ArchivedClientOrderListView.as_view(), name='archived_client_order_list'),
-    path('admin/client/orders/<int:pk>/archive/', ClientOrderArchiveView.as_view(), name='client_order_archive'),
-    path('admin/client/orders/<int:pk>/unarchive/', ClientOrderUnArchiveView.as_view(), name='client_order_unarchive'),
-    path('admin/client/orders/<int:pk>/complete/', client_order_complete, name='client_order_complete'),
-
-    path('technologist/client/orders/', ClientOrderListTechnologistView.as_view(), name='client_order_list_technologist'),
-    path('technologist/client/orders/<int:pk>/', ClientOrderDetailTechnologistView.as_view(), name='client_order_detail_technologist'),
+    path('technologist/client/orders/', ClientOrderListView.as_view(), name='client_order_list'),
+    path('technologist/client/orders/create/', ClientOrderCreateView.as_view(), name='client_order_create'),
+    path('technologist/client/orders/<int:pk>/', ClientOrderDetailView.as_view(), name='client_order_detail'),
+    path('technologist/client/orders/<int:pk>/edit/', ClientOrderUpdateView.as_view(), name='client_order_edit'),
+    path('technologist/client/orders/<int:pk>/delete/', ClientOrderDeleteView.as_view(), name='client_order_delete'),
+    path('technologist/client/orders/archived/', ArchivedClientOrderListView.as_view(), name='archived_client_order_list'),
+    path('technologist/client/orders/<int:pk>/archive/', ClientOrderArchiveView.as_view(), name='client_order_archive'),
+    path('technologist/client/orders/<int:pk>/unarchive/', ClientOrderUnArchiveView.as_view(), name='client_order_unarchive'),
+    path('technologist/client/orders/<int:pk>/complete/', client_order_complete, name='client_order_complete'),
 
     path('cutter/client/orders/', ClientOrderListCutterView.as_view(), name='client_order_list_cutter'),
     path('cutter/client/orders/<int:pk>/', ClientOrderDetailCutterView.as_view(), name='client_order_detail_cutter'),

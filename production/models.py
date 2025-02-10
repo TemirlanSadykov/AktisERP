@@ -262,7 +262,7 @@ class SizeQuantity(models.Model):
     
 class ClientOrder(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')
-    order_number = models.CharField(max_length=100, verbose_name='Номер заказа')
+    order_number = models.CharField(max_length=100, verbose_name='Название')
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='client_orders', verbose_name='Клиент')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     NEW = 0
