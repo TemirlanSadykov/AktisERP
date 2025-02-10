@@ -6,7 +6,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -58,7 +58,7 @@
             {% endfor %}
             </div>
           <div class="form-actions">
-            <a href="{% url 'client_order_detail' order.client_order.pk %}" class="btn create-btn">{% trans "Finish" %}</a>
+            <a href="{% url 'order_detail' order.pk %}" class="btn create-btn">{% trans "Finish" %}</a>
           </div>
         </div>
       <!-- </div> -->
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function() {
   form.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(form);
-    const actionUrl = `/production/admin/orders/${orderId}/create_size_quantity/`;  
+    const actionUrl = `/production/technologist/client/orders/order/${orderId}/create_size_quantity/`;  
     
     fetch(actionUrl, {
       method: 'POST',
@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function updateSizeQuantity(sqId, size, quantity, color) {  // Add color parameter
-    fetch(`/production/admin/orders/edit-size-quantity/${sqId}/`, {
+    fetch(`/production/technologist/client/orders/order/edit-size-quantity/${sqId}/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   
   function deleteSizeQuantity(sqId) {
-    fetch(`/production/admin/orders/delete-size-quantity/${sqId}/`, {
+    fetch(`/production/technologist/client/orders/order/delete-size-quantity/${sqId}/`, {
       method: 'POST',
       headers: {
         'X-CSRFToken': getCookie('csrftoken'),
@@ -210,12 +210,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const colorSpan = document.createElement('span');
         colorSpan.classList.add('color');
         colorSpan.setAttribute('data-sq-id', sq.id);
-        colorSpan.textContent = sq.color ? sq.color.name : 'No Color';  // Display the color name or a default text
-
-        const editBtn = document.createElement('button');
-        editBtn.classList.add('edit-btn');
-        editBtn.setAttribute('data-sq-id', sq.id);
-        editBtn.textContent = editText;
+        colorSpan.textContent = sq.color__name;  // Display the color name or a default text
 
         const deleteBtn = document.createElement('button');
         deleteBtn.classList.add('delete-btn');
@@ -237,7 +232,6 @@ document.addEventListener("DOMContentLoaded", function() {
         li.appendChild(quantitySpan);
         li.appendChild(colorTextEl);
         li.appendChild(colorSpan);
-        li.appendChild(editBtn);
         li.appendChild(deleteBtn);
 
         list.appendChild(li);

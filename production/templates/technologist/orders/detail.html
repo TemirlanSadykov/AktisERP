@@ -26,12 +26,13 @@
 
 <div class="container maincontr">
   <div class="card-header">
-    {% trans "Model Details:" %} {{ order.model.name }}          
+    {{ order.model.name }}          
   </div>
   <div class="container">
     <div class="card-body">
       <div class="row">
         <div class="col-md-6 details">
+          <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client }}</p>
           <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
           <p><strong>{% trans "Color:" %}</strong> 
             {% for color in order.colors.all %}
@@ -51,6 +52,21 @@
           <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
           <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
           <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+          <a href="{% url 'order_edit' order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
+          <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+          <form id="deleteForm" action="{% url 'order_delete' order.pk %}" method="post" style="display:none;">
+            {% csrf_token %}
+          </form>
+          <div class="modal" id="deleteModal">
+            <div class="modal-content">
+                <span class="close" id="closeBtn">&times;</span>
+                <p>{% trans "Are you sure you want to delete this order?" %}</p>
+                <div class="modal-buttons">
+                    <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+                    <button class="btn cancel" id="cancelBtn">Cancel</button>
+                </div>
+            </div>
+          </div>
         </div>
         <div class="col-md-5 text-center">
           {% if order.model.photo %}
@@ -65,7 +81,14 @@
     </div>
 
     <!-- Required Quantities Table -->
-    <h3>{% trans "Required Quantities" %}</h3>
+    <div class="row">
+      <div class="col-md-6" style="margin:auto;">
+        <h3>{% trans "Required Quantities" %}</h3>
+      </div>
+      <div class="col-md-6 text-center">
+          <a href="{% url 'create_size_quantity' order.pk %}" class="btn btn-primary">{% trans "Edit" %}</a>
+      </div>
+    </div><br>
     <div class="table-responsive">
       <table class="table table-striped">
         <thead>
@@ -185,6 +208,23 @@
     {% endif %}
   </div>
 </div>
+<script>
+  document.getElementById('deleteBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'flex';
+  };
+
+  document.getElementById('closeBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+  };
+
+  document.getElementById('cancelBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+  };
+
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+      document.getElementById('deleteForm').submit();
+  };
+</script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const accordionLinks = document.querySelectorAll('.cut-link');

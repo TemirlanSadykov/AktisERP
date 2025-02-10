@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView 
+from django.views import View
 from openpyxl import Workbook
 from openpyxl.styles import  Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
@@ -479,7 +480,7 @@ def client_order_complete(request, pk):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
+class OrderListView(RestrictOrderBranchMixin, ListView):
     model = Order
     template_name = 'technologist/orders/list.html'
     context_object_name = 'orders'
@@ -531,7 +532,7 @@ class OrderListTechnologistView(RestrictOrderBranchMixin, ListView):
         return context
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class OrderDetailTechnologistView(DetailView):
+class OrderDetailView(DetailView):
     model = Order
     template_name = 'technologist/orders/detail.html'
     context_object_name = 'order'
@@ -598,6 +599,105 @@ class OrderDetailTechnologistView(DetailView):
         })
 
         return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OrderCreateView(CreateView):
+    model = Order
+    form_class = OrderForm
+    template_name = 'technologist/orders/create.html'
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.client_order = get_object_or_404(ClientOrder, pk=self.kwargs['client_order_pk'])
+        self.object.save()
+        form.save_m2m()
+        redirect_url = reverse('create_size_quantity', kwargs={'pk': self.object.id})
+        return HttpResponseRedirect(redirect_url)
+
+    def get_context_data(self, **kwargs):
+        context = super(OrderCreateView, self).get_context_data(**kwargs)
+        context['client_order_pk'] = self.kwargs.get('client_order_pk')
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OrderUpdateView(UpdateView):
+    model = Order
+    form_class = OrderForm
+    template_name = 'technologist/orders/edit.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def get_success_url(self):
+        return reverse('order_detail', kwargs={'pk': self.object.pk})
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OrderDeleteView(DeleteView):
+    model = Order
+    template_name = 'technologist/orders/delete.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def get_success_url(self):
+        return reverse('client_order_detail', kwargs={'pk': self.object.client_order.pk})
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class SizeQuantityCreateView(View):
+    def get(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        form = SizeQuantityForm(order=order)  # Pass the order to the form
+        size_quantities = order.size_quantities.all()
+        return render(request, 'technologist/orders/create_size_quantity.html', {
+            'form': form,
+            'size_quantities': size_quantities,
+            'order': order,
+            'sidebar_type': 'technology'
+        })
+
+    def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = SizeQuantityForm(request.POST, order=order)  # Pass the order to the form
+            if form.is_valid():
+                new_size_quantity = form.save(commit=False)
+                new_size_quantity.save()
+                order.size_quantities.add(new_size_quantity)
+
+                # Retrieve size quantities with color names instead of IDs
+                size_quantities = order.size_quantities.select_related('color').values(
+                    'id', 'size', 'quantity', 'color__name'  # Use color__name instead of color ID
+                )
+
+                return JsonResponse({'success': True, 'sizeQuantities': list(size_quantities)})
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        return JsonResponse({'success': False, 'error': 'Non-AJAX request not allowed'}, status=400)
+    
+@login_required
+@technologist_required
+def edit_size_quantity(request, sq_id):
+    size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
+
+    if request.method == 'POST':
+        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+        form = SizeQuantityForm(data, instance=size_quantity)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': 'success'}, status=200)
+    
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+@technologist_required
+def delete_size_quantity(request, sq_id):
+    if request.method == 'POST':
+        size_quantity = get_object_or_404(SizeQuantity, id=sq_id)
+        size_quantity.delete()
+        return JsonResponse({'status': 'success'}, status=200)
+    return JsonResponse({'status': 'error'}, status=400)
+
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class CutDetailTechnologistView(DetailView):
