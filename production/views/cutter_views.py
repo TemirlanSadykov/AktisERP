@@ -43,42 +43,50 @@ class ClientOrderListCutterView(RestrictBranchMixin, ListView):
     form_class = DateRangeForm 
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(is_archived=False).order_by('term')
-        status = self.request.GET.get('status', None)
+        queryset = super().get_queryset().filter(is_archived=False)
+        today = timezone.localdate()
+
+        # Get the term filter from the URL, defaulting to upcoming if not provided
+        term_filter = self.request.GET.get('term', 'upcoming').lower()
+
+        if term_filter == 'upcoming':
+            # Orders with a term today or later, ordered by the soonest term first.
+            queryset = queryset.filter(term__gte=today).order_by('term')
+        elif term_filter == 'passed':
+            # Orders with a term before today, ordered so that the most recent passed comes first.
+            queryset = queryset.filter(term__lt=today).order_by('-term')
+        else:
+            # If for some reason the parameter is not recognized, default to upcoming.
+            queryset = queryset.filter(term__gte=today).order_by('term')
+
+        # Optionally filter by the created_at date range using your DateRangeForm
         form = self.form_class(self.request.GET)
-
-        if status:
-            try:
-                status = int(status)
-                if status in dict(self.model.TYPE_CHOICES):
-                    queryset = queryset.filter(status=status)
-            except ValueError:
-                pass
-
         if form.is_valid():
             start_date = form.cleaned_data.get('start_date')
             end_date = form.cleaned_data.get('end_date')
-
             if start_date and end_date:
-                queryset = queryset.filter(created_at__date__range=[start_date, end_date])
+                queryset = queryset.filter(launch__range=[start_date, end_date])
             elif start_date:
-                queryset = queryset.filter(created_at__date__gte=start_date)
+                queryset = queryset.filter(launch__gte=start_date)
             elif end_date:
-                queryset = queryset.filter(created_at__date__lte=end_date)
+                queryset = queryset.filter(launch__lte=end_date)
 
         return queryset
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.form_class(self.request.GET or None) 
+        context['form'] = self.form_class(self.request.GET or None)
         today = timezone.localdate()
+
+        # Prepare orders along with the number of days left (which will be negative for passed orders)
         orders_with_days_left = []
         for order in context['orders']:
             days_left = (order.term - today).days
             orders_with_days_left.append({'order': order, 'days_left': days_left})
+        context['orders_with_days_left'] = orders_with_days_left
 
-        context['orders_with_days_left'] = sorted(orders_with_days_left, key=lambda x: x['days_left'])
-        context['selected_status'] = self.request.GET.get('status', '')
+        # Pass the active filter to the template (default to 'upcoming')
+        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
         context['ClientOrder'] = ClientOrder 
         context['sidebar_type'] = 'cutter'
         return context

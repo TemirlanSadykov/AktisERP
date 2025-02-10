@@ -216,43 +216,51 @@ class ClientOrderListTechnologistView(RestrictBranchMixin, ListView):
     form_class = DateRangeForm 
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(is_archived=False).order_by('term')
-        status = self.request.GET.get('status', None)
+        queryset = super().get_queryset().filter(is_archived=False)
+        today = timezone.localdate()
+
+        # Read the term filter from GET. Defaults to 'upcoming' if not provided.
+        term_filter = self.request.GET.get('term', 'upcoming').lower()
+
+        if term_filter == 'upcoming':
+            # Upcoming orders: term is today or later; sort ascending (soonest first)
+            queryset = queryset.filter(term__gte=today).order_by('term')
+        elif term_filter == 'passed':
+            # Passed orders: term is before today; sort descending (most recent first)
+            queryset = queryset.filter(term__lt=today).order_by('-term')
+        else:
+            # Default to upcoming if unknown value is provided
+            queryset = queryset.filter(term__gte=today).order_by('term')
+
+        # Apply optional date range filtering
         form = self.form_class(self.request.GET)
-
-        if status:
-            try:
-                status = int(status)
-                if status in dict(self.model.TYPE_CHOICES):
-                    queryset = queryset.filter(status=status)
-            except ValueError:
-                pass
-
         if form.is_valid():
             start_date = form.cleaned_data.get('start_date')
             end_date = form.cleaned_data.get('end_date')
-
             if start_date and end_date:
-                queryset = queryset.filter(created_at__date__range=[start_date, end_date])
+                queryset = queryset.filter(launch__range=[start_date, end_date])
             elif start_date:
-                queryset = queryset.filter(created_at__date__gte=start_date)
+                queryset = queryset.filter(launch__gte=start_date)
             elif end_date:
-                queryset = queryset.filter(created_at__date__lte=end_date)
+                queryset = queryset.filter(launch__lte=end_date)
 
         return queryset
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.form_class(self.request.GET or None) 
+        context['form'] = self.form_class(self.request.GET or None)
         today = timezone.localdate()
         orders_with_days_left = []
+
+        # Calculate days_left for display. (Negative values for passed orders.)
         for order in context['orders']:
             days_left = (order.term - today).days
             orders_with_days_left.append({'order': order, 'days_left': days_left})
+        context['orders_with_days_left'] = orders_with_days_left
 
-        context['orders_with_days_left'] = sorted(orders_with_days_left, key=lambda x: x['days_left'])
-        context['selected_status'] = self.request.GET.get('status', '')
-        context['ClientOrder'] = ClientOrder 
+        # Pass the current term filter for use in the template
+        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
+        context['ClientOrder'] = ClientOrder
         context['sidebar_type'] = 'technology'
         return context
     
