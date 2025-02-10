@@ -214,7 +214,7 @@
   #page-content-wrapper {
     width: 100%;
     transition: margin-left 0.3s;
-    margin-left: 220px;
+    /* margin-left: 220px; */
   }
 
   .bg-primary {

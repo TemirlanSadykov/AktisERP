@@ -42,10 +42,52 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @login_required
 @admin_required
 def admin_page(request):
-    branches = Branch.objects.all()
+    """
+    1) Displays a form with start_date and end_date (GET).
+    2) On GET with valid date range, fetches Orders that have Cuts within that date range.
+    3) Allows user to select which Orders to analyze (POST).
+    4) Submits to another view (or can compute inline) to get employee calculations.
+    """
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Convert strings to date objects (if provided)
+    orders = []
+    if start_date and end_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+            # Get all Cuts in [start_dt, end_dt]
+            cuts_in_range = Cut.objects.filter(date__range=[start_dt, end_dt])
+
+            # From those Cuts, get their Orders
+            orders_in_range = Order.objects.filter(cuts__in=cuts_in_range).distinct().order_by('model__name')
+
+            orders = orders_in_range
+
+        except ValueError:
+            # If date parsing fails, just ignore or handle error
+            pass
+
+    if request.method == 'POST':
+        # The user has chosen specific order IDs to analyze
+        selected_orders_ids = request.POST.getlist('order_ids')
+
+        # Option A: Do the calculations right here and render a new template:
+        # results = calculate_employee_data(selected_orders_ids)
+        # return render(request, 'employee_calculation.html', {
+        #     'results': results
+        # })
+
+        # Option B: Redirect to another view that does the calculation:
+        return redirect('employee_calculation', order_ids=",".join(selected_orders_ids))
+
     context = {
-        'branches': branches,
         'sidebar_type': 'admin',
+        'orders': orders,
+        'start_date': start_date,
+        'end_date': end_date,
     }
     return render(request, 'admin_page.html', context)
 
@@ -379,152 +421,6 @@ def branch_switch(request):
     except Branch.DoesNotExist:
         messages.error(request, 'Selected branch does not exist.')
         return redirect('admin_page')
-
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeListView(ListView):
-    model = UserProfile
-    template_name = 'admin/employees/list.html'
-    context_object_name = 'employees'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return UserProfile.objects.filter(
-            branch=self.request.user.userprofile.branch,
-            is_archived=False
-        ).exclude(user__username='admin').order_by('employee_id')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['upload_form'] = UploadFileForm()
-        return context
-    
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
-    template_name = 'admin/employees/create.html'
-    form_class = UserWithProfileForm
-    success_url = reverse_lazy('employee_list')
-
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeDetailView(DetailView):
-    model = UserProfile
-    template_name = 'admin/employees/detail.html'
-    context_object_name = 'employee'
-
-@login_required
-@admin_required
-def employee_edit(request, pk):
-    user_profile = get_object_or_404(UserProfile, pk=pk, branch=request.user.userprofile.branch)
-    user = user_profile.user
-
-    if request.method == 'POST':
-        user_form = UserEditForm(request.POST, instance=user)
-        if user_form.is_valid():
-            user_form.save()
-            messages.success(request, 'Employee details updated successfully.')
-            return redirect('employee_list')
-    else:
-        user_form = UserEditForm(instance=user)
-
-    context = {'user_form': user_form, 'user_profile': user_profile}
-    return render(request, 'admin/employees/edit.html', context)
-
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
-    model = UserProfile
-    template_name = 'admin/employees/delete.html'
-    success_url = reverse_lazy('employee_list')
-    
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeArchiveView(UpdateView):
-    model = UserProfile
-    template_name = 'admin/employees/list.html'
-    success_url = reverse_lazy('employee_list')
-    
-    def post(self, request, *args, **kwargs):
-        employee = self.get_object()
-        employee.is_archived = True
-        employee.save()
-        return HttpResponseRedirect(self.success_url)
-   
-@method_decorator([login_required, admin_required], name='dispatch')
-class EmployeeUnArchiveView(UpdateView):
-    model = UserProfile
-    template_name = 'admin/employees/list.html'
-    success_url = reverse_lazy('employee_list')
-    
-    def post(self, request, *args, **kwargs):
-        employee = self.get_object()
-        employee.is_archived = False
-        employee.save()
-        return HttpResponseRedirect(self.success_url)
-     
-@method_decorator([login_required, admin_required], name='dispatch')
-class ArchivedEmployeeListView(ListView):
-    template_name = 'admin/employees/list.html'
-    context_object_name = 'employees'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return UserProfile.objects.filter(            
-            branch=self.request.user.userprofile.branch,
-            is_archived=True
-            ).order_by('employee_id')
-    
-
-@login_required
-@admin_required
-@require_POST
-def employee_upload(request):
-    form = UploadFileForm(request.POST, request.FILES)
-    if form.is_valid():
-        excel_file = request.FILES['excel_file']
-        try:
-            workbook = openpyxl.load_workbook(excel_file)
-            sheet = workbook.active
-            with transaction.atomic():
-                for row in sheet.iter_rows(min_row=2, values_only=True):
-                    branch_id, first_name, last_name, username, employee_id, type, station, password = row
-                    branch = Branch.objects.get(id=branch_id)
-                    try:
-                        # Attempt to find an existing UserProfile with given employee_id and branch
-                        profile = UserProfile.objects.get(employee_id=employee_id, branch=branch)
-                        
-                    except UserProfile.DoesNotExist:
-                        # If it does not exist, create User and UserProfile
-                        user = User.objects.create(username=username, first_name=first_name, last_name=last_name)
-                        user.set_password(password)
-                        user.save()
-                        profile = UserProfile.objects.create(
-                            user=user, 
-                            branch=branch, 
-                            employee_id=employee_id, 
-                            type=type, 
-                            station=station, 
-                            status=False
-                        )
-                    else:
-                        # If UserProfile exists, update both User and UserProfile
-                        user = profile.user
-                        user.first_name = first_name
-                        user.last_name = last_name
-                        user.username = username
-                        user.set_password(password)
-                        user.save()
-                        
-                        profile.type = type
-                        profile.station = station
-                        profile.save()
-
-            messages.success(request, 'Employees uploaded successfully.')
-            return redirect(reverse_lazy('employee_list'))
-        except Exception as e:
-            messages.error(request, f'Error processing the file: {e}')
-            return redirect(reverse_lazy('employee_list'))
-        finally:
-            workbook.close()
-    else:
-        messages.error(request, 'Invalid file format.')
-        return redirect(reverse_lazy('employee_list'))
 
 # @login_required
 # @admin_required
