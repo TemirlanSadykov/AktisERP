@@ -33,22 +33,217 @@
           <form method="post">
             {% csrf_token %}
             <div class="form-group">
-              {{ form.as_p }}
+              <label for="id_model">{% trans "Model:" %}</label>
+              {{ form.model }}
             </div>
             <div class="form-group">
-              <div class="row">
-                <div class="col text-left">
-                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Save" %}</button>
-                </div>
-                <div class="col text-right">
-                  <a href="{% url 'client_order_detail' client_order_pk  %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
-                </div>
+              <label for="id_quantity">{% trans "Quantity:" %}</label>
+              {{ form.quantity }}
             </div>
-            </div>
+        
+            <h3>{% trans "Size Quantities" %}</h3>
+            <table id="sizeQuantityTable" class="table table-bordered">
+              <thead>
+                <tr>
+                  <!-- First column for Color & Fabric -->
+                  <th>{% trans "Color & Fabric" %}</th>
+                  <!-- One dynamic column for size header (with manual text input) -->
+                  <th>
+                    <input type="text" name="header_0" class="form-control" placeholder="{% trans 'Enter Size' %}">
+                  </th>
+                  <!-- Extra column on the far right for column controls -->
+                  <th class="control-col" style="width:50px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-row="0">
+                  <!-- Color & Fabric cell with side-by-side selects -->
+                  <td>
+                    <div class="row">
+                      <div class="col">
+                        <select name="row-0_color" class="form-control">
+                          <option value="">{% trans "Choose Color" %}</option>
+                          {% for color in colors %}
+                            <option value="{{ color.pk }}">{{ color.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="col">
+                        <select name="row-0_fabric" class="form-control">
+                          <option value="">{% trans "Choose Fabric" %}</option>
+                          {% for fabric in fabrics %}
+                            <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                  </td>
+                  <!-- One dynamic cell for quantity (corresponding to the size header) -->
+                  <td>
+                    <input type="number" name="cell_0_0" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
+                  </td>
+                  <!-- Extra (control) cell for the column on the far right -->
+                  <td class="control-col" style="width:50px;"></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="control-row" style="height:50px;">
+                  <!-- This cell spans all “normal” columns (first column + dynamic columns) -->
+                  <td id="rowControlCell" colspan="2">
+                    <div style="display:flex; height:100%;">
+                      <!-- Left half for row addition -->
+                      <div id="addRowControl" style="flex:1; display:flex; align-items:center; justify-content:center; border-right:1px solid #ccc; cursor:pointer;">
+                        +
+                      </div>
+                      <!-- Right half for row deletion -->
+                      <div id="deleteRowControl" style="flex:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        –
+                      </div>
+                    </div>
+                  </td>
+                  <!-- Rightmost cell: dedicated for column controls -->
+                  <td class="control-col" style="width:50px; padding:0;">
+                    <div style="height:100%; display:flex; flex-direction:column;">
+                      <!-- Top half for column addition -->
+                      <div id="addColumnControl" style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #ccc; cursor:pointer;">
+                        +
+                      </div>
+                      <!-- Bottom half for column deletion -->
+                      <div id="deleteColumnControl" style="flex:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                        –
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+        
+            <br>
+            <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+            <a href="{% url 'client_order_detail' client_order_pk %}" class="btn btn-outline-secondary">{% trans "Back" %}</a>
           </form>
         </div>
       <!-- </div> -->
     </div>
   </div>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    // rowCount: number of data rows (tbody) currently in the table.
+    let rowCount = 1;  // one row already exists (data-row="0")
+    // colCount: number of dynamic columns (size columns), initially 1.
+    let colCount = 1;
+  
+    // Update the colspan of the row control cell.
+    function updateRowControlColspan() {
+      const rowControlCell = document.getElementById("rowControlCell");
+      // The non-control columns are: the first "Color & Fabric" column plus the dynamic size columns.
+      rowControlCell.colSpan = 1 + colCount;
+    }
+    updateRowControlColspan();
+  
+    // Add a new row at the end of tbody.
+    function addRow() {
+      const tbody = document.querySelector("#sizeQuantityTable tbody");
+      const newRow = document.createElement("tr");
+      newRow.setAttribute("data-row", rowCount);
+      let rowHtml = "";
+      // First cell: Color & Fabric selectors.
+      rowHtml += `<td>
+                    <div class="row">
+                      <div class="col">
+                        <select name="row-${rowCount}_color" class="form-control">
+                          <option value="">{% trans "Choose Color" %}</option>
+                          {% for color in colors %}
+                            <option value="{{ color.pk }}">{{ color.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="col">
+                        <select name="row-${rowCount}_fabric" class="form-control">
+                          <option value="">{% trans "Choose Fabric" %}</option>
+                          {% for fabric in fabrics %}
+                            <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                  </td>`;
+      // Create a cell for each dynamic column.
+      for (let col = 0; col < colCount; col++) {
+        rowHtml += `<td>
+                      <input type="number" name="cell_${rowCount}_${col}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
+                    </td>`;
+      }
+      // Extra cell for the control column (empty).
+      rowHtml += `<td class="control-col" style="width:50px;"></td>`;
+      newRow.innerHTML = rowHtml;
+      tbody.appendChild(newRow);
+      rowCount++;
+    }
+  
+    // Delete the last row (if more than one remains).
+    function deleteRow() {
+      const tbody = document.querySelector("#sizeQuantityTable tbody");
+      if(tbody.children.length > 1) {
+        tbody.removeChild(tbody.lastElementChild);
+        rowCount--;
+      } else {
+        alert("{% trans 'At least one row must remain.' %}");
+      }
+    }
+  
+    // Add a new dynamic column.
+    function addColumn() {
+      colCount++;
+      // In the header, add a new <th> with an input (insert before the control column).
+      const theadRow = document.querySelector("#sizeQuantityTable thead tr");
+      const newHeaderCell = document.createElement("th");
+      newHeaderCell.innerHTML = `<input type="text" name="header_${colCount-1}" class="form-control" placeholder="{% trans 'Enter Size' %}">`;
+      theadRow.insertBefore(newHeaderCell, theadRow.lastElementChild);
+  
+      // In each tbody row, add a new cell (insert before the control cell).
+      const rows = document.querySelectorAll("#sizeQuantityTable tbody tr");
+      rows.forEach(function(row) {
+        const newCell = document.createElement("td");
+        let currentRow = row.getAttribute("data-row");
+        newCell.innerHTML = `<input type="number" name="cell_${currentRow}_${colCount-1}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">`;
+        row.insertBefore(newCell, row.lastElementChild);
+      });
+      updateRowControlColspan();
+    }
+  
+    // Delete the last dynamic column (if at least one remains).
+    function deleteColumn() {
+      if (colCount > 1) {
+        // Remove the header cell (the one immediately before the control column).
+        const theadRow = document.querySelector("#sizeQuantityTable thead tr");
+        theadRow.removeChild(theadRow.children[theadRow.children.length - 2]);
+        // In each tbody row, remove the cell immediately before the control cell.
+        const rows = document.querySelectorAll("#sizeQuantityTable tbody tr");
+        rows.forEach(function(row) {
+          row.removeChild(row.children[row.children.length - 2]);
+        });
+        colCount--;
+        updateRowControlColspan();
+      } else {
+        alert("{% trans 'At least one column must remain.' %}");
+      }
+    }
+  
+    // Attach event listeners to the control elements in the tfoot.
+    document.getElementById("addRowControl").addEventListener("click", function(){
+      addRow();
+    });
+    document.getElementById("deleteRowControl").addEventListener("click", function(){
+      deleteRow();
+    });
+    document.getElementById("addColumnControl").addEventListener("click", function(){
+      addColumn();
+    });
+    document.getElementById("deleteColumnControl").addEventListener("click", function(){
+      deleteColumn();
+    });
+  });
+  </script>
 {% endblock %}

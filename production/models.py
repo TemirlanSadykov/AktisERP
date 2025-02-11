@@ -252,13 +252,14 @@ class ModelOperation(models.Model):
         ordering = ['order']
 
 class SizeQuantity(models.Model):
-    size = models.CharField(max_length=10, verbose_name='Размер')
-    quantity = models.IntegerField(verbose_name='Количество')
+    size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
+    quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
     def __str__(self):
-        return f"Размер: {self.size}, Количество: {self.quantity}, Цвет: {self.color.name if self.color else 'None'}"
+        return f"{self.color} {self.fabrics} {self.size} ({self.quantity})"
     
 class ClientOrder(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='client_orders', null=True, blank=True, verbose_name='Филиал')

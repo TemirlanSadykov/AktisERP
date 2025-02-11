@@ -285,4 +285,6 @@ urlpatterns = [
     path('api/employees_by_orders/<int:employee_id>/', employee_api_by_orders, name='employee_api_by_orders'),
 
     path('api/add-client/', add_client_api, name='add_client_api'),
+    path('api/add-color/', add_color_api, name='add_color_api'),
+    path('api/add-fabric/', add_fabric_api, name='add_fabric_api'),
 ]

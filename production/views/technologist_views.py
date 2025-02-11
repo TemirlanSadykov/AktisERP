@@ -733,14 +733,107 @@ class OrderCreateView(CreateView):
         self.object.client_order = get_object_or_404(ClientOrder, pk=self.kwargs['client_order_pk'])
         self.object.save()
         form.save_m2m()
-        redirect_url = reverse('create_size_quantity', kwargs={'pk': self.object.id})
-        return HttpResponseRedirect(redirect_url)
+        # Process the dynamic table data
+        self.handle_size_quantities(self.object, self.request.POST)
+        return redirect('client_order_detail', pk=self.object.client_order.pk)
+
+    def handle_size_quantities(self, order, post_data):
+        """
+        Expected post_data keys:
+          - header_0, header_1, …      (the size for each column)
+          - row-0_color, row-0_fabric    (color and fabric for row 0)
+          - cell_0_0, cell_0_1, …        (quantity for row 0, for each size column)
+          - row-1_color, row-1_fabric, cell_1_0, cell_1_1, etc.
+          
+        For each row and column where quantity > 0, a SizeQuantity object is created and
+        associated with the order. Additionally, the color and fabric used for each row
+        are collected and saved to the order's many-to-many fields.
+        """
+        used_colors = set()
+        used_fabrics = set()
+        sizes = []
+        # Get the number of columns from the header row inputs
+        col = 0
+        while f'header_{col}' in post_data:
+            sizes.append(post_data[f'header_{col}'])
+            col += 1
+
+        row = 0
+        while f'row-{row}_color' in post_data:
+            color_id = post_data.get(f'row-{row}_color')
+            fabric_id = post_data.get(f'row-{row}_fabric')
+            # Lookup the color and fabric objects:
+            color = Color.objects.filter(pk=color_id).first() if color_id else None
+            fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
+
+            # Collect these for saving later on the order
+            if color:
+                used_colors.add(color)
+            if fabric:
+                used_fabrics.add(fabric)
+
+            # Process each column for the current row
+            for col_index, size in enumerate(sizes):
+                quantity = post_data.get(f'cell_{row}_{col_index}', 0)
+                if quantity and int(quantity) > 0:
+                    # Create and save the SizeQuantity object
+                    size_qty = SizeQuantity.objects.create(
+                        size=size,
+                        quantity=int(quantity),
+                        color=color,
+                        fabrics=fabric
+                    )
+                    order.size_quantities.add(size_qty)
+            row += 1
+
+        # Save the collected colors and fabrics to the order
+        if used_colors:
+            order.colors.add(*used_colors)
+        if used_fabrics:
+            order.fabrics.add(*used_fabrics)
 
     def get_context_data(self, **kwargs):
         context = super(OrderCreateView, self).get_context_data(**kwargs)
         context['client_order_pk'] = self.kwargs.get('client_order_pk')
         context['sidebar_type'] = 'technology'
+        # Pass available colors and fabrics (and sizes) for use in the template.
+        context['colors'] = Color.objects.all().order_by('name')
+        context['fabrics'] = Fabrics.objects.all().order_by('name')
         return context
+    
+@require_POST
+@login_required
+@technologist_required
+def add_color_api(request):
+    form = ColorForm(request.POST)
+    if form.is_valid():
+        color = form.save()
+        data = {
+            'success': True,
+            'color_id': color.id,
+            'color_name': color.name,
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    
+@require_POST
+@login_required
+@technologist_required
+def add_fabric_api(request):
+    form = FabricsForm(request.POST)
+    if form.is_valid():
+        fabric = form.save()
+        data = {
+            'success': True,
+            'fabric_id': fabric.id,
+            'fabric_name': fabric.name,
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderUpdateView(UpdateView):
