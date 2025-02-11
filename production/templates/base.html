@@ -95,6 +95,9 @@
                         <span class="sidetext">{% trans 'Additional' %}</span>
                     </a>
                     <div class="collapse" id="additionalSubmenu">
+                        <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                            {% trans 'Clients' %}
+                        </a>
                         <a href="{% url 'color_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                             {% trans 'Colors' %}
                         </a>

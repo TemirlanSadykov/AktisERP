@@ -211,6 +211,109 @@ def employee_upload(request):
     else:
         messages.error(request, 'Invalid file format.')
         return redirect(reverse_lazy('employee_list'))
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientListView(ListView):
+    model = Client
+    template_name = 'technologist/clients/list.html'
+    context_object_name = 'clients'
+    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def get_queryset(self):
+        return Client.objects.filter(
+            is_archived=False
+            ).order_by('name')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedClientListView(ListView):
+    template_name = 'technologist/clients/list.html'
+    context_object_name = 'clients'
+    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def get_queryset(self):
+        return Client.objects.filter(            
+            is_archived=True
+            ).order_by('name')
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientCreateView(CreateView):
+    model = Client
+    form_class = ClientForm
+    template_name = 'technologist/clients/create.html'
+    success_url = reverse_lazy('client_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientDetailView(DetailView):
+    model = Client
+    template_name = 'technologist/clients/detail.html'
+    context_object_name = 'client'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientUpdateView(UpdateView):
+    model = Client
+    form_class = ClientForm
+    template_name = 'technologist/clients/edit.html'
+    def get_success_url(self):
+        return reverse('client_detail', kwargs={'pk': self.object.pk})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientDeleteView(DeleteView):
+    model = Client
+    template_name = 'technologist/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientArchiveView(UpdateView):
+    model = Client
+    template_name = 'technologist/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = True
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ClientUnArchiveView(UpdateView):
+    model = Client
+    template_name = 'technologist/clients/delete.html'
+    success_url = reverse_lazy('client_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    def post(self, request, *args, **kwargs):
+        clien_order = self.get_object()
+        clien_order.is_archived = False
+        clien_order.save()
+        return HttpResponseRedirect(self.success_url)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ClientOrderListView(RestrictBranchMixin, ListView):
