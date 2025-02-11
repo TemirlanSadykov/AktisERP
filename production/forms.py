@@ -417,10 +417,9 @@ class ModelCustomForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['name', 'contact_info']
+        fields = ['name']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'contact_info': forms.TextInput(attrs={'class': 'form-control'})
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
         }
 
 class ClientOrderForm(forms.ModelForm):
@@ -428,12 +427,21 @@ class ClientOrderForm(forms.ModelForm):
         model = ClientOrder
         fields = ['order_number', 'client', 'launch', 'term', 'info']
         widgets = {
-            'order_number': forms.TextInput(attrs={'class': 'form-control','placeholder':'Order number'}),
+            'order_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
             'client': forms.Select(attrs={'class': 'form-control'}),
-            'launch': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
-            'term': forms.DateInput(format=('%Y-%m-%d'), attrs={'type': 'date', 'class': 'form-control'}),
-            'info': forms.TextInput(attrs={'class': 'form-control','placeholder':'Additional Info'}),
+            'launch': forms.DateInput(format=('%Y-%m-%d'),
+                                      attrs={'type': 'date', 'class': 'form-control'}),
+            'term': forms.DateInput(format=('%Y-%m-%d'),
+                                    attrs={'type': 'date', 'class': 'form-control'}),
+            'info': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Additional Info'}),
         }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prepend an "Add New Client" option.
+        # Note: ModelChoiceField choices is a list of (value, label) tuples.
+        orig_choices = list(self.fields['client'].choices)
+        self.fields['client'].choices = [("add_new", "Add New Client")] + orig_choices
 
     def clean_term(self):
         term = self.cleaned_data.get('term')
@@ -446,21 +454,19 @@ class ClientOrderForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['model', 'colors', 'fabrics', 'status', 'quantity', 'payment']
+        fields = ['model', 'colors', 'fabrics', 'quantity']
         widgets = {
             'model': forms.Select(attrs={'class': 'form-control'}),
             'colors': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'fabrics': forms.SelectMultiple(attrs={'class': 'form-control'}),
-            'status': forms.Select(choices=Order.TYPE_CHOICES, attrs={'class': 'form-control'}), 
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'payment': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
-        self.fields['model'].queryset = Model.objects.all()
-        self.fields['colors'].queryset = Color.objects.all()
-        self.fields['fabrics'].queryset = Fabrics.objects.all()
+        self.fields['model'].queryset = Model.objects.all().order_by('name')
+        self.fields['colors'].queryset = Color.objects.all().order_by('name')
+        self.fields['fabrics'].queryset = Fabrics.objects.all().order_by('name')
 
         # Make certain fields optional in the form
         self.fields['model'].required = False

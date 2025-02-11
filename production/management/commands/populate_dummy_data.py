@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 is_clock_in=faker.boolean())
 
         # Create Clients
-        clients = [Client.objects.create(name=faker.name(), contact_info=faker.address()) for _ in range(5)]
+        clients = [Client.objects.create(name=faker.name()) for _ in range(5)]
 
         # Create Rolls
         rolls = [Roll.objects.create(

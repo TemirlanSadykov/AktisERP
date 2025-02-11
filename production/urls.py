@@ -284,4 +284,5 @@ urlpatterns = [
     path('admin/orders/calculate/<str:order_ids>/', employee_calculation_view, name='employee_calculation'),
     path('api/employees_by_orders/<int:employee_id>/', employee_api_by_orders, name='employee_api_by_orders'),
 
+    path('api/add-client/', add_client_api, name='add_client_api'),
 ]

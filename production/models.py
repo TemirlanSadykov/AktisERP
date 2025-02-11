@@ -82,9 +82,9 @@ class EmployeeAttendance(models.Model):
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
-    contact_info = models.TextField(verbose_name='Контактная информация')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    
     def __str__(self):
         return self.name
 
@@ -306,11 +306,30 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.model}"
+
+class Batch(models.Model):
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, verbose_name='Цвет', related_name='batches')
+    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, verbose_name='Ткань', related_name='batches')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='Модель', related_name='batches')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+
+    def __str__(self):
+        return f"{self.color.name} - {self.fabric.name}"
+    
+class SizeBatch(models.Model):
+    size = models.CharField(max_length=10, verbose_name='Размер')
+    quantity = models.IntegerField(verbose_name='Количество')
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE, verbose_name='Группа', related_name='size_batches')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+
+    def __str__(self):
+        return f"{self.batch} ({self.size} - {self.quantity})"
     
 class Cut(models.Model):
     number = models.IntegerField(verbose_name='Номер', editable=False)
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
+    size_batches = models.ManyToManyField(SizeBatch, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
     size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
@@ -331,6 +350,7 @@ class Cut(models.Model):
 class CutSize(models.Model):
     extra = models.CharField(max_length=5, blank=True, null=True, verbose_name='Дополнительно')
     cut = models.ForeignKey(Cut, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Резка')
+    size_batch = models.ForeignKey(SizeBatch, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Размер и количество',  blank=True, null=True)
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Размер и количество')
     CUTTING = 0
     SEWING = 1
@@ -364,6 +384,7 @@ class Passport(models.Model):
     cut = models.ForeignKey(Cut, on_delete=models.CASCADE, blank=True, null=True, related_name='passports', verbose_name='Крой')
     number = models.IntegerField(verbose_name='Номер', null=True, blank=True)
     roll = models.ForeignKey(Roll, on_delete=models.CASCADE, related_name='passport_rolls', verbose_name='Рулон', null=True, blank=True)
+    size_batches = models.ManyToManyField(SizeBatch, through='PassportSize', related_name='passports', verbose_name='Размеры и количества')
     size_quantities = models.ManyToManyField(SizeQuantity, through='PassportSize', related_name='passports', verbose_name='Размеры и количества')
     layers = models.DecimalField(max_digits=10, decimal_places=0, verbose_name='Слои', null=True, blank=True)
     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры', null=True, blank=True)
@@ -389,6 +410,7 @@ class Passport(models.Model):
 class PassportSize(models.Model):
     passport = models.ForeignKey(Passport, on_delete=models.CASCADE, blank=True, null=True, related_name='passport_sizes', verbose_name='Паспорт')
     extra = models.CharField(max_length=5, blank=True, null=True)
+    size_batches = models.ForeignKey(SizeBatch, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество', null=True, blank=True)
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
     quantity = models.IntegerField(verbose_name='Количество')
     CUTTING = 0

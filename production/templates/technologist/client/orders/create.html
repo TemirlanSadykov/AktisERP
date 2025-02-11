@@ -14,7 +14,7 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
@@ -23,30 +23,123 @@
 <div class="container maincontr">
   <div class="row justify-content-center">
     <div class="col-md-12">
-      <!-- <div class="card"> -->
-        <div class="card-header">
-          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Client Order" %}</h2>
-        </div>
-        <div class="card-body">
-          <form method="post">
-            {% csrf_token %}
-            <div class="form-group">
-              {{ form.as_p }}
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Client Order" %}</h2>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            {{ form.as_p }}
+          </div>
+          <div class="form-group">
+            <div class="row">
+              <div class="col text-left">
+                <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
+              </div>
+              <div class="col text-right">
+                <a href="{% url 'client_order_list' %}" class="btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
+              </div>
             </div>
-            <div class="form-group">
-              <div class="row">
-                <div class="col text-left">
-                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
-                </div>
-                <div class="col text-right">
-                  <a href="{% url 'client_order_list' %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
-                </div>
-            </div>
-            </div>
-          </form>
-        </div>
-      <!-- </div> -->
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Add Client Modal -->
+<div class="modal" data-backdrop="false" id="addClientModal" tabindex="-1" role="dialog" aria-labelledby="addClientModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addClientForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addClientModalLabel">{% trans "Add New Client" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Client Form Field -->
+          <div class="form-group">
+            <label for="id_client_name">{% trans "Client Name" %}</label>
+            <input type="text" class="form-control" id="id_client_name" name="name" placeholder="{% trans 'Enter client name' %}" required>
+          </div>
+          <!-- Add more fields if needed -->
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- jQuery and Bootstrap JS should be loaded already -->
+<script>
+  // Function to retrieve a cookie value by name (for CSRF token)
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const clientSelect = document.getElementById('id_client');
+    const addClientModalEl = document.getElementById('addClientModal'); // Get modal element
+    const addClientModal = new bootstrap.Modal(addClientModalEl, { backdrop: false }); // Bootstrap modal instance
+    const addClientForm = document.getElementById('addClientForm');
+    if (clientSelect) {
+      clientSelect.addEventListener('change', function () {
+        if (this.value === "add_new") {
+          // Reset and show the modal for adding a new client
+          addClientForm.reset();
+          addClientModal.show();
+          // Reset the client select (so "Add New Client" is not left selected)
+          this.value = "";
+        }
+      });
+    }
+
+    // Handle submission of the new client form via fetch API
+    addClientForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(addClientForm);
+
+      fetch("{% url 'add_client_api' %}", {
+        method: "POST",
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken') // Include CSRF token
+        },
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Create a new option element with the new client info
+          const newOption = new Option(data.client_name, data.client_id, false, true);
+          clientSelect.appendChild(newOption);
+          // Hide the modal
+          addClientModal.hide();
+        } else {
+          alert("Error: " + JSON.stringify(data.errors)); // Show errors if validation fails
+        }
+      })
+      .catch(error => {
+        alert("An error occurred: " + error);
+      });
+    });
+  });
+</script>
 {% endblock %}

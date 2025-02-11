@@ -315,6 +315,8 @@ class ClientUnArchiveView(UpdateView):
         clien_order.save()
         return HttpResponseRedirect(self.success_url)
 
+
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ClientOrderListView(RestrictBranchMixin, ListView):
     model = ClientOrder
@@ -579,6 +581,23 @@ def client_order_complete(request, pk):
     #         client_order.save()
 
     return redirect('client_order_detail', pk=client_order.pk)
+
+@require_POST
+@login_required
+@technologist_required
+def add_client_api(request):
+    form = ClientForm(request.POST)
+    if form.is_valid():
+        client = form.save()
+        data = {
+            'success': True,
+            'client_id': client.id,
+            'client_name': client.name,
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 

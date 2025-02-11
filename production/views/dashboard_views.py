@@ -44,7 +44,6 @@ def client_api(request, client_id):
         response_data = {
             'id': client.id,
             'name': client.name,
-            'contact_info': client.contact_info,
             'total_spendings': total_spendings,
             'spendings_over_time': spendings_by_date
         }
