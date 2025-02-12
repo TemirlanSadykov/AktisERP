@@ -335,6 +335,8 @@ class OperationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['equipment'].queryset = Equipment.objects.all().order_by('name')
+        self.fields['node'].queryset = Node.objects.all().order_by('name')
         # Prepend an "Add New Equipment" option.
         equipment_choices = list(self.fields['equipment'].choices)
         self.fields['equipment'].choices = [("add_new", "Add New Equipment")] + equipment_choices
@@ -448,6 +450,7 @@ class ClientOrderForm(forms.ModelForm):
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['client'].queryset = Client.objects.all().order_by('name')
         # Prepend an "Add New Client" option.
         # Note: ModelChoiceField choices is a list of (value, label) tuples.
         orig_choices = list(self.fields['client'].choices)
