@@ -165,26 +165,6 @@ class CutForm(forms.ModelForm):
                     extra=extra
                 )
 
-class ConsumptionForm(forms.ModelForm):
-    class Meta:
-        model = Consumption
-        fields = ['fabrics', 'width', 'length', 'factual', 'commerce']
-        widgets = {
-            'fabrics': forms.Select(attrs={'class': 'form-control'}),
-            'width': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
-            'length': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
-            'factual': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
-            'commerce': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        cut = kwargs.pop('cut', None)
-        super().__init__(*args, **kwargs)
-        if cut and cut.order:
-            self.fields['fabrics'].queryset = cut.order.fabrics.all()
-        else:
-            self.fields['fabrics'].queryset = Fabrics.objects.none()
-
 class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport

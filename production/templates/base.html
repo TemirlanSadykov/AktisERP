@@ -274,7 +274,6 @@
                     return;
                 }
                 const linkPath = new URL(link.href).pathname;
-                console.log(linkPath, currentPath)
                 if (currentPath === linkPath || currentPath.includes(linkPath)) {
                     // Remove active from all sidebar items and add to the matching link
                     document.querySelectorAll('#sidebar .list-group-item').forEach(item => item.classList.remove('active'));

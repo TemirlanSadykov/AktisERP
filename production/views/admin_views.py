@@ -986,8 +986,6 @@ class CutDetailAdminView(DetailView):
         context = super().get_context_data(**kwargs)
         cut_pk = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_pk)
-        # Get all consumptions related to the cut
-        consumptions = cut.consumptions.all()
 
         # Get all passports related to the cut
         passports = cut.passports.all()
@@ -1001,7 +999,6 @@ class CutDetailAdminView(DetailView):
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
         context.update({
-            'consumptions': consumptions,
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,

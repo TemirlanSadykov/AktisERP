@@ -265,7 +265,7 @@ class CutCreateView(CreateView):
         cut.order = order
         cut.save()
         form.save_cut_sizes(cut)  # Save sizes and quantities to CutSize
-        return redirect('consumption_create', pk=cut.pk)
+        return redirect('passport_create', pk=cut.pk)
 
     def get_success_url(self):
         return reverse('cut_create', kwargs={'pk': self.kwargs['pk']})
@@ -280,8 +280,6 @@ class CutDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         cut_pk = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_pk)
-        # Get all consumptions related to the cut
-        consumptions = cut.consumptions.all()
 
         # Get all passports related to the cut
         passports = cut.passports.all()
@@ -295,7 +293,6 @@ class CutDetailView(DetailView):
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
         context.update({
-            'consumptions': consumptions,
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
@@ -333,48 +330,6 @@ class CutDeleteView(DeleteView):
     model = Cut
     def get_success_url(self):
         return reverse('order_detail_cutter', kwargs={'pk': self.object.order.pk})
-
-    
-@method_decorator([login_required, cutter_required], name='dispatch')
-class ConsumptionCreateView(CreateView):
-    model = Consumption
-    form_class = ConsumptionForm
-    template_name = 'cutter/consumptions/create.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        cut_id = self.kwargs.get('pk')
-        cut = get_object_or_404(Cut, pk=cut_id)
-        kwargs['cut'] = cut
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        cut_id = self.kwargs.get('pk')
-        cut = get_object_or_404(Cut, pk=cut_id)
-        context['cut'] = cut
-        context['sidebar_type'] = 'cutter'
-        return context
-
-    def form_valid(self, form):
-        cut_id = self.kwargs.get('pk')
-        cut = get_object_or_404(Cut, pk=cut_id)
-        consumption = form.save(commit=False)
-        consumption.cut = cut
-        consumption.save()
-        return redirect(self.request.path)
-
-    def get_success_url(self):
-        return reverse('consumption_create', kwargs={'pk': self.kwargs['pk']})
-    
-@login_required
-@cutter_required
-def delete_consumption(request, pk):
-    if request.method == 'POST':
-        consumption = get_object_or_404(Consumption, pk=pk)
-        consumption.delete()
-        return JsonResponse({'status': 'success'}, status=200)
-    return JsonResponse({'status': 'error'}, status=400)
   
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportCreateView(CreateView):

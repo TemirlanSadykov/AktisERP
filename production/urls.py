@@ -177,9 +177,6 @@ urlpatterns = [
     path('cutter/client/orders/order/<int:pk>/cut/edit/', CutEditView.as_view(), name='cut_edit'),
     path('cutter/cuts/delete-cut/<int:pk>/', CutDeleteView.as_view(), name='cut_delete'),
 
-    path('cutter/client/orders/order/<int:pk>/cut/consumption/create/', ConsumptionCreateView.as_view(), name='consumption_create'),
-    path('cutter/cuts/delete-consumption/<int:pk>/', delete_consumption, name='delete_consumption'),
-
     path('cutter/client/orders/order/<int:pk>/cut/passport/create/', PassportCreateView.as_view(), name='passport_create'),
     path('cutter/cuts/delete-passport/<int:pk>/', delete_passport, name='delete_passport'),
 
