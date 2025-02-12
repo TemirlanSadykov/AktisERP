@@ -14,43 +14,202 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
   </div>
 </nav>
-    <div class="container maincontr">
-      <div class="row justify-content-center">
-        <div class="col-md-12">
-          <!-- <div class="card"> -->
-            <div class="card-header">
-              <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Operation" %}</h2>
+
+<div class="container maincontr">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Operation" %}</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            {{ form.as_p }}
+          </div>
+          <div class="form-group">
+            <div class="row">
+              <div class="col text-left">
+                <button type="submit" class="btn btn-create btnset">{% trans "Create" %}</button>
+              </div>
+              <div class="col text-right">
+                <a href="{% url 'operation_list' %}" class="btn btn-back btn back-btn btnback">{% trans "Complete" %}</a>
+              </div>
             </div>
-            <div class="card-body">
-              <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="form-group">
-                  {{ form.as_p }}
-                </div>
-                <div class="form-group">
-    
-                  <div class="row">
-                    <div class="col text-left">
-                      <button type="submit" class="btn btn-create btnset">{% trans "Create" %}</button>
-                    </div>
-                    <div class="col text-right">
-                      <a href="{% url 'operation_list' %}" class=" btn btn-back btn back-btn btnback">{% trans "Complete" %}</a>
-                    </div>
-                </div>
-    
-    
-                </div>
-              </form>
-            </div>
-          <!-- </div> -->
-        </div>
+          </div>
+        </form>
       </div>
     </div>
+  </div>
+</div>
 
+<!-- Add Node Modal -->
+<div class="modal" data-backdrop="false" id="addNodeModal" tabindex="-1" role="dialog" aria-labelledby="addNodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addNodeForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addNodeModalLabel">{% trans "Add New Node" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Node Form Field -->
+          <div class="form-group">
+            <label for="id_node_name">{% trans "Node Name" %}</label>
+            <input type="text" class="form-control" id="id_node_name" name="name" placeholder="{% trans 'Enter node name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Equipment Modal -->
+<div class="modal" data-backdrop="false" id="addEquipmentModal" tabindex="-1" role="dialog" aria-labelledby="addEquipmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addEquipmentForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addEquipmentModalLabel">{% trans "Add New Equipment" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Equipment Form Field -->
+          <div class="form-group">
+            <label for="id_equipment_name">{% trans "Equipment Name" %}</label>
+            <input type="text" class="form-control" id="id_equipment_name" name="name" placeholder="{% trans 'Enter equipment name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+// Function to retrieve a cookie value by name (for CSRF token)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Append "Add New" option to node and equipment select fields if not present.
+  const nodeSelect = document.getElementById('id_node');
+  const equipmentSelect = document.getElementById('id_equipment');
+
+  // ===== Node Modal =====
+  const addNodeModalEl = document.getElementById('addNodeModal');
+  const addNodeModal = new bootstrap.Modal(addNodeModalEl, { backdrop: false });
+  const addNodeForm = document.getElementById('addNodeForm');
+  if (nodeSelect) {
+    nodeSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addNodeForm.reset();
+        addNodeModal.show();
+        // Reset selection so the "Add New" option is not left selected
+        this.value = "";
+      }
+    });
+  }
+
+  addNodeForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addNodeForm);
+    fetch("{% url 'add_node_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new node info
+        const newOption = new Option(data.node_name, data.node_id, false, true);
+        nodeSelect.appendChild(newOption);
+        addNodeModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+
+  // ===== Equipment Modal =====
+  const addEquipmentModalEl = document.getElementById('addEquipmentModal');
+  const addEquipmentModal = new bootstrap.Modal(addEquipmentModalEl, { backdrop: false });
+  const addEquipmentForm = document.getElementById('addEquipmentForm');
+  if (equipmentSelect) {
+    equipmentSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addEquipmentForm.reset();
+        addEquipmentModal.show();
+        // Reset selection so the "Add New" option is not left selected
+        this.value = "";
+      }
+    });
+  }
+
+  addEquipmentForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addEquipmentForm);
+    fetch("{% url 'add_equipment_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new equipment info
+        const newOption = new Option(data.equipment_name, data.equipment_id, false, true);
+        equipmentSelect.appendChild(newOption);
+        addEquipmentModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+});
+</script>
 {% endblock %}

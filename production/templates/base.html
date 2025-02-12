@@ -78,6 +78,12 @@
                         <i class="fas fa-table fa-fw"></i>
                         <span class="sidetext">{% trans 'Models' %}</span>
                     </a>
+                    <a href="{% url 'operation_list' %}"
+                    class="list-group-item list-group-item-action text-black collapsesidebarset"
+                    data-id="operations">
+                        <i class="fas fa-toolbox fa-fw"></i>
+                        <span class="sidetext">{% trans 'Operations' %}</span>
+                    </a>
                     <a href="{% url 'employee_list' %}"
                     class="list-group-item list-group-item-action text-black collapsesidebarset"
                     data-id="employees">
@@ -103,9 +109,6 @@
                         </a>
                         <a href="{% url 'fabrics_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                             {% trans 'Fabrics' %}
-                        </a>
-                        <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black ml-4">
-                            {% trans 'Operations' %}
                         </a>
                         <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                             {% trans 'Nodes' %}

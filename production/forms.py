@@ -332,6 +332,17 @@ class OperationForm(forms.ModelForm):
             'preferred_completion_time': forms.DateTimeInput(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prepend an "Add New Equipment" option.
+        equipment_choices = list(self.fields['equipment'].choices)
+        self.fields['equipment'].choices = [("add_new", "Add New Equipment")] + equipment_choices
+
+        # Prepend an "Add New Node" option.
+        node_choices = list(self.fields['node'].choices)
+        self.fields['node'].choices = [("add_new", "Add New Node")] + node_choices
+
 class RollForm(forms.ModelForm):
     class Meta:
         model = Roll

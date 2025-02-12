@@ -66,7 +66,7 @@ class Command(BaseCommand):
                     payment=faker.random_number(digits=5),
                     equipment=random.choice(equipments),
                     node=node,
-                    preferred_completion_time=faker.random_int(min=1, max=10),
+                    preferred_completion_time=faker.random_int(min=1, max=10))
                 operations.append(operation)
 
         # Create Assortments and Models

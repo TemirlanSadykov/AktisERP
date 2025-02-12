@@ -1909,6 +1909,38 @@ class NodeDeleteView(DeleteView):
         context['sidebar_type'] = 'technology'
         return context
 
+@require_POST
+@login_required
+@technologist_required
+def add_node_api(request):
+    form = NodeForm(request.POST)
+    if form.is_valid():
+        node = form.save()
+        data = {
+            'success': True,
+            'node_id': node.id,
+            'node_name': node.name,
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@require_POST
+@login_required
+@technologist_required
+def add_equipment_api(request):
+    form = EquipmentForm(request.POST)
+    if form.is_valid():
+        equipment = form.save()
+        data = {
+            'success': True,
+            'equipment_id': equipment.id,
+            'equipment_name': equipment.name,
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EquipmentListView(ListView):
