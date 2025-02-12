@@ -111,7 +111,7 @@ urlpatterns = [
     path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
     path('technologist/passports/api/reassigned_works/<int:assigned_work_id>/', get_reassigned_works, name='get_reassigned_works'),
     path('technologist/passports/reassign-work/complete/', complete_reassigned_work, name='complete_reassigned_work'),
-    path('technologist/passports/<int:passport_id>/download_excel/', download_passport_excel, name='download_passport_excel'),
+    # path('technologist/passports/<int:passport_id>/download_excel/', download_passport_excel, name='download_passport_excel'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),
@@ -135,7 +135,6 @@ urlpatterns = [
 
     path('technologist/assortments/<int:a_id>/models/', ModelListView.as_view(), name='model_list'),
     path('technologist/assortments/<int:a_id>/models/create/', model_create, name='model_create'),
-    path('technologist/models/<int:model_id>/add_accessories/', model_add_accessories, name='model_add_accessories'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/edit/', model_edit, name='model_edit'),
     path('technologist/assortments/<int:a_id>/models/archived/', ArchivedModelListView.as_view(), name='archived_model_list'),

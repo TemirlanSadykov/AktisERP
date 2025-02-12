@@ -1184,130 +1184,130 @@ def complete_reassigned_work(request):
     except Exception as e:
         return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
 
-@login_required
-@technologist_required
-def download_passport_excel(request, passport_id):
-    # Fetch the Passport and related data
-    passport = get_object_or_404(Passport, pk=passport_id)
-    passport_sizes = PassportSize.objects.filter(passport=passport)
-    passport_rolls = PassportRoll.objects.filter(passport=passport)
+# @login_required
+# @technologist_required
+# def download_passport_excel(request, passport_id):
+#     # Fetch the Passport and related data
+#     passport = get_object_or_404(Passport, pk=passport_id)
+#     passport_sizes = PassportSize.objects.filter(passport=passport)
+#     passport_rolls = PassportRoll.objects.filter(passport=passport)
 
-    # Create a workbook and initialize a worksheet
-    wb = Workbook()
-    ws = wb.active
+#     # Create a workbook and initialize a worksheet
+#     wb = Workbook()
+#     ws = wb.active
 
-    # First row headers
-    headers = [
-        'заказч', 'модель', 'ассортимент', '', '№ рулона', 'цвет', 'Ткань', 'дата кроя'
-    ]
-    ws.append(headers)
+#     # First row headers
+#     headers = [
+#         'заказч', 'модель', 'ассортимент', '', '№ рулона', 'цвет', 'Ткань', 'дата кроя'
+#     ]
+#     ws.append(headers)
 
-    # Set headers style
-    for cell in ws[1]:
-        cell.font = Font(bold=True)
-        cell.alignment = Alignment(horizontal='center')
+#     # Set headers style
+#     for cell in ws[1]:
+#         cell.font = Font(bold=True)
+#         cell.alignment = Alignment(horizontal='center')
 
-    # Insert data in the second row
-    passport_roll = passport_rolls.first() if passport_rolls else None
-    second_row_data = [
-        passport.order.client_order.client.name, passport.order.model.name, passport.order.assortment.name,
-        '', passport_roll.roll.name if passport_roll else '',
-        passport_roll.roll.color if passport_roll else '',
-        passport_roll.roll.fabrics if passport_roll else '',
-        passport.date.strftime("%m/%d/%Y") if passport.date else ''
-    ]
-    ws.append(second_row_data)
+#     # Insert data in the second row
+#     passport_roll = passport_rolls.first() if passport_rolls else None
+#     second_row_data = [
+#         passport.order.client_order.client.name, passport.order.model.name, passport.order.assortment.name,
+#         '', passport_roll.roll.name if passport_roll else '',
+#         passport_roll.roll.color if passport_roll else '',
+#         passport_roll.roll.fabrics if passport_roll else '',
+#         passport.date.strftime("%m/%d/%Y") if passport.date else ''
+#     ]
+#     ws.append(second_row_data)
 
-    # Define the operation headers
-    operation_headers = [
-        '№', 'Операции', 'Оборуд.', 'тех-процесс', 'расценки', 'трудоемкость'
-    ]
+#     # Define the operation headers
+#     operation_headers = [
+#         '№', 'Операции', 'Оборуд.', 'тех-процесс', 'расценки', 'трудоемкость'
+#     ]
 
-    # Add size columns based on size_quantities in the order
-    sizes = [size.size for size in passport.order.size_quantities.all()]
-    operation_headers.extend(sizes)
+#     # Add size columns based on size_quantities in the order
+#     sizes = [size.size for size in passport.order.size_quantities.all()]
+#     operation_headers.extend(sizes)
 
-    # Append operation headers
-    ws.append(operation_headers)
+#     # Append operation headers
+#     ws.append(operation_headers)
 
-    # Set style for operation headers
-    for cell in ws[3]:
-        cell.font = Font(bold=True)
-        cell.alignment = Alignment(horizontal='center')
+#     # Set style for operation headers
+#     for cell in ws[3]:
+#         cell.font = Font(bold=True)
+#         cell.alignment = Alignment(horizontal='center')
 
-    model_operations = ModelOperation.objects.filter(
-        model=passport.order.model
-    ).select_related('operation').order_by('order')
-    operations = [model_op.operation for model_op in model_operations]
+#     model_operations = ModelOperation.objects.filter(
+#         model=passport.order.model
+#     ).select_related('operation').order_by('order')
+#     operations = [model_op.operation for model_op in model_operations]
 
-    for index, operation in enumerate(operations, start=1):
-        # Assume 'get_operation_details' is a method to fetch needed details
-        # You will need to implement this based on your application's specific data
-        operation_details = get_operation_details(operation, passport_sizes)
-        row_data = [index] + operation_details
-        ws.append(row_data)
+#     for index, operation in enumerate(operations, start=1):
+#         # Assume 'get_operation_details' is a method to fetch needed details
+#         # You will need to implement this based on your application's specific data
+#         operation_details = get_operation_details(operation, passport_sizes)
+#         row_data = [index] + operation_details
+#         ws.append(row_data)
 
 
-    # Autosize column widths
-    for column_cells in ws.columns:
-        length = max(len(str(cell.value)) for cell in column_cells)
-        ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length
+#     # Autosize column widths
+#     for column_cells in ws.columns:
+#         length = max(len(str(cell.value)) for cell in column_cells)
+#         ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length
 
-    # Apply bold font style to headers and sizes
-    bold_font = Font(bold=True)
-    header_rows = [1, 3]  # Rows which contain the headers you mentioned
+#     # Apply bold font style to headers and sizes
+#     bold_font = Font(bold=True)
+#     header_rows = [1, 3]  # Rows which contain the headers you mentioned
 
-    # Apply bold font to all cells in the header rows
-    for row in header_rows:
-        for cell in ws[row]:
-            cell.font = bold_font
+#     # Apply bold font to all cells in the header rows
+#     for row in header_rows:
+#         for cell in ws[row]:
+#             cell.font = bold_font
 
-    # Additionally, bold the size headers individually in case they are not in the above rows
-    size_header_row = 3  # Assuming the size headers are in the third row
-    for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
-        ws.cell(row=size_header_row, column=size_col).font = bold_font
+#     # Additionally, bold the size headers individually in case they are not in the above rows
+#     size_header_row = 3  # Assuming the size headers are in the third row
+#     for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
+#         ws.cell(row=size_header_row, column=size_col).font = bold_font
 
-    # Define border style
-    thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
+#     # Define border style
+#     thin_border = Border(
+#         left=Side(style='thin'),
+#         right=Side(style='thin'),
+#         top=Side(style='thin'),
+#         bottom=Side(style='thin')
+#     )
 
-    # Apply borders to the first two rows, creating a box effect
-    for row in ws.iter_rows(min_row=1, max_row=2, min_col=1, max_col=ws.max_column):
-        for cell in row:
-            cell.border = thin_border
+#     # Apply borders to the first two rows, creating a box effect
+#     for row in ws.iter_rows(min_row=1, max_row=2, min_col=1, max_col=ws.max_column):
+#         for cell in row:
+#             cell.border = thin_border
 
-    # Insert an empty row after the first two rows
-    ws.insert_rows(3)
+#     # Insert an empty row after the first two rows
+#     ws.insert_rows(3)
 
-    # Now adjust your other rows accordingly since you inserted a new row
-    # You might need to update the `header_rows` and `size_header_row` if you used the previous code snippet
-    header_rows = [1, 4]  # Updated to reflect the new empty row
-    size_header_row = 4   # Updated to reflect the new empty row
+#     # Now adjust your other rows accordingly since you inserted a new row
+#     # You might need to update the `header_rows` and `size_header_row` if you used the previous code snippet
+#     header_rows = [1, 4]  # Updated to reflect the new empty row
+#     size_header_row = 4   # Updated to reflect the new empty row
 
-    # Apply bold font to all cells in the updated header rows
-    for row in header_rows:
-        for cell in ws[row]:
-            cell.font = bold_font
+#     # Apply bold font to all cells in the updated header rows
+#     for row in header_rows:
+#         for cell in ws[row]:
+#             cell.font = bold_font
 
-    # Additionally, bold the size headers individually
-    for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
-        ws.cell(row=size_header_row, column=size_col).font = bold_font
+#     # Additionally, bold the size headers individually
+#     for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
+#         ws.cell(row=size_header_row, column=size_col).font = bold_font
 
-    ws.column_dimensions['D'].width = 50
+#     ws.column_dimensions['D'].width = 50
 
-    # Set the HTTP response with a content-type for Excel file
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    )
-    response['Content-Disposition'] = f'attachment; filename="Passport_{passport_id}_Details.xlsx"'
+#     # Set the HTTP response with a content-type for Excel file
+#     response = HttpResponse(
+#         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+#     )
+#     response['Content-Disposition'] = f'attachment; filename="Passport_{passport_id}_Details.xlsx"'
 
-    # Save the workbook to the response
-    wb.save(response)
-    return response
+#     # Save the workbook to the response
+#     wb.save(response)
+#     return response
 
 def get_operation_details(operation, passport_sizes):
     details = [
@@ -1470,15 +1470,9 @@ def operation_upload(request):
 
         with transaction.atomic():
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                number, operation_name, node_name, node_number, equipment_name, time, price = row
+                number, operation_name, node_name, equipment_name, time, price = row
 
-                node, created = Node.objects.get_or_create(
-                    number=node_number,
-                    defaults={'name': node_name}
-                )
-                if not created and node.name != node_name:
-                    node.name = node_name
-                    node.save()
+                node, _ = Node.objects.get_or_create(name=node_name)
                 equipment, _ = Equipment.objects.get_or_create(name=equipment_name)
                 operation, created = Operation.objects.get_or_create(
                     number=number,
@@ -1701,12 +1695,12 @@ def model_create(request, a_id, pk=None):
         form = ModelCustomForm(request.POST, request.FILES, instance=None, a_id=a_id, copy_id=copy_id)
         if form.is_valid():
             model_instance = form.save()  # Save the model instance
-            return redirect('model_add_accessories', model_id=model_instance.id)  # Redirect to accessories view
+            return redirect('model_detail', a_id = model_instance.assortment.id, pk=model_instance.id)  # Redirect to accessories view
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
         # Order the operations queryset by node number (numerically) and operation name
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
-            'node__number', 'name'
+            'name'
         )
 
     operations_order_json = ""
@@ -1724,42 +1718,6 @@ def model_create(request, a_id, pk=None):
         'sidebar_type': 'technology',
     }
     return render(request, template_name, context)
-
-@login_required
-@technologist_required
-def model_add_accessories(request, model_id):
-    model_instance = get_object_or_404(Model, pk=model_id)
-    
-    if request.method == 'POST':
-        accessories_data_raw = request.POST.get('accessories_data', '{}')
-        
-        try:
-            # Try to parse the JSON data
-            accessories_data = json.loads(accessories_data_raw)
-        except json.JSONDecodeError:
-            # If parsing fails, set accessories_data to an empty dictionary
-            accessories_data = {}
-
-        # Check if accessories_data is not empty
-        if accessories_data:
-            for accessory_id, quantity in accessories_data.items():
-                accessory = AbstractAccessory.objects.get(pk=accessory_id)
-                ModelAccessory.objects.create(
-                    model=model_instance,
-                    abstract_accessory=accessory,
-                    quantity=quantity
-                )
-        
-        # Redirect to model list after adding accessories
-        return redirect('model_list', a_id=model_instance.assortment.id)
-
-    accessories = AbstractAccessory.objects.all()
-    context = {
-        'model': model_instance,
-        'accessories': accessories,
-        'sidebar_type': 'technology',
-    }
-    return render(request, 'technologist/models/add_accessories.html', context)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelDetailView(DetailView):
@@ -1782,13 +1740,13 @@ def model_edit(request, a_id, pk):
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
-            form.save()
-            return redirect('model_list', a_id=a_id)
+            model_instance = form.save()  # Save the model instance
+            return redirect('model_detail', a_id = model_instance.assortment.id, pk=model_instance.id)  # Redirect to accessories view
     else:
         form = ModelCustomForm(instance=model_instance)
         # Order the operations queryset by node number (numerically) and operation name
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
-            'node__number', 'name'
+            'name'
         )
         operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
         operations_order_json = json.dumps(operations_order)
