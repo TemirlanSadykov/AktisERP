@@ -619,28 +619,10 @@ def delete_passport(request, pk):
 def mark_as_sewing(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        operations = Operation.objects.filter(node__type=Node.CUTTING) # Work for Employees type Cutter
         with transaction.atomic():
             if passport_size.stage == PassportSize.SEWING:
                 passport_size.stage = PassportSize.CUTTING
-                for operation in operations:
-                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
-                    work.delete()
             else:
-                for operation in operations:
-                    work = Work.objects.create(
-                        operation=operation,
-                        passport=passport_size.passport,
-                        passport_size=passport_size
-                    )
-                    AssignedWork.objects.create(
-                        work=work,
-                        employee=operation.employee,
-                        quantity=passport_size.quantity,
-                        start_time=timezone.now(),
-                        end_time=timezone.now(),
-                        is_success=False
-                    )
                 passport_size.stage = PassportSize.SEWING
             passport_size.save()
 

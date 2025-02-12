@@ -121,7 +121,6 @@ urlpatterns = [
     path('technologist/operations/<int:pk>/archive/', OperationArchiveView.as_view(), name='operation_archive'),
     path('technologist/operations/<int:pk>/unarchive/', OperationUnArchiveView.as_view(), name='operation_unarchive'),
     path('technologist/operations/<int:pk>/delete/', OperationDeleteView.as_view(), name='operation_delete'),
-    path('technologist/operations/<int:operation_id>/calculate_average/', calculate_average_completion_time, name='calculate_average'),
     path('technologist/operations/upload/', operation_upload, name='operation_upload'),
     path('technologist/operations/download/', operation_download, name='operation_download'),
 

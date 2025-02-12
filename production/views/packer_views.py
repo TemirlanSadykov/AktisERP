@@ -398,28 +398,12 @@ class DiscrepancyDeleteView(DeleteView):
 def mark_as_done(request, passport_size_id):
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.cut.order
-        assigned_works = AssignedWork.objects.filter(work__passport_size=passport_size)
-
         with transaction.atomic():
             if passport_size.stage == PassportSize.DONE:
-                # Change the status to PACKING and update assigned_work is_success to False
                 passport_size.stage = PassportSize.PACKING
-                assigned_works.update(is_success=False)
-                
-                # Decrement the completed_quantity for the order
-                order.completed_quantity -= passport_size.quantity
             else:
-                # Change the status to DONE and update assigned_work is_success to True
                 passport_size.stage = PassportSize.DONE
-                assigned_works.update(is_success=True)
-                
-                # Increment the completed_quantity for the order
-                order.completed_quantity += passport_size.quantity
-
-            # Save the updated stage and order
             passport_size.save()
-            order.save()
 
         return JsonResponse({'success': True})
 

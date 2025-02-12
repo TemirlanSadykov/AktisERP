@@ -26,7 +26,7 @@
 <div class="container maincontr">
   <div class="container">
     <div class="card-header d-flex justify-content-between align-items-center">
-      {% trans "Operation Details:" %} {{ operation.name }}
+      {{ operation.name }}
       {% if operation.is_archived %}
         <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans "Unarchive" %}</a>
       {% endif %}
@@ -39,8 +39,6 @@
           <p><strong>{% trans "Equipment:" %}</strong> {{ operation.equipment }}</p>
           <p><strong>{% trans "Node:" %}</strong> {{ operation.node }}</p>
           <p><strong>{% trans "Preferred Completion Time:" %}</strong> {{ operation.preferred_completion_time }} {% trans "seconds" %}</p>
-          <p><strong>{% trans "Average Completion Time:" %}</strong> {{ operation.average_completion_time }} {% trans "seconds" %}</p>
-          <p><a href="{% url 'calculate_average' operation.pk %}" class="btn btn-primary">{% trans "Calculate Average" %}</a></p>
           {% if not operation.is_archived %}
             <a href="{% url 'operation_edit' operation.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
           {% endif %}

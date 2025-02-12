@@ -20,76 +20,12 @@
     </ul>
   </div>
 </nav>
-
-{% comment %}
-  <div class=" border-right" id="sidebar-wrapper">
-    <div class="d-flex justify-content-between align-items-centero">
-      <button type="button" class="close-btn" id="close-sidebar" aria-label="Close sidebar" aria-label="Toggle sidebar">
-        <i class="fas fa-bars"></i>
-      </button>
-    </div>
-    <!-- <div class="sidebar-heading sidebar-navi">Navigation</div> -->
-    <div class="list-group list-group-flush">
-      <a href="{% url 'user_redirect' %}" class="list-group-item list-group-item-action text-black">
-        <i class="fas fa-cubes"></i> {% trans 'Navigation' %}</a>
-      <a href="{% url 'order_list_technologist' %}" class="list-group-item list-group-item-action text-black">
-          <i class="fas fa-cubes"></i> {% trans 'Models' %}</a>
-      <a href="{% url 'roll_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-home"></i> {% trans 'Rolls' %}</a>
-      <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-table"></i></i> {% trans 'Assortments' %}</a>
-      <a href="{% url 'operation_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-users"></i> {% trans 'Operations' %}</a>
-      <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-user"></i> {% trans 'Nodes' %}</a>
-      <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black"><i
-          class="fas fa-clipboard-list"></i> {% trans 'Equipment' %}</a>
-    </div>
-  </div>
-{% endcomment   %}
-  
-{% comment %}
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-md-11">
-            <!-- <div class="card"> -->
-              <div class="card-header">
-                <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Nodes" %}</h2>
-              </div>
-              <div class="card-body">
-                <form method="post">
-                  {% csrf_token %}
-                  <div class="form-group">
-                    {{ form.as_p }}
-                  </div>
-                  <div class="form-group">
-      
-                    <div class="row">
-                      <div class="col text-left">
-                        <button type="submit" class="btn btn-create btnset">{% trans "Create" %}</button>
-                      </div>
-                      <div class="col text-right">
-                        <a href="{% url 'node_list' %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
-                      </div>
-                  </div>
-      
-      
-                  </div>
-                </form>
-              </div>
-            <!-- </div> -->
-          </div>
-        </div>
-      </div>
-{% endcomment %}
-
-
       <div class="container maincontr">
         <div class="row justify-content-center">
           <div class="col-md-12">
             <!-- <div class="card"> -->
               <div class="card-header">
-                <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New User" %}</h2>
+                <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Node" %}</h2>
               </div>
               <div class="card-body">
                 <form method="post">
@@ -98,18 +34,7 @@
                     <label for="id_name">{% trans "Name" %}:</label>
                     {{ form.name }}
                     <small id="usernameError" class="text-danger"></small>
-      
                   </div>
-                  <div class="form-group">
-                    <label for="id_node_no">{% trans "Node No" %}:</label>
-                    {{ form.number }}
-                  </div>
-
-                  <div class="form-group">
-                    <label for="id_type">{% trans "Type" %}:</label>
-                    {{ form.type }}
-                  </div>
-
                   <div class="form-group">
                     <div class="row">
                       <div class="col text-left">

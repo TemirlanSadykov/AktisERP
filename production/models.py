@@ -158,18 +158,6 @@ class Equipment(models.Model):
     
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
-    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
-    SEWING = 0
-    CUTTING = 1
-    QC = 2
-    PACKING = 3
-    TYPE_CHOICES = [
-        (SEWING, 'Шитье'),
-        (CUTTING, 'Резка'),
-        (QC, 'ОТК'),
-        (PACKING, 'Упаковка'),
-    ]
-    type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     def __str__(self):
@@ -182,9 +170,7 @@ class Operation(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations', verbose_name='Оборудование')
     node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations', verbose_name='Узел')
     preferred_completion_time = models.IntegerField(verbose_name='Предпочтительное время выполнения')
-    average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
-    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
@@ -209,7 +195,7 @@ class Operation(models.Model):
         if creating or node_changed:
             current_count = Operation.objects.filter(node=self.node).count()
             new_operation_number = current_count + 1
-            self.number = f"{self.node.number}N{new_operation_number}O"
+            self.number = f"{self.node.id}N{new_operation_number}O"
             super().save(update_fields=['number'])
     
 class Assortment(models.Model):

@@ -323,7 +323,7 @@ class SalaryListForm(forms.Form):
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
-        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo', 'employee']
+        fields = ['name', 'payment', 'equipment', 'node', 'preferred_completion_time', 'photo']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'payment': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -331,7 +331,6 @@ class OperationForm(forms.ModelForm):
             'node': forms.Select(attrs={'class': 'form-control'}),
             'preferred_completion_time': forms.DateTimeInput(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
-            'employee': forms.Select(attrs={'class': 'form-control'}),
         }
 class RollForm(forms.ModelForm):
     class Meta:
@@ -476,11 +475,9 @@ class OrderForm(forms.ModelForm):
 class NodeForm(forms.ModelForm):
     class Meta:
         model = Node
-        fields = ['name', 'number', 'type']
+        fields = ['name']
         widgets = {
                 'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
-                'number': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter number'}),
-                'type': forms.Select(attrs={'class': 'form-control'}),
             }
     
 

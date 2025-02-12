@@ -545,40 +545,6 @@ def client_order_complete(request, pk):
     client_order.status = STATUSES[next_index]
 
     client_order.save()
-    # if client_order.status != ClientOrder.COMPLETED:
-    # # Retrieve all orders linked to this client order
-    #     orders = Order.objects.filter(client_order=client_order)
-
-    #     # Begin a transaction to ensure all or nothing is saved
-    #     with transaction.atomic():
-    #         for order in orders:
-    #             # Retrieve all passports linked to each order
-    #             passports = Passport.objects.filter(cut__order=order)
-    #             for passport in passports:
-    #                 # Retrieve all passport sizes linked to each passport
-    #                 passport_sizes = PassportSize.objects.filter(passport=passport)
-    #                 for passport_size in passport_sizes:
-    #                     # Assume operations need to be created for QC and Packing stages
-    #                     operations = Operation.objects.filter(node__type=Node.QC)
-    #                     for operation in operations:
-    #                         # Create work for each operation
-    #                         work = Work.objects.create(
-    #                             operation=operation,
-    #                             passport_size=passport_size
-    #                         )
-    #                         # Create assigned work assuming quantity and success need handling
-    #                         AssignedWork.objects.create(
-    #                             work=work,
-    #                             employee=operation.employee,
-    #                             quantity=passport_size.quantity,
-    #                             start_time=timezone.now(),
-    #                             end_time=timezone.now(),
-    #                             is_success=True  # Assuming work is successful for demonstration
-    #                         )
-
-    #         # Set the client order status to completed
-    #         client_order.status = ClientOrder.COMPLETED
-    #         client_order.save()
 
     return redirect('client_order_detail', pk=client_order.pk)
 
@@ -1492,35 +1458,6 @@ class OperationUnArchiveView(UpdateView):
         operation.save()
         return HttpResponseRedirect(self.success_url)
 
-
-@login_required
-@technologist_required
-def calculate_average_completion_time(request, operation_id):
-    operation = get_object_or_404(Operation, pk=operation_id)
-    assigned_works = AssignedWork.objects.filter(work__operation=operation, end_time__isnull=False, start_time__isnull=False)
-
-    if assigned_works.exists():
-        for assigned_work in assigned_works:
-            reassigned_work = ReassignedWork.objects.filter(original_assigned_work=assigned_work).first()
-
-            if reassigned_work:
-                adjusted_quantity = assigned_work.quantity + reassigned_work.reassigned_quantity
-            else:
-                adjusted_quantity = assigned_work.quantity
-            assigned_work.completion_time_per_unit = (assigned_work.end_time - assigned_work.start_time) / adjusted_quantity
-
-        total_completion_time = sum([aw.completion_time_per_unit.total_seconds() for aw in assigned_works])
-        average_seconds = total_completion_time / len(assigned_works)
-
-        operation.average_completion_time = average_seconds
-        operation.save()
-
-        messages.success(request, 'Average completion time per unit calculated successfully.')
-    else:
-        messages.error(request, 'No completed assigned works found for this operation.')
-
-    return redirect('operation_detail', pk=operation.pk)
-
 @login_required
 @technologist_required
 @require_POST
@@ -1582,7 +1519,6 @@ def operation_download(request):
             operation.number,
             operation.name,
             operation.node.name if operation.node else "",
-            operation.node.number if operation.node else "",
             operation.equipment.name if operation.equipment else "",
             operation.preferred_completion_time,
             operation.payment,

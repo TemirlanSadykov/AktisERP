@@ -476,41 +476,6 @@ def mark_as_packing(request, passport_size_id):
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
  
-# @login_required
-# @qc_required
-# def mark_as_packing(request, passport_size_id):
-#     try:
-#         passport_size = PassportSize.objects.get(id=passport_size_id)
-#         operations = Operation.objects.filter(node__type=Node.QC)
-#         with transaction.atomic():
-#             if passport_size.stage == PassportSize.PACKING:
-#                 passport_size.stage = PassportSize.SEWING
-#                 for operation in operations:
-#                     work = Work.objects.filter(passport_size=passport_size, operation=operation)
-#                     work.delete()
-#             else:
-#                 for operation in operations:
-#                     work = Work.objects.create(
-#                         operation=operation,
-#                         passport=passport_size.passport,
-#                         passport_size=passport_size
-#                     )
-#                     AssignedWork.objects.create(
-#                         work=work,
-#                         employee=operation.employee,
-#                         quantity=passport_size.quantity,
-#                         start_time=timezone.now(),
-#                         end_time=timezone.now(),
-#                         is_success=True
-#                     )
-#                 passport_size.stage = PassportSize.PACKING
-#             passport_size.save()
-
-#         return JsonResponse({'success': True})
-
-#     except PassportSize.DoesNotExist:
-#         return JsonResponse({'error': 'PassportSize not found'}, status=404)
-
 @login_required
 @qc_required
 def scan_qc_page(request):
