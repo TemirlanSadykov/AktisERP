@@ -363,29 +363,10 @@ class PassportCreateView(CreateView):
 
         passport.cut = cut  # Link passport directly to the cut
 
-        roll = passport.roll  # Get the roll from the form (if provided)
-
-        if roll:
-            # If a roll is provided, check meters availability and update the roll
-            meters_requested = passport.meters
-
-            if roll.available_meters is not None and roll.available_meters >= meters_requested:
-                roll.used_meters += meters_requested  # Update used meters
-                roll.save()  # Save the updated roll
-
-                passport.save()  # Save the passport instance
-            else:
-                # Add an error if not enough meters are available
-                form.add_error('meters', 'Not enough available meters on the selected roll.')
-                return self.form_invalid(form)
-        else:
-            # If no roll is provided, save the passport without roll or meters logic
-            passport.save()
+        passport.save()
 
         # Automatically create PassportSize for each unique CutSize in the cut
         cut_sizes = cut.cut_sizes.all()
-        if roll:
-            cut_sizes = cut_sizes.filter(size_quantity__color=roll.color)
 
         for cut_size in cut_sizes:
             passport_size = PassportSize.objects.create(

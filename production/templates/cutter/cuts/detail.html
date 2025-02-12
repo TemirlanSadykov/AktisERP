@@ -54,25 +54,6 @@
                         </div>
                     </div>
                 </div>
-                <h3>{% trans "Size Quantities" %}</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{% trans "Size" %}</th>
-                            <th>{% trans "Color" %}</th>
-                            <th>{% trans "Required Quantity" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for size, quantity in total_quantity_per_size.items %}
-                            <tr>
-                                <td>{{  size|split_part:0  }}</td>
-                                <td>{{  size|split_part:1  }}</td>
-                                <td>{{ quantity }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
 
                 <div class="row">
                     <div class="col-md-6" style="margin:auto;">
@@ -86,11 +67,8 @@
                     <thead>
                         <tr>
                             <th>{% trans "Number" %}</th>
-                            <th>{% trans "Roll" %}</th>
-                            <th>{% trans "Meters" %}</th>
                             <th>{% trans "Layers" %}</th>
                             <th>{% trans "Quantity" %}</th>
-                            <th>{% trans "Completed" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,11 +79,8 @@
                                         {{ passport.number }}
                                     </a>
                                 </td>
-                                <td>{{ passport.roll }}</td>
-                                <td>{{ passport.meters }}</td>
                                 <td>{{ passport.layers }}</td>
                                 <td>{{ passport.quantity }}</td>
-                                <td>{{ passport.is_completed|yesno:'Yes,No' }}</td>
                             </tr>
                         {% empty %}
                             <tr>

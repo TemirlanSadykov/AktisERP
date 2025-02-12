@@ -168,25 +168,14 @@ class CutForm(forms.ModelForm):
 class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport
-        fields = ['roll', 'meters', 'layers']
+        fields = ['layers']
         widgets = {
-            'roll': forms.Select(attrs={'class': 'form-control'}),
-            'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
             'layers': forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
-        cut = kwargs.pop('cut', None)  # Get cut from the view
+        cut = kwargs.pop('cut', None)
         super().__init__(*args, **kwargs)
-
-        if cut:
-            self.fields['roll'].queryset = Roll.objects.filter(
-                fabrics__in=cut.order.fabrics.all(),
-                color__in=cut.order.colors.all(),
-                meters__gt=F('used_meters')
-            )
-        else:
-            self.fields['roll'].queryset = Roll.objects.none()
 
 # class PassportForm(forms.ModelForm):
 #     class Meta:
