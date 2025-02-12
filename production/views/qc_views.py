@@ -169,34 +169,34 @@ class OrderDetailQcView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # Data for "Required Quantities" table
-        required_data = []
-        for sq in order.size_quantities.all().order_by('size'):
-            required_data.append({
-                'size': sq.size,
-                'color': sq.color,
-                'required': sq.quantity,
-            })
+        # ----- Build pivot data for "Required Quantities" table -----
+        # We'll use order.size_quantities.all() (assumed to include both color and fabric)
+        required_qs = order.size_quantities.all().order_by('size')
+        pivot_data = {}  # keys: (color, fabric), value: {size: quantity}
+        all_sizes_set = set()
+        for sq in required_qs:
+            # Collect the size (header) value.
+            all_sizes_set.add(sq.size)
+            # Use a tuple (color, fabric) as the key.
+            key = (sq.color, sq.fabrics)  # Adjust field names if needed.
+            if key not in pivot_data:
+                pivot_data[key] = {}
+            pivot_data[key][sq.size] = sq.quantity
 
-        # Fetch associated cuts
-        associated_cuts = order.cuts.all().order_by('number')  # Ascending order by cut number
+        # Sort sizes. (If sizes are numeric strings, convert to int for sorting.)
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
 
-        # Fetch associated passports
+        # ----- Other context data (pass along your existing context) -----
+        associated_cuts = order.cuts.all().order_by('number')
         passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-
-        # Initialize size_data for passports
-        size_data = defaultdict(lambda: defaultdict(lambda: {
-            'quantity': 0,
-            'checked_quantity': 0,
-            'passport_size_id': None,
-            'stage': None,
-            'extra': None
-        }))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'checked_quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
         total_per_size = defaultdict(int)
         total_checked_per_size = defaultdict(int)
-
         for passport in passports:
-            passport_number = passport.id  # Use passport ID for indexing
+            passport_number = passport.id
             for passport_size in passport.passport_sizes.all():
                 size = passport_size.size_quantity.size
                 extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
@@ -211,27 +211,14 @@ class OrderDetailQcView(DetailView):
                     stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
                 ).count()
                 size_data[extra_key][passport_number]['checked_quantity'] += checked_pieces
-
                 total_per_size[size] += passport_size.quantity
                 total_checked_per_size[size] += checked_pieces
 
-        # Required, Missing, and Checked per size
-        required_missing = {
-            sq.size: {
-                'required': sq.quantity,
-                'missing': sq.quantity - total_per_size.get(sq.size, 0),
-                'checked': total_checked_per_size.get(sq.size, 0),
-            }
-            for sq in order.size_quantities.all().order_by('size')
-        }
-
+        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0), 'checked': total_checked_per_size.get(sq.size, 0)}
+                            for sq in order.size_quantities.all().order_by('size')}
         for size in total_per_size:
             if size not in required_missing:
-                required_missing[size] = {
-                    'required': 0,
-                    'missing': -total_per_size[size],
-                    'checked': total_checked_per_size[size],
-                }
+                required_missing[size] = {'required': 0, 'missing': -total_per_size[size], 'checked': total_checked_per_size[size]}
 
         def sort_key(x):
             parts = x.split('-')
@@ -239,11 +226,12 @@ class OrderDetailQcView(DetailView):
                 return int(parts[0]), x
             except ValueError:
                 return float('inf'), x
-
         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
 
         context.update({
-            'required_data': required_data,
+            'pivot_data': pivot_data,  # Our new pivoted required data
+            'all_sizes': all_sizes,    # List of sizes for the header row
+            # (Include your other context items as before.)
             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
             'total_per_size': dict(total_per_size),
             'required_missing': required_missing,
@@ -252,8 +240,7 @@ class OrderDetailQcView(DetailView):
             'associated_cuts': associated_cuts,
             'sidebar_type': 'qc_page'
         })
-
-        return context
+        return context  
     
 @method_decorator([login_required, qc_required], name='dispatch')
 class CutDetailQcView(DetailView):

@@ -26,7 +26,7 @@
 
 <div class="container maincontr">
   <div class="card-header">
-    {% trans "Model Details:" %} {{ order.model.name }}          
+    {{ order.model.name }}          
   </div>
   <div class="container">
     <div class="card-body">
@@ -67,24 +67,28 @@
     <!-- Required Quantities Table -->
     <h3>{% trans "Required Quantities" %}</h3>
     <div class="table-responsive">
-      <table class="table table-striped">
+      <table class="table table-bordered">
         <thead>
           <tr>
-            <th>{% trans "Size" %}</th>
-            <th>{% trans "Color" %}</th>
-            <th>{% trans "Required Quantity" %}</th>
+            <th>{% trans "Color & Fabric" %}</th>
+            {% for size in all_sizes %}
+              <th>{{ size }}</th>
+            {% endfor %}
           </tr>
         </thead>
         <tbody>
-          {% for item in required_data %}
+          {% for key, row in pivot_data.items %}
             <tr>
-              <td>{{ item.size }}</td>
-              <td>{{ item.color }}</td>
-              <td>{{ item.required }}</td>
+              <td>
+                {{ key.0 }} &amp; {{ key.1 }}
+              </td>
+              {% for size in all_sizes %}
+                <td>{{ row|get_item:size|default:"" }}</td>
+              {% endfor %}
             </tr>
           {% empty %}
             <tr>
-              <td colspan="3">{% trans "No required quantities available." %}</td>
+              <td colspan="{{ all_sizes|length|add:'1' }}">{% trans "No required quantities available." %}</td>
             </tr>
           {% endfor %}
         </tbody>
