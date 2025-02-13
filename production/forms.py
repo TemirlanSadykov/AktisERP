@@ -166,16 +166,46 @@ class CutForm(forms.ModelForm):
                 )
 
 class PassportForm(forms.ModelForm):
+    # New field for selecting the unique combination.
+    combination = forms.ChoiceField(
+        label="Color & Fabric", 
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
     class Meta:
         model = Passport
-        fields = ['layers']
+        # Include combination in the fields so it renders.
+        fields = ['combination', 'layers']
         widgets = {
             'layers': forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
         }
-
+    
     def __init__(self, *args, **kwargs):
         cut = kwargs.pop('cut', None)
         super().__init__(*args, **kwargs)
+        if cut:
+            unique_combinations = set()
+            # Loop over all cut_sizes to get unique (color, fabric) combinations.
+            for cut_size in cut.cut_sizes.all():
+                color = cut_size.size_quantity.color      # Model instance.
+                fabric = cut_size.size_quantity.fabrics    # Model instance.
+                # Store a tuple: (color_id, fabric_id, color_name, fabric_name)
+                unique_combinations.add((color.id, fabric.id, str(color), str(fabric)))
+            # Build choices: value "12|5", label "Blue Cotton"
+            choices = [
+                (f"{color_id}|{fabric_id}", f"{color_name} {fabric_name}")
+                for (color_id, fabric_id, color_name, fabric_name) in unique_combinations
+            ]
+            # Sort choices alphabetically by label.
+            choices = sorted(choices, key=lambda x: x[1])
+            # Insert a placeholder choice at the beginning.
+            choices.insert(0, ("", "------"))
+            self.fields['combination'].choices = choices
+            # Optionally, you can set the initial value to the placeholder (which will force validation if not changed)
+            self.initial['combination'] = ""
+        else:
+            self.fields['combination'].choices = [("", "------")]
 
 # class PassportForm(forms.ModelForm):
 #     class Meta:

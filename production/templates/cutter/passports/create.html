@@ -23,38 +23,51 @@
 </nav>
 
 <div class="container maincontr">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card-header">
-                <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Passport for Cut:" %} #{{ cut.number }}</h2>
-            </div>
-            <div class="card-body">
-                <form method="post" class="date-filter-form" style="align-items: flex-end;">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label>{% trans "Layers:" %}</label>
-                        {{ form.layers }}
-                    </div>
-                    <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
-                </form>
-                <br>
-                <div id="passportList" class="size-quantity-list">
-                    {% for passport in cut.passports.all %}
-                        <li id="passport-{{ passport.id }}" class="size-quantity-item">
-                            <span class="detail"><strong>{% trans "Passport #:" %}</strong> {{ passport.number }}</span>
-                            <span class="detail"><strong>{% trans "Layers:" %}</strong> {{ passport.layers }}</span>
-                            <span class="detail"><strong>{% trans "Quantity:" %}</strong> {{ passport.quantity }}</span>
-                            {% comment %} <button class="edit-btn" data-passport-id="{{ passport.id }}">{% trans "Edit" %}</button> {% endcomment %}
-                            <button class="delete-btn" data-passport-id="{{ passport.id }}">{% trans "Delete" %}</button>
-                        </li>
-                    {% endfor %}
-                </div>
-                <div class="form-actions">
-                    <a href="{% url 'cut_detail' cut.pk %}" class="btn create-btn">{% trans "Continue" %}</a>
-                </div>
-            </div>
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">
+          {% trans "Create New Passport for Cut:" %} #{{ cut.number }}
+        </h2>
+      </div>
+      <div class="card-body">
+        <form method="post" class="date-filter-form" style="align-items: flex-end;">
+          {% csrf_token %}
+          <!-- New select for unique Color & Fabric combinations -->
+          <div class="form-group">
+            <label>{% trans "Fabric:" %}</label>
+            {{ form.combination }}
+          </div>
+          <div class="form-group">
+            <label>{% trans "Layers:" %}</label>
+            {{ form.layers }}
+          </div>
+          <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
+        </form>
+        <br>
+        <div id="passportList" class="size-quantity-list">
+          {% for passport in passports %}
+            <li id="passport-{{ passport.id }}" class="size-quantity-item">
+              <span class="detail"><strong>{% trans "Passport #" %}</strong> {{ passport.number }}</span>
+              {% if passport.passport_sizes.all %}
+                {% with ps=passport.passport_sizes.all.0 %}
+                  <span class="detail">
+                    {{ ps.size_quantity.color }} {{ ps.size_quantity.fabrics }}
+                  </span>
+                {% endwith %}
+              {% endif %}
+              <span class="detail"><strong>{% trans "Layers:" %}</strong> {{ passport.layers }}</span>
+              <span class="detail"><strong>{% trans "Quantity:" %}</strong> {{ passport.quantity }}</span>
+              <button class="delete-btn" data-passport-id="{{ passport.id }}">{% trans "Delete" %}</button>
+            </li>
+          {% endfor %}
         </div>
+        <div class="form-actions">
+          <a href="{% url 'cut_detail' cut.pk %}" class="btn create-btn">{% trans "Continue" %}</a>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 <script>
     var cutNumber = "{{ cut.number }}";

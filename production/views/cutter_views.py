@@ -341,7 +341,7 @@ class PassportCreateView(CreateView):
         kwargs = super().get_form_kwargs()
         cut_id = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_id)
-        kwargs['cut'] = cut  # Pass the cut to the form
+        kwargs['cut'] = cut  # Pass the cut to the form so it can build the combo choices.
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -349,6 +349,7 @@ class PassportCreateView(CreateView):
         cut_id = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_id)
         context['cut'] = cut
+        context['passports'] = cut.passports.all().order_by('-number')
         context['sidebar_type'] = 'cutter'
         return context
 
@@ -362,22 +363,25 @@ class PassportCreateView(CreateView):
         passport.number = last_passport.number + 1 if last_passport else 1
 
         passport.cut = cut  # Link passport directly to the cut
-
         passport.save()
+        # Get the selected combination. The value is like "12|5"
+        combination = form.cleaned_data['combination']
+        color_id, fabric_id = combination.split("|")
 
-        # Automatically create PassportSize for each unique CutSize in the cut
-        cut_sizes = cut.cut_sizes.all()
-
-        for cut_size in cut_sizes:
+        # Filter the cut's cut_sizes so that we only include those with matching color and fabric.
+        matching_cut_sizes = cut.cut_sizes.filter(
+            size_quantity__color_id=color_id,
+            size_quantity__fabrics_id=fabric_id
+        )
+        # For each matching cut_size, create a PassportSize (and ProductionPieces)
+        for cut_size in matching_cut_sizes:
             passport_size = PassportSize.objects.create(
                 passport=passport,
                 size_quantity=cut_size.size_quantity,
-                quantity=form.cleaned_data['layers'],  # Layers from form input
-                stage=0,  # Default to CUTTING
-                extra=cut_size.extra  # Use `extra` from CutSize
+                quantity=form.cleaned_data['layers'],  # Use layers from the form input
+                stage=0,  # Default stage (CUTTING)
+                extra=cut_size.extra  # Use extra from CutSize
             )
-
-            # Generate ProductionPiece for each PassportSize based on quantity
             quantity = int(passport_size.quantity)
             for i in range(1, quantity + 1):
                 ProductionPiece.objects.create(
@@ -386,6 +390,7 @@ class PassportCreateView(CreateView):
                 )
 
         return redirect(self.get_success_url())
+
 
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})
