@@ -300,46 +300,12 @@ def update_piece_packer(request, piece_id):
         piece.stage = ProductionPiece.StageChoices.PACKED
         piece.save()
 
-        # Delete discrepancy errors related to this piece
-        Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
-
-        # Fetch the Packing operation
-        packing_operation = Operation.objects.filter(node__type=Node.PACKING).first()
-        
-        if packing_operation:
-            # Create or update the assigned work entry
-            work, created = Work.objects.get_or_create(
-                passport_size=piece.passport_size,
-                operation=packing_operation
-            )
-
-            # Check if an AssignedWork already exists for the user and work
-            assigned_work = AssignedWork.objects.filter(
-                work=work,
-                employee=request.user.userprofile
-            ).first()
-
-            if assigned_work:
-                # Increment quantity if assigned work already exists
-                assigned_work.quantity += 1
-                assigned_work.save()
-            else:
-                # Create a new assigned work with quantity 1
-                AssignedWork.objects.create(
-                    work=work,
-                    employee=request.user.userprofile,
-                    quantity=1,
-                    start_time=timezone.now(),
-                    end_time=timezone.now(),
-                    is_success=False
-                )
-
         # Prepare response data
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.passport.roll.color.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.colors.first().name
-        fabrics = piece.passport_size.passport.roll.fabrics.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.fabrics.first().name
+        color = piece.passport_size.size_quantity.color if piece.passport_size.size_quantity.color else "-"
+        fabrics = piece.passport_size.size_quantity.fabrics if piece.passport_size.size_quantity.fabrics else "-"
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
         

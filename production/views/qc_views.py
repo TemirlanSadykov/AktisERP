@@ -332,88 +332,35 @@ def get_piece_info(request, barcode):
 @login_required
 @qc_required
 def update_piece_qc(request, piece_id):
-    try:
-        data = json.loads(request.body)
-        status = data.get('status')
-        defect_type = data.get('defectType', None)
+    data = json.loads(request.body)
+    status = data.get('status')
+    defect_type = data.get('defectType', None)
 
-        valid_statuses = {
-            'Checked': ProductionPiece.StageChoices.CHECKED,
-            'Defect': ProductionPiece.StageChoices.DEFECT
-        }
-        
-        if status not in valid_statuses:
-            return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
+    valid_statuses = {
+        'Checked': ProductionPiece.StageChoices.CHECKED,
+        'Defect': ProductionPiece.StageChoices.DEFECT
+    }
+    
+    if status not in valid_statuses:
+        return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
 
-        piece = ProductionPiece.objects.get(id=piece_id)
-        
-        # Only assign work if the initial status is NOT_CHECKED
-        if piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
-            # Fetch the QC operation
-            qc_operation = Operation.objects.filter(node__type=Node.QC).first()
+    piece = ProductionPiece.objects.get(id=piece_id)
 
-            if qc_operation:
-                work, created = Work.objects.get_or_create(
-                    passport_size=piece.passport_size,
-                    operation=qc_operation
-                )
-
-                # Check if an AssignedWork already exists for the user and work
-                assigned_work = AssignedWork.objects.filter(
-                    work=work,
-                    employee=request.user.userprofile
-                ).first()
-
-                if assigned_work:
-                    # Increment quantity if assigned work already exists
-                    assigned_work.quantity += 1
-                    assigned_work.save()
-                else:
-                    # Create a new assigned work with quantity 1
-                    AssignedWork.objects.create(
-                        work=work,
-                        employee=request.user.userprofile,
-                        quantity=1,
-                        start_time=timezone.now(),
-                        end_time=timezone.now(),
-                        is_success=False
-                    )
-
-        # Now update the piece status and defect_type if applicable
-        piece.stage = valid_statuses[status]
-        if status == 'Defect':
-            if defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
-                piece.defect_type = defect_type
-                piece.save()
-
-                error, created = Error.objects.update_or_create(
-                    piece=piece,
-                    error_type=Error.ErrorType.DEFECT,
-                    defaults={
-                        'cost': piece.passport_size.passport.cut.order.payment if piece.passport_size.passport.cut.order.payment else 0,
-                        'status': Error.Status.REPORTED,
-                        'reported_date': timezone.now()
-                    }
-                )
-
-                message = f'Piece status updated to {status} with defect type {defect_type}. {"Error record created." if created else "Error record updated."}'
-            else:
-                return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
-        
-        else:
-            piece.defect_type = None
+    piece.stage = valid_statuses[status]
+    if status == 'Defect':
+        if defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
+            piece.defect_type = defect_type
             piece.save()
-            Error.objects.filter(piece=piece, error_type=Error.ErrorType.DEFECT).delete()
-            message = f'Piece status updated to {status}. Any related error records have been removed.'
+            message = f'Piece status updated to {status} with defect type {defect_type}.'
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
+    
+    else:
+        piece.defect_type = None
+        piece.save()
+        message = f'Piece status updated to {status}.'
 
-        return JsonResponse({'success': True, 'message': message})
-
-    except ProductionPiece.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
-    except KeyError:
-        return JsonResponse({'success': False, 'message': 'Status or defect type not provided in request.'}, status=400)
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    return JsonResponse({'success': True, 'message': message})
 
 @method_decorator([login_required, qc_required], name='dispatch')
 class DefectDetailView(DetailView):

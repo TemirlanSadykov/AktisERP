@@ -92,15 +92,15 @@
                     </a>
 
                     <!-- Additional dropdown tab -->
-                    <a href="#additionalSubmenu" 
+                    <a href="#" 
                     class="list-group-item list-group-item-action text-black collapsesidebarset" 
                     data-toggle="collapse" 
-                    aria-expanded="false" 
+                    aria-expanded="true" 
                     aria-controls="additionalSubmenu">
                         <i class="fas fa-plus fa-fw"></i>
                         <span class="sidetext">{% trans 'Additional' %}</span>
                     </a>
-                    <div class="collapse" id="additionalSubmenu">
+                    <div class="collapse show" id="additionalSubmenu">
                         <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                             {% trans 'Clients' %}
                         </a>
