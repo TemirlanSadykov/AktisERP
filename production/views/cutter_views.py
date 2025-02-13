@@ -277,28 +277,43 @@ class CutDetailView(DetailView):
     context_object_name = 'cut'
 
     def get_context_data(self, **kwargs):
+        from collections import defaultdict
         context = super().get_context_data(**kwargs)
         cut_pk = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_pk)
 
-        # Get all passports related to the cut
-        passports = cut.passports.all()
+        # Get all passports related to the cut.
+        passports = cut.passports.all().order_by('-number')
 
-        # Prepare the total quantities for each size in the cut
+        # Get overall sizes from CutSizes—but only those that have been used in passports.
+        # We'll build a set of (size, extra) pairs from all PassportSize records.
+        passport_sizes_set = set()
+        for passport in passports:
+            for ps in passport.passport_sizes.all():
+                # Use ps.extra or '' if it's empty.
+                passport_sizes_set.add((ps.size_quantity.size, ps.extra or ''))
+        # Sort them: first by numeric value of size (if possible), then by extra.
+        try:
+            passport_sizes_display = sorted(passport_sizes_set, key=lambda x: (int(x[0]), x[1]))
+        except ValueError:
+            passport_sizes_display = sorted(passport_sizes_set, key=lambda x: (x[0], x[1]))
+
+        # Prepare total quantities per size (if needed elsewhere)
         total_quantity_per_size = defaultdict(int)
-        for size_quantity in cut.size_quantities.all():
-            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+        for cs in cut.cut_sizes.all():
+            # Note: This sums by size only (ignoring extra).
+            total_quantity_per_size[cs.size_quantity.size] += cs.size_quantity.quantity
 
-        # Total quantity of layers (sum layers for all passports)
+        # Total layers from all passports.
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
         context.update({
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
+            'passport_sizes_display': passport_sizes_display,  # New variable for overall passport sizes.
             'sidebar_type': 'cutter'
         })
-
         return context
     
 @method_decorator([login_required, cutter_required], name='dispatch')

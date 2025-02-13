@@ -127,43 +127,57 @@ class UserEditForm(forms.ModelForm):
         return user
     
 class CutForm(forms.ModelForm):
-    size_quantities = forms.ModelMultipleChoiceField(
-        queryset=SizeQuantity.objects.none(),
+    # Field for selecting unique sizes (e.g. 40, 42, 44)
+    size_choices = forms.MultipleChoiceField(
+        choices=[],
         widget=forms.CheckboxSelectMultiple,
-        label="Выберите размеры"
+        label="Выберите размеры"  # "Select sizes"
     )
-    quantities = forms.CharField(widget=forms.HiddenInput(), required=False)  # Hidden field to store quantities as JSON
+    # Hidden field to store quantities as JSON; keys will be size values.
+    quantities = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = Cut
-        exclude = ['order', 'date', 'number']
+        exclude = ['order', 'date', 'number', 'size_quantities']
 
     def __init__(self, *args, **kwargs):
         order = kwargs.pop('order', None)
         super().__init__(*args, **kwargs)
-
         if order:
-            self.fields['size_quantities'].queryset = order.size_quantities.all()
-        
+            # Get all size_quantity objects for the order.
+            qs = order.size_quantities.all()
+            # Extract unique sizes (assume q.size is a string, e.g. "40")
+            unique_sizes = sorted(set(q.size for q in qs), key=lambda s: int(s) if s.isdigit() else s)
+            choices = [(size, size) for size in unique_sizes]
+            self.fields['size_choices'].choices = choices
+
     def clean_quantities(self):
         import json
         try:
             quantities = json.loads(self.cleaned_data['quantities'])
-            return {int(k): int(v) for k, v in quantities.items()}
+            # Keys are size strings, values are integers.
+            return {str(k): int(v) for k, v in quantities.items()}
         except (TypeError, ValueError):
             raise forms.ValidationError("Invalid quantities format.")
 
     def save_cut_sizes(self, cut):
+        # Get the JSON quantities; keys are size values.
         quantities = self.cleaned_data['quantities']
-        for size_quantity in self.cleaned_data['size_quantities']:
-            count = quantities.get(size_quantity.id, 1)
-            extras = [""] + [chr(65 + i) for i in range(count - 1)]  # "", "A", "B", etc.
-            for extra in extras:
-                CutSize.objects.create(
-                    cut=cut,
-                    size_quantity=size_quantity,
-                    extra=extra
-                )
+        # Get the selected sizes (as strings)
+        selected_sizes = self.cleaned_data['size_choices']
+        for size in selected_sizes:
+            # For each selected size, find all SizeQuantity objects in the order with that size.
+            for size_quantity in cut.order.size_quantities.filter(size=size):
+                # Get the count for this size from the JSON; default to 1 if not provided.
+                count = quantities.get(size, 1)
+                # Create extra codes: empty string for the first piece, then "A", "B", etc.
+                extras = [""] + [chr(65 + i) for i in range(count - 1)]
+                for extra in extras:
+                    CutSize.objects.create(
+                        cut=cut,
+                        size_quantity=size_quantity,
+                        extra=extra
+                    )
 
 class PassportForm(forms.ModelForm):
     # New field for selecting the unique combination.

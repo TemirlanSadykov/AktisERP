@@ -29,7 +29,7 @@
         <div class="card-header">
           <div class="row">
             <div class="col-md-9">
-            {% trans "Passport Details" %} №{{ passport }} 
+            №{{ passport }} 
             </div>
             {% comment %} <div class="col-md-3" >
             <!-- <div class="col-md-6 text-center"> -->
@@ -39,16 +39,32 @@
         </div>
           <div class="card-body">
               <div class="row">
-                  <div class="col-md-6 details">
-                    <p><strong>{% trans "Date:" %}</strong> {{ passport.cut.date }}</p>
-                    <p><strong>{% trans "Order:" %}</strong> {{ passport.cut.order.client_order }}</p>
-                    <p><strong>{% trans "Model:" %}</strong> {{ passport.cut.order.model }}</p>
-                    <p><strong>{% trans "Color:" %}</strong> {% if passport.roll %}{{ passport.roll.color }}{% else %}{{ passport.cut.order.colors.first }}{% endif %}</p>
-                    <p><strong>{% trans "Fabrics:" %}</strong> {% if passport.roll %}{{ passport.roll.fabrics }}{% else %}{{ passport.cut.order.fabrics.first }}{% endif %}</p>
-                    <p><strong>{% trans "Roll:" %}</strong> {{ passport.roll }}</p>
-                    <p><strong>{% trans "Meters:" %}</strong> {{ passport.meters }}</p>
-                    <p><strong>{% trans "Layers:" %}</strong> {{ passport.layers }}</p>
-                  </div>
+                <div class="col-md-6 details">
+                  <p><strong>{% trans "Date:" %}</strong> {{ passport.cut.date }}</p>
+                  <p><strong>{% trans "Order:" %}</strong> {{ passport.cut.order.client_order }}</p>
+                  <p><strong>{% trans "Model:" %}</strong> {{ passport.cut.order.model }}</p>
+                  <p>
+                    <strong>{% trans "Color:" %}</strong>
+                    {% if passport.passport_sizes.all %}
+                      {% with ps=passport.passport_sizes.all.0 %}
+                        {{ ps.size_quantity.color }}
+                      {% endwith %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                  <p>
+                    <strong>{% trans "Fabrics:" %}</strong>
+                    {% if passport.passport_sizes.all %}
+                      {% with ps=passport.passport_sizes.all.0 %}
+                        {{ ps.size_quantity.fabrics }}
+                      {% endwith %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </p>
+                  <p><strong>{% trans "Layers:" %}</strong> {{ passport.layers }}</p>
+                </div>                
                   <div class="col-md-5 text-center">
                       <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
                   </div>
@@ -60,29 +76,20 @@
               <tr>
                 <th>{% trans "Size" %}</th>
                 <th>{% trans "Quantity" %}</th>
-                <th>{% trans "Stage" %}</th>
+                <th>{% trans "Actions" %}</th>
               </tr>
               {% for size in passport_sizes %}
               <tr>
                 <td>
-                  <a href="{% url 'barcode_passport_size' size.id %}" style="display: block; width: 100%; height: 100%;">{% if size.extra %} {{ size.size_quantity.size }} - {{ size.extra }} {% else %} {{ size.size_quantity.size }} {% endif %}</a>
+                  {% if size.extra %} {{ size.size_quantity.size }} - {{ size.extra }} {% else %} {{ size.size_quantity.size }} {% endif %}
                 </td>
                 <td>
-                  <a href="{% url 'barcode_passport_size_per_piece' size.id %}" style="display: block; width: 100%; height: 100%;">{{ size.quantity }}</a>
+                  {{ size.quantity }}
                 </td>
                 <td>
-                  {% if size.stage == 0 %}
-                  <button type="button" class="stage-cutting-button btn edit-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Резка</button>
-                  {% elif size.stage == 1 %}
-                  <button type="button" class="stage-cutting-button btn success-btn" data-passport-size-id="{{ size.id }}" onclick="handleStageChange(event, this)">Шитье</button>
-                  {% else %}
-                  <button type="button" class="stage-cutting-button btn back-btn" data-passport-size-id="{{ size.id }}" disabled>
-                    {% if size.stage == 2 %}ОТК
-                    {% elif size.stage == 3 %}Упаковка
-                    {% else %}Готово
-                    {% endif %}
-                  </button>
-                  {% endif %}
+                  <a href="{% url 'barcode_passport_size_per_piece' size.id %}" class="btn btn-sm btn-primary">
+                    {% trans "Download QR" %}
+                  </a>
                 </td>
               </tr>
               {% empty %}
@@ -94,47 +101,4 @@
           </div>
     </div>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var buttons = document.querySelectorAll('.stage-cutting-button');
-    buttons.forEach(function(button) {
-      button.addEventListener('click', function() { // Changed to 'click' event for buttons
-        var passportSizeId = this.dataset.passportSizeId; // Access data attribute from button
-        if (passportSizeId) {
-          fetch(`/production/cutter/orders/mark-as-sewing/${passportSizeId}/`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              window.location.reload();
-            } else {
-              alert('Не получилось обновить');
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-          });
-        }
-      });
-    });
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                  break;
-              }
-          }
-      }
-      return cookieValue;
-    }
-  });
-</script>
 {% endblock %}

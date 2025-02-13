@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block content %}
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
@@ -9,9 +8,7 @@
     <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Cutter Dashboard' %}</h4>
     <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
         <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
-            <li class="nav-item dropdown" style="margin: 10px;">
-                {{ request.user.username }}
-            </li>
+            <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
             <li class="nav-item dropdown">
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
@@ -31,70 +28,73 @@
             <div class="card-body">
                 <form method="post" id="cut-form">
                     {% csrf_token %}
-                    {{ form.size_quantities }}
+                    <!-- Render the unique sizes checkboxes -->
+                    {{ form.size_choices }}
                     <div id="quantity-fields" style="margin-top: 20px;">
-                        <!-- Quantity input fields with size labels will be added here dynamically -->
+                        <!-- Quantity input fields (one per selected size) will be added here dynamically -->
                     </div>
                     <input type="hidden" name="quantities" id="id_quantities">
                     <button type="submit" class="btn btn-primary mt-3">{% trans "Create Cut" %}</button>
                 </form>
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        {{ form.errors }}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // This object will store the quantity for each selected size.
     const quantities = {};
 
-    document.querySelectorAll('input[name="size_quantities"]').forEach(sizeCheckbox => {
+    // Listen for changes on all checkboxes for the field "size_choices"
+    document.querySelectorAll('input[name="size_choices"]').forEach(sizeCheckbox => {
         sizeCheckbox.addEventListener('change', () => {
             const quantityFields = document.getElementById('quantity-fields');
-            const sizeId = sizeCheckbox.value;
-
-            // Use `id` to find the associated label
-            const sizeLabelElement = document.querySelector(`label[for="${sizeCheckbox.id}"]`);
-            const sizeLabel = sizeLabelElement ? sizeLabelElement.textContent.trim() : 'Size';
+            const sizeValue = sizeCheckbox.value;  // e.g., "40"
+            // Use the size value as the label.
+            const sizeLabel = sizeValue;
 
             if (sizeCheckbox.checked) {
-                // Create a new container for the size and input field
+                // Create a container for the quantity input if it doesn't already exist.
                 const container = document.createElement('div');
                 container.classList.add('d-flex', 'align-items-center', 'mb-2');
-                container.dataset.sizeId = sizeId;
+                container.dataset.sizeValue = sizeValue;
 
-                // Label displaying the size name
                 const label = document.createElement('span');
                 label.textContent = `${sizeLabel}: `;
                 label.classList.add('mr-2');
 
-                // Quantity input field
                 const quantityInput = document.createElement('input');
                 quantityInput.type = 'number';
-                quantityInput.name = `quantity_${sizeId}`;
+                quantityInput.name = `quantity_${sizeValue}`;
                 quantityInput.min = 1;
                 quantityInput.value = 1;
                 quantityInput.classList.add('form-control', 'form-control-sm');
                 quantityInput.style.width = '80px';
 
-                // Append label and input to the container, then add to the form
                 container.appendChild(label);
                 container.appendChild(quantityInput);
                 quantityFields.appendChild(container);
 
-                // Initialize quantity in the JSON object
-                quantities[sizeId] = 1;
+                // Initialize quantity for this size.
+                quantities[sizeValue] = 1;
                 document.getElementById('id_quantities').value = JSON.stringify(quantities);
 
-                // Update the quantities JSON as the input value changes
+                // Update the quantity when the input changes.
                 quantityInput.addEventListener('input', (e) => {
-                    quantities[sizeId] = parseInt(e.target.value) || 1;
+                    quantities[sizeValue] = parseInt(e.target.value) || 1;
                     document.getElementById('id_quantities').value = JSON.stringify(quantities);
                 });
             } else {
-                // Remove the quantity input and label for this size if unchecked
-                const containerToRemove = document.querySelector(`div[data-size-id="${sizeId}"]`);
+                // Remove the container if the checkbox is unchecked.
+                const containerToRemove = document.querySelector(`div[data-size-value="${sizeValue}"]`);
                 if (containerToRemove) {
                     containerToRemove.remove();
-                    delete quantities[sizeId];
+                    delete quantities[sizeValue];
                     document.getElementById('id_quantities').value = JSON.stringify(quantities);
                 }
             }
