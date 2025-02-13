@@ -891,35 +891,43 @@ class CutDetailTechnologistView(DetailView):
     context_object_name = 'cut'
 
     def get_context_data(self, **kwargs):
+        from collections import defaultdict
         context = super().get_context_data(**kwargs)
         cut_pk = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_pk)
 
-        # Get all passports related to the cut
-        passports = cut.passports.all()
+        # Get all passports related to the cut.
+        passports = cut.passports.all().order_by('-number')
 
-        # Get all production pieces related to the cut
-        production_pieces = ProductionPiece.objects.filter(passport_size__passport__cut=cut)
+        # Get overall sizes from CutSizes—but only those that have been used in passports.
+        # We'll build a set of (size, extra) pairs from all PassportSize records.
+        passport_sizes_set = set()
+        for passport in passports:
+            for ps in passport.passport_sizes.all():
+                # Use ps.extra or '' if it's empty.
+                passport_sizes_set.add((ps.size_quantity.size, ps.extra or ''))
+        # Sort them: first by numeric value of size (if possible), then by extra.
+        try:
+            passport_sizes_display = sorted(passport_sizes_set, key=lambda x: (int(x[0]), x[1]))
+        except ValueError:
+            passport_sizes_display = sorted(passport_sizes_set, key=lambda x: (x[0], x[1]))
 
-        # Get all errors related to the production pieces
-        errors = Error.objects.filter(piece__in=production_pieces)
-
-        # Prepare the total quantities for each size in the cut
+        # Prepare total quantities per size (if needed elsewhere)
         total_quantity_per_size = defaultdict(int)
-        for size_quantity in cut.size_quantities.all():
-            total_quantity_per_size[f'{size_quantity.size} - {size_quantity.color}'] = size_quantity.quantity
+        for cs in cut.cut_sizes.all():
+            # Note: This sums by size only (ignoring extra).
+            total_quantity_per_size[cs.size_quantity.size] += cs.size_quantity.quantity
 
-        # Total quantity of layers (sum layers for all passports)
+        # Total layers from all passports.
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
         context.update({
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
-            'errors': errors,  # Add the errors to the context
+            'passport_sizes_display': passport_sizes_display,  # New variable for overall passport sizes.
             'sidebar_type': 'technology'
         })
-
         return context
     
 @login_required
@@ -1005,7 +1013,7 @@ def assign_operations(request, passport_id):
                         employee_id_input = entry
                         quantity = total_quantity
 
-                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, type=UserProfile.EMPLOYEE, branch=request.user.userprofile.branch).first()
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, branch=request.user.userprofile.branch).first()
                     if not employee_profile:
                         continue
 
@@ -1040,6 +1048,85 @@ def assign_operations(request, passport_id):
         'work_by_op_and_size': work_by_op_and_size,
         'sidebar_type': 'technology'
     })
+
+@login_required
+@technologist_required
+def assign_operations_by_cut(request, cut_id):
+    cut = get_object_or_404(Cut, pk=cut_id)
+    model_operations = ModelOperation.objects.filter(
+        model=cut.order.model
+    ).select_related('operation').order_by('order')
+    operations = [model_op.operation for model_op in model_operations]
+
+    # Get all passports for this cut, ordered by number (or creation order)
+    passports = cut.passports.all().order_by('number')
+    
+    # For each passport, get its passport sizes ordered by size.
+    passport_sizes_by_passport = {}
+    for passport in passports:
+        sizes = passport.passport_sizes.all().order_by('size_quantity__size')
+        passport_sizes_by_passport[passport.id] = sizes
+
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        import json
+        from django.db import transaction
+        data = json.loads(request.body)
+        operation_id = data.get('operation_id')
+        passport_size_id = data.get('passport_size_id')
+        value = data.get('value')
+
+        try:
+            with transaction.atomic():
+                passport_size = PassportSize.objects.get(id=passport_size_id)
+                total_quantity = passport_size.quantity
+
+                entries = value.split(',')
+                for entry in entries:
+                    if '(' in entry and ')' in entry:
+                        employee_id_input, quantity = entry.split('(')
+                        employee_id_input = employee_id_input.strip()
+                        quantity = int(quantity.strip(' )'))
+                    else:
+                        employee_id_input = entry.strip()
+                        quantity = total_quantity
+
+                    employee_profile = UserProfile.objects.filter(
+                        employee_id=employee_id_input,
+                        type=UserProfile.EMPLOYEE,
+                        branch=request.user.userprofile.branch
+                    ).first()
+                    if not employee_profile:
+                        continue
+
+                    work, created = Work.objects.get_or_create(
+                        operation_id=operation_id,
+                        passport_size=passport_size,
+                    )
+                    AssignedWork.objects.create(
+                        work=work,
+                        employee=employee_profile,
+                        quantity=quantity
+                    )
+                return JsonResponse({'status': 'success'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    # Build a dictionary of already assigned works, keyed by (operation_id, passport_size_id)
+    work_by_op_and_size = {}
+    for aw in AssignedWork.objects.filter(work__passport_size__passport__in=passports).select_related('employee', 'work__operation', 'work__passport_size'):
+        key = (aw.work.operation_id, aw.work.passport_size_id)
+        work_by_op_and_size.setdefault(key, []).append(aw)
+
+    return render(request, 'technologist/passports/assign_operations_by_cut.html', {
+        'cut': cut,
+        'operations': operations,
+        'passports': passports,
+        'passport_sizes_by_passport': passport_sizes_by_passport,
+        'work_by_op_and_size': work_by_op_and_size,
+        'sidebar_type': 'technology'
+    })
+
 
 @login_required
 @technologist_required

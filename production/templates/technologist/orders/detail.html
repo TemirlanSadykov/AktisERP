@@ -49,7 +49,6 @@
             {% endfor %}
           </p>
           <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
-          <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
           <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
           <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
           <a href="{% url 'order_edit' order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
@@ -179,7 +178,7 @@
       <div class="accordion" id="cutsAccordion">
         {% for cut in associated_cuts %}
           <div class="accordion-item">
-            <a href="{% url 'cut_detail_technologist' cut.pk %}" 
+            <a href="{% url 'assign_operations_by_cut' cut.pk %}" 
                class="list-group-item list-group-item-action cut-link" 
                style="border: 1px solid #ced4da;"
                data-bs-target="#collapse{{ cut.id }}"

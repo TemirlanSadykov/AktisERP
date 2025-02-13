@@ -106,6 +106,7 @@ urlpatterns = [
     path('technologist/client/orders/order/error/<int:pk>/', error_detail, name='error_detail'),
     path('technologist/client/orders/order/error/<int:pk>/update-status/', error_update_status, name='error_update_status'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
+    path('technologist/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
