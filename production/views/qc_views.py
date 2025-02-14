@@ -286,27 +286,38 @@ class PassportDetailQcView(DetailView):
         context['sidebar_type'] = 'qc_page'
         return context
 
+# ------------------------------
+# Updated get_piece_info view
+# ------------------------------
 @login_required
 @qc_required
 def get_piece_info(request, barcode):
     try:
-        # Split the barcode and extract the piece ID
+        # Split the barcode and extract the piece ID.
         parts = barcode.split('-')
         if len(parts) != 3:
             return JsonResponse({'error': 'Invalid barcode format'}, status=400)
 
-        piece_id = parts[2]  # Assuming the last part is the piece ID
-        piece = ProductionPiece.objects.get(id=piece_id)  # Fetch the piece using the extracted ID
+        piece_id = parts[2]  # Assuming the last part is the piece ID.
+        piece = ProductionPiece.objects.get(id=piece_id)
 
-        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
+        # Get details from the piece.
         date = piece.passport_size.passport.cut.date
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.passport.roll.color.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.colors.first().name
-        fabrics = piece.passport_size.passport.roll.fabrics.name if piece.passport_size.passport.roll else piece.passport_size.passport.cut.order.fabrics.first().name
+        # Use color and fabrics from size_quantity (fallback to "-" if missing)
+        color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
+        fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
         size = piece.passport_size.size_quantity.size
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
+
+        # Get order info (assuming each piece’s passport -> cut -> order exists)
+        order = piece.passport_size.passport.cut.order
+        order_id = order.id
+        # Display the order’s model name
+        order_name = order.model.name
+
         data = {
             'piece_id': piece.id,
             'piece_number': piece.piece_number,
@@ -319,13 +330,66 @@ def get_piece_info(request, barcode):
             'fabrics': fabrics,
             'size': size,
             'stage': piece.get_stage_display(),
+            'order_id': order_id,
+            'order_name': order_name,
         }
         return JsonResponse(data)
     except ProductionPiece.DoesNotExist:
         return JsonResponse({'error': 'Piece not found'}, status=404)
-
     except ValueError:
         return JsonResponse({'error': 'Error processing barcode'}, status=500)
+
+# ------------------------------
+# New API view: get_order_table_data
+# ------------------------------
+@login_required
+@qc_required
+def get_order_table_data(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        # Assume that order.size_quantities.all() returns objects with attributes:
+        # size, color, fabrics, and quantity.
+        required_qs = order.size_quantities.all().order_by('size')
+        pivot_data = {}  # keys: "Color Fabrics", value: { size: required_quantity }
+        all_sizes_set = set()
+        for sq in required_qs:
+            all_sizes_set.add(sq.size)
+            key = f"{sq.color} {sq.fabrics}"  # combine color & fabric
+            if key not in pivot_data:
+                pivot_data[key] = {}
+            pivot_data[key][sq.size] = sq.quantity
+
+        # Sort sizes (if numeric, sort by integer value)
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
+
+        # Now, get the current checked pieces counts.
+        checked_counts = {}
+        pieces = ProductionPiece.objects.filter(
+            passport_size__passport__cut__order=order,
+            stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
+        )
+        for piece in pieces:
+            color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
+            fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
+            key = f"{color} {fabrics}"
+            size = piece.passport_size.size_quantity.size
+            if key not in checked_counts:
+                checked_counts[key] = {}
+            checked_counts[key][size] = checked_counts[key].get(size, 0) + 1
+
+        data = {
+            'order_id': order.id,
+            'order_name': order.model.name,  # using model name for display
+            'all_sizes': all_sizes,
+            'pivot_data': pivot_data,
+            'checked_counts': checked_counts,
+        }
+        return JsonResponse(data)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
     
 @require_POST
 @login_required
@@ -343,9 +407,7 @@ def update_piece_qc(request, piece_id):
         return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
 
     piece = ProductionPiece.objects.get(id=piece_id)
-
     piece.stage = valid_statuses[status]
-    print(piece)
     piece.save()
     message = f'Piece status updated to {status}.'
 

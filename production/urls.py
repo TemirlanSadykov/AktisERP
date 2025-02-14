@@ -202,6 +202,7 @@ urlpatterns = [
     # path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
     path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
     path('qc/orders/api/get-piece-info/<str:barcode>/', get_piece_info, name='get_piece_info'),
+    path('qc/orders/get-order-table-data/<int:order_id>/', get_order_table_data, name='get_order_table_data'),
     path('qc/orders/update-piece-status/<int:piece_id>/', update_piece_qc, name='update_piece_qc'),
     path('qc/scan/', scan_qc_page, name='scan_qc_page'),
     
@@ -212,6 +213,7 @@ urlpatterns = [
     # path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
     path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
     path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
+    path('packer/orders/get-order-table-data/<int:order_id>/', get_order_table_data_packer, name='get_order_table_data_packer'),
     path('packer/orders/calculate-discrepancies/<int:order_pk>/', calculate_discrepancies, name='calculate_discrepancies'),
     path('packer/scan/', scan_packer_page, name='scan_packer_page'),
 

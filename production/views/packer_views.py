@@ -304,8 +304,8 @@ def update_piece_packer(request, piece_id):
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
         cut = piece.passport_size.passport.cut.number
         model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.size_quantity.color if piece.passport_size.size_quantity.color else "-"
-        fabrics = piece.passport_size.size_quantity.fabrics if piece.passport_size.size_quantity.fabrics else "-"
+        color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
+        fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
         passport_id = piece.passport_size.passport.id
         passport_number = piece.passport_size.passport.number
         
@@ -314,6 +314,7 @@ def update_piece_packer(request, piece_id):
             'success': True,
             'message': 'Piece status updated to Packed.',
             'piece_id': piece.id,
+            'order_id': piece.passport_size.passport.cut.order.id,
             'piece_number': piece.piece_number,
             'passport_id': passport_id,
             'passport_number': passport_number,
@@ -330,6 +331,60 @@ def update_piece_packer(request, piece_id):
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+@login_required
+@packer_required
+def get_order_table_data_packer(request, order_id):
+    """
+    Returns pivot data for the required quantities for an order,
+    as well as the current counts of pieces marked as PACKED.
+    """
+    try:
+        order = Order.objects.get(id=order_id)
+        # Assume order.size_quantities.all() returns objects with attributes:
+        # size, color, fabrics, and quantity.
+        required_qs = order.size_quantities.all().order_by('size')
+        pivot_data = {}  # keys: "Color Fabrics", value: { size: required_quantity }
+        all_sizes_set = set()
+        for sq in required_qs:
+            all_sizes_set.add(sq.size)
+            key = f"{sq.color} {sq.fabrics}"  # Combine color & fabric
+            if key not in pivot_data:
+                pivot_data[key] = {}
+            pivot_data[key][sq.size] = sq.quantity
+
+        # Sort sizes (if numeric, sort by integer value)
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
+
+        # Get current packed pieces counts.
+        packed_counts = {}
+        pieces = ProductionPiece.objects.filter(
+            passport_size__passport__cut__order=order,
+            stage=ProductionPiece.StageChoices.PACKED
+        )
+        for piece in pieces:
+            col = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
+            fab = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
+            key = f"{col} {fab}"
+            size = piece.passport_size.size_quantity.size
+            if key not in packed_counts:
+                packed_counts[key] = {}
+            packed_counts[key][size] = packed_counts[key].get(size, 0) + 1
+
+        data = {
+            'order_id': order.id,
+            # For display we use the order’s model name.
+            'order_name': order.model.name,
+            'all_sizes': all_sizes,
+            'pivot_data': pivot_data,
+            'packed_counts': packed_counts,
+        }
+        return JsonResponse(data)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
 
 @method_decorator([login_required, packer_required], name='dispatch')
 class DiscrepancyDetailView(DetailView):
