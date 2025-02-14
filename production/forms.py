@@ -28,8 +28,6 @@ class UserWithProfileForm(UserCreationForm):
     last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     employee_id = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
-    status = forms.BooleanField(required=False, initial=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input','style': 'margin:7px 0px 0px 10px'}))
-    station = forms.ChoiceField(choices=UserProfile.STATION_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,8 +52,6 @@ class UserWithProfileForm(UserCreationForm):
                 user=user,
                 employee_id=self.cleaned_data['employee_id'],
                 type=self.cleaned_data['type'],
-                status=self.cleaned_data['status'],
-                station=self.cleaned_data['station'],
             )
         return user
 

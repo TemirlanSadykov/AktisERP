@@ -48,7 +48,7 @@ class UserProfile(models.Model):
         (KEEPER, 'Кладовщик'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
-    status = models.BooleanField(default=False, verbose_name='Статус')
+    status = models.BooleanField(default=True, verbose_name='Статус', null=True, blank=True)
     STATION_CHOICES = [
         ('admin_technologist', 'Админ/Технолог'),
         ('cutting_station', 'Закройный участок'),
@@ -60,7 +60,7 @@ class UserProfile(models.Model):
         ('interns', 'Практиканты'),
         ('others', 'Остальные'),
     ]
-    station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station', verbose_name='Станция')
+    station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station', verbose_name='Станция', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"

@@ -15,15 +15,15 @@ def user_redirect(request):
     if user_profile.type == UserProfile.ADMIN:
         return redirect('admin_page')
     elif user_profile.type == UserProfile.TECHNOLOGIST:
-        return redirect('technologist_page')
+        return redirect('client_order_list')
     elif user_profile.type == UserProfile.EMPLOYEE:
         return redirect('employee_page')
     elif user_profile.type == UserProfile.CUTTER:
-        return redirect('cutter_page')
+        return redirect('client_order_list_cutter')
     elif user_profile.type == UserProfile.QC:
-        return redirect('qc_page')
+        return redirect('client_order_list_qc')
     elif user_profile.type == UserProfile.PACKER:
-        return redirect('packer_page')
+        return redirect('client_order_list_packer')
     elif user_profile.type == UserProfile.KEEPER:
         return redirect('keeper_page')
     else:
