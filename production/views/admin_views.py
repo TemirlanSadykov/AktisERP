@@ -1426,7 +1426,7 @@ def employee_api_by_orders(request, employee_id):
     response_data = {
         'id': employee.id,
         'full_name': f"{employee.user.first_name} {employee.user.last_name}",
-        'username': employee.user.username,
+        'employee_id': employee.employee_id,
         'efficiency': overall_efficiency,
         'operations': operations_details,
         'orders': [
@@ -1436,9 +1436,6 @@ def employee_api_by_orders(request, employee_id):
         'operation_distribution': operation_distribution_list,
         'total_time': total_time,
         'total_payment': total_payment,
-        'total_defects': total_defects,
-        'units_over_time': units_over_time,
-        'earnings': 0.0  # or compute your own logic
     }
 
     return JsonResponse(response_data)
