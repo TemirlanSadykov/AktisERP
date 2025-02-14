@@ -151,20 +151,15 @@ document.addEventListener('DOMContentLoaded', function() {
       loadOrderTableData(scannedPiece.order_id)
         .then(function(orderData) {
           initializeOrderTable(orderData);
-          if (addCount) {
-            var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
-            if (orderTableData.rows[combo]) {
-              orderTableData.rows[combo].scanned[scannedPiece.size] =
-                (orderTableData.rows[combo].scanned[scannedPiece.size] || 0) + 1;
-            }
-          }
+          // Do not manually add the count here,
+          // because orderData.checked_counts already reflect the update.
           renderOrderTable();
         })
         .catch(function(err) {
           console.error('Error loading order table data:', err);
         });
     } else {
-      // Same order – update the scanned count for the corresponding cell only if addCount is true.
+      // Same order – update the scanned count manually if addCount is true.
       if (addCount) {
         var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
         if (orderTableData.rows[combo]) {
@@ -175,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
       renderOrderTable();
     }
   }
+  
 
   // Process the barcode input: fetch piece info and show modal.
   function processBarcode() {

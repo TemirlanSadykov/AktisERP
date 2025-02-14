@@ -143,13 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
       loadOrderTableData(scannedPiece.order_id)
         .then(function(orderData) {
           initializeOrderTable(orderData);
-          if (addCount) {
-            var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
-            if (orderTableData.rows[combo]) {
-              orderTableData.rows[combo].packed[scannedPiece.size] =
-                (orderTableData.rows[combo].packed[scannedPiece.size] || 0) + 1;
-            }
-          }
+          // Do not manually add the count here because the server data already reflects the update.
           renderOrderTable();
         })
         .catch(function(err) {
@@ -166,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       renderOrderTable();
     }
-  }
+  }  
 
   // Process the barcode input: extract piece ID and mark it as packed.
   function processBarcode() {
