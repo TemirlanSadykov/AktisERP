@@ -278,13 +278,16 @@ urlpatterns = [
     path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
     path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
 
-    path('admin/orders/select/', select_orders_view, name='select_orders'),
-    path('admin/orders/calculate/<str:order_ids>/', employee_calculation_view, name='employee_calculation'),
-    path('api/employees_by_orders/<int:employee_id>/', employee_api_by_orders, name='employee_api_by_orders'),
+    # path('admin/orders/select/', select_orders_view, name='select_orders'),
+    # path('admin/orders/calculate/<str:order_ids>/', employee_calculation_view, name='employee_calculation'),
 
     path('api/add-client/', add_client_api, name='add_client_api'),
     path('api/add-color/', add_color_api, name='add_color_api'),
     path('api/add-fabric/', add_fabric_api, name='add_fabric_api'),
     path('api/add_node/', add_node_api, name='add_node_api'),
     path('api/add_equipment/', add_equipment_api, name='add_equipment_api'),
+
+
+    path('api/payment_details/', payment_details_view, name='payment_details'),
+    path('api/employees_by_orders/<int:employee_id>/', employee_api_by_orders, name='employee_api_by_orders'),
 ]

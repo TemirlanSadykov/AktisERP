@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
 from django.db.models import F, Window, Sum, Count, Q
+from django.db.models import ExpressionWrapper, DecimalField
 from django.db.models.functions import Lead
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
@@ -36,60 +37,120 @@ from ..models import *
 from datetime import datetime, timedelta
 from django.utils import timezone
 
-CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
-
-# @cache_page(CACHE_TTL)
 @login_required
 @admin_required
 def admin_page(request):
-    """
-    1) Displays a form with start_date and end_date (GET).
-    2) On GET with valid date range, fetches Orders that have Cuts within that date range.
-    3) Allows user to select which Orders to analyze (POST).
-    4) Submits to another view (or can compute inline) to get employee calculations.
-    """
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
-    # Convert strings to date objects (if provided)
-    orders = []
+    # Default summary data
+    summary_data = {
+        'total_production': 0,  # Sum of order quantities
+        'orders_count': 0,      # Count of orders
+        'cuts_count': 0,        # Count of cuts
+        'total_payment': 0,     # Sum of payment amounts from AssignedWork
+    }
+
     if start_date and end_date:
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
             end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
 
-            # Get all Cuts in [start_dt, end_dt]
-            cuts_in_range = Cut.objects.filter(date__range=[start_dt, end_dt])
+            # Total Production and Orders: use orders created in the date range
+            orders_in_range = Order.objects.filter(created_at__date__range=[start_dt, end_dt])
+            total_production = orders_in_range.aggregate(total=Sum('quantity'))['total'] or 0
+            orders_count = orders_in_range.count()
 
-            # From those Cuts, get their Orders
-            orders_in_range = Order.objects.filter(cuts__in=cuts_in_range).distinct().order_by('model__name')
+            # Cuts: count cuts whose date is in the range
+            cuts_count = Cut.objects.filter(date__range=[start_dt, end_dt]).count()
 
-            orders = orders_in_range
+            # Payment: For each AssignedWork created in the date range,
+            # calculate: quantity * work.operation.payment and sum all values.
+            payment_expr = ExpressionWrapper(
+                F('quantity') * F('work__operation__payment'),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+            total_payment = AssignedWork.objects.filter(created_at__date__range=[start_dt, end_dt]).annotate(
+                work_payment=payment_expr
+            ).aggregate(total_payment=Sum('work_payment'))['total_payment'] or 0
 
+            summary_data = {
+                'total_production': total_production,
+                'orders_count': orders_count,
+                'cuts_count': cuts_count,
+                'total_payment': total_payment,
+            }
         except ValueError:
-            # If date parsing fails, just ignore or handle error
+            # Optionally, handle invalid date formats here
             pass
 
-    if request.method == 'POST':
-        # The user has chosen specific order IDs to analyze
-        selected_orders_ids = request.POST.getlist('order_ids')
-
-        # Option A: Do the calculations right here and render a new template:
-        # results = calculate_employee_data(selected_orders_ids)
-        # return render(request, 'employee_calculation.html', {
-        #     'results': results
-        # })
-
-        # Option B: Redirect to another view that does the calculation:
-        return redirect('employee_calculation', order_ids=",".join(selected_orders_ids))
-
     context = {
-        'sidebar_type': 'admin',
-        'orders': orders,
         'start_date': start_date,
         'end_date': end_date,
+        'summary_data': summary_data,
     }
     return render(request, 'admin_page.html', context)
+
+@login_required
+@admin_required
+def payment_details_view(request):
+    """
+    Returns an HTML snippet (table) with employee payment details
+    for all AssignedWork records created within the date range.
+    """
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        # If dates are missing or invalid, return an empty table
+        return render(request, 'admin/partial_payment_details.html', {'employee_data': []})
+
+    # Filter AssignedWork records within the date range
+    assigned_works = AssignedWork.objects.filter(
+        created_at__date__range=[start_dt, end_dt]
+    ).select_related('employee', 'work__operation')
+
+    # Aggregate employee data
+    employee_data_map = {}
+    for aw in assigned_works:
+        emp = aw.employee
+        # Use operation details for timing and payment values
+        operation = aw.work.operation
+        preferred_time = operation.preferred_completion_time or 0
+        payment_per_operation = operation.payment or 0
+
+        if emp not in employee_data_map:
+            employee_data_map[emp] = {
+                'units_produced': 0,
+                'seconds_worked': 0,
+                'payment': 0,
+            }
+        employee_data_map[emp]['units_produced'] += aw.quantity
+        employee_data_map[emp]['seconds_worked'] += aw.quantity * preferred_time
+        employee_data_map[emp]['payment'] += aw.quantity * payment_per_operation
+
+    # Convert to a list for easier iteration in the template
+    employee_data_list = []
+    for emp, data in employee_data_map.items():
+        employee_data_list.append({
+            'id': emp.id,
+            'employee_id': emp.employee_id,
+            'full_name': f"{emp.user.first_name} {emp.user.last_name}",
+            'units_produced': data['units_produced'],
+            'seconds_worked': int(data['seconds_worked']),
+            'payment': int(data['payment']),
+        })
+
+    # Optionally, sort by units produced descending
+    employee_data_list.sort(key=lambda e: e['units_produced'], reverse=True)
+
+    context = {'employee_data': employee_data_list}
+    return render(request, 'admin/partial_payment_details.html', context)
+
+
 
 @login_required
 @admin_required
@@ -1315,30 +1376,36 @@ def employee_api_by_orders(request, employee_id):
     # 1) Get the employee
     employee = get_object_or_404(UserProfile, pk=employee_id)
 
-    # 2) Parse the 'orders' query param (e.g. ?orders=10,12)
-    orders_param = request.GET.get('orders', '')
-    # Split by comma, keep only digits
-    order_ids = [int(x) for x in orders_param.split(',') if x.isdigit()]
+    # 2) Parse the date range from query parameters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    if start_date and end_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            start_dt = None
+            end_dt = None
+    else:
+        start_dt = end_dt = None
 
-    # 3) Fetch assigned works that match the employee AND the selected orders
-    # AssignedWork -> Work -> PassportSize -> Passport -> Cut -> Order
-    assigned_works = AssignedWork.objects.filter(
-        employee=employee,
-        work__passport_size__passport__cut__order__in=order_ids
-    )
+    # 3) Fetch AssignedWork for the employee in that date range
+    if start_dt and end_dt:
+        assigned_works = AssignedWork.objects.filter(
+            employee=employee,
+            created_at__date__range=[start_dt, end_dt]
+        )
+    else:
+        assigned_works = AssignedWork.objects.filter(employee=employee)
 
-    # 4) The rest of the logic is the same as your existing code: 
-    #    building up operation_summary, operation_distribution, etc.
-
-    # Extract unique orders
+    # 4) Extract unique orders from the assigned works
     orders = assigned_works.values_list(
         "work__passport_size__passport__cut__order__id",
         "work__passport_size__passport__cut__order__model__name"
     ).distinct()
-
     orders_dict = {order_id: model_name for order_id, model_name in orders}
 
-    # Group operations and calculate average time spent in seconds
+    # 5) Group operations and calculate summary details
     operation_summary = {}
     total_units = 0
     total_weighted_efficiency = 0
@@ -1353,7 +1420,7 @@ def employee_api_by_orders(request, employee_id):
         if work.start_time and work.end_time:
             actual_time = (work.end_time - work.start_time).total_seconds()
 
-        # If not tracked yet, initialize
+        # Initialize or update the summary for this operation
         if operation_name not in operation_summary:
             operation_summary[operation_name] = {
                 'operation': operation_name,
@@ -1370,20 +1437,15 @@ def employee_api_by_orders(request, employee_id):
         key = (operation_name, order_id)
         operation_distribution[key] = operation_distribution.get(key, 0) + work.quantity
 
-    # Build the operations_details list
+    # 6) Build the list of operation details
     operations_details = []
     total_time = 0
     total_payment = 0
     for op_data in operation_summary.values():
         total_time_spent = op_data['preferred_completion_time'] * op_data['quantity']
         total_payment_spent = op_data['payment'] * op_data['quantity']
-        avg_time_per_unit = (
-            op_data['total_time'] / op_data['quantity']
-            if op_data['quantity'] else 0
-        )
-        # If actual_time_per_unit <= preferred, 100% or more
-        efficiency = (op_data['preferred_completion_time'] / avg_time_per_unit) * 100 \
-            if avg_time_per_unit != 0 and avg_time_per_unit > 0 else 100
+        avg_time_per_unit = (op_data['total_time'] / op_data['quantity']) if op_data['quantity'] else 0
+        efficiency = (op_data['preferred_completion_time'] / avg_time_per_unit) * 100 if avg_time_per_unit else 100
 
         total_units += op_data['quantity']
         total_weighted_efficiency += (efficiency * op_data['quantity'])
@@ -1402,26 +1464,22 @@ def employee_api_by_orders(request, employee_id):
 
     overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
 
-    # Summarize units produced by day
+    # 7) Summarize units produced by day (if needed)
     units_by_day = {}
     for work in assigned_works:
         if work.start_time:
             day = work.start_time.date()
             units_by_day[day] = units_by_day.get(day, 0) + work.quantity
+    # units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
 
-    units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
-
-    # Calculate total defects
+    # 8) Calculate total defects for the employee
     total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
 
-    # Convert operation distribution to list format
+    # 9) Convert operation distribution to list format
     operation_distribution_list = [
         {'operation': op, 'order': order, 'quantity': qty}
         for (op, order), qty in operation_distribution.items()
     ]
-
-    # Optionally, you can compute "earnings" if you want,
-    # or set data['earnings'] = 0.0 if not used
 
     response_data = {
         'id': employee.id,
@@ -1436,6 +1494,7 @@ def employee_api_by_orders(request, employee_id):
         'operation_distribution': operation_distribution_list,
         'total_time': total_time,
         'total_payment': total_payment,
+        # Optionally include other fields (e.g., total_defects) if needed
     }
 
     return JsonResponse(response_data)

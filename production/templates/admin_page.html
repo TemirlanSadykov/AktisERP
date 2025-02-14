@@ -1,15 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load static %}
-{% load custom_filters %}
 {% block content %}
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}
-  </h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -24,70 +22,198 @@
     </ul>
   </div>
 </nav>
-<div class="container maincontr">
-  <div class="d-flex justify-content-end mb-3 ">
-    <span class="operation-text">{% trans "Summary" %}</span>
-  </div><hr>
 
-  <!-- Step 1: Date range filter form -->
+<div class="container maincontr">
+  <div class="d-flex justify-content-end mb-3">
+    <span class="operation-text">{% trans "Summary" %}</span>
+  </div>
+  <hr>
+
+  <!-- Date range filter form -->
   <form method="get" class="form-row align-items-end">
     <div class="col-md-4 mb-3">
       <label for="start_date">{% trans 'Start Date' %}</label>
-      <input type="date" id="start_date" name="start_date" class="form-control"
-            value="{{ start_date|default_if_none:'' }}">
+      <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date|default_if_none:'' }}">
     </div>
     <div class="col-md-4 mb-3">
       <label for="end_date">{% trans 'End Date' %}</label>
-      <input type="date" id="end_date" name="end_date" class="form-control"
-            value="{{ end_date|default_if_none:'' }}">
+      <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date|default_if_none:'' }}">
     </div>
     <div class="col-md-4 mb-3">
-      <button type="submit" class="btn btn-primary w-100">
-        {% trans "Filter Orders" %}
-      </button>
+      <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
     </div>
   </form>
 
-  <!-- Step 2: If orders found, display them in a form to let user select which orders -->
-  {% if orders %}
-    <hr>
-    <form method="post" class="form">
-      {% csrf_token %}
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>{% trans "Select" %}</th>
-            <th>{% trans "Model" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for order in orders %}
-            <tr>
-              <td>
-                <input type="checkbox" name="order_ids" value="{{ order.id }}">
-              </td>
-              <td>{{ order.model.name }} - {% for color in order.colors.all %}
-                                              {{ color }}{% if not forloop.last %}, {% endif %}
-                                          {% empty %}
-                                              {% trans "No colors selected" %}
-                                          {% endfor %} - 
-                                          {% for fabric in order.fabrics.all %}
-                                              {{ fabric }}{% if not forloop.last %}, {% endif %}
-                                          {% empty %}
-                                              {% trans "No fabrics selected" %}
-                                          {% endfor %} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <button type="submit" class="btn btn-success">
-        {% trans "Compute Employee Data" %}
-      </button>
-    </form>
-  {% else %}
-    {% if start_date and end_date %}
-      <p><em>{% trans "No orders found in this date range." %}</em></p>
-    {% endif %}
-  {% endif %}
+  <!-- Summary Cards (2x2 grid) -->
+  <div class="row mt-4">
+    <div class="col-md-3 col-sm-6 mb-4">
+      <div class="card text-black h-100" style="cursor:default;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title text-left">{% trans 'Production' %}</h5>
+                <p>{{ summary_data.total_production }}</p>
+            </div>
+            <div class="icon">
+              <img src="{% static 'img/income-statement.png' %}" alt="" style="width: 80px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="col-md-3 col-sm-6 mb-4">
+      <div class="card text-black h-100" style="cursor:default;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title text-left">{% trans 'Orders' %}</h5>
+                <p>{{ summary_data.orders_count }}</p>
+            </div>
+            <div class="icon">
+              <img src="{% static 'img/all.png' %}" alt="" style="width: 80px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="col-md-3 col-sm-6 mb-4">
+      <div class="card text-black h-100" style="cursor:default;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title text-left">{% trans 'Cuts' %}</h5>
+                <p>{{ summary_data.cuts_count }}</p>
+            </div>
+            <div class="icon">
+              <img src="{% static 'img/gears.png' %}" alt="" style="width: 80px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Payment Card: make it clickable -->
+    <div class="col-md-3 col-sm-6 mb-4">
+      <div id="payment-card" class="card text-black h-100" style="cursor:pointer;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title text-left">{% trans 'Payment' %}</h5>
+                <p>{{ summary_data.total_payment }}</p>
+            </div>
+            <div class="icon">
+              <img src="{% static 'img/allocation.png' %}" alt="" style="width: 80px;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>  
+
+  <!-- Placeholder for Payment Details Table -->
+  <div id="payment-details-container"></div>
 </div>
+
+<script>
+  // When the Payment card is clicked, fetch the Payment details HTML
+  document.addEventListener('DOMContentLoaded', function() {
+    const paymentCard = document.getElementById('payment-card');
+    paymentCard.addEventListener('click', function(){
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+
+      // Build the URL with query parameters for the Payment details view
+      const url = new URL("{% url 'payment_details' %}", window.location.origin);
+      url.searchParams.append('start_date', startDate);
+      url.searchParams.append('end_date', endDate);
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not OK");
+          }
+          return response.text();
+        })
+        .then(html => {
+          document.getElementById('payment-details-container').innerHTML = html;
+          // After inserting the HTML, attach event listeners to employee links
+          attachEmployeeLinkListeners();
+        })
+        .catch(error => {
+          alert('Error fetching payment details: ' + error);
+        });
+    });
+  });
+
+  // Attach click listeners to employee links in the newly loaded HTML
+  function attachEmployeeLinkListeners() {
+    document.querySelectorAll('.employee-details-link').forEach(function(link) {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        const employeeId = this.dataset.employeeId;
+        fetchEmployeeDetails(employeeId);
+      });
+    });
+  }
+
+  // Fetch employee details based on the date range
+  function fetchEmployeeDetails(employeeId) {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+
+    fetch(`/production/api/employees_by_orders/${employeeId}/?start_date=${startDate}&end_date=${endDate}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        const modalBody = document.querySelector('#employeeModal .modal-body');
+        // Build the operations table
+        let tableHtml = `
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Операция</th>
+                  <th>Норма времени (сек)</th>
+                  <th>Плата (сом)</th>
+                  ${data.orders.map(order => `<th>${order.model_name}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        data.operations.forEach(op => {
+          tableHtml += `<tr>
+            <td><strong>${op.operation}</strong></td>
+            <td class="text-center">${op.preferred_completion_time}</td>
+            <td class="text-center">${op.payment}</td>`;
+          data.orders.forEach(order => {
+            const operationData = data.operation_distribution.find(d =>
+              d.operation === op.operation && d.order === order.id
+            );
+            const quantity = operationData ? operationData.quantity : 0;
+            tableHtml += `<td class="text-center">${quantity}</td>`;
+          });
+          tableHtml += `</tr>`;
+        });
+        tableHtml += `</tbody></table></div>`;
+
+        modalBody.innerHTML = `
+          <div>
+            <p><strong>{% trans 'Имя:' %}</strong> ${data.full_name}</p>
+            <p><strong>{% trans 'ID:' %}</strong> ${data.employee_id}</p>
+            <p><strong>{% trans 'Время активной работы:' %}</strong> ${data.total_time}с</p>
+            <p><strong>{% trans 'Общий заработок:' %}</strong> ${data.total_payment}с</p>
+            <p><strong>{% trans 'Работал(-а) над операциями:' %}</strong></p>
+            ${tableHtml}
+          </div>
+        `;
+      })
+      .catch(error => console.error('Error loading employee details:', error));
+  }
+</script>
 {% endblock %}
