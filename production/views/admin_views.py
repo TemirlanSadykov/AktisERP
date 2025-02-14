@@ -1372,7 +1372,7 @@ def employee_calculation_view(request, order_ids):
 
 @login_required
 @admin_required
-def employee_api_by_orders(request, employee_id):
+def employees_payment_details(request, employee_id):
     # 1) Get the employee
     employee = get_object_or_404(UserProfile, pk=employee_id)
 

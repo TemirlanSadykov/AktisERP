@@ -289,5 +289,5 @@ urlpatterns = [
 
 
     path('api/payment_details/', payment_details_view, name='payment_details'),
-    path('api/employees_by_orders/<int:employee_id>/', employee_api_by_orders, name='employee_api_by_orders'),
+    path('api/employees_payment_details/<int:employee_id>/', employees_payment_details, name='employees_payment_details'),
 ]

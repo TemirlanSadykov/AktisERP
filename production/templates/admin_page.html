@@ -163,7 +163,7 @@
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
 
-    fetch(`/production/api/employees_by_orders/${employeeId}/?start_date=${startDate}&end_date=${endDate}`)
+    fetch(`/production/api/employees_payment_details/${employeeId}/?start_date=${startDate}&end_date=${endDate}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -203,14 +203,26 @@
         tableHtml += `</tbody></table></div>`;
 
         modalBody.innerHTML = `
-          <div>
-            <p><strong>{% trans 'Имя:' %}</strong> ${data.full_name}</p>
-            <p><strong>{% trans 'ID:' %}</strong> ${data.employee_id}</p>
-            <p><strong>{% trans 'Время активной работы:' %}</strong> ${data.total_time}с</p>
-            <p><strong>{% trans 'Общий заработок:' %}</strong> ${data.total_payment}с</p>
-            <p><strong>{% trans 'Работал(-а) над операциями:' %}</strong></p>
-            ${tableHtml}
+        <div class="employee-details container-fluid">
+          <div class="row">
+              <div class="col-md-6 mb-2">
+                  <p><strong>Имя:</strong> ${data.full_name}</p>
+              </div>
+              <div class="col-md-6 mb-2">
+                  <p><strong>ID:</strong> ${data.employee_id}</p>
+              </div>
+              <div class="col-md-6 mb-2">
+                  <p><strong>Время активной работы:</strong> ${data.total_time}с</p>
+              </div>
+              <div class="col-md-6 mb-2">
+                  <p><strong>Общий заработок:</strong> ${data.total_payment}с</p>
+              </div>
+              <div class="col-12 mb-2">
+                  <p><strong>Работал(-а) над операциями:</strong></p>
+                  ${tableHtml}
+              </div>
           </div>
+        </div>
         `;
       })
       .catch(error => console.error('Error loading employee details:', error));
