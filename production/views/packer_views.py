@@ -322,7 +322,6 @@ def update_piece_packer(request, piece_id):
             'color': color,
             'fabrics': fabrics,
             'size': size,
-            'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display()
         }
         return JsonResponse(data)

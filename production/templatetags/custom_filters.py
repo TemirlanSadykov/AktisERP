@@ -119,11 +119,6 @@ def packed_pieces(passport_size):
     return passport_size.pieces.filter(stage='PACKED').count()
 
 @register.filter
-def defective_pieces(passport_size):
-    # Count the number of pieces with a defect type defined
-    return passport_size.pieces.filter(defect_type__isnull=False).count()
-
-@register.filter
 def multiply(value, arg):
     try:
         return float(value) * float(arg)

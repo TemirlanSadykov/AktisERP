@@ -47,25 +47,10 @@
         <p><strong>Ткань:</strong> <span id="modal-fabrics"></span></p>
         <p><strong>Размер:</strong> <span id="modal-size"></span></p>
         <p><strong>Статус:</strong> <span id="modal-stage"></span></p>
-        <p><strong>Дефект:</strong> <span id="modal-defect"></span></p>
-        <div id="defectTypeSelect" style="display: none;">
-          <label for="defectType"><strong>Тип Дефекта:</strong></label>
-          <select id="defectType" class="form-control">
-            <option value="STITCHING">Ошибка шитья</option>
-            <option value="CUTTING">Ошибка резки</option>
-            <option value="FABRIC">Дефект ткани</option>
-            <option value="ASSEMBLY">Ошибка сборки</option>
-            <option value="OTHER">Прочие ошибки</option>
-          </select>
-        </div>
       </div>
       <div class="modal-footer form-actions" id="initialButtons">
         <button type="button" class="btn edit-btn" id="checked-button">{% trans "Checked" %}</button>
         <button type="button" class="btn btn-danger" id="defect-button">{% trans "Defect" %}</button>
-      </div>
-      <div class="modal-footer form-actions" id="saveBackButtons" style="display: none;">
-        <button type="button" class="btn edit-btn" id="save-button">{% trans "Save" %}</button>
-        <button type="button" class="btn back-btn" id="back-button">{% trans "Back" %}</button>
       </div>
     </div>
   </div>
@@ -107,7 +92,6 @@
                   document.getElementById('modal-fabrics').textContent = data.fabrics;
                   document.getElementById('modal-size').textContent = data.size;
                   document.getElementById('modal-stage').textContent = data.stage;
-                  document.getElementById('modal-defect').textContent = data.defect;
                   currentPieceId = data.piece_id;
                   $('#scanModal').modal('show');
                 })              
@@ -126,31 +110,15 @@
     });
 
     document.getElementById('defect-button').addEventListener('click', function() {
-        document.getElementById('initialButtons').style.display = 'none';
-        document.getElementById('saveBackButtons').style.display = 'flex';
-        document.getElementById('defectTypeSelect').style.display = 'block';
-    });
-
-    document.getElementById('back-button').addEventListener('click', function() {
-        document.getElementById('initialButtons').style.display = 'flex';
-        document.getElementById('saveBackButtons').style.display = 'none';
-        document.getElementById('defectTypeSelect').style.display = 'none';
-    });
-
-    document.getElementById('save-button').addEventListener('click', function() {
-        let defectType = document.getElementById('defectType').value;
-        updatePieceStatus('Defect', defectType);
+        updatePieceStatus('Defect');
     });
 
     document.getElementById('checked-button').addEventListener('click', function() {
         updatePieceStatus('Checked');
     });
 
-    function updatePieceStatus(status, defectType = null) {
+    function updatePieceStatus(status) {
       let updateData = { status: status };
-      if (defectType) {
-          updateData.defectType = defectType;
-      }
   
       fetch(`/production/qc/orders/update-piece-status/${currentPieceId}/`, {
           method: 'POST',

@@ -318,7 +318,6 @@ def get_piece_info(request, barcode):
             'color': color,
             'fabrics': fabrics,
             'size': size,
-            'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display(),
         }
         return JsonResponse(data)
@@ -334,7 +333,6 @@ def get_piece_info(request, barcode):
 def update_piece_qc(request, piece_id):
     data = json.loads(request.body)
     status = data.get('status')
-    defect_type = data.get('defectType', None)
 
     valid_statuses = {
         'Checked': ProductionPiece.StageChoices.CHECKED,
@@ -347,18 +345,9 @@ def update_piece_qc(request, piece_id):
     piece = ProductionPiece.objects.get(id=piece_id)
 
     piece.stage = valid_statuses[status]
-    if status == 'Defect':
-        if defect_type in [choice[0] for choice in ProductionPiece.DefectType.choices]:
-            piece.defect_type = defect_type
-            piece.save()
-            message = f'Piece status updated to {status} with defect type {defect_type}.'
-        else:
-            return JsonResponse({'success': False, 'message': 'Invalid defect type provided for defect status.'}, status=400)
-    
-    else:
-        piece.defect_type = None
-        piece.save()
-        message = f'Piece status updated to {status}.'
+    print(piece)
+    piece.save()
+    message = f'Piece status updated to {status}.'
 
     return JsonResponse({'success': True, 'message': message})
 

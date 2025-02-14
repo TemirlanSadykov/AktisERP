@@ -402,17 +402,9 @@ class ProductionPiece(models.Model):
         PACKED = 'PACKED', 'Упаковано'
         DEFECT = 'DEFECT', 'Брак'
 
-    class DefectType(models.TextChoices):
-        STITCHING = 'STITCHING', 'Ошибка шитья'
-        CUTTING = 'CUTTING', 'Ошибка резки'
-        FABRIC = 'FABRIC', 'Дефект ткани'
-        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
-        OTHER = 'OTHER', 'Прочие ошибки'
-
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='pieces')
     piece_number = models.IntegerField(verbose_name='Piece Number')
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
-    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
