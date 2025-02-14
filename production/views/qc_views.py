@@ -17,6 +17,7 @@ from django.shortcuts import render
 from io import BytesIO
 from django.views.decorators.http import require_POST
 from django.db.models import Q
+from django.db.models import Count
 
 from ..decorators import qc_required
 from ..forms import *
@@ -170,77 +171,52 @@ class OrderDetailQcView(DetailView):
         order = context['order']
 
         # ----- Build pivot data for "Required Quantities" table -----
-        # We'll use order.size_quantities.all() (assumed to include both color and fabric)
         required_qs = order.size_quantities.all().order_by('size')
-        pivot_data = {}  # keys: (color, fabric), value: {size: quantity}
+        pivot_data = {}          # keys: (color, fabric), value: {size: required quantity}
+        pivot_data_checked = {}  # keys: (color, fabric), value: {size: checked count}
         all_sizes_set = set()
+
+        # Pre-calculate the checked counts for each SizeQuantity in this order.
+        # We join ProductionPiece through passport_size -> passport -> cut -> order.
+        checked_counts_qs = ProductionPiece.objects.filter(
+            passport_size__passport__cut__order=order,
+            stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
+        ).values('passport_size__size_quantity').annotate(checked_count=Count('id'))
+
+        # Create a lookup dictionary: {SizeQuantity_id: checked_count}
+        checked_counts_dict = {
+            item['passport_size__size_quantity']: item['checked_count']
+            for item in checked_counts_qs
+        }
+
+        # Build our pivot data structures.
         for sq in required_qs:
-            # Collect the size (header) value.
             all_sizes_set.add(sq.size)
-            # Use a tuple (color, fabric) as the key.
-            key = (sq.color, sq.fabrics)  # Adjust field names if needed.
+            key = (sq.color, sq.fabrics)  # tuple key based on color and fabric
+
             if key not in pivot_data:
                 pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
+                pivot_data_checked[key] = {}
 
-        # Sort sizes. (If sizes are numeric strings, convert to int for sorting.)
+            pivot_data[key][sq.size] = sq.quantity
+            # Use the pre-computed count, defaulting to 0 if none found.
+            pivot_data_checked[key][sq.size] = checked_counts_dict.get(sq.id, 0)
+
+        # Sort sizes (if sizes are numeric strings, sort numerically).
         try:
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
         except ValueError:
             all_sizes = sorted(all_sizes_set)
 
-        # ----- Other context data (pass along your existing context) -----
-        associated_cuts = order.cuts.all().order_by('number')
-        passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'checked_quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
-        total_per_size = defaultdict(int)
-        total_checked_per_size = defaultdict(int)
-        for passport in passports:
-            passport_number = passport.id
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-                size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport_number]['stage'] = passport_size.stage
-                size_data[extra_key][passport_number]['extra'] = passport_size.extra
-
-                # Calculate checked pieces
-                checked_pieces = ProductionPiece.objects.filter(
-                    passport_size=passport_size,
-                    stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
-                ).count()
-                size_data[extra_key][passport_number]['checked_quantity'] += checked_pieces
-                total_per_size[size] += passport_size.quantity
-                total_checked_per_size[size] += checked_pieces
-
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0), 'checked': total_checked_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size], 'checked': total_checked_per_size[size]}
-
-        def sort_key(x):
-            parts = x.split('-')
-            try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
-
         context.update({
-            'pivot_data': pivot_data,  # Our new pivoted required data
-            'all_sizes': all_sizes,    # List of sizes for the header row
-            # (Include your other context items as before.)
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'associated_passports': passports,
-            'associated_cuts': associated_cuts,
+            'pivot_data': pivot_data,             # required quantities pivot
+            'pivot_data_checked': pivot_data_checked,  # checked counts pivot
+            'all_sizes': all_sizes,               # list of sizes for header row
+            'days_left': (order.client_order.term - timezone.now().date()).days
+                          if order.client_order.term >= timezone.now().date() else 0,
             'sidebar_type': 'qc_page'
         })
-        return context  
+        return context
     
 @method_decorator([login_required, qc_required], name='dispatch')
 class CutDetailQcView(DetailView):
