@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms import ModelChoiceField
 from django.db import transaction
+from collections import defaultdict
+
 import json
 from .models import *
 from django.db.models import F
@@ -127,13 +129,11 @@ class UserEditForm(forms.ModelForm):
         return user
     
 class CutForm(forms.ModelForm):
-    # Field for selecting unique sizes (e.g. 40, 42, 44)
     size_choices = forms.MultipleChoiceField(
         choices=[],
         widget=forms.CheckboxSelectMultiple,
         label="Выберите размеры"  # "Select sizes"
     )
-    # Hidden field to store quantities as JSON; keys will be size values.
     quantities = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
@@ -144,33 +144,57 @@ class CutForm(forms.ModelForm):
         order = kwargs.pop('order', None)
         super().__init__(*args, **kwargs)
         if order:
-            # Get all size_quantity objects for the order.
             qs = order.size_quantities.all()
-            # Extract unique sizes (assume q.size is a string, e.g. "40")
-            unique_sizes = sorted(set(q.size for q in qs), key=lambda s: int(s) if s.isdigit() else s)
+            unique_sizes = sorted(
+                set(q.size for q in qs), 
+                key=lambda s: int(s) if s.isdigit() else s
+            )
             choices = [(size, size) for size in unique_sizes]
             self.fields['size_choices'].choices = choices
 
+        # When editing an existing cut, pre-populate the fields.
+        if self.instance and self.instance.pk:
+            init_quantities = {}
+            qs = CutSize.objects.filter(cut=self.instance)
+            # Group CutSize objects by size.
+            groups = defaultdict(list)
+            for cs in qs:
+                size_val = cs.size_quantity.size
+                groups[size_val].append(cs)
+            for size_val, records in groups.items():
+                # Determine the unique (color, fabrics) combinations for these records.
+                unique_combos = set((cs.size_quantity.color, cs.size_quantity.fabrics) for cs in records)
+                # If there are duplicates from multiple color/fabric combinations,
+                # assume each combination should contribute the same number.
+                if unique_combos:
+                    # For example, if there are 4 records for size 40 and 2 unique combos,
+                    # then the intended quantity is 4 / 2 = 2.
+                    count = len(records) // len(unique_combos)
+                else:
+                    count = len(records)
+                init_quantities[size_val] = count
+            self.initial['quantities'] = json.dumps(init_quantities)
+            self.initial['size_choices'] = list(init_quantities.keys())
+
     def clean_quantities(self):
-        import json
         try:
             quantities = json.loads(self.cleaned_data['quantities'])
-            # Keys are size strings, values are integers.
             return {str(k): int(v) for k, v in quantities.items()}
         except (TypeError, ValueError):
             raise forms.ValidationError("Invalid quantities format.")
 
-    def save_cut_sizes(self, cut):
-        # Get the JSON quantities; keys are size values.
+    def save_cut_sizes(self, cut, sizes_to_create=None):
+        """
+        Create CutSize records for the given cut.
+        If sizes_to_create is provided, only create for those sizes.
+        Otherwise, create for all selected sizes.
+        """
         quantities = self.cleaned_data['quantities']
-        # Get the selected sizes (as strings)
         selected_sizes = self.cleaned_data['size_choices']
-        for size in selected_sizes:
-            # For each selected size, find all SizeQuantity objects in the order with that size.
+        sizes = sizes_to_create if sizes_to_create is not None else selected_sizes
+        for size in sizes:
             for size_quantity in cut.order.size_quantities.filter(size=size):
-                # Get the count for this size from the JSON; default to 1 if not provided.
                 count = quantities.get(size, 1)
-                # Create extra codes: empty string for the first piece, then "A", "B", etc.
                 extras = [""] + [chr(65 + i) for i in range(count - 1)]
                 for extra in extras:
                     CutSize.objects.create(

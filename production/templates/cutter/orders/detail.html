@@ -154,9 +154,8 @@
       </div>
     </div><br>
     {% if associated_cuts %}
-      <div class="accordion" id="cutsAccordion">
+      <div class="list-group">
         {% for cut in associated_cuts %}
-          <div class="accordion-item">
             <a href="{% url 'cut_detail' cut.pk %}"
                class="list-group-item list-group-item-action cut-link" 
                style="border: 1px solid #ced4da;"
@@ -165,20 +164,6 @@
                aria-controls="collapse{{ cut.id }}">
               {% trans "Cut" %}: {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
             </a>
-            <div id="collapse{{ cut.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ cut.id }}" data-bs-parent="#cutsAccordion">
-              <div class="accordion-body">
-                <ul class="list-group">
-                  {% for passport in cut.passports.all %}
-                    <li class="list-group-item">
-                      <a href="{% url 'passport_detail' passport.pk %}">
-                        №{{ passport }} - {{ passport.quantity }}
-                      </a>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            </div>
-          </div>
         {% endfor %}
       </div>
     {% else %}
@@ -190,33 +175,4 @@
     {% endif %}
   </div>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const accordionLinks = document.querySelectorAll('.cut-link');
-
-    accordionLinks.forEach(link => {
-      const targetId = link.getAttribute('data-bs-target');
-      const target = document.querySelector(targetId);
-      const collapse = new bootstrap.Collapse(target, { toggle: false }); // Initialize without toggling
-      
-      // Expand on hover
-      link.addEventListener('mouseenter', function () {
-        collapse.show(); // Explicitly show
-      });
-
-      // Collapse on hover out
-      link.addEventListener('mouseleave', function () {
-        collapse.hide(); // Explicitly hide
-      });
-
-      // Ensure it collapses if hovered out of the expanded area
-      target.addEventListener('mouseleave', function () {
-        collapse.hide(); // Collapse when the cursor leaves the content
-      });
-    });
-  });
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 {% endblock %}

@@ -324,18 +324,55 @@ class CutEditView(UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        order_id = self.object.order.pk  # Get order from the existing cut object
-        order = get_object_or_404(Order, pk=order_id)
-        kwargs['order'] = order  # Pass the order to the form
+        order = get_object_or_404(self.model.order.field.related_model, pk=self.object.order.pk)
+        kwargs['order'] = order
         return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        order_id = self.object.order.pk  # Get order from the existing cut object
-        order = get_object_or_404(Order, pk=order_id)
+        order = get_object_or_404(self.object.order.__class__, pk=self.object.order.pk)
         context['order'] = order
         context['sidebar_type'] = 'cutter'
         return context
+
+    def form_valid(self, form):
+        # Get the new sizes from the form.
+        new_sizes = set(form.cleaned_data['size_choices'])
+        # Get the old sizes from the existing cut.
+        old_sizes = set(cs.size_quantity.size for cs in self.object.cut_sizes.all())
+        removed_sizes = old_sizes - new_sizes
+        added_sizes = new_sizes - old_sizes
+
+        # Save the basic fields.
+        response = super().form_valid(form)
+        cut = self.object
+
+        # Handle removed sizes.
+        if removed_sizes:
+            # Delete CutSize records for removed sizes.
+            cut.cut_sizes.filter(size_quantity__size__in=removed_sizes).delete()
+            # For each related passport, remove PassportSize records for those sizes.
+            for passport in cut.passports.all():
+                passport.passport_sizes.filter(size_quantity__size__in=removed_sizes).delete()
+            # (If needed, also update related ProductionPiece records, 
+            # but if they depend on PassportSize, cascade deletion may handle that.)
+
+        # Handle added sizes.
+        if added_sizes:
+            # Create new CutSize records only for the newly added sizes.
+            form.save_cut_sizes(cut, sizes_to_create=added_sizes)
+
+        # Optionally, if the sizes that remain have changed quantities,
+        # you might want to update those too.
+        # One approach: delete and re-create them for sizes that remain.
+        common_sizes = new_sizes & old_sizes
+        if common_sizes:
+            # Delete existing records for these sizes.
+            cut.cut_sizes.filter(size_quantity__size__in=common_sizes).delete()
+            # Re-create them with the new quantities.
+            form.save_cut_sizes(cut, sizes_to_create=common_sizes)
+
+        return response
 
     def get_success_url(self):
         return reverse('cut_detail', kwargs={'pk': self.object.pk})

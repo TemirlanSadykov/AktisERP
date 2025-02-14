@@ -33,7 +33,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 details">
+                    <div class="details" >
                         <p><strong>{% trans "Date:" %}</strong> {{ cut.date }}</p>
                         <p><strong>{% trans "Order:" %}</strong> {{ cut.order.client_order }}</p>
                         <p><strong>{% trans "Model:" %}</strong> {{ cut.order.model }}</p>
@@ -43,7 +43,10 @@
                             {% for size, extra in passport_sizes_display %}
                               {{ size }}{% if extra %}-{{ extra }}{% endif %}{% if not forloop.last %}, {% endif %}
                             {% endfor %}
-                        </p>                        
+                        </p>
+                        <p><strong>{% trans "Length:" %}</strong> {{ cut.length }}</p>
+                        <p><strong>{% trans "Width:" %}</strong> {{ cut.width }}</p>
+                        <p><strong>{% trans "Consumption:" %}</strong> {{ cut.consumption }}</p>
                         <a href="{% url 'cut_edit' cut.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
                         <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
                     </div>
