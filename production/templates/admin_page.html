@@ -116,7 +116,7 @@
   <div id="payment-details-container"></div>
 </div>
 
-<script>
+{% comment %} <script>
   // When the Payment card is clicked, fetch the Payment details HTML
   document.addEventListener('DOMContentLoaded', function() {
     const paymentCard = document.getElementById('payment-card');
@@ -227,5 +227,5 @@
       })
       .catch(error => console.error('Error loading employee details:', error));
   }
-</script>
+</script> {% endcomment %}
 {% endblock %}
