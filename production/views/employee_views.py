@@ -20,7 +20,7 @@ CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 @employee_required
 def employee_page(request):
     user_profile = request.user.userprofile
-    assigned_works = AssignedWork.objects.filter(employee=user_profile).select_related('work', 'work__operation', 'work__passport_size')
+    assigned_works = AssignedWork.objects.filter(employee=user_profile, is_success=False, created_at__gt=datetime(2025, 2, 7)).select_related('work', 'work__operation', 'work__passport_size')
     return render(request, 'employee/works/list.html', {'assigned_works': assigned_works, 'sidebar_type' : 'emp'})
 
 @login_required
