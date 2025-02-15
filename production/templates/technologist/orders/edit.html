@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% load custom_filters %}
 {% block content %}
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
@@ -26,9 +25,8 @@
 <div class="container maincontr">
   <div class="row justify-content-center">
     <div class="col-md-12">
-      <!-- Header -->
       <div class="card-header">
-        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Order" %}</h2>
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Task" %}</h2>
       </div>
       <div class="card-body">
         <form method="post">
@@ -41,110 +39,67 @@
             <label for="id_quantity">{% trans "Quantity:" %}</label>
             {{ form.quantity }}
           </div>
-
+      
           <h3>{% trans "Size Quantities" %}</h3>
           <table id="sizeQuantityTable" class="table table-bordered">
             <thead>
               <tr>
                 <!-- First column for Color & Fabric -->
                 <th>{% trans "Color & Fabric" %}</th>
-                <!-- Dynamic columns for each size header -->
-                {% if dynamic_sizes %}
-                  {% for size in dynamic_sizes %}
-                    <th>
-                      <input type="text" name="header_{{ forloop.counter0 }}" value="{{ size }}" class="form-control" placeholder="{% trans 'Enter Size' %}">
-                    </th>
-                  {% endfor %}
-                {% else %}
+                <!-- Dynamic columns: loop over header sizes -->
+                {% for size in table_sizes %}
                   <th>
-                    <input type="text" name="header_0" class="form-control" placeholder="{% trans 'Enter Size' %}">
+                    <input type="text" name="header_{{ forloop.counter0 }}" class="form-control" placeholder="{% trans 'Enter Size' %}" value="{{ size }}">
                   </th>
-                {% endif %}
+                {% endfor %}
+                <!-- Extra column for column controls -->
                 <th class="control-col" style="width:50px;"></th>
               </tr>
             </thead>
             <tbody>
-              {% if dynamic_rows %}
-                {% for row in dynamic_rows %}
-                  {% with row_index=forloop.counter0 %}
-                  <tr data-row="{{ row_index }}">
-                    <!-- Color & Fabric cell -->
-                    <td>
-                      <div class="row">
-                        <div class="col">
-                          <select name="row-{{ row_index }}_color" class="form-control color-select">
-                            <option value="">{% trans "-------" %}</option>
-                            <option value="add_new_color">{% trans "Add New Color" %}</option>
-                            {% for color in colors %}
-                              <option value="{{ color.pk }}" {% if row.color == color.pk|stringformat:"s" %}selected{% endif %}>{{ color.name }}</option>
-                            {% endfor %}
-                          </select>
-                        </div>
-                        <div class="col">
-                          <select name="row-{{ row_index }}_fabric" class="form-control fabric-select">
-                            <option value="">{% trans "-------" %}</option>
-                            <option value="add_new_fabric">{% trans "Add New Fabric" %}</option>
-                            {% for fabric in fabrics %}
-                              <option value="{{ fabric.pk }}" {% if row.fabric == fabric.pk|stringformat:"s" %}selected{% endif %}>{{ fabric.name }}</option>
-                            {% endfor %}
-                          </select>
-                        </div>
-                      </div>
-                    </td>
-                    <!-- Quantity cells per size column -->
-                    {% if dynamic_sizes %}
-                      {% for size in dynamic_sizes %}
-                        <td>
-                          <input type="number" name="cell_{{ row_index }}_{{ forloop.counter0 }}" class="form-control"
-                                 value="{{ row.quantities|get_item:size|default_if_none:'' }}"
-                                 placeholder="{% trans 'Enter Quantity' %}">
-                        </td>
-                      {% endfor %}
-                    {% else %}
-                      <td>
-                        <input type="number" name="cell_{{ row_index }}_0" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
-                      </td>
-                    {% endif %}
-                    <td class="control-col" style="width:50px;"></td>
-                  </tr>
-                  {% endwith %}
-                {% endfor %}
-              {% else %}
-                <!-- Render one empty row if there is no dynamic data -->
-                <tr data-row="0">
+              {% for row in table_rows %}
+                <tr data-row="{{ forloop.counter0 }}">
+                  <!-- Color & Fabric cell -->
                   <td>
                     <div class="row">
                       <div class="col">
-                        <select name="row-0_color" class="form-control color-select">
+                        <select name="row-{{ forloop.counter0 }}_color" class="form-control color-select">
                           <option value="">{% trans "-------" %}</option>
                           <option value="add_new_color">{% trans "Add New Color" %}</option>
                           {% for color in colors %}
-                            <option value="{{ color.pk }}">{{ color.name }}</option>
+                            <option value="{{ color.pk }}" {% if color.pk|stringformat:"s" == row.color_id|stringformat:"s" %}selected{% endif %}>{{ color.name }}</option>
                           {% endfor %}
                         </select>
                       </div>
                       <div class="col">
-                        <select name="row-0_fabric" class="form-control fabric-select">
+                        <select name="row-{{ forloop.counter0 }}_fabric" class="form-control fabric-select">
                           <option value="">{% trans "-------" %}</option>
                           <option value="add_new_fabric">{% trans "Add New Fabric" %}</option>
                           {% for fabric in fabrics %}
-                            <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
+                            <option value="{{ fabric.pk }}" {% if fabric.pk|stringformat:"s" == row.fabric_id|stringformat:"s" %}selected{% endif %}>{{ fabric.name }}</option>
                           {% endfor %}
                         </select>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <input type="number" name="cell_0_0" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
-                  </td>
+                  <!-- Loop over cells in this row -->
+                  {% for cell in row.cells %}
+                    <td>
+                      <input type="number" name="cell_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" class="form-control" placeholder="{% trans 'Enter Quantity' %}" value="{{ cell.quantity }}">
+                      {% if cell.id %}
+                        <input type="hidden" name="cell_id_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" value="{{ cell.id }}">
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                  <!-- Extra control cell -->
                   <td class="control-col" style="width:50px;"></td>
                 </tr>
-              {% endif %}
-            </tbody>            
+              {% endfor %}
+            </tbody>
             <tfoot>
               <tr class="control-row" style="height:50px;">
-                <!-- The cell spans the Color & Fabric column plus all dynamic size columns -->
-                <td id="rowControlCell" colspan="{% if dynamic_sizes %}{{ dynamic_sizes|length|add:'1' }}{% else %}2{% endif %}">
+                <!-- This cell spans all “normal” columns (first + dynamic) -->
+                <td id="rowControlCell" colspan="{{ 1|add:col_count }}">
                   <div style="display:flex; height:100%;">
                     <div id="addRowControl" style="flex:1; display:flex; align-items:center; justify-content:center; border-right:1px solid #ccc; cursor:pointer;">
                       +
@@ -154,6 +109,7 @@
                     </div>
                   </div>
                 </td>
+                <!-- Rightmost control cell for columns -->
                 <td class="control-col" style="width:50px; padding:0;">
                   <div style="height:100%; display:flex; flex-direction:column;">
                     <div id="addColumnControl" style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #ccc; cursor:pointer;">
@@ -167,7 +123,7 @@
               </tr>
             </tfoot>
           </table>
-
+      
           <br>
           <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
           <a href="{% url 'client_order_detail' client_order_pk %}" class="btn btn-outline-secondary">{% trans "Back" %}</a>
@@ -179,7 +135,6 @@
 
 <!-- ======================== -->
 <!-- Add New Color Modal -->
-<!-- (same modal markup as in your create template) -->
 <div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-labelledby="addColorModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -208,7 +163,6 @@
 
 <!-- ======================== -->
 <!-- Add New Fabric Modal -->
-<!-- (same as in create template) -->
 <div class="modal" data-backdrop="false" id="addFabricModal" tabindex="-1" role="dialog" aria-labelledby="addFabricModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -237,9 +191,10 @@
 
 <!-- ======================== -->
 <!-- JavaScript Section -->
-<!-- (Reuse the same JS as in your create template for dynamic table and modal handling) -->
 <script>
+// ===========================
 // Global arrays for colors and fabrics.
+// These arrays are populated from the server context.
 var globalColors = [
   {% for color in colors %}
     { id: "{{ color.pk }}", name: "{{ color.name }}" },
@@ -251,6 +206,7 @@ var globalFabrics = [
   {% endfor %}
 ];
 
+// Helper function to get CSRF token from cookies.
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -266,6 +222,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
+// Helper functions to generate option markup.
 function getColorOptionsHTML() {
   let html = '<option value="">{% trans "-------" %}</option>';
   html += '<option value="add_new_color">{% trans "Add New Color" %}</option>';
@@ -284,6 +241,7 @@ function getFabricOptionsHTML() {
   return html;
 }
 
+// Custom modal show/hide functions.
 function showModal(modalEl) {
   modalEl.classList.add('show');
   modalEl.style.display = 'block';
@@ -299,6 +257,7 @@ function hideModal(modalEl) {
   }
 }
 
+// Update all color/fabric selects with a new option.
 function updateAllColorSelects(newOptionValue, newOptionText) {
   document.querySelectorAll('select.color-select').forEach(function(select) {
     if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
@@ -322,9 +281,11 @@ function updateAllFabricSelects(newOptionValue, newOptionText) {
 }
 
 document.addEventListener("DOMContentLoaded", function(){
+  // --------------------------
   // Dynamic Table Functionality
-  let rowCount = document.querySelectorAll("#sizeQuantityTable tbody tr").length;
-  let colCount = document.querySelectorAll("#sizeQuantityTable thead tr th").length - 2; // subtracting the first and control columns
+  // --------------------------
+  let rowCount = {{ row_count }};  // pre-populated rows from context
+  let colCount = {{ col_count }};  // pre-populated columns from context
 
   function updateRowControlColspan() {
     const rowControlCell = document.getElementById("rowControlCell");

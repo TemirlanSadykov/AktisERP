@@ -811,26 +811,96 @@ class OrderUpdateView(UpdateView):
     form_class = OrderForm
     template_name = 'technologist/orders/edit.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(OrderUpdateView, self).get_context_data(**kwargs)
+        context['client_order_pk'] = self.object.client_order.pk
+        context['sidebar_type'] = 'technology'
+        context['colors'] = Color.objects.all().order_by('name')
+        context['fabrics'] = Fabrics.objects.all().order_by('name')
+        
+        # --- Build the table header & rows from existing size quantities ---
+        # Get all size quantities for this order
+        size_quantities = self.object.size_quantities.all()
+        # Build a list of unique sizes (in order of appearance)
+        sizes = []
+        for sq in size_quantities:
+            if sq.size not in sizes:
+                sizes.append(sq.size)
+        # If no sizes exist yet, provide one empty header:
+        if not sizes:
+            sizes = ['']
+        
+        # Group size quantities by the combination (color, fabric)
+        rows_dict = {}
+        for sq in size_quantities:
+            key = (sq.color_id, sq.fabrics_id)
+            if key not in rows_dict:
+                rows_dict[key] = {}
+            # For each size in that row store the quantity and its pk
+            rows_dict[key][sq.size] = {'quantity': sq.quantity, 'id': sq.pk}
+        
+        # Now build a list of rows that the template can iterate over
+        table_rows = []
+        for (color_id, fabric_id), cells in rows_dict.items():
+            row_data = {
+                'color_id': color_id,
+                'fabric_id': fabric_id,
+                'cells': []
+            }
+            # For each header size, get the cell value (or leave blank)
+            for size in sizes:
+                if size in cells:
+                    row_data['cells'].append({
+                        'size': size,
+                        'quantity': cells[size]['quantity'],
+                        'id': cells[size]['id']
+                    })
+                else:
+                    row_data['cells'].append({
+                        'size': size,
+                        'quantity': '',
+                        'id': ''
+                    })
+            table_rows.append(row_data)
+        
+        # If there are no rows at all, create one empty row with one column
+        if not table_rows:
+            table_rows = [{
+                'color_id': '',
+                'fabric_id': '',
+                'cells': [{'size': sizes[0], 'quantity': '', 'id': ''}]
+            }]
+        
+        context['table_sizes'] = sizes
+        context['table_rows'] = table_rows
+        context['row_count'] = len(table_rows)
+        context['col_count'] = len(sizes)
+        return context
+
     def form_valid(self, form):
-        # Save the order basic fields
         self.object = form.save(commit=False)
         self.object.save()
         form.save_m2m()
-
-        # Update dynamic table data by editing existing SizeQuantity objects
-        self.handle_size_quantities(self.object, self.request.POST)
+        self.handle_size_quantities_update(self.object, self.request.POST)
         return redirect('order_detail', pk=self.object.pk)
 
-    def handle_size_quantities(self, order, post_data):
+    def handle_size_quantities_update(self, order, post_data):
         """
-        Process the dynamic table data by updating existing SizeQuantity objects
-        rather than deleting and recreating them.
-
-        Expected post_data keys:
-          - header_0, header_1, …         (the size for each column)
-          - row-0_color, row-0_fabric       (color and fabric for row 0)
-          - cell_0_0, cell_0_1, …           (quantity for row 0, for each size column)
-          - row-1_color, row-1_fabric, etc.
+        Process the dynamic table for editing.
+        
+        Expected POST keys:
+          - header_0, header_1, … (the header sizes)
+          - For each row:
+              row-0_color, row-0_fabric
+              cell_0_0, cell_0_1, … (quantities for each size)
+              (optionally) cell_id_0_0, cell_id_0_1, … (hidden IDs for existing SizeQuantity objects)
+        
+        For each cell:
+          • If a quantity > 0 is given:
+              – If a hidden ID exists, update that SizeQuantity.
+              – Otherwise, create a new SizeQuantity and add it to the order.
+          • If the cell is empty or 0 and a SizeQuantity exists (via hidden ID), remove and delete it.
+        Finally, update the order’s many-to-many “colors” and “fabrics” using the row data.
         """
         used_colors = set()
         used_fabrics = set()
@@ -840,17 +910,7 @@ class OrderUpdateView(UpdateView):
             sizes.append(post_data[f'header_{col}'])
             col += 1
 
-        # Build a dict of existing SizeQuantity objects keyed by (color_id, fabric_id, size)
-        existing_sq = {}
-        for sq in order.size_quantities.all():
-            key = (
-                sq.color.pk if sq.color else None,
-                sq.fabrics.pk if sq.fabrics else None,
-                sq.size
-            )
-            existing_sq[key] = sq
-
-        new_keys = set()
+        processed_sq_ids = set()
         row = 0
         while f'row-{row}_color' in post_data:
             color_id = post_data.get(f'row-{row}_color')
@@ -862,85 +922,67 @@ class OrderUpdateView(UpdateView):
                 used_colors.add(color)
             if fabric:
                 used_fabrics.add(fabric)
-
+            
+            # Process each cell in the row
             for col_index, size in enumerate(sizes):
-                qty_str = post_data.get(f'cell_{row}_{col_index}', '0')
-                try:
-                    quantity = int(qty_str)
-                except ValueError:
-                    quantity = 0
-
-                # Only process cells with a quantity > 0
-                if quantity > 0:
-                    key = (
-                        color.pk if color else None,
-                        fabric.pk if fabric else None,
-                        size
-                    )
-                    new_keys.add(key)
-                    if key in existing_sq:
-                        # Update the existing SizeQuantity if quantity has changed.
-                        sq_obj = existing_sq[key]
-                        if sq_obj.quantity != quantity:
-                            sq_obj.quantity = quantity
-                            sq_obj.save(update_fields=['quantity'])
+                cell_val = post_data.get(f'cell_{row}_{col_index}', '')
+                cell_sq_id = post_data.get(f'cell_id_{row}_{col_index}', None)
+                if cell_val and cell_val.isdigit() and int(cell_val) > 0:
+                    if cell_sq_id:
+                        try:
+                            sq_obj = SizeQuantity.objects.get(pk=cell_sq_id)
+                            sq_obj.quantity = int(cell_val)
+                            sq_obj.size = size  # update header in case it changed
+                            sq_obj.color = color
+                            sq_obj.fabrics = fabric
+                            sq_obj.save()
+                            processed_sq_ids.add(sq_obj.pk)
+                        except SizeQuantity.DoesNotExist:
+                            # In rare cases the ID may not exist: create new.
+                            sq_obj = SizeQuantity.objects.create(
+                                size=size,
+                                quantity=int(cell_val),
+                                color=color,
+                                fabrics=fabric
+                            )
+                            order.size_quantities.add(sq_obj)
+                            processed_sq_ids.add(sq_obj.pk)
                     else:
-                        # Create a new SizeQuantity and add it to the order.
+                        # No existing object; create one (this happens if you add a new size column)
                         sq_obj = SizeQuantity.objects.create(
                             size=size,
-                            quantity=quantity,
+                            quantity=int(cell_val),
                             color=color,
                             fabrics=fabric
                         )
                         order.size_quantities.add(sq_obj)
+                        processed_sq_ids.add(sq_obj.pk)
+                else:
+                    # If the cell is empty (or 0) but a SizeQuantity was previously there, remove it.
+                    if cell_sq_id:
+                        try:
+                            sq_obj = SizeQuantity.objects.get(pk=cell_sq_id)
+                            order.size_quantities.remove(sq_obj)
+                            sq_obj.delete()
+                        except SizeQuantity.DoesNotExist:
+                            pass
             row += 1
 
-        # Remove any SizeQuantity objects that exist in the order but weren't included in the form.
-        for key, sq in existing_sq.items():
-            if key not in new_keys:
+        # (Optional) Remove any SizeQuantity objects not present in the submitted data.
+        for sq in order.size_quantities.all():
+            if sq.pk not in processed_sq_ids:
                 order.size_quantities.remove(sq)
                 sq.delete()
 
-        # Update the order's many-to-many fields for colors and fabrics.
+        # Update order colors and fabrics from the rows
         if used_colors:
-            order.colors.set(used_colors)
+            order.colors.set(list(used_colors))
+        else:
+            order.colors.clear()
         if used_fabrics:
-            order.fabrics.set(used_fabrics)
-
-    def get_context_data(self, **kwargs):
-        context = super(OrderUpdateView, self).get_context_data(**kwargs)
-        context['client_order_pk'] = self.object.client_order.pk if self.object.client_order else None
-        context['sidebar_type'] = 'technology'
-        context['colors'] = Color.objects.all().order_by('name')
-        context['fabrics'] = Fabrics.objects.all().order_by('name')
-
-        # Group existing SizeQuantity objects by (color, fabric)
-        rows_dict = {}
-        for size_qty in self.object.size_quantities.all():
-            color_id = str(size_qty.color.pk) if size_qty.color else ''
-            fabric_id = str(size_qty.fabrics.pk) if size_qty.fabrics else ''
-            key = (color_id, fabric_id)
-            if key not in rows_dict:
-                rows_dict[key] = {
-                    'color': color_id,
-                    'fabric': fabric_id,
-                    'quantities': {}
-                }
-            # Save the quantity keyed by the size (header)
-            rows_dict[key]['quantities'][size_qty.size] = size_qty.quantity
-
-        # Convert to a list of rows for easier iteration in the template.
-        dynamic_rows = list(rows_dict.values())
-
-        # Determine all distinct sizes across all rows (order them as needed)
-        all_sizes = set()
-        for row in dynamic_rows:
-            all_sizes.update(row['quantities'].keys())
-        dynamic_sizes = sorted(list(all_sizes))
-
-        context['dynamic_rows'] = dynamic_rows
-        context['dynamic_sizes'] = dynamic_sizes
-        return context
+            order.fabrics.set(list(used_fabrics))
+        else:
+            order.fabrics.clear()
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderDeleteView(DeleteView):
