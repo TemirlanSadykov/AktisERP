@@ -82,6 +82,7 @@ class EmployeeAttendance(models.Model):
 
 class Client(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    contact_info = models.TextField(verbose_name='Контактная информация')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     
@@ -158,6 +159,18 @@ class Equipment(models.Model):
     
 class Node(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    number = models.CharField(max_length=100, null=True, blank=True, verbose_name='№ узла')
+    SEWING = 0
+    CUTTING = 1
+    QC = 2
+    PACKING = 3
+    TYPE_CHOICES = [
+        (SEWING, 'Шитье'),
+        (CUTTING, 'Резка'),
+        (QC, 'ОТК'),
+        (PACKING, 'Упаковка'),
+    ]
+    type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     def __str__(self):
@@ -170,7 +183,9 @@ class Operation(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='operations', verbose_name='Оборудование')
     node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='operations', verbose_name='Узел')
     preferred_completion_time = models.IntegerField(verbose_name='Предпочтительное время выполнения')
+    average_completion_time = models.IntegerField(null=True, verbose_name='Среднее время выполнения')
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
+    employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='operations', null=True, blank=True, verbose_name='Сотрудник')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
@@ -298,7 +313,7 @@ class Cut(models.Model):
     number = models.IntegerField(verbose_name='Номер', editable=False)
     width = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Ширина', blank=True, null=True)
     length = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Длина', blank=True, null=True)
-    consumption = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход', blank=True, null=True)
+    consum = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход', blank=True, null=True)
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
     size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
@@ -404,10 +419,18 @@ class ProductionPiece(models.Model):
         CHECKED = 'CHECKED', 'Проверено'
         PACKED = 'PACKED', 'Упаковано'
         DEFECT = 'DEFECT', 'Брак'
+    
+    class DefectType(models.TextChoices):
+        STITCHING = 'STITCHING', 'Ошибка шитья'
+        CUTTING = 'CUTTING', 'Ошибка резки'
+        FABRIC = 'FABRIC', 'Дефект ткани'
+        ASSEMBLY = 'ASSEMBLY', 'Ошибка сборки'
+        OTHER = 'OTHER', 'Прочие ошибки'
 
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='pieces')
     piece_number = models.IntegerField(verbose_name='Piece Number')
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
+    defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
