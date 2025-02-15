@@ -191,7 +191,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://prod-aktis.up.railway.app', 'https://luma-light.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://prod-aktis.up.railway.app', 'https://prod-aktis-old.up.railway.app', 'https://luma-light.up.railway.app']
 
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
