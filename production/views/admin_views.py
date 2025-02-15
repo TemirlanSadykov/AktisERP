@@ -56,16 +56,12 @@ def admin_page(request):
             start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
             end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
 
-            # Total Production and Orders: use orders created in the date range
+            # Use orders created within the given date range
             orders_in_range = Order.objects.filter(created_at__date__range=[start_dt, end_dt])
             total_production = orders_in_range.aggregate(total=Sum('quantity'))['total'] or 0
             orders_count = orders_in_range.count()
-
-            # Cuts: count cuts whose date is in the range
             cuts_count = Cut.objects.filter(date__range=[start_dt, end_dt]).count()
 
-            # Payment: For each AssignedWork created in the date range,
-            # calculate: quantity * work.operation.payment and sum all values.
             payment_expr = ExpressionWrapper(
                 F('quantity') * F('work__operation__payment'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
@@ -81,8 +77,34 @@ def admin_page(request):
                 'total_payment': total_payment,
             }
         except ValueError:
-            # Optionally, handle invalid date formats here
+            # If the provided dates are invalid, leave summary_data as zeros.
             pass
+    else:
+        # No date range provided—use the current state based on active client orders.
+        today = date.today()
+        # Get client orders where today is between launch_date and term_date.
+        active_client_orders = ClientOrder.objects.filter(launch__lte=today, term__gte=today)
+        # Get all orders that belong to these active client orders.
+        orders_in_range = Order.objects.filter(client_order__in=active_client_orders)
+        total_production = orders_in_range.aggregate(total=Sum('quantity'))['total'] or 0
+        orders_count = orders_in_range.count()
+        # Count cuts for orders that belong to active client orders.
+        cuts_count = Cut.objects.filter(order__client_order__in=active_client_orders).count()
+
+        payment_expr = ExpressionWrapper(
+            F('quantity') * F('work__operation__payment'),
+            output_field=DecimalField(max_digits=10, decimal_places=2)
+        )
+        total_payment = AssignedWork.objects.filter(
+            work__passport_size__passport__cut__order__client_order__in=active_client_orders
+        ).annotate(work_payment=payment_expr).aggregate(total_payment=Sum('work_payment'))['total_payment'] or 0
+
+        summary_data = {
+            'total_production': total_production,
+            'orders_count': orders_count,
+            'cuts_count': cuts_count,
+            'total_payment': total_payment,
+        }
 
     context = {
         'start_date': start_date,
@@ -150,7 +172,134 @@ def payment_details_view(request):
     context = {'employee_data': employee_data_list}
     return render(request, 'admin/partial_payment_details.html', context)
 
+@login_required
+@admin_required
+def employees_payment_details(request, employee_id):
+    # 1) Get the employee
+    employee = get_object_or_404(UserProfile, pk=employee_id)
 
+    # 2) Parse the date range from query parameters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    if start_date and end_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            start_dt = None
+            end_dt = None
+    else:
+        start_dt = end_dt = None
+
+    # 3) Fetch AssignedWork for the employee in that date range
+    if start_dt and end_dt:
+        assigned_works = AssignedWork.objects.filter(
+            employee=employee,
+            created_at__date__range=[start_dt, end_dt]
+        )
+    else:
+        assigned_works = AssignedWork.objects.filter(employee=employee)
+
+    # 4) Extract unique orders from the assigned works
+    orders = assigned_works.values_list(
+        "work__passport_size__passport__cut__order__id",
+        "work__passport_size__passport__cut__order__model__name"
+    ).distinct()
+    orders_dict = {order_id: model_name for order_id, model_name in orders}
+
+    # 5) Group operations and calculate summary details
+    operation_summary = {}
+    total_units = 0
+    total_weighted_efficiency = 0
+    operation_distribution = {}
+
+    for work in assigned_works:
+        operation_name = work.work.operation.name
+        order_id = work.work.passport_size.passport.cut.order.id
+        preferred_completion_time = work.work.operation.preferred_completion_time
+        payment = work.work.operation.payment
+        actual_time = 0
+        if work.start_time and work.end_time:
+            actual_time = (work.end_time - work.start_time).total_seconds()
+
+        # Initialize or update the summary for this operation
+        if operation_name not in operation_summary:
+            operation_summary[operation_name] = {
+                'operation': operation_name,
+                'quantity': work.quantity,
+                'total_time': actual_time,
+                'preferred_completion_time': preferred_completion_time,
+                'payment': payment,
+            }
+        else:
+            operation_summary[operation_name]['quantity'] += work.quantity
+            operation_summary[operation_name]['total_time'] += actual_time
+
+        # Operation distribution across orders
+        key = (operation_name, order_id)
+        operation_distribution[key] = operation_distribution.get(key, 0) + work.quantity
+
+    # 6) Build the list of operation details
+    operations_details = []
+    total_time = 0
+    total_payment = 0
+    for op_data in operation_summary.values():
+        total_time_spent = op_data['preferred_completion_time'] * op_data['quantity']
+        total_payment_spent = op_data['payment'] * op_data['quantity']
+        avg_time_per_unit = (op_data['total_time'] / op_data['quantity']) if op_data['quantity'] else 0
+        efficiency = (op_data['preferred_completion_time'] / avg_time_per_unit) * 100 if avg_time_per_unit else 100
+
+        total_units += op_data['quantity']
+        total_weighted_efficiency += (efficiency * op_data['quantity'])
+        total_time += total_time_spent
+        total_payment += total_payment_spent
+
+        operations_details.append({
+            'operation': op_data['operation'],
+            'quantity': op_data['quantity'],
+            'total_time_spent': total_time_spent,
+            'total_payment_spent': total_payment_spent,
+            'average_time_per_unit': avg_time_per_unit,
+            'preferred_completion_time': op_data['preferred_completion_time'],
+            'payment': op_data['payment']
+        })
+
+    overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
+
+    # 7) Summarize units produced by day (if needed)
+    units_by_day = {}
+    for work in assigned_works:
+        if work.start_time:
+            day = work.start_time.date()
+            units_by_day[day] = units_by_day.get(day, 0) + work.quantity
+    # units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
+
+    # 8) Calculate total defects for the employee
+    total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
+
+    # 9) Convert operation distribution to list format
+    operation_distribution_list = [
+        {'operation': op, 'order': order, 'quantity': qty}
+        for (op, order), qty in operation_distribution.items()
+    ]
+
+    response_data = {
+        'id': employee.id,
+        'full_name': f"{employee.user.first_name} {employee.user.last_name}",
+        'employee_id': employee.employee_id,
+        'efficiency': overall_efficiency,
+        'operations': operations_details,
+        'orders': [
+            {'id': order_id, 'model_name': model_name}
+            for order_id, model_name in orders_dict.items()
+        ],
+        'operation_distribution': operation_distribution_list,
+        'total_time': total_time,
+        'total_payment': total_payment,
+        # Optionally include other fields (e.g., total_defects) if needed
+    }
+
+    return JsonResponse(response_data)
 
 @login_required
 @admin_required
@@ -1369,132 +1518,3 @@ def employee_calculation_view(request, order_ids):
         'employee_data': employee_data_list,
     }
     return render(request, 'admin/employee_calculation.html', context)
-
-@login_required
-@admin_required
-def employees_payment_details(request, employee_id):
-    # 1) Get the employee
-    employee = get_object_or_404(UserProfile, pk=employee_id)
-
-    # 2) Parse the date range from query parameters
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    if start_date and end_date:
-        try:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-        except ValueError:
-            start_dt = None
-            end_dt = None
-    else:
-        start_dt = end_dt = None
-
-    # 3) Fetch AssignedWork for the employee in that date range
-    if start_dt and end_dt:
-        assigned_works = AssignedWork.objects.filter(
-            employee=employee,
-            created_at__date__range=[start_dt, end_dt]
-        )
-    else:
-        assigned_works = AssignedWork.objects.filter(employee=employee)
-
-    # 4) Extract unique orders from the assigned works
-    orders = assigned_works.values_list(
-        "work__passport_size__passport__cut__order__id",
-        "work__passport_size__passport__cut__order__model__name"
-    ).distinct()
-    orders_dict = {order_id: model_name for order_id, model_name in orders}
-
-    # 5) Group operations and calculate summary details
-    operation_summary = {}
-    total_units = 0
-    total_weighted_efficiency = 0
-    operation_distribution = {}
-
-    for work in assigned_works:
-        operation_name = work.work.operation.name
-        order_id = work.work.passport_size.passport.cut.order.id
-        preferred_completion_time = work.work.operation.preferred_completion_time
-        payment = work.work.operation.payment
-        actual_time = 0
-        if work.start_time and work.end_time:
-            actual_time = (work.end_time - work.start_time).total_seconds()
-
-        # Initialize or update the summary for this operation
-        if operation_name not in operation_summary:
-            operation_summary[operation_name] = {
-                'operation': operation_name,
-                'quantity': work.quantity,
-                'total_time': actual_time,
-                'preferred_completion_time': preferred_completion_time,
-                'payment': payment,
-            }
-        else:
-            operation_summary[operation_name]['quantity'] += work.quantity
-            operation_summary[operation_name]['total_time'] += actual_time
-
-        # Operation distribution across orders
-        key = (operation_name, order_id)
-        operation_distribution[key] = operation_distribution.get(key, 0) + work.quantity
-
-    # 6) Build the list of operation details
-    operations_details = []
-    total_time = 0
-    total_payment = 0
-    for op_data in operation_summary.values():
-        total_time_spent = op_data['preferred_completion_time'] * op_data['quantity']
-        total_payment_spent = op_data['payment'] * op_data['quantity']
-        avg_time_per_unit = (op_data['total_time'] / op_data['quantity']) if op_data['quantity'] else 0
-        efficiency = (op_data['preferred_completion_time'] / avg_time_per_unit) * 100 if avg_time_per_unit else 100
-
-        total_units += op_data['quantity']
-        total_weighted_efficiency += (efficiency * op_data['quantity'])
-        total_time += total_time_spent
-        total_payment += total_payment_spent
-
-        operations_details.append({
-            'operation': op_data['operation'],
-            'quantity': op_data['quantity'],
-            'total_time_spent': total_time_spent,
-            'total_payment_spent': total_payment_spent,
-            'average_time_per_unit': avg_time_per_unit,
-            'preferred_completion_time': op_data['preferred_completion_time'],
-            'payment': op_data['payment']
-        })
-
-    overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
-
-    # 7) Summarize units produced by day (if needed)
-    units_by_day = {}
-    for work in assigned_works:
-        if work.start_time:
-            day = work.start_time.date()
-            units_by_day[day] = units_by_day.get(day, 0) + work.quantity
-    # units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
-
-    # 8) Calculate total defects for the employee
-    total_defects = ErrorResponsibility.objects.filter(employee=employee).count()
-
-    # 9) Convert operation distribution to list format
-    operation_distribution_list = [
-        {'operation': op, 'order': order, 'quantity': qty}
-        for (op, order), qty in operation_distribution.items()
-    ]
-
-    response_data = {
-        'id': employee.id,
-        'full_name': f"{employee.user.first_name} {employee.user.last_name}",
-        'employee_id': employee.employee_id,
-        'efficiency': overall_efficiency,
-        'operations': operations_details,
-        'orders': [
-            {'id': order_id, 'model_name': model_name}
-            for order_id, model_name in orders_dict.items()
-        ],
-        'operation_distribution': operation_distribution_list,
-        'total_time': total_time,
-        'total_payment': total_payment,
-        # Optionally include other fields (e.g., total_defects) if needed
-    }
-
-    return JsonResponse(response_data)

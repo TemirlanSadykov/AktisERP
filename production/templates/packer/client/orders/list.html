@@ -74,13 +74,7 @@
                   <td>{{ order_info.order.order_number }}</td>
                   <td>{{ order_info.order.launch }}</td>
                   <td>{{ order_info.order.term }}</td>
-                  <td>
-                    {% if term_filter == 'upcoming' %}
-                      {% trans 'Days left:' %} {{ order_info.days_left }}
-                    {% else %}
-                      {% trans 'Passed by:' %} {{ order_info.days_left }}
-                    {% endif %}
-                  </td>
+                  <td>{{ order_info.days_left }}</td>
                   <td>
                     <a href="{% url 'client_order_detail_packer' order_info.order.pk %}" class="btn btn-sm btn-primary">
                       {% trans "View" %}

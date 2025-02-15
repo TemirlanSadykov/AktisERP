@@ -493,7 +493,7 @@ class ClientOrderForm(forms.ModelForm):
         term = self.cleaned_data.get('term')
         launch = self.cleaned_data.get('launch')
         today = timezone.localdate()
-        if term < today or term < launch:
+        if term < launch:
             raise ValidationError("The term date cannot be earlier than today or the launch date.")
         return term
 

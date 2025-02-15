@@ -425,7 +425,7 @@ class ClientOrderUpdateView(RestrictBranchMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        return reverse('client_order_detail', kwargs={'pk': self.object.pk, 'sidebar_type': 'technology'})
+        return reverse('client_order_detail', kwargs={'pk': self.object.pk})
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
