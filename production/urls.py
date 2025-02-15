@@ -6,7 +6,6 @@ urlpatterns = [
     path('', user_redirect, name='user_redirect'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
-    path('employee/clock-in-out/', clock_in_out, name='clock_in_out'),
     
     path('employee/', employee_page, name='employee_page'),
     path('technologist/', technologist_page, name='technologist_page'),
@@ -161,11 +160,7 @@ urlpatterns = [
     path('technologist/equipment<int:pk>/unarchive/', EquipmentUnArchiveView.as_view(), name='equipment_unarchive'), 
     path('technologist/equipment/<int:pk>/delete/', EquipmentDeleteView.as_view(), name='equipment_delete'),
 
-    path('employee/works/done/', done_works_list, name='done_works_list'),
-    path('employee/works/pending/', pending_works_list, name='pending_works_list'),
-    path('employee/works/reassigned/', reassigned_works_list, name='reassigned_works_list'),
-    path('employee/works/<int:assigned_work_id>/start/', start_work, name='start_work'),
-    path('employee/works/<int:assigned_work_id>/finish/', finish_work, name='finish_work'),
+    path('employee/works/<int:id>/complete/', complete_work, name='complete_work'),
 
     path('cutter/client/orders/order/', OrderListCutterView.as_view(), name='order_list_cutter'),
     path('cutter/client/orders/order/<int:pk>/', OrderDetailCutterView.as_view(), name='order_detail_cutter'),

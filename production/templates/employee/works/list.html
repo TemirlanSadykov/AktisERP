@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load custom_filters %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <!-- Navigation content remains unchanged -->
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Employee Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container clients-wrapper maincontr">
+  <div class="d-flex justify-content-end mb-3">
+    <span class="operation-text">{% trans "My Works" %}</span>
+  </div><hr>
+
+    {% if assigned_works %}
+    <div class="employee-cards-container">
+      {% for assigned_work in assigned_works %}
+      <div class="employee-card" id="employee-card-{{ assigned_work.id }}">
+        <div class="employee-operation-name">
+          {{ assigned_work.work.operation.number }} - {{ assigned_work.work.operation.name }}
+        </div>
+        <div class="employee-operation-photo" style="padding: 15px;">
+          {% if assigned_work.work.operation.photo %}
+          <img src="{{ assigned_work.work.operation.photo.url }}" alt="{% trans 'Operation Photo' %}">
+          {% else %}
+          {% trans "No photo" %}
+          {% endif %}
+        </div>
+        <div class="employee-details">
+          <!-- Other details remain unchanged -->
+          <div class="employee-passport">
+            {% trans "Passport:" %}
+            <strong>{{ assigned_work.work.passport_size.passport }}</strong>
+          </div>
+          <div class="employee-passport">
+            {% trans "Cut:" %}
+            <strong>{{ assigned_work.work.passport_size.passport.cut.number }}</strong>
+          </div>
+          <div class="employee-passport">
+            {% trans "Model:" %}
+            <strong>{{ assigned_work.work.passport_size.passport.cut.order.model }}</strong>
+          </div>
+          <div class="employee-passport">
+            {% trans "Fabrics:" %}
+            <strong>
+              {% if assigned_work.work.passport_size.size_quantity.color and assigned_work.work.passport_size.size_quantity.fabrics %}
+                {{ assigned_work.work.passport_size.size_quantity.color }} - {{ assigned_work.work.passport_size.size_quantity.fabrics }}
+              {% else %} -- {% endif %}
+            </strong>
+          </div>
+          <div class="employee-size">
+            {% trans "Size:" %}
+              {% if assigned_work.work.passport_size.extra %}
+              <strong>{{ assigned_work.work.passport_size.size_quantity.size }}-{{ assigned_work.work.passport_size.extra }}</strong>
+              {% else %}
+              <strong>{{ assigned_work.work.passport_size.size_quantity.size }}</strong>
+              {% endif %}
+          </div>
+          <div class="employee-quantity">
+            {% trans "Assigned Quantity:" %} <strong>{{ assigned_work.quantity }}</strong>
+          </div>
+          <!-- Complete Button -->
+          <div class="employee-actions">
+            <button class="complete-button" data-id="{{ assigned_work.id }}">
+              {% trans "Complete" %}
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="list-group">
+      <a class="list-group-item list-group-item-action" style="border: 1px solid #ced4da; border-radius: 0px;">
+        {% trans "No works found." %}
+      </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Use event delegation to handle clicks on any complete button
+  const container = document.querySelector('.employee-cards-container');
+  if (container) {
+    container.addEventListener('click', function (e) {
+      if (e.target && e.target.classList.contains('complete-button')) {
+        const button = e.target;
+        const assignedWorkId = button.getAttribute('data-id');
+        const csrfToken = getCookie('csrftoken');
+
+        fetch(`/production/employee/works/${assignedWorkId}/complete/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            // Remove the work card from the DOM
+            const workCard = document.getElementById(`employee-card-${assignedWorkId}`);
+            if (workCard) {
+              workCard.remove();
+            }
+          } else {
+            console.error('Error completing work:', data.message);
+          }
+        })
+        .catch(error => console.error('Error:', error));
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
