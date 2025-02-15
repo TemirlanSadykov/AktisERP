@@ -109,84 +109,119 @@
   </div>
 </div>
 
+<!-- Loading overlay to prevent duplicate submissions -->
+<div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 9999;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">{% trans "Loading..." %}</span>
+  </div>
+</div>
+
 <script>
-    var passportId = "{{ passport.id }}";
-    var cutId = "{{ cut.id }}";
+  // Counter to track ongoing submissions
+  var activeRequests = 0;
+  function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+  }
+  function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+
+  var passportId = "{{ passport.id }}";
+  var cutId = "{{ cut.id }}";
   
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
       }
-      return cookieValue;
     }
+    return cookieValue;
+  }
   
-    document.addEventListener("DOMContentLoaded", function() {
-      // Propagate value in row when input changes
-      document.querySelectorAll('.employee-input').forEach(input => {
-        input.addEventListener('input', function(event) {
-          const value = input.value.trim();
-          const row = input.closest('tr');
-          const inputsInRow = row.querySelectorAll('.employee-input');
-          inputsInRow.forEach(inp => {
-            inp.value = value;
-          });
-        });
-  
-        // On Enter, process every input in the same row
-        input.addEventListener('keypress', function(event) {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            const row = input.closest('tr');
-            const inputsInRow = row.querySelectorAll('.employee-input');
-            inputsInRow.forEach(inp => {
-              const nameParts = inp.name.split('_'); // expected: employee_{operationId}_{passportSizeId}
-              const operationId = nameParts[1];
-              const passportSizeId = nameParts[2];
-              const value = inp.value.trim();
-              if (value !== '') {
-                assignOperation(operationId, passportSizeId, value, inp);
-              }
-            });
-          }
+  document.addEventListener("DOMContentLoaded", function() {
+    // Only propagate value if it's the first cell in the row
+    document.querySelectorAll('.employee-input').forEach(input => {
+      input.addEventListener('input', function(event) {
+        const row = input.closest('tr');
+        // Get the first input in the row
+        const firstInput = row.querySelector('.employee-input');
+        // Only propagate if the changed input is the first one
+        if (input !== firstInput) {
+          return;
+        }
+        const value = input.value.trim();
+        // Propagate to all inputs in that row
+        row.querySelectorAll('.employee-input').forEach(inp => {
+          inp.value = value;
         });
       });
-    });
   
-    function assignOperation(operationId, passportSizeId, value, inputElement) {
-      fetch(`/production/technologist/passports/${cutId}/assign_operations/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'),
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-          operation_id: operationId,
-          passport_size_id: passportSizeId,
-          value: value
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          inputElement.value = ''; // Clear the input field
-          const newSpan = document.createElement('span');
-          newSpan.className = 'editable';
-          newSpan.textContent = value;
-          inputElement.parentNode.replaceChild(newSpan, inputElement);
-        } else {
-          console.error('Failed to assign operation', data.message);
-          alert('Не получилось обновить');
+      // On Enter, process every input in the same row
+      input.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const row = input.closest('tr');
+          row.querySelectorAll('.employee-input').forEach(inp => {
+            const nameParts = inp.name.split('_'); // expected: employee_{operationId}_{passportSizeId}
+            const operationId = nameParts[1];
+            const passportSizeId = nameParts[2];
+            const value = inp.value.trim();
+            if (value !== '') {
+              assignOperation(operationId, passportSizeId, value, inp);
+            }
+          });
         }
       });
+    });
+  });
+  
+  function assignOperation(operationId, passportSizeId, value, inputElement) {
+    activeRequests++;
+    if (activeRequests === 1) {
+      showLoading();
     }
+    
+    fetch(`/production/technologist/passports/${cutId}/assign_operations_by_cut/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        operation_id: operationId,
+        passport_size_id: passportSizeId,
+        value: value
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        inputElement.value = ''; // Clear the input field
+        const newSpan = document.createElement('span');
+        newSpan.className = 'editable';
+        newSpan.textContent = value;
+        inputElement.parentNode.replaceChild(newSpan, inputElement);
+      } else {
+        console.error('Failed to assign operation', data.message);
+        alert('Не получилось обновить');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    })
+    .finally(() => {
+      activeRequests--;
+      if (activeRequests === 0) {
+        hideLoading();
+      }
+    });
+  }
 </script>
 {% endblock %}
