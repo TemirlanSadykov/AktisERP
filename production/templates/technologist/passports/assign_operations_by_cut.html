@@ -224,4 +224,83 @@
     });
   }
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelector('#operationAssignmentForm').addEventListener('dblclick', function(event) {
+      if (event.target.classList.contains('editable')) {
+        var span = event.target;
+        var originalText = span.textContent.trim();
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalText;
+        input.className = 'edit-input';
+        input.style.width = '80px';
+        input.setAttribute('data-work', span.getAttribute('data-work'));
+
+        // Replace the span with the input field
+        span.parentNode.replaceChild(input, span);
+        input.focus();
+
+        // Flag to ensure the revert function runs only once
+        var isReplaced = false;
+        var revertToSpan = function(newValue) {
+          if (isReplaced) return;  // Already replaced, so do nothing
+          isReplaced = true;
+          if (!input.parentNode || !input.parentNode.contains(input)) return; // Guard against missing node
+
+          var newSpan = document.createElement('span');
+          newSpan.textContent = newValue || originalText;
+          newSpan.className = 'editable';
+          newSpan.style.color = span.style.color;  // Copy any styling if needed
+          newSpan.setAttribute('data-work', span.getAttribute('data-work'));
+          input.parentNode.replaceChild(newSpan, input);
+        };
+
+        // On blur, revert back to a span with the (possibly updated) text.
+        input.addEventListener('blur', function() {
+          revertToSpan(input.value);
+        });
+
+        // On Enter, update via AJAX then revert.
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            var workId = input.getAttribute('data-work');
+            updateWork(workId, input.value, revertToSpan, originalText);
+          }
+        });
+      }
+    });
+  });
+
+  function updateWork(workId, newValue, callback, originalText) {
+    fetch(`/production/technologist/passports/update_work/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        work_id: workId,
+        value: newValue
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        callback(newValue);
+      } else {
+        console.error('Failed to update work', data.message);
+        alert('Не получилось обновить');
+        callback(originalText);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Не получилось обновить');
+      callback(originalText);
+    });
+  }
+</script>
 {% endblock %}
