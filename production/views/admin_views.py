@@ -115,6 +115,150 @@ def admin_page(request):
 
 @login_required
 @admin_required
+def production_details_view(request):
+    """
+    Returns an HTML snippet (table) with client order details and their associated orders.
+    """
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        client_orders = ClientOrder.objects.filter(is_archived=False)
+    else:
+        client_orders = ClientOrder.objects.filter(
+            is_archived=False,
+            launch__range=[start_dt, end_dt]
+        )
+    
+    client_orders_data = []
+    for co in client_orders:
+        orders_data = []
+        for order in co.orders.all():
+            # Join names for many-to-many fields
+            color_names = ", ".join([color.name for color in order.colors.all()])
+            fabric_names = ", ".join([fabric.name for fabric in order.fabrics.all()])
+            unique_sizes = sorted({sq.size for sq in order.size_quantities.all() if sq.size})
+            sizes = ", ".join(unique_sizes)
+            orders_data.append({
+                'id': order.id,
+                'model_name': order.model.name,
+                'colors': color_names,
+                'fabrics': fabric_names,
+                'quantity': order.quantity,
+                'sizes': sizes,
+            })
+        client_orders_data.append({
+            'id': co.id,
+            'client_name': co.client.name,
+            'launch': co.launch,
+            'term': co.term,
+            'orders': orders_data,
+        })
+    
+    context = {'client_orders': client_orders_data}
+    return render(request, 'admin/partial_client_orders.html', context)
+
+@login_required
+@admin_required
+def order_details_api(request, order_id):
+    """
+    API endpoint to return aggregated order details grouped by unique (color, fabric)
+    pairs and then by size for a given order, with optional date filtering.
+
+    For each unique (color, fabric) pair from the order's SizeQuantity records, we assume
+    there is only one record per size. For each such record, we return:
+      - total ordered (from SizeQuantity.quantity)
+      - cut (aggregated from CutSize.quantity)
+      - sew (aggregated from AssignedWork.quantity)
+      - check (count of ProductionPiece records in the CHECKED stage)
+      - packed (count of ProductionPiece records in the PACKED stage)
+
+    Production aggregations are filtered using the specific SizeQuantity ID.
+    """
+    order = get_object_or_404(Order, pk=order_id)
+    
+    # Get all SizeQuantity objects associated with the order.
+    size_quantities = order.size_quantities.all()
+
+    # Group the SizeQuantity objects by unique (color, fabric) pair.
+    # Within each group, assume there is only one record per size.
+    groups = {}  # key: (color, fabric)
+    for sq in size_quantities:
+        color_name = sq.color.name if sq.color else ""
+        fabric_name = sq.fabrics.name if sq.fabrics else ""
+        key = (color_name, fabric_name)
+        if key not in groups:
+            groups[key] = {}
+        # Group by size; we only store one record per size.
+        if sq.size:
+            if sq.size not in groups[key]:
+                groups[key][sq.size] = {"id": sq.id, "total": sq.quantity or 0}
+            # If a duplicate is encountered for the same size, it is ignored.
+    
+    group_list = []
+    # For each unique (color, fabric) group...
+    for (color_name, fabric_name), sizes_dict in groups.items():
+        sizes_data = []
+        # Loop through each size in the group.
+        for size_value, data_dict in sizes_dict.items():
+            size_id = data_dict["id"]
+            total_ordered = data_dict["total"]
+            
+            # Aggregate "Cut" quantity using the specific SizeQuantity ID.
+            passport_qs = Passport.objects.filter(
+                cut__order=order,
+                size_quantities__id=size_id
+            )
+
+            passport_qs = passport_qs.filter()
+            cut_total = passport_qs.aggregate(total=Sum('layers'))['total'] or 0
+
+            # Aggregate "Sew" quantity from AssignedWork using the SizeQuantity ID.
+            sew_total = 0
+            for passport in passport_qs:
+                assigned = AssignedWork.objects.filter(work__passport_size__passport=passport)
+                if assigned.exists():
+                    # If there is any assigned work for this passport, add the passport's full quantity.
+                    sew_total += passport.layers
+            
+            # Count "Check" quantity from ProductionPiece records in the CHECKED stage.
+            check_qs = ProductionPiece.objects.filter(
+                passport_size__passport__in=passport_qs,
+                stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
+            )
+            check_total = check_qs.count()
+
+            # Count "Packed" quantity from ProductionPiece records in the PACKED stage using the same passports.
+            packed_qs = ProductionPiece.objects.filter(
+                passport_size__passport__in=passport_qs,
+                stage=ProductionPiece.StageChoices.PACKED
+            )
+            packed_total = packed_qs.count()
+            
+            sizes_data.append({
+                "size": size_value,
+                "total": total_ordered,
+                "cut": cut_total,
+                "sew": sew_total,
+                "check": check_total,
+                "packed": packed_total,
+            })
+        group_list.append({
+            "color": color_name,
+            "fabric": fabric_name,
+            "sizes": sizes_data,
+        })
+    
+    response_data = {
+        "groups": group_list,
+        "model_name": order.model.name,
+    }
+    return JsonResponse(response_data)
+
+@login_required
+@admin_required
 def payment_details_view(request):
     """
     Returns an HTML snippet (table) with employee payment details

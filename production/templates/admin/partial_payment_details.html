@@ -8,24 +8,24 @@
       <th>{% trans 'Число Операций' %}</th>
       <th>{% trans 'Трудоемкость (сек)' %}</th>
       <th>{% trans 'Плата (сом)' %}</th>
+      <th>{% trans "Actions" %}</th>
     </tr>
   </thead>
   <tbody>
     {% for employee in employee_data %}
     <tr>
       <td>{{ employee.employee_id }}</td>
-      <td>
-        <a href="#"
-           data-toggle="modal"
-           data-target="#employeeModal"
-           class="employee-details-link"
-           data-employee-id="{{ employee.id }}">
-           {{ employee.full_name }}
-        </a>
-      </td>
+      <td>{{ employee.full_name }}</td>
       <td>{{ employee.units_produced }}</td>
       <td>{{ employee.seconds_worked }}</td>
       <td>{{ employee.payment }}</td>
+      <td><a href="#"
+        data-toggle="modal"
+        data-target="#employeeModal"
+        class="employee-details-link"
+        data-employee-id="{{ employee.id }}">
+        {% trans "View" %}</a>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
