@@ -368,8 +368,8 @@ class OperationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['equipment'].queryset = Equipment.objects.all().order_by('name')
-        self.fields['node'].queryset = Node.objects.all().order_by('name')
+        self.fields['equipment'].queryset = Equipment.objects.filter(is_archived=False).order_by('name')
+        self.fields['node'].queryset = Node.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         equipment_choices = list(self.fields['equipment'].choices)
         self.fields['equipment'].choices = [("add_new", "Add New Equipment")] + equipment_choices
@@ -414,7 +414,7 @@ class ModelCustomForm(forms.ModelForm):
         self.assortment_id = kwargs.pop('a_id', None)
         copy_id = kwargs.pop('copy_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
-        queryset = Operation.objects.all().select_related('node').order_by('number')
+        queryset = Operation.objects.filter(is_archived=False).select_related('node').order_by('number')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
             queryset=queryset,
             widget=forms.CheckboxSelectMultiple,
@@ -483,7 +483,7 @@ class ClientOrderForm(forms.ModelForm):
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['client'].queryset = Client.objects.all().order_by('name')
+        self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Client" option.
         # Note: ModelChoiceField choices is a list of (value, label) tuples.
         orig_choices = list(self.fields['client'].choices)
@@ -510,9 +510,9 @@ class OrderForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(OrderForm, self).__init__(*args, **kwargs)
-        self.fields['model'].queryset = Model.objects.all().order_by('name')
-        self.fields['colors'].queryset = Color.objects.all().order_by('name')
-        self.fields['fabrics'].queryset = Fabrics.objects.all().order_by('name')
+        self.fields['model'].queryset = Model.objects.filter(is_archived=False).order_by('name')
+        self.fields['colors'].queryset = Color.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabrics'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
 
         # Make certain fields optional in the form
         self.fields['model'].required = False
