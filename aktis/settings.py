@@ -91,12 +91,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('PROD_AKTIS_DB_ENGINE'),
-        'NAME': config('PROD_AKTIS_DB_NAME'),
-        'USER': config('PROD_AKTIS_DB_USER'),
-        'PASSWORD': config('PROD_AKTIS_DB_PASSWORD'),
-        'HOST': config('PROD_AKTIS_DB_HOST'),
-        'PORT': config('PROD_AKTIS_DB_PORT'),
+        'ENGINE': config('LUMA_LIGHT_DB_ENGINE'),
+        'NAME': config('LUMA_LIGHT_DB_NAME'),
+        'USER': config('LUMA_LIGHT_DB_USER'),
+        'PASSWORD': config('LUMA_LIGHT_DB_PASSWORD'),
+        'HOST': config('LUMA_LIGHT_DB_HOST'),
+        'PORT': config('LUMA_LIGHT_DB_PORT'),
     }
 }
 
