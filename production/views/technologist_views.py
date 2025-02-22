@@ -1081,9 +1081,7 @@ def model_create(request, a_id, pk=None):
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
         # Order the operations queryset by node number (numerically) and operation name
-        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
-            'node__number', 'name'
-        )
+        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('name')
 
     operations_order_json = ""
     if copy_id:
@@ -1155,6 +1153,7 @@ class ModelDetailView(DetailView):
 @technologist_required
 def model_edit(request, a_id, pk):
     model_instance = get_object_or_404(Model, pk=pk)
+    
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
@@ -1162,13 +1161,12 @@ def model_edit(request, a_id, pk):
             return redirect('model_list', a_id=a_id)
     else:
         form = ModelCustomForm(instance=model_instance)
-        # Order the operations queryset by node number (numerically) and operation name
-        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
-            'node__number', 'name'
-        )
-        operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
-        operations_order_json = json.dumps(operations_order)
-
+        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('name')
+    
+    # Define operations_order_json regardless of the method
+    operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
+    operations_order_json = json.dumps(operations_order)
+    
     return render(request, 'technologist/models/edit.html', {
         'form': form,
         'model': model_instance,
