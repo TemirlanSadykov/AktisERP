@@ -648,7 +648,7 @@ class OrderDetailView(DetailView):
         # ----- Other context data (pass along your existing context) -----
         associated_cuts = order.cuts.all().order_by('number')
         passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
         total_per_size = defaultdict(int)
         for passport in passports:
             passport_number = passport.id
@@ -657,7 +657,6 @@ class OrderDetailView(DetailView):
                 extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
                 size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
                 size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport_number]['stage'] = passport_size.stage
                 size_data[extra_key][passport_number]['extra'] = passport_size.extra
                 total_per_size[size] += passport_size.quantity
 
