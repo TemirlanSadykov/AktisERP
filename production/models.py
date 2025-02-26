@@ -182,7 +182,11 @@ class Operation(CompanyAwareModel):
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
     @property
     def changed_fields(self):
-        return {field.name for field in self._meta.fields if getattr(self, field.name) != self._original_values[field.name]}
+        return {
+            field.name
+            for field in self._meta.fields
+            if field.name != 'company' and getattr(self, field.name) != self._original_values[field.name]
+        }
     def save(self, *args, **kwargs):
         creating = self._state.adding
         node_changed = 'node' in self.changed_fields

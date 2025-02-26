@@ -62,9 +62,6 @@ urlpatterns = [
     path('technologist/client/orders/order/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
     path('technologist/client/orders/order/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
     path('technologist/client/orders/order/<int:pk>/delete/', OrderDeleteView.as_view(), name='order_delete'),
-    path('technologist/client/orders/order/<int:pk>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
-    path('technologist/client/orders/order/edit-size-quantity/<int:sq_id>/', edit_size_quantity, name='edit_size_quantity'),
-    path('technologist/client/orders/order/delete-size-quantity/<int:sq_id>/', delete_size_quantity, name='delete_size_quantity'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
     path('technologist/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
@@ -176,15 +173,6 @@ urlpatterns = [
 
     # For name changes
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
-
-    # For dashboard APIs
-    path('api/clients/<int:client_id>/', client_api, name='client_api'),
-    path('api/employees/<int:employee_id>/', employee_api, name='employee_api'),
-    path('api/orders/<int:order_id>/', order_api, name='order_api'),
-    path('api/rolls/<int:roll_id>/', roll_api, name='roll_api'),
-    path('api/client-orders/<int:client_order_id>/', client_order_api, name='client_order_api'),
-    path('api/fetch-model-records/', fetch_model_records, name='fetch_model_records'),
-    path('api/fetch-record-details/', fetch_record_details, name='fetch_record_details'),
 
     # For barcode creation
     path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),

@@ -28,11 +28,10 @@ class CompanyMiddleware:
 
     def __call__(self, request):
         # Set the company context from the user’s profile (if authenticated)
-        if request.user.is_authenticated:
-            # Adjust this as necessary for your project structure
-            company = getattr(request.user, 'userprofile', None) and request.user.userprofile.company
-            set_current_company(company)
+        if request.user.is_authenticated and hasattr(request.user, 'userprofile'):
+            company = request.user.userprofile.company
         else:
-            set_current_company(None)
+            company = None
+        set_current_company(company)
         response = self.get_response(request)
         return response
