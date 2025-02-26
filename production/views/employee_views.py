@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
 from ..decorators import employee_required
-from ..models import AssignedWork, ReassignedWork
+from ..models import AssignedWork
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 

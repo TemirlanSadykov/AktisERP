@@ -16,7 +16,6 @@ from django.db.models import Count
 
 from ..decorators import packer_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -31,7 +30,7 @@ def packer_page(request):
     return render(request, 'packer_page.html' , context)
 
 @method_decorator([login_required, packer_required], name='dispatch')
-class ClientOrderListPackerView(RestrictBranchMixin, ListView):
+class ClientOrderListPackerView(ListView):
     model = ClientOrder
     template_name = 'packer/client/orders/list.html'
     context_object_name = 'orders'
@@ -105,7 +104,7 @@ class ClientOrderDetailPackerView(DetailView):
         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
-class OrderListPackerView(RestrictOrderBranchMixin, ListView):
+class OrderListPackerView(ListView):
     model = Order
     template_name = 'packer/orders/list.html'
     context_object_name = 'orders'
@@ -361,20 +360,6 @@ def get_order_table_data_packer(request, order_id):
         return JsonResponse(data)
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
-
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyDetailView(DetailView):
-    model = Error
-    template_name = 'packer/discrepancies/detail.html'
-    context_object_name = 'error'
-
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyDeleteView(DeleteView):
-    model = Error
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
     
 @login_required
 @packer_required
@@ -392,37 +377,6 @@ def mark_as_done(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
-    
-@login_required
-@packer_required
-@require_POST
-def calculate_discrepancies(request, order_pk):
-    try:
-        order = Order.objects.get(pk=order_pk)
-    except Order.DoesNotExist:
-        return JsonResponse({'error': 'Order does not exist'}, status=404)
-
-    pieces = ProductionPiece.objects.filter(
-        passport_size__passport__order=order,
-        stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.NOT_CHECKED]
-    )
-
-    discrepancies_created = 0
-
-    for piece in pieces:
-        error, created = Error.objects.get_or_create(
-            piece=piece,
-            error_type=Error.ErrorType.DISCREPANCY,
-            defaults={
-                'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
-                'status': Error.Status.REPORTED,
-                'reported_date': timezone.now()
-            }
-        )
-        if created:
-            discrepancies_created += 1
-
-    return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})
 
 @login_required
 @packer_required

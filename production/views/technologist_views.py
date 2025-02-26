@@ -24,7 +24,6 @@ from django.db.models.functions import Cast
 
 from ..decorators import technologist_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 
@@ -48,7 +47,6 @@ class EmployeeListView(ListView):
 
     def get_queryset(self):
         return UserProfile.objects.filter(
-            branch=self.request.user.userprofile.branch,
             is_archived=False
         ).exclude(user__username='admin').annotate(
             employee_id_int=Cast('employee_id', IntegerField())
@@ -61,7 +59,7 @@ class EmployeeListView(ListView):
         return context
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeCreateView(AssignBranchForEmployeeMixin, CreateView):
+class EmployeeCreateView(CreateView):
     template_name = 'technologist/employees/create.html'
     form_class = UserWithProfileForm
     success_url = reverse_lazy('employee_list')
@@ -83,7 +81,7 @@ class EmployeeDetailView(DetailView):
 @login_required
 @technologist_required
 def employee_edit(request, pk):
-    user_profile = get_object_or_404(UserProfile, pk=pk, branch=request.user.userprofile.branch)
+    user_profile = get_object_or_404(UserProfile, pk=pk)
     user = user_profile.user
 
     if request.method == 'POST':
@@ -99,7 +97,7 @@ def employee_edit(request, pk):
     return render(request, 'technologist/employees/edit.html', context)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeDeleteView(RestrictBranchMixin, DeleteView):
+class EmployeeDeleteView(DeleteView):
     model = UserProfile
     template_name = 'technologist/employees/delete.html'
     success_url = reverse_lazy('employee_list')
@@ -151,8 +149,7 @@ class ArchivedEmployeeListView(ListView):
         return context
 
     def get_queryset(self):
-        return UserProfile.objects.filter(            
-            branch=self.request.user.userprofile.branch,
+        return UserProfile.objects.filter(
             is_archived=True
             ).order_by('employee_id')
     
@@ -169,11 +166,11 @@ def employee_upload(request):
             sheet = workbook.active
             with transaction.atomic():
                 for row in sheet.iter_rows(min_row=2, values_only=True):
-                    branch_id, first_name, last_name, username, employee_id, type, station, password = row
-                    branch = Branch.objects.get(id=branch_id)
+                    company_id, first_name, last_name, username, employee_id, type, station, password = row
+                    company = Company.objects.get(id=company_id)
                     try:
-                        # Attempt to find an existing UserProfile with given employee_id and branch
-                        profile = UserProfile.objects.get(employee_id=employee_id, branch=branch)
+                        # Attempt to find an existing UserProfile with given employee_id and company
+                        profile = UserProfile.objects.get(employee_id=employee_id, company=company)
                         
                     except UserProfile.DoesNotExist:
                         # If it does not exist, create User and UserProfile
@@ -182,7 +179,7 @@ def employee_upload(request):
                         user.save()
                         profile = UserProfile.objects.create(
                             user=user, 
-                            branch=branch, 
+                            company=company, 
                             employee_id=employee_id, 
                             type=type, 
                             station=station, 
@@ -318,7 +315,7 @@ class ClientUnArchiveView(UpdateView):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderListView(RestrictBranchMixin, ListView):
+class ClientOrderListView(ListView):
     model = ClientOrder
     template_name = 'technologist/client/orders/list.html'
     context_object_name = 'orders'
@@ -387,7 +384,6 @@ class ClientOrderCreateView(CreateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        self.object.branch = self.request.user.userprofile.branch
         self.object.save()
         form.save_m2m()
         redirect_url = reverse('client_order_detail', kwargs={'pk': self.object.pk})
@@ -414,7 +410,7 @@ class ClientOrderDetailView(DetailView):
         return context
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderUpdateView(RestrictBranchMixin, UpdateView):
+class ClientOrderUpdateView(UpdateView):
     model = ClientOrder
     form_class = ClientOrderForm
     template_name = 'technologist/client/orders/edit.html'
@@ -428,7 +424,7 @@ class ClientOrderUpdateView(RestrictBranchMixin, UpdateView):
         return reverse('client_order_detail', kwargs={'pk': self.object.pk})
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
+class ClientOrderDeleteView(DeleteView):
     model = ClientOrder
     template_name = 'technologist/client/orders/delete.html'
     success_url = reverse_lazy('client_order_list')
@@ -438,7 +434,7 @@ class ClientOrderDeleteView(RestrictBranchMixin, DeleteView):
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderArchiveView(RestrictBranchMixin, UpdateView):
+class ClientOrderArchiveView(UpdateView):
     model = ClientOrder
     template_name = 'technologist/client/orders/delete.html'
     success_url = reverse_lazy('client_order_list')
@@ -456,7 +452,7 @@ class ClientOrderArchiveView(RestrictBranchMixin, UpdateView):
     
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ClientOrderUnArchiveView(RestrictBranchMixin, UpdateView):
+class ClientOrderUnArchiveView(UpdateView):
     model = ClientOrder
     template_name = 'technologist/client/orders/delete.html'
     success_url = reverse_lazy('client_order_list')
@@ -472,7 +468,7 @@ class ClientOrderUnArchiveView(RestrictBranchMixin, UpdateView):
         return HttpResponseRedirect(self.success_url)
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ArchivedClientOrderListView(RestrictBranchMixin, ListView):
+class ArchivedClientOrderListView(ListView):
     model = ClientOrder
     template_name = 'technologist/client/orders/list.html'  # Use a separate template if necessary
     context_object_name = 'archived_orders'
@@ -568,7 +564,7 @@ def add_client_api(request):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class OrderListView(RestrictOrderBranchMixin, ListView):
+class OrderListView(ListView):
     model = Order
     template_name = 'technologist/orders/list.html'
     context_object_name = 'orders'
@@ -1099,58 +1095,6 @@ class CutDetailTechnologistView(DetailView):
     
 @login_required
 @technologist_required
-def error_detail(request, pk):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        error = Error.objects.filter(pk=pk).values(
-            'pk', 'piece_id', 'piece__piece_number', 'piece__passport_size__passport_id', 'piece__passport_size__passport__number', 
-            'piece__passport_size__passport__cut', 'piece__passport_size__passport__cut__order__model',
-            'piece__passport_size__size_quantity__size', 'piece__id', 'piece__passport_size__size_quantity_id',
-            'error_type', 'piece__defect_type', 'cost', 'status',
-            'reported_date', 'resolved_date'
-        ).first()
-        if error:
-            error['reported_date'] = error['reported_date'].strftime('%Y-%m-%d %H:%M:%S')
-            error['resolved_date'] = error['resolved_date'].strftime('%Y-%m-%d %H:%M:%S') if error['resolved_date'] else None
-            error['status'] = Error.Status(error['status']).label
-            if error['error_type'] == 'DEFECT':
-                works = AssignedWork.objects.filter(
-                    work__passport_size__size_quantity_id=error['piece__passport_size__size_quantity_id']
-                ).select_related('employee')
-                employee_ids = [work.employee.employee_id for work in works]
-                error['responsible_employees'] = employee_ids
-            
-            return JsonResponse({'error': error}, status=200)
-        else:
-            return JsonResponse({'error': 'Error not found'}, status=404)
-    else:
-        return JsonResponse({'error': 'Invalid request'}, status=400)
-    
-@login_required
-@technologist_required
-@require_POST
-def error_update_status(request, pk):
-    try:
-        data = json.loads(request.body)
-        new_status = data.get('status')
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-    
-    valid_statuses = [choice[0] for choice in Error.Status.choices]
-    if new_status not in valid_statuses:
-        return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
-
-    try:
-        error = Error.objects.get(pk=pk)
-        error.status = new_status
-        error.resolved_date = timezone.now() if new_status == Error.Status.RESOLVED else None
-        error.save()
-
-        return JsonResponse({'status': 'success', 'message': 'Error status updated successfully'})
-    except Error.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Error not found'}, status=404)    
-
-@login_required
-@technologist_required
 def assign_operations(request, passport_id):
     passport = get_object_or_404(Passport, pk=passport_id)
     model_operations = ModelOperation.objects.filter(
@@ -1180,7 +1124,7 @@ def assign_operations(request, passport_id):
                         employee_id_input = entry
                         quantity = total_quantity
 
-                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input, branch=request.user.userprofile.branch).first()
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input).first()
                     if not employee_profile:
                         continue
 
@@ -1260,7 +1204,7 @@ def assign_operations_by_cut(request, cut_id):
                     employee_profile = UserProfile.objects.filter(
                         employee_id=employee_id_input,
                         type=UserProfile.EMPLOYEE,
-                        branch=request.user.userprofile.branch
+                        
                     ).first()
                     if not employee_profile:
                         continue
@@ -1324,7 +1268,7 @@ def update_work(request):
 
             employee_profile = UserProfile.objects.filter(
                 employee_id=employee_id, type=UserProfile.EMPLOYEE,
-                branch=request.user.userprofile.branch).first()
+                ).first()
 
             if not employee_profile:
                 continue
@@ -1364,241 +1308,6 @@ def update_work_success(request):
         return JsonResponse({'status': 'success'})
     except AssignedWork.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Assigned work not found'}, status=404)
-
-@login_required
-@technologist_required
-def get_reassigned_works(request, assigned_work_id):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        reassigned_works = ReassignedWork.objects.filter(original_assigned_work_id=assigned_work_id)
-        data = list(reassigned_works.values('id', 'new_employee__employee_id', 'reassigned_quantity', 'reason', 'is_completed', 'is_success'))
-        return JsonResponse({'reassigned_works': data})
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
-@login_required
-@require_POST
-def reassign_work(request):
-    data = json.loads(request.body)
-    work_id = data.get('work_id')
-    new_employee_id = data.get('new_employee_id')
-    quantity = data.get('quantity')
-    reason = data.get('reason')
-    # Validation
-    if not all([work_id, new_employee_id, quantity, reason]):
-        return JsonResponse({'message': 'Missing required data'}, status=400)
-
-    try:
-        with transaction.atomic():
-            assigned_work = get_object_or_404(AssignedWork, id=work_id)
-            new_employee_profile = get_object_or_404(UserProfile, employee_id=new_employee_id, branch=request.user.userprofile.branch)
-
-            # Attempt to retrieve an existing reassigned work
-            reassigned_work, created = ReassignedWork.objects.get_or_create(
-                original_assigned_work=assigned_work,
-                new_employee=new_employee_profile,
-                defaults={'reassigned_quantity': quantity, 'reason': reason}
-            )
-
-            if not created:
-                # If the reassigned work is being updated, adjust the assigned_work.quantity
-                # by adding the old reassigned quantity before setting the new one
-                assigned_work.quantity += reassigned_work.reassigned_quantity
-                reassigned_work.reassigned_quantity = quantity
-                reassigned_work.reason = reason
-                reassigned_work.is_success = False
-            
-            if quantity <= 0 or quantity > assigned_work.quantity:
-                return JsonResponse({'message': 'Invalid quantity'}, status=400)
-
-            # Adjust the assigned work quantity by subtracting the new reassigned quantity
-            assigned_work.quantity -= quantity
-            reassigned_work.save()
-            assigned_work.save()
-
-            return JsonResponse({"message": "Work reassigned successfully"}, status=200)
-    
-    except AssignedWork.DoesNotExist:
-        return JsonResponse({'message': 'Assigned work not found'}, status=404)
-    except UserProfile.DoesNotExist:
-        return JsonResponse({'message': 'Employee profile not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
-    
-@login_required
-@require_POST
-def complete_reassigned_work(request):
-    reassigned_work_id = request.POST.get('reassigned_work_id')
-    try:
-        reassigned_work = ReassignedWork.objects.get(id=reassigned_work_id)
-        if reassigned_work.is_success:
-            reassigned_work.is_success = False
-            reassigned_work.is_completed = False
-        else:
-            reassigned_work.is_success = True
-
-        reassigned_work.save()
-        return JsonResponse({'message': 'Reassigned work status updated successfully'}, status=200)
-    except ReassignedWork.DoesNotExist:
-        return JsonResponse({'message': 'Reassigned work not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'message': 'An error occurred: ' + str(e)}, status=500)
-
-# @login_required
-# @technologist_required
-# def download_passport_excel(request, passport_id):
-#     # Fetch the Passport and related data
-#     passport = get_object_or_404(Passport, pk=passport_id)
-#     passport_sizes = PassportSize.objects.filter(passport=passport)
-#     passport_rolls = PassportRoll.objects.filter(passport=passport)
-
-#     # Create a workbook and initialize a worksheet
-#     wb = Workbook()
-#     ws = wb.active
-
-#     # First row headers
-#     headers = [
-#         'заказч', 'модель', 'ассортимент', '', '№ рулона', 'цвет', 'Ткань', 'дата кроя'
-#     ]
-#     ws.append(headers)
-
-#     # Set headers style
-#     for cell in ws[1]:
-#         cell.font = Font(bold=True)
-#         cell.alignment = Alignment(horizontal='center')
-
-#     # Insert data in the second row
-#     passport_roll = passport_rolls.first() if passport_rolls else None
-#     second_row_data = [
-#         passport.order.client_order.client.name, passport.order.model.name, passport.order.assortment.name,
-#         '', passport_roll.roll.name if passport_roll else '',
-#         passport_roll.roll.color if passport_roll else '',
-#         passport_roll.roll.fabrics if passport_roll else '',
-#         passport.date.strftime("%m/%d/%Y") if passport.date else ''
-#     ]
-#     ws.append(second_row_data)
-
-#     # Define the operation headers
-#     operation_headers = [
-#         '№', 'Операции', 'Оборуд.', 'тех-процесс', 'расценки', 'трудоемкость'
-#     ]
-
-#     # Add size columns based on size_quantities in the order
-#     sizes = [size.size for size in passport.order.size_quantities.all()]
-#     operation_headers.extend(sizes)
-
-#     # Append operation headers
-#     ws.append(operation_headers)
-
-#     # Set style for operation headers
-#     for cell in ws[3]:
-#         cell.font = Font(bold=True)
-#         cell.alignment = Alignment(horizontal='center')
-
-#     model_operations = ModelOperation.objects.filter(
-#         model=passport.order.model
-#     ).select_related('operation').order_by('order')
-#     operations = [model_op.operation for model_op in model_operations]
-
-#     for index, operation in enumerate(operations, start=1):
-#         # Assume 'get_operation_details' is a method to fetch needed details
-#         # You will need to implement this based on your application's specific data
-#         operation_details = get_operation_details(operation, passport_sizes)
-#         row_data = [index] + operation_details
-#         ws.append(row_data)
-
-
-#     # Autosize column widths
-#     for column_cells in ws.columns:
-#         length = max(len(str(cell.value)) for cell in column_cells)
-#         ws.column_dimensions[get_column_letter(column_cells[0].column)].width = length
-
-#     # Apply bold font style to headers and sizes
-#     bold_font = Font(bold=True)
-#     header_rows = [1, 3]  # Rows which contain the headers you mentioned
-
-#     # Apply bold font to all cells in the header rows
-#     for row in header_rows:
-#         for cell in ws[row]:
-#             cell.font = bold_font
-
-#     # Additionally, bold the size headers individually in case they are not in the above rows
-#     size_header_row = 3  # Assuming the size headers are in the third row
-#     for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
-#         ws.cell(row=size_header_row, column=size_col).font = bold_font
-
-#     # Define border style
-#     thin_border = Border(
-#         left=Side(style='thin'),
-#         right=Side(style='thin'),
-#         top=Side(style='thin'),
-#         bottom=Side(style='thin')
-#     )
-
-#     # Apply borders to the first two rows, creating a box effect
-#     for row in ws.iter_rows(min_row=1, max_row=2, min_col=1, max_col=ws.max_column):
-#         for cell in row:
-#             cell.border = thin_border
-
-#     # Insert an empty row after the first two rows
-#     ws.insert_rows(3)
-
-#     # Now adjust your other rows accordingly since you inserted a new row
-#     # You might need to update the `header_rows` and `size_header_row` if you used the previous code snippet
-#     header_rows = [1, 4]  # Updated to reflect the new empty row
-#     size_header_row = 4   # Updated to reflect the new empty row
-
-#     # Apply bold font to all cells in the updated header rows
-#     for row in header_rows:
-#         for cell in ws[row]:
-#             cell.font = bold_font
-
-#     # Additionally, bold the size headers individually
-#     for size_col in range(7, 7 + len(sizes)):  # Adjust 7 if your size columns start from a different index
-#         ws.cell(row=size_header_row, column=size_col).font = bold_font
-
-#     ws.column_dimensions['D'].width = 50
-
-#     # Set the HTTP response with a content-type for Excel file
-#     response = HttpResponse(
-#         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-#     )
-#     response['Content-Disposition'] = f'attachment; filename="Passport_{passport_id}_Details.xlsx"'
-
-#     # Save the workbook to the response
-#     wb.save(response)
-#     return response
-
-def get_operation_details(operation, passport_sizes):
-    details = [
-        operation.node.name,
-        operation.equipment.name,
-        operation.name,
-        operation.payment,
-        operation.preferred_completion_time
-    ]
-
-    # Ensure the sizes are sorted consistently
-    sorted_sizes = sorted(passport_sizes, key=lambda x: x.size_quantity.size)
-    
-    # Fetch and accumulate details for each sorted size
-    for passport_size in sorted_sizes:
-        assigned_works = AssignedWork.objects.filter(
-            work__operation=operation,
-            work__passport_size=passport_size
-        ).select_related('employee')
-
-        reassigned_works = ReassignedWork.objects.filter(
-            original_assigned_work__work__operation=operation,
-            original_assigned_work__work__passport_size=passport_size
-        ).select_related('new_employee')
-
-        employee_ids = set(aw.employee.employee_id for aw in assigned_works)
-        employee_ids.update(rw.new_employee.employee_id for rw in reassigned_works)
-
-        details.append(', '.join(employee_ids))
-
-    return details
-
-
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OperationListView(ListView):
@@ -1783,7 +1492,7 @@ def operation_download(request):
     return response
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentListView(RestrictBranchMixin, ListView):
+class AssortmentListView(ListView):
     model = Assortment
     template_name = 'technologist/assortments/list.html'
     context_object_name = 'assortments'
@@ -1798,7 +1507,7 @@ class AssortmentListView(RestrictBranchMixin, ListView):
     
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ArchivedAssortmentListView(RestrictBranchMixin, ListView):
+class ArchivedAssortmentListView(ListView):
     model = Assortment
     template_name = 'technologist/assortments/list.html'
     context_object_name = 'assortments'
@@ -1812,7 +1521,7 @@ class ArchivedAssortmentListView(RestrictBranchMixin, ListView):
         return context
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentArchiveView(RestrictBranchMixin, UpdateView):
+class AssortmentArchiveView(UpdateView):
     model = Assortment
     template_name = 'technologist/assortments/delete.html'
     success_url = reverse_lazy('assortment_list')
@@ -1836,7 +1545,7 @@ class AssortmentUnArchiveView(UpdateView):
         return HttpResponseRedirect(self.success_url)
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentCreateView(AssignBranchMixin, CreateView):
+class AssortmentCreateView(CreateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
@@ -1861,7 +1570,7 @@ class AssortmentDetailView(DetailView):
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
+class AssortmentUpdateView(UpdateView):
     model = Assortment
     form_class = AssortmentForm
     template_name = 'technologist/assortments/edit.html'
@@ -1874,7 +1583,7 @@ class AssortmentUpdateView(RestrictBranchMixin, UpdateView):
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class AssortmentDeleteView(RestrictBranchMixin, DeleteView):
+class AssortmentDeleteView(DeleteView):
     model = Assortment
     template_name = 'technologist/assortments/delete.html'
     success_url = reverse_lazy('assortment_list')
@@ -1987,7 +1696,6 @@ class ModelDetailView(DetailView):
         context = super(ModelDetailView, self).get_context_data(**kwargs)
         model = context['model']
         context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
-        context['model_accessories'] = ModelAccessory.objects.filter(model=model)
         context['sidebar_type'] = 'technology'
         return context
 

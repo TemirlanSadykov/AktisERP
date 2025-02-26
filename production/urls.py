@@ -15,19 +15,6 @@ urlpatterns = [
     path('packer/', packer_page, name='packer_page'),
     path('keeper/', keeper_page, name='keeper_page'),
 
-    path('admin/dashboard/', dashboard_page, name='dashboard_page'),
-
-    path('admin/branches/', BranchListView.as_view(), name='branch_list'),
-    path('admin/branches/create/', BranchCreateView.as_view(), name='branch_create'),
-    path('admin/branches/<int:pk>/', BranchDetailView.as_view(), name='branch_detail'),
-    path('admin/branches/<int:pk>/edit/', BranchUpdateView.as_view(), name='branch_edit'),
-    path('admin/branches/<int:pk>/delete/', BranchDeleteView.as_view(), name='branch_delete'),
-    path('admin/branches/<int:pk>/archive/', BranchArchiveView.as_view(), name='branch_archive'),
-    path('admin/branches/<int:pk>/unarchive/', BranchUnArchiveView.as_view(), name='branch_unarchive'),
-    path('admin/branches/<int:pk>/archive/detail', ArchivedBranchDetailView.as_view(), name='branch_archive_detail'),
-    path('admin/branches/archived/', ArchivedBranchListView.as_view(), name='archived_branch_list'),
-    path('admin/branches/switch/', branch_switch, name='branch_switch'),
-
     # Admin management of employees
     path('technologist/employees/', EmployeeListView.as_view(), name='employee_list'),
     path('technologist/employees/create/', EmployeeCreateView.as_view(), name='employee_create'),
@@ -38,15 +25,6 @@ urlpatterns = [
     path('technologist/employees/<int:pk>/unarchive/', EmployeeUnArchiveView.as_view(), name='employee_unarchive'),
     path('technologist/employees/archived/', ArchivedEmployeeListView.as_view(), name='archived_employee_list'),
     path('technologist/employees/upload_employees/', employee_upload, name='employee_upload'),
-
-    # path('admin/passports/<int:pk>/', passport_detail_admin, name='passport_detail_admin'),
-
-    path('admin/salaries/', salary_list, name='salary_list'),
-    path('admin/salaries/<int:pk>/', salary_detail, name='salary_detail'),
-    path('admin/salaries/export-salaries/', export_salaries_to_excel, name='export_salaries'),
-    path('admin/salaries/process-payments/', process_payments, name='process_payments'),
-
-    path('admin/attendances/', attendance_list, name='attendance_list'),
 
     path('technologist/client/orders/', ClientOrderListView.as_view(), name='client_order_list'),
     path('technologist/client/orders/create/', ClientOrderCreateView.as_view(), name='client_order_create'),
@@ -79,22 +57,7 @@ urlpatterns = [
     path('technologist/client/archived/', ArchivedClientListView.as_view(), name='archived_clients_list'),
     path('technologist/client/<int:pk>/archive/', ClientArchiveView.as_view(), name='client_archive'),
     path('technologist/client/<int:pk>/unarchive/', ClientUnArchiveView.as_view(), name='client_unarchive'),
-
-    path('admin/fixed_salaries/', FixedSalaryListView.as_view(), name='fixed_salary_list'),
-    path('admin/fixed_salaries/create/', FixedSalaryCreateView.as_view(), name='fixed_salary_create'),
-    path('admin/fixed_salaries/<int:pk>/', FixedSalaryDetailView.as_view(), name='fixed_salary_detail'),
-    path('admin/fixed_salaries/<int:pk>/edit/', FixedSalaryUpdateView.as_view(), name='fixed_salary_edit'),
-    path('admin/fixed_salaries/<int:pk>/delete/', FixedSalaryDeleteView.as_view(), name='fixed_salary_delete'),
-    path('admin/fixed_salaries/archived/', ArchivedFixedSalaryListView.as_view(), name='archived_fixed_salary_list'),
-    path('admin/fixed_salaries/<int:pk>/archive/', FixedSalaryArchiveView.as_view(), name='fixed_salary_archive'),
-    path('admin/fixed_salaries/<int:pk>/unarchive/', FixedSalaryUnArchiveView.as_view(), name='fixed_salary_unarchive'),
     
-    
-    path('admin/orders/errors/<int:pk>/', ErrorDetailAdminView.as_view(), name='error_detail_admin'),
-    path('admin/orders/errors/<int:rd_id>/edit_percentage/', error_edit_admin, name='error_edit_admin'),
-    path('admin/orders/errors/<int:rd_id>/delete_percentage/', error_delete_admin, name='error_delete_admin'),
-    path('admin/orders/errors/<int:error_id>/edit_cost/', edit_error_cost_admin, name='edit_error_cost_admin'),
-
     path('technologist/client/orders/order/create/<int:client_order_pk>', OrderCreateView.as_view(), name='order_create'),
     path('technologist/client/orders/order/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
     path('technologist/client/orders/order/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
@@ -102,16 +65,10 @@ urlpatterns = [
     path('technologist/client/orders/order/<int:pk>/create_size_quantity/', SizeQuantityCreateView.as_view(), name='create_size_quantity'),
     path('technologist/client/orders/order/edit-size-quantity/<int:sq_id>/', edit_size_quantity, name='edit_size_quantity'),
     path('technologist/client/orders/order/delete-size-quantity/<int:sq_id>/', delete_size_quantity, name='delete_size_quantity'),
-    path('technologist/client/orders/order/error/<int:pk>/', error_detail, name='error_detail'),
-    path('technologist/client/orders/order/error/<int:pk>/update-status/', error_update_status, name='error_update_status'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
     path('technologist/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
-    path('technologist/passports/reassign-work/', reassign_work, name='reassign_work'),
-    path('technologist/passports/api/reassigned_works/<int:assigned_work_id>/', get_reassigned_works, name='get_reassigned_works'),
-    path('technologist/passports/reassign-work/complete/', complete_reassigned_work, name='complete_reassigned_work'),
-    # path('technologist/passports/<int:passport_id>/download_excel/', download_passport_excel, name='download_passport_excel'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),
@@ -181,21 +138,8 @@ urlpatterns = [
     path('qc/client/orders/order/<int:pk>/cut/detail/', CutDetailQcView.as_view(), name='cut_detail_qc'),
     path('packer/client/orders/order/<int:pk>/cut/detail/', CutDetailPackerView.as_view(), name='cut_detail_packer'),
 
-
-    # path('cutter/orders/passport/<int:passport_id>/delete/', passport_delete, name='passport_delete'),
-    # path('cutter/orders/passport/<int:passport_id>/create_passport_roll/', PassportRollCreateView.as_view(), name='create_passport_roll'),
-    # path('cutter/orders/passport/<int:passport_id>/create_passport_size/', PassportSizeCreateView.as_view(), name='create_passport_size'),
-    # path('cutter/orders/passport/<int:sq_id>/edit_size_quantity/', edit_passport_size_quantity, name='edit_passport_size_quantity'),
-    # path('cutter/orders/passport/<int:sq_id>/delete_size_quantity/', delete_passport_size_quantity, name='delete_passport_size_quantity'),
-    # path('cutter/orders/passport/<int:pr_id>/edit_passport_roll/', edit_passport_roll, name='edit_passport_roll'),
-    # path('cutter/orders/passport/<int:pr_id>/delete_passport_roll/', delete_passport_roll, name='delete_passport_roll'),
-
     path('qc/client/orders/order/', OrderListQcView.as_view(), name='order_list_qc'),
     path('qc/client/orders/order/<int:pk>/', OrderDetailQcView.as_view(), name='order_detail_qc'),
-    # path('qc/orders/<int:order_pk>/defects/create/', DefectCreateView.as_view(), name='defect_create'),
-    path('qc/client/orders/order/<int:order_pk>/defects/<int:pk>/', DefectDetailView.as_view(), name='defect_detail'),
-    # path('qc/orders/<int:order_pk>/defects/<int:pk>/edit/', DefectUpdateView.as_view(), name='defect_edit'),
-    path('qc/orders/<int:order_pk>/defects/<int:pk>/delete/', DefectDeleteView.as_view(), name='defect_delete'),
     path('qc/orders/api/get-piece-info/<str:barcode>/', get_piece_info, name='get_piece_info'),
     path('qc/orders/get-order-table-data/<int:order_id>/', get_order_table_data, name='get_order_table_data'),
     path('qc/orders/update-piece-status/<int:piece_id>/', update_piece_qc, name='update_piece_qc'),
@@ -203,23 +147,9 @@ urlpatterns = [
     
     path('packer/client/orders/order/', OrderListPackerView.as_view(), name='order_list_packer'),
     path('packer/client/orders/order/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
-    # path('packer/orders/<int:order_pk>/discrepancy/create/', DiscrepancyCreateView.as_view(), name='discrepancy_create'),
-    path('packer/client/orders/order/<int:order_pk>/discrepancy/<int:pk>/', DiscrepancyDetailView.as_view(), name='discrepancy_detail'),
-    # path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/edit/', DiscrepancyUpdateView.as_view(), name='discrepancy_edit'),
-    path('packer/orders/<int:order_pk>/discrepancy/<int:pk>/delete/', DiscrepancyDeleteView.as_view(), name='discrepancy_delete'),
     path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
     path('packer/orders/get-order-table-data/<int:order_id>/', get_order_table_data_packer, name='get_order_table_data_packer'),
-    path('packer/orders/calculate-discrepancies/<int:order_pk>/', calculate_discrepancies, name='calculate_discrepancies'),
     path('packer/scan/', scan_packer_page, name='scan_packer_page'),
-
-    path('keeper/rolls/', RollListView.as_view(), name='roll_list'),
-    path('keeper/rolls/create/', RollCreateView.as_view(), name='roll_create'),
-    path('keeper/rolls/<int:pk>/', RollDetailView.as_view(), name='roll_detail'),
-    path('keeper/rolls/<int:pk>/edit/', RollUpdateView.as_view(), name='roll_edit'),
-    path('keeper/rolls/archived/', ArchivedRollListView.as_view(), name='archived_roll_list'),
-    path('keeper/rolls/<int:pk>/archive/', RollArchiveView.as_view(), name='roll_archive'),
-    path('keeper/rolls/<int:pk>/unarchive/', RollUnArchiveView.as_view(), name='roll_unarchive'),
-    path('keeper/rolls/<int:pk>/delete/', RollDeleteView.as_view(), name='roll_delete'),
     
     path('keeper/color/', ColorListView.as_view(), name='color_list'),
     path('keeper/color/create/', ColorCreateView.as_view(), name='color_create'),
@@ -238,20 +168,11 @@ urlpatterns = [
     path('keeper/fabrics/<int:pk>/archive/', FabricsArchiveView.as_view(), name='fabrics_archive'),
     path('keeper/fabrics<int:pk>/unarchive/', FabricsUnArchiveView.as_view(), name='fabrics_unarchive'), 
     path('keeper/fabrics/<int:pk>/delete/', FabricsDeleteView.as_view(), name='fabrics_delete'),
-
-    path('keeper/abstract_accessory/', AbstractAccessoryListView.as_view(), name='abstract_accessory_list'),
-    path('keeper/abstract_accessory/create/', AbstractAccessoryCreateView.as_view(), name='abstract_accessory_create'),
-    path('keeper/abstract_accessory/<int:pk>/', AbstractAccessoryDetailView.as_view(), name='abstract_accessory_detail'),
-    path('keeper/abstract_accessory/<int:pk>/edit/', AbstractAccessoryUpdateView.as_view(), name='abstract_accessory_edit'),
-    path('keeper/abstract_accessory/archived/', ArchivedAbstractAccessoryListView.as_view(), name='archived_abstract_accessory_list'),
-    path('keeper/abstract_accessory/<int:pk>/archive/', AbstractAccessoryArchiveView.as_view(), name='abstract_accessory_archive'),
-    path('keeper/abstract_accessory<int:pk>/unarchive/', AbstractAccessoryUnArchiveView.as_view(), name='abstract_accessory_unarchive'), 
-    path('keeper/abstract_accessory/<int:pk>/delete/', AbstractAccessoryDeleteView.as_view(), name='abstract_accessory_delete'),
     
-    path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
-    path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
-    path('qc/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
-    path('qc/orders/mark-as-packing/<int:passport_size_id>/', mark_as_packing, name='mark-as-packing'),
+    # path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
+    # path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
+    # path('qc/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
+    # path('qc/orders/mark-as-packing/<int:passport_size_id>/', mark_as_packing, name='mark-as-packing'),
 
     # For name changes
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
@@ -266,15 +187,10 @@ urlpatterns = [
     path('api/fetch-record-details/', fetch_record_details, name='fetch_record_details'),
 
     # For barcode creation
-    # path('barcode/api/passport/<int:passport_id>/', BarcodePassport.as_view(), name='barcode_passport'),
-    # path('barcode/api/passport_size/<int:passport_size_id>/', BarcodePassportSize.as_view(), name='barcode_passport_size'),
     path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
     #for whatsapp qr code
     path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
     path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
-
-    # path('admin/orders/select/', select_orders_view, name='select_orders'),
-    # path('admin/orders/calculate/<str:order_ids>/', employee_calculation_view, name='employee_calculation'),
 
     path('api/add-client/', add_client_api, name='add_client_api'),
     path('api/add-color/', add_color_api, name='add_color_api'),

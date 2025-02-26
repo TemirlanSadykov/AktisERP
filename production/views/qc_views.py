@@ -21,7 +21,6 @@ from django.db.models import Count
 
 from ..decorators import qc_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -36,7 +35,7 @@ def qc_page(request):
     return render(request, 'qc_page.html', context)
 
 @method_decorator([login_required, qc_required], name='dispatch')
-class ClientOrderListQcView(RestrictBranchMixin, ListView):
+class ClientOrderListQcView(ListView):
     model = ClientOrder
     template_name = 'qc/client/orders/list.html'
     context_object_name = 'orders'
@@ -110,7 +109,7 @@ class ClientOrderDetailQcView(DetailView):
         return context
 
 @method_decorator([login_required, qc_required], name='dispatch')
-class OrderListQcView(RestrictOrderBranchMixin, ListView):
+class OrderListQcView(ListView):
     model = Order
     template_name = 'qc/orders/list.html'
     context_object_name = 'orders'
@@ -389,19 +388,6 @@ def update_piece_qc(request, piece_id):
 
     return JsonResponse({'success': True, 'message': message})
 
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectDetailView(DetailView):
-    model = Error 
-    template_name = 'qc/defects/detail.html'  
-    context_object_name = 'error'
-
-@method_decorator([login_required, qc_required], name='dispatch')
-class DefectDeleteView(DeleteView):
-    model = Error
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_qc', kwargs={'pk': order_pk})
     
 @login_required
 @qc_required
