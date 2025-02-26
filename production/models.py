@@ -1,10 +1,62 @@
 import datetime
+import threading
 
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from datetime import date
 
+# ------------------------------------------------------------------
+# Company Model (Name field only for now)
+# ------------------------------------------------------------------
+class Company(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Company Name")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+
+    def __str__(self):
+        return self.name
+
+# ------------------------------------------------------------------
+# Thread-local Storage for the Current Company Context
+# ------------------------------------------------------------------
+_local = threading.local()
+
+def set_current_company(company):
+    """Call this (e.g., in middleware) to set the company context for the current thread."""
+    _local.company = company
+
+def get_current_company():
+    return getattr(_local, 'company', None)
+
+# ------------------------------------------------------------------
+# Custom QuerySet and Manager to Auto-Filter by Company
+# ------------------------------------------------------------------
+class CompanyAwareQuerySet(models.QuerySet):
+    def _apply_company_filter(self):
+        # Prevent recursive application of the company filter.
+        if getattr(self, '_company_filter_applied', False):
+            return self
+        current_company = get_current_company()
+        if current_company is not None:
+            qs = self.filter(company=current_company)
+            qs._company_filter_applied = True
+            return qs
+        return self
+
+    def all(self):
+        return super().all()._apply_company_filter()
+
+    def filter(self, *args, **kwargs):
+        # Avoid applying the filter again if 'company' is explicitly provided.
+        if 'company' in kwargs:
+            return super().filter(*args, **kwargs)
+        qs = super().filter(*args, **kwargs)
+        return qs._apply_company_filter()
+
+
+class CompanyAwareManager(models.Manager):
+    def get_queryset(self):
+        return CompanyAwareQuerySet(self.model, using=self._db)
 
 class Branch(models.Model):
     name = models.CharField(max_length=100)
@@ -13,7 +65,8 @@ class Branch(models.Model):
     longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
     radius = models.IntegerField(verbose_name='Allowed Radius (meters)', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
     
@@ -62,6 +115,8 @@ class UserProfile(models.Model):
     ]
     station = models.CharField(max_length=100, choices=STATION_CHOICES, default='sewing_station', verbose_name='Станция', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"
     
@@ -76,6 +131,8 @@ class EmployeeAttendance(models.Model):
     longitude = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='Longitude', null=True, blank=True)
     fingerprint = models.CharField(max_length=255, null=True, blank=True, verbose_name='Browser Fingerprint')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         event_type = "Clock In" if self.is_clock_in else "Clock Out"
         return f"{self.employee} - {event_type} at {self.timestamp} (Distance: {self.distance}m)"
@@ -86,6 +143,8 @@ class Client(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
 
@@ -94,6 +153,8 @@ class Color(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
     
@@ -102,6 +163,8 @@ class Fabrics(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
 
@@ -111,6 +174,8 @@ class AbstractAccessory(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
 
@@ -119,6 +184,8 @@ class AccessoryAttribute(models.Model):
     value = models.CharField(max_length=100, verbose_name='Value')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.key}: {self.value}"
 
@@ -130,6 +197,8 @@ class Accessory(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         attributes_str = ", ".join([str(attr) for attr in self.attributes.all()])
         return f"{self.abstract.name} ({attributes_str}) - {self.quantity} {self.abstract.unit}"
@@ -144,6 +213,8 @@ class Roll(models.Model):
     used_meters = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True, verbose_name='Использованные метры')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.name} - {self.color} - {self.fabrics} - {self.available_meters}"
     @property
@@ -154,6 +225,8 @@ class Equipment(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
     
@@ -173,6 +246,8 @@ class Node(models.Model):
     type = models.IntegerField(choices=TYPE_CHOICES, default=SEWING, verbose_name='Тип')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
     
@@ -198,6 +273,8 @@ class Operation(models.Model):
             except AttributeError:
                 value = None
             self._original_values[field.name] = value
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
     @property
@@ -219,6 +296,8 @@ class Assortment(models.Model):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
 
@@ -231,6 +310,8 @@ class Model(models.Model):
     abstract_accessories = models.ManyToManyField(AbstractAccessory, through='ModelAccessory', related_name='models', verbose_name='Фурнитура')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.name
 
@@ -240,6 +321,8 @@ class ModelAccessory(models.Model):
     quantity = models.PositiveIntegerField(verbose_name='Количество')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.model.name} - {self.abstract_accessory.name} ({self.quantity} {self.abstract_accessory.unit})"
 
@@ -249,6 +332,9 @@ class ModelOperation(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
+
     class Meta:
         ordering = ['order']
 
@@ -259,6 +345,8 @@ class SizeQuantity(models.Model):
     fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.color} {self.fabrics} {self.size} ({self.quantity})"
     
@@ -284,6 +372,8 @@ class ClientOrder(models.Model):
     term = models.DateField(default=default_term, verbose_name='Срок выполнения')
     info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return self.order_number
 
@@ -306,6 +396,8 @@ class Order(models.Model):
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.model}"
     
@@ -319,6 +411,8 @@ class Cut(models.Model):
     size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
 
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"Cut {self.number} for Order {self.order}"
 
@@ -351,6 +445,8 @@ class CutSize(models.Model):
     ]
     stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.size_quantity.size} - {self.extra}"
 
@@ -362,6 +458,8 @@ class Consumption(models.Model):
     factual = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Фактическое')
     commerce = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Коммерческое')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"Consumption with {self.fabrics} fabric"
 
@@ -374,6 +472,8 @@ class Passport(models.Model):
     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры', null=True, blank=True)
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.cut.number}-{self.number}"
 
@@ -410,6 +510,8 @@ class PassportSize(models.Model):
     ]
     stage = models.IntegerField(choices=STAGE_CHOICES, default=CUTTING, verbose_name='Этап')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"
 
@@ -432,6 +534,8 @@ class ProductionPiece(models.Model):
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
     defect_type = models.CharField(max_length=20, choices=DefectType.choices, null=True, blank=True, verbose_name='Defect Type')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
@@ -440,6 +544,8 @@ class Work(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True, verbose_name='Размер и количество')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         if self.passport_size:
             return f"{self.operation.name} - {self.passport_size.size_quantity.size}"
@@ -455,6 +561,8 @@ class AssignedWork(models.Model):
     is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
     payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
 
@@ -467,6 +575,8 @@ class ReassignedWork(models.Model):
     is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
     payment_date = models.DateField(null=True, verbose_name='Дата оплаты')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"Переназначено {self.reassigned_quantity} от {self.original_assigned_work} к {self.new_employee}"
     
@@ -488,6 +598,8 @@ class Error(models.Model):
     reported_date = models.DateTimeField(default=timezone.now, verbose_name='Дата сообщения')
     resolved_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата решения')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.error_type}: {self.piece.passport_size.passport.order} - {self.piece.passport_size.passport.id} - {self.piece.passport_size.size_quantity.size} - {self.piece.id}"
     
@@ -496,6 +608,8 @@ class ErrorResponsibility(models.Model):
     employee = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='error_responsibilities', verbose_name='Сотрудник')
     percentage = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Процент ответственности', help_text="Процент ответственности, приписываемый этому сотруднику.")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.employee.user.username} - {self.percentage}%"
 
@@ -506,6 +620,8 @@ class FixedSalary(models.Model):
     salary = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Зарплата')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.position} - {self.salary}"
 
@@ -515,6 +631,8 @@ class SalaryPayment(models.Model):
     payment_date = models.DateField(verbose_name='Дата платежа')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()
     def __str__(self):
         return f"{self.employee.user.username} - {self.payment_date} - {self.amount}"
     
@@ -522,3 +640,5 @@ class SalaryPayment(models.Model):
 class PhoneNumberScaner(models.Model):
     phone_number = models.CharField(max_length=15)
     created_at = models.DateTimeField(default=timezone.now)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    objects = CompanyAwareManager()

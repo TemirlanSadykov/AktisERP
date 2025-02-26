@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'production.middleware.HandleCSRFMiddleware',
     'production.middleware.SessionExpiredMiddleware',
+    'production.middleware.CompanyMiddleware',
 ]
 
 ROOT_URLCONF = 'aktis.urls'

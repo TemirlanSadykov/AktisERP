@@ -66,15 +66,15 @@ def admin_page(request):
                 F('quantity') * F('work__operation__payment'),
                 output_field=DecimalField(max_digits=10, decimal_places=2)
             )
-            # total_payment = AssignedWork.objects.filter(created_at__date__range=[start_dt, end_dt]).annotate(
-            #     work_payment=payment_expr
-            # ).aggregate(total_payment=Sum('work_payment'))['total_payment'] or 0
+            total_payment = AssignedWork.objects.filter(created_at__date__range=[start_dt, end_dt]).annotate(
+                work_payment=payment_expr
+            ).aggregate(total_payment=Sum('work_payment'))['total_payment'] or 0
 
             summary_data = {
                 'total_production': total_production,
                 'orders_count': orders_count,
                 'cuts_count': cuts_count,
-                'total_payment': 0,
+                'total_payment': total_payment,
             }
         except ValueError:
             # If the provided dates are invalid, leave summary_data as zeros.
@@ -95,15 +95,15 @@ def admin_page(request):
             F('quantity') * F('work__operation__payment'),
             output_field=DecimalField(max_digits=10, decimal_places=2)
         )
-        # total_payment = AssignedWork.objects.filter(
-        #     work__passport_size__passport__cut__order__client_order__in=active_client_orders
-        # ).annotate(work_payment=payment_expr).aggregate(total_payment=Sum('work_payment'))['total_payment'] or 0
+        total_payment = AssignedWork.objects.filter(
+            work__passport_size__passport__cut__order__client_order__in=active_client_orders
+        ).annotate(work_payment=payment_expr).aggregate(total_payment=Sum('work_payment'))['total_payment'] or 0
 
         summary_data = {
             'total_production': total_production,
             'orders_count': orders_count,
             'cuts_count': cuts_count,
-            'total_payment': 0,
+            'total_payment': total_payment,
         }
 
     context = {
