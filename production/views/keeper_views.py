@@ -13,6 +13,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.db.models import Q
 from django.urls import reverse_lazy, reverse
+from django.views.decorators.http import require_POST
 
 from ..decorators import keeper_required
 from ..forms import *
@@ -146,3 +147,82 @@ class SupplierUnArchiveView(UpdateView):
         supplier.is_archived = False
         supplier.save()
         return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollListView(ListView):
+    model = Roll
+    template_name = 'keeper/rolls/list.html'
+    context_object_name = 'rolls'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Roll.objects.all().order_by('name')
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollCreateView(CreateView):
+    model = Roll
+    form_class = RollForm
+    template_name = 'keeper/rolls/create.html'
+    success_url = reverse_lazy('roll_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollDetailView(DetailView):
+    model = Roll
+    template_name = 'keeper/rolls/detail.html'
+    context_object_name = 'roll'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollUpdateView(UpdateView):
+    model = Roll
+    form_class = RollForm
+    template_name = 'keeper/rolls/edit.html'
+
+    def get_success_url(self):
+        return reverse('roll_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollDeleteView(DeleteView):
+    model = Roll
+    template_name = 'keeper/rolls/delete.html'
+    success_url = reverse_lazy('roll_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+    
+@require_POST
+@login_required
+def add_supplier_api(request):
+    form = SupplierForm(request.POST)
+    if form.is_valid():
+        supplier = form.save()
+        data = {
+            'success': True,
+            'supplier_id': supplier.id,
+            'supplier_name': supplier.name,
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)

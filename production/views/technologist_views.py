@@ -546,7 +546,6 @@ def client_order_complete(request, pk):
 
 @require_POST
 @login_required
-@technologist_required
 def add_client_api(request):
     form = ClientForm(request.POST)
     if form.is_valid():
@@ -768,7 +767,6 @@ class OrderCreateView(CreateView):
     
 @require_POST
 @login_required
-@technologist_required
 def add_color_api(request):
     form = ColorForm(request.POST)
     if form.is_valid():
@@ -785,7 +783,6 @@ def add_color_api(request):
     
 @require_POST
 @login_required
-@technologist_required
 def add_fabric_api(request):
     form = FabricsForm(request.POST)
     if form.is_valid():
@@ -1778,7 +1775,6 @@ class NodeDeleteView(DeleteView):
 
 @require_POST
 @login_required
-@technologist_required
 def add_node_api(request):
     form = NodeForm(request.POST)
     if form.is_valid():
@@ -1795,7 +1791,6 @@ def add_node_api(request):
 
 @require_POST
 @login_required
-@technologist_required
 def add_equipment_api(request):
     form = EquipmentForm(request.POST)
     if form.is_valid():

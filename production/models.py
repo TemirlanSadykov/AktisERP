@@ -397,7 +397,7 @@ class Roll(CompanyAwareModel):
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
     fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
-    roll_number = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
+    name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
     length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
     length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
     width = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Ширина (м)', null=True, blank=True)

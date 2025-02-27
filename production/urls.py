@@ -185,6 +185,7 @@ urlpatterns = [
     path('api/add-fabric/', add_fabric_api, name='add_fabric_api'),
     path('api/add_node/', add_node_api, name='add_node_api'),
     path('api/add_equipment/', add_equipment_api, name='add_equipment_api'),
+    path('api/add-supplier/', add_supplier_api, name='add_supplier_api'),
 
 
     path('api/payment_details/', payment_details_view, name='payment_details'),
@@ -201,5 +202,11 @@ urlpatterns = [
     path('keeper/suppliers/archived/', ArchivedSupplierListView.as_view(), name='archived_suppliers_list'),
     path('keeper/suppliers/<int:pk>/archive/', SupplierArchiveView.as_view(), name='supplier_archive'),
     path('keeper/suppliers/<int:pk>/unarchive/', SupplierUnArchiveView.as_view(), name='supplier_unarchive'),
+
+    path('keeper/rolls/', RollListView.as_view(), name='roll_list'),
+    path('keeper/rolls/create/', RollCreateView.as_view(), name='roll_create'),
+    path('keeper/rolls/<int:pk>/', RollDetailView.as_view(), name='roll_detail'),
+    path('keeper/rolls/<int:pk>/edit/', RollUpdateView.as_view(), name='roll_edit'),
+    path('keeper/rolls/<int:pk>/delete/', RollDeleteView.as_view(), name='roll_delete'),
 
 ]

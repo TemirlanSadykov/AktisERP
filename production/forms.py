@@ -461,3 +461,39 @@ class SupplierForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
         }
+
+class RollForm(forms.ModelForm):
+    class Meta:
+        model = Roll
+        fields = [
+            'color',
+            'fabric',
+            'supplier',
+            'length_t',
+            'width',
+            'weight',
+        ]
+        widgets = {
+            'color': forms.Select(attrs={'class': 'form-control'}),
+            'fabric': forms.Select(attrs={'class': 'form-control'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'length_t': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Длина Т (м)'}),
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Вес (кг)'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
+        # Prepend an "Add New Equipment" option.
+        color_choices = list(self.fields['color'].choices)
+        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+
+        # Prepend an "Add New Node" option.
+        fabric_choices = list(self.fields['fabric'].choices)
+        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+
+        # Prepend an "Add New Node" option.
+        supplier_choices = list(self.fields['supplier'].choices)
+        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices

@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Rolls Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <!-- <div class="card"> -->
+        <div class="card-header">
+          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Roll" %}</h2>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              {{ form.as_p }}
+            </div>
+            <div class="form-group">
+              <div class="row">
+                <div class="col text-left">
+                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
+                </div>
+                <div class="col text-right">
+                  <a href="{% url 'roll_list' %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
+                </div>
+            </div>
+            </div>
+          </form>
+        </div>
+      <!-- </div> -->
+    </div>
+  </div>
+</div>
+<!-- Add Color Modal -->
+<div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-labelledby="addColorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addColorForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addColorModalLabel">{% trans "Add New Color" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Color Form Field -->
+          <div class="form-group">
+            <label for="id_color_name">{% trans "Color Name" %}</label>
+            <input type="text" class="form-control" id="id_color_name" name="name" placeholder="{% trans 'Enter color name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Fabric Modal -->
+<div class="modal" data-backdrop="false" id="addFabricModal" tabindex="-1" role="dialog" aria-labelledby="addFabricModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addFabricForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addFabricModalLabel">{% trans "Add New Fabric" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Fabric Form Field -->
+          <div class="form-group">
+            <label for="id_fabric_name">{% trans "Fabric Name" %}</label>
+            <input type="text" class="form-control" id="id_fabric_name" name="name" placeholder="{% trans 'Enter fabric name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Supplier Modal -->
+<div class="modal" data-backdrop="false" id="addSupplierModal" tabindex="-1" role="dialog" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addSupplierForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addSupplierModalLabel">{% trans "Add New Supplier" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Supplier Form Field -->
+          <div class="form-group">
+            <label for="id_supplier_name">{% trans "Supplier Name" %}</label>
+            <input type="text" class="form-control" id="id_supplier_name" name="name" placeholder="{% trans 'Enter supplier name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- JavaScript -->
+<script>
+// Function to retrieve a cookie value by name (for CSRF token)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Append "Add New" option to color and fabric select fields if not present.
+  const colorSelect = document.getElementById('id_color');
+  const fabricSelect = document.getElementById('id_fabric');
+  const supplierSelect = document.getElementById('id_supplier');
+
+  // ===== Color Modal =====
+  const addColorModalEl = document.getElementById('addColorModal');
+  const addColorModal = new bootstrap.Modal(addColorModalEl, { backdrop: false });
+  const addColorForm = document.getElementById('addColorForm');
+  if (colorSelect) {
+    colorSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addColorForm.reset();
+        addColorModal.show();
+        // Reset selection so the "Add New" option is not left selected
+        this.value = "";
+      }
+    });
+  }
+
+  addColorForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addColorForm);
+    fetch("{% url 'add_color_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new color info
+        const newOption = new Option(data.color_name, data.color_id, false, true);
+        colorSelect.appendChild(newOption);
+        addColorModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+
+  // ===== Fabric Modal =====
+  const addFabricModalEl = document.getElementById('addFabricModal');
+  const addFabricModal = new bootstrap.Modal(addFabricModalEl, { backdrop: false });
+  const addFabricForm = document.getElementById('addFabricForm');
+  if (fabricSelect) {
+    fabricSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addFabricForm.reset();
+        addFabricModal.show();
+        // Reset selection so the "Add New" option is not left selected
+        this.value = "";
+      }
+    });
+  }
+
+  addFabricForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addFabricForm);
+    fetch("{% url 'add_fabric_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new fabric info
+        const newOption = new Option(data.fabric_name, data.fabric_id, false, true);
+        fabricSelect.appendChild(newOption);
+        addFabricModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+
+  // ===== Supplier Modal =====
+  const addSupplierModalEl = document.getElementById('addSupplierModal');
+  const addSupplierModal = new bootstrap.Modal(addSupplierModalEl, { backdrop: false });
+  const addSupplierForm = document.getElementById('addSupplierForm');
+  if (supplierSelect) {
+    supplierSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addSupplierForm.reset();
+        addSupplierModal.show();
+        // Reset selection so the "Add New" option is not left selected
+        this.value = "";
+      }
+    });
+  }
+
+  addSupplierForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addSupplierForm);
+    fetch("{% url 'add_supplier_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new supplier info
+        const newOption = new Option(data.supplier_name, data.supplier_id, false, true);
+        supplierSelect.appendChild(newOption);
+        addSupplierModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+  
+});
+</script>
+{% endblock %}
