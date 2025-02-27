@@ -54,9 +54,9 @@ urlpatterns = [
     path('technologist/clients/<int:pk>/', ClientDetailView.as_view(), name='client_detail'),
     path('technologist/clients/<int:pk>/edit/', ClientUpdateView.as_view(), name='client_edit'),
     path('technologist/clients/<int:pk>/delete/', ClientDeleteView.as_view(), name='client_delete'),
-    path('technologist/client/archived/', ArchivedClientListView.as_view(), name='archived_clients_list'),
-    path('technologist/client/<int:pk>/archive/', ClientArchiveView.as_view(), name='client_archive'),
-    path('technologist/client/<int:pk>/unarchive/', ClientUnArchiveView.as_view(), name='client_unarchive'),
+    path('technologist/clients/archived/', ArchivedClientListView.as_view(), name='archived_clients_list'),
+    path('technologist/clients/<int:pk>/archive/', ClientArchiveView.as_view(), name='client_archive'),
+    path('technologist/clients/<int:pk>/unarchive/', ClientUnArchiveView.as_view(), name='client_unarchive'),
     
     path('technologist/client/orders/order/create/<int:client_order_pk>', OrderCreateView.as_view(), name='order_create'),
     path('technologist/client/orders/order/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
@@ -192,4 +192,14 @@ urlpatterns = [
 
     path('api/employees_payment_details/<int:employee_id>/', employees_payment_details, name='employees_payment_details'),
     path('api/order_details_api/<int:order_id>/', order_details_api, name='order_details_api'),
+
+    path('keeper/suppliers/', SupplierListView.as_view(), name='supplier_list'),
+    path('keeper/suppliers/create/', SupplierCreateView.as_view(), name='supplier_create'),
+    path('keeper/suppliers/<int:pk>/', SupplierDetailView.as_view(), name='supplier_detail'),
+    path('keeper/suppliers/<int:pk>/edit/', SupplierUpdateView.as_view(), name='supplier_edit'),
+    path('keeper/suppliers/<int:pk>/delete/', SupplierDeleteView.as_view(), name='supplier_delete'),
+    path('keeper/suppliers/archived/', ArchivedSupplierListView.as_view(), name='archived_suppliers_list'),
+    path('keeper/suppliers/<int:pk>/archive/', SupplierArchiveView.as_view(), name='supplier_archive'),
+    path('keeper/suppliers/<int:pk>/unarchive/', SupplierUnArchiveView.as_view(), name='supplier_unarchive'),
+
 ]

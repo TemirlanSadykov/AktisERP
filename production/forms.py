@@ -453,3 +453,11 @@ class UploadFileForm(forms.Form):
         help_text='Maximum size allowed is 10MB',
         validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
     )
+    
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+        }

@@ -386,3 +386,25 @@ class AssignedWork(CompanyAwareModel):
     
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
+    
+class Supplier(CompanyAwareModel):
+    name = models.CharField(max_length=100, verbose_name='Имя')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    def __str__(self):
+        return self.name
+
+class Roll(CompanyAwareModel):
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
+    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
+    roll_number = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
+    length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
+    length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
+    width = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Ширина (м)', null=True, blank=True)
+    weight = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Вес (кг)', null=True, blank=True)
+    remainder = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Остаток (м)', null=True, blank=True)
+    is_used = models.BooleanField(default=False, verbose_name='Is Used')
+    # additional fields like received_date, status, etc. can be added as needed
+
+    def __str__(self):
+        return f"Roll: {self.color.name} - {self.fabric.name}"

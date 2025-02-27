@@ -362,4 +362,8 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='SalaryPayment',
         ),
+        migrations.RemoveConstraint(
+            model_name='userprofile',
+            name='unique_employee_id_per_branch',
+        ),
     ]
