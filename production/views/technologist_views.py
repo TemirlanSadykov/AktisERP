@@ -1607,7 +1607,7 @@ def model_create(request, a_id, pk=None):
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
         # Order the operations queryset by node number (numerically) and operation name
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
-            'node__number', 'name'
+            'name'
         )
 
     operations_order_json = ""
@@ -1651,7 +1651,7 @@ def model_edit(request, a_id, pk):
             return redirect('model_list', a_id=a_id)
     else:
         form = ModelCustomForm(instance=model_instance)
-        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('node__number', 'name')
+        form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('name')
     
     # Define operations_order_json regardless of the method
     operations_order = list(ModelOperation.objects.filter(model=model_instance).order_by('order').values_list('operation_id', flat=True))
