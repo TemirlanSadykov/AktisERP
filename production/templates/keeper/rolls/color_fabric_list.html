@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Technologist Dashboard" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+        <li class="nav-item dropdown" style="margin: 10px;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container clients-wrapper maincontr">
+    <div class="clients-header">
+      <span class="operation-text">{% trans "Rolls" %}</span>
+      <a href="{% url 'roll_bulk_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{% trans "Color" %}</th>
+            <th>{% trans "Fabric" %}</th>
+            <th>{% trans "Supplier" %}</th>
+            <th>{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for combo in combinations %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ combo.color_name }}</td>
+              <td>{{ combo.fabric_name }}</td>
+              <td>{{ combo.supplier_name }}</td>
+              <td>
+                <a href="{% url 'roll_combination_detail' color_id=combo.color fabric_id=combo.fabric supplier_id=combo.supplier %}" class="btn btn-sm btn-primary">
+                  {% trans "View" %}
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">{% trans "No combinations available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

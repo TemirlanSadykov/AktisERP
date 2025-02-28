@@ -497,3 +497,43 @@ class RollForm(forms.ModelForm):
         # Prepend an "Add New Node" option.
         supplier_choices = list(self.fields['supplier'].choices)
         self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+
+class BulkRollForm(forms.ModelForm):
+    quantity = forms.IntegerField(min_value=1, label="Quantity", widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}))
+    
+    class Meta:
+        model = Roll
+        # We only need the following fields from the Roll model for bulk creation.
+        # In this case, color, fabric, supplier come from the initial selection,
+        # while weight is provided per roll in the table.
+        fields = [
+            'color',
+            'fabric',
+            'supplier',
+            'width'
+        ]
+        widgets = {
+            'color': forms.Select(attrs={'class': 'form-control'}),
+            'fabric': forms.Select(attrs={'class': 'form-control'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'})
+        }
+    
+    def __init__(self, *args, **kwargs):
+        # Remove any 'instance' passed in so that ModelForm does not complain
+        kwargs.pop('instance', None)
+        super().__init__(*args, **kwargs)
+        # Use the same choices as RollForm for consistency.
+        self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
+        
+        # Prepend an "Add New" option (same as in RollForm)
+        color_choices = list(self.fields['color'].choices)
+        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+
+        fabric_choices = list(self.fields['fabric'].choices)
+        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+
+        supplier_choices = list(self.fields['supplier'].choices)
+        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices

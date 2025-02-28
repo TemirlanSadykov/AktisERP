@@ -208,5 +208,8 @@ urlpatterns = [
     path('keeper/rolls/<int:pk>/', RollDetailView.as_view(), name='roll_detail'),
     path('keeper/rolls/<int:pk>/edit/', RollUpdateView.as_view(), name='roll_edit'),
     path('keeper/rolls/<int:pk>/delete/', RollDeleteView.as_view(), name='roll_delete'),
+    path('keeper/rolls/combinations/', ColorFabricListView.as_view(), name='roll_combinations'),
+    path('keeper/rolls/combinations/<int:color_id>/<int:fabric_id>/<int:supplier_id>/', RollsByCombinationListView.as_view(), name='roll_combination_detail'),
+    path('keeper/rolls/create_bulk/', RollBulkCreateView.as_view(), name='roll_bulk_create'),
 
 ]
