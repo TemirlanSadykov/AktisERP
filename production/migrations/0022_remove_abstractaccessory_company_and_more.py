@@ -64,6 +64,10 @@ class Migration(migrations.Migration):
             model_name='fixedsalary',
             name='branch',
         ),
+        migrations.RemoveConstraint(
+            model_name='userprofile',
+            name='unique_employee_id_per_branch',
+        ),
         migrations.RemoveField(
             model_name='userprofile',
             name='branch',
@@ -361,9 +365,5 @@ class Migration(migrations.Migration):
         ),
         migrations.DeleteModel(
             name='SalaryPayment',
-        ),
-        migrations.RemoveConstraint(
-            model_name='userprofile',
-            name='unique_employee_id_per_branch',
         ),
     ]

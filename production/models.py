@@ -5,12 +5,19 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from datetime import date
+from django.db import transaction
+from django.db.models import F
 
 # ------------------------------------------------------------------
 # Company Model (Name field only for now)
 # ------------------------------------------------------------------
 class Company(models.Model):
     name = models.CharField(max_length=100, verbose_name="Company Name")
+    last_operation_number = models.PositiveIntegerField(default=0)
+    last_cut_number = models.PositiveIntegerField(default=0)
+    def current_year():
+        return date.today().year
+    cut_year = models.PositiveIntegerField(default=current_year)
 
     def __str__(self):
         return self.name
@@ -120,37 +127,49 @@ class Client(CompanyAwareModel):
         return self.name
 
 class Color(CompanyAwareModel):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'name'], name='unique_color_per_company')
+        ]
     
     def __str__(self):
         return self.name
     
 class Fabrics(CompanyAwareModel):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'name'], name='unique_fabric_per_company')
+        ]
     
     def __str__(self):
         return self.name
 
 class Equipment(CompanyAwareModel):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'name'], name='unique_equipment_per_company')
+        ]
     
     def __str__(self):
         return self.name
     
 class Node(CompanyAwareModel):
-    name = models.CharField(max_length=100, unique=True, verbose_name='Название')
+    name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'name'], name='unique_node_per_company')
+        ]
     
     def __str__(self):
         return self.name
@@ -166,36 +185,18 @@ class Operation(CompanyAwareModel):
     photo = models.ImageField(upload_to='operation_photos/', null=True, blank=True, verbose_name='Фото')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
-    
-    
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._original_values = {}
-        for field in self._meta.fields:
-            try:
-                value = getattr(self, field.name)
-            except AttributeError:
-                value = None
-            self._original_values[field.name] = value
     def __str__(self):
         return f"{self.number} - {self.node.name} - {self.equipment.name} - {self.name}"
-    @property
-    def changed_fields(self):
-        return {
-            field.name
-            for field in self._meta.fields
-            if field.name != 'company' and getattr(self, field.name) != self._original_values[field.name]
-        }
+
     def save(self, *args, **kwargs):
-        creating = self._state.adding
-        node_changed = 'node' in self.changed_fields
+        if not self.pk:  # only assign for new instances
+            with transaction.atomic():
+                # Increment the counter for operations in the current company
+                Company.objects.filter(pk=self.company.pk).update(last_operation_number=F('last_operation_number') + 1)
+                self.company.refresh_from_db(fields=['last_operation_number'])
+                new_op_num = self.company.last_operation_number
+                self.number = new_op_num
         super().save(*args, **kwargs)
-        if creating or node_changed:
-            current_count = Operation.objects.filter(node=self.node).count()
-            new_operation_number = current_count + 1
-            self.number = f"{self.node.id}N{new_operation_number}O"
-            super().save(update_fields=['number'])
     
 class Assortment(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
@@ -302,14 +303,17 @@ class Cut(CompanyAwareModel):
         return f"Cut {self.number} for Order {self.order}"
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.pk:  # Only assign number on creation
             current_year = date.today().year
-            latest_cut = Cut.objects.filter(date__year=current_year).order_by('-number').first()
-            if latest_cut:
-                self.number = latest_cut.number + 1
-            else:
-                self.number = 1
-
+            # Reset company's cut counter if the year has changed
+            if self.company.cut_year != current_year:
+                self.company.last_cut_number = 0
+                self.company.cut_year = current_year
+                self.company.save(update_fields=['last_cut_number', 'cut_year'])
+            with transaction.atomic():
+                Company.objects.filter(pk=self.company.pk).update(last_cut_number=F('last_cut_number') + 1)
+                self.company.refresh_from_db(fields=['last_cut_number'])
+                self.number = self.company.last_cut_number
         super().save(*args, **kwargs)
         
 class CutSize(CompanyAwareModel):
