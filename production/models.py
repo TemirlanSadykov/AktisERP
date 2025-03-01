@@ -190,12 +190,20 @@ class Operation(CompanyAwareModel):
 
     def save(self, *args, **kwargs):
         if not self.pk:  # only assign for new instances
+            # Ensure the company is assigned, similar to CompanyAwareModel
+            if not self.company_id:
+                current_company = get_current_company()
+                if current_company:
+                    self.company = current_company
+                else:
+                    raise ValueError("Operation must have a company assigned before saving.")
             with transaction.atomic():
                 # Increment the counter for operations in the current company
-                Company.objects.filter(pk=self.company.pk).update(last_operation_number=F('last_operation_number') + 1)
+                Company.objects.filter(pk=self.company.pk).update(
+                    last_operation_number=F('last_operation_number') + 1
+                )
                 self.company.refresh_from_db(fields=['last_operation_number'])
-                new_op_num = self.company.last_operation_number
-                self.number = new_op_num
+                self.number = self.company.last_operation_number
         super().save(*args, **kwargs)
     
 class Assortment(CompanyAwareModel):
@@ -324,6 +332,29 @@ class CutSize(CompanyAwareModel):
     
     def __str__(self):
         return f"{self.size_quantity.size} - {self.extra}"
+
+class Supplier(CompanyAwareModel):
+    name = models.CharField(max_length=100, verbose_name='Имя')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    def __str__(self):
+        return self.name
+
+class Roll(CompanyAwareModel):
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
+    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
+    name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
+    length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
+    length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
+    width = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Ширина (м)', null=True, blank=True)
+    weight = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Вес (кг)', null=True, blank=True)
+    remainder = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Остаток (м)', null=True, blank=True)
+    is_used = models.BooleanField(default=False, verbose_name='Is Used')
+    # additional fields like received_date, status, etc. can be added as needed
+
+    def __str__(self):
+        return f"Roll: {self.color.name} - {self.fabric.name}"
+
 class Passport(CompanyAwareModel):
     cut = models.ForeignKey(Cut, on_delete=models.CASCADE, blank=True, null=True, related_name='passports', verbose_name='Крой')
     number = models.IntegerField(verbose_name='Номер', null=True, blank=True)
@@ -331,8 +362,8 @@ class Passport(CompanyAwareModel):
     layers = models.DecimalField(max_digits=10, decimal_places=0, verbose_name='Слои', null=True, blank=True)
     meters = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Метры', null=True, blank=True)
     is_completed = models.BooleanField(default=False, verbose_name='Паспорт завершен')
-    
-    
+    roll = models.ForeignKey(Roll, on_delete=models.SET_NULL, null=True, blank=True, related_name='passports', verbose_name='Roll')
+
     def __str__(self):
         return f"{self.cut.number}-{self.number}"
 
@@ -390,25 +421,3 @@ class AssignedWork(CompanyAwareModel):
     
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
-    
-class Supplier(CompanyAwareModel):
-    name = models.CharField(max_length=100, verbose_name='Имя')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-    def __str__(self):
-        return self.name
-
-class Roll(CompanyAwareModel):
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
-    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
-    name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
-    length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
-    length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
-    width = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Ширина (м)', null=True, blank=True)
-    weight = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Вес (кг)', null=True, blank=True)
-    remainder = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Остаток (м)', null=True, blank=True)
-    is_used = models.BooleanField(default=False, verbose_name='Is Used')
-    # additional fields like received_date, status, etc. can be added as needed
-
-    def __str__(self):
-        return f"Roll: {self.color.name} - {self.fabric.name}"
