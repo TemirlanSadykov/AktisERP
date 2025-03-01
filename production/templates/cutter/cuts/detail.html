@@ -46,7 +46,8 @@
                         </p>
                         <p><strong>{% trans "Length:" %}</strong> {{ cut.length }}</p>
                         <p><strong>{% trans "Width:" %}</strong> {{ cut.width }}</p>
-                        <p><strong>{% trans "Consumption:" %}</strong> {{ cut.consumption }}</p>
+                        <p><strong>{% trans "Consumption Theoretical:" %}</strong> {{ cut.consumption }}</p>
+                        <p><strong>{% trans "Consumption Practical:" %}</strong> {{ cut.consumption_p }}</p>
                         <a href="{% url 'cut_edit' cut.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
                         <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
                     </div>

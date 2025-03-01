@@ -447,7 +447,9 @@ class PassportCreateView(CreateView):
         selected_roll.length_p = new_remainder+layers*cut.length
         selected_roll.is_used = True
         selected_roll.save()
-
+        
+        cut.consumption_p = selected_roll.length_p/passport.quantity # Use length_p or length_t?
+        cut.save()
         return redirect(self.get_success_url())
 
 
