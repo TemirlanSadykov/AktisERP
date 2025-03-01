@@ -174,17 +174,26 @@ class CutForm(forms.ModelForm):
                     )
 
 class PassportForm(forms.ModelForm):
-    # New field for selecting the unique combination.
     combination = forms.ChoiceField(
         label="Color & Fabric", 
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+    roll = forms.ModelChoiceField(
+        queryset=Roll.objects.none(),
+        label="Roll",
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    remainder = forms.DecimalField(
+        required=True,
+        label="Remainder",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
     
     class Meta:
         model = Passport
-        # Include combination in the fields so it renders.
-        fields = ['combination', 'layers']
+        fields = ['combination', 'roll', 'layers', 'remainder']
         widgets = {
             'layers': forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
         }
@@ -194,26 +203,32 @@ class PassportForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if cut:
             unique_combinations = set()
-            # Loop over all cut_sizes to get unique (color, fabric) combinations.
             for cut_size in cut.cut_sizes.all():
-                color = cut_size.size_quantity.color      # Model instance.
-                fabric = cut_size.size_quantity.fabrics    # Model instance.
-                # Store a tuple: (color_id, fabric_id, color_name, fabric_name)
+                color = cut_size.size_quantity.color
+                fabric = cut_size.size_quantity.fabrics
                 unique_combinations.add((color.id, fabric.id, str(color), str(fabric)))
-            # Build choices: value "12|5", label "Blue Cotton"
             choices = [
                 (f"{color_id}|{fabric_id}", f"{color_name} {fabric_name}")
                 for (color_id, fabric_id, color_name, fabric_name) in unique_combinations
             ]
-            # Sort choices alphabetically by label.
             choices = sorted(choices, key=lambda x: x[1])
-            # Insert a placeholder choice at the beginning.
             choices.insert(0, ("", "------"))
             self.fields['combination'].choices = choices
-            # Optionally, you can set the initial value to the placeholder (which will force validation if not changed)
             self.initial['combination'] = ""
+            
+            # Update the roll queryset if POST data is present
+            if 'combination' in self.data:
+                combination = self.data.get('combination')
+                if combination:
+                    color_id, fabric_id = combination.split("|")
+                    self.fields['roll'].queryset = Roll.objects.filter(color_id=color_id, fabric_id=fabric_id, is_used=False)
+                else:
+                    self.fields['roll'].queryset = Roll.objects.none()
+            else:
+                self.fields['roll'].queryset = Roll.objects.none()
         else:
             self.fields['combination'].choices = [("", "------")]
+            self.fields['roll'].queryset = Roll.objects.none()
 
 class OperationAssignmentForm(forms.ModelForm):
     employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")
@@ -328,13 +343,16 @@ class ModelCustomForm(forms.ModelForm):
         
         if commit:
             model_instance.save()
-            self.save_m2m()
             if 'operations_data' in self.cleaned_data and self.cleaned_data['operations_data']:
                 operations_data = json.loads(self.cleaned_data['operations_data'])
                 self.update_operations_order(model_instance, operations_data)
         return model_instance
 
     def update_operations_order(self, model_instance, operations_data):
+        current_company = get_current_company()
+        if not current_company:
+            raise ValueError("No current company set for creating a ModelOperation.")
+
         with transaction.atomic():
             # Clear existing operations to reset them with new order
             ModelOperation.objects.filter(model=model_instance).delete()
@@ -347,7 +365,8 @@ class ModelCustomForm(forms.ModelForm):
                 ModelOperation.objects.create(
                     model=model_instance,
                     operation=operation,
-                    order=order
+                    order=order,
+                    company=current_company
                 )
 
 class ClientForm(forms.ModelForm):

@@ -407,29 +407,27 @@ class PassportCreateView(CreateView):
         cut_id = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_id)
         passport = form.save(commit=False)
-
-        # Generate passport number starting from 1 for each cut
+        # Generate passport number starting from 1 for each cut.
         last_passport = Passport.objects.filter(cut=cut).order_by('number').last()
         passport.number = last_passport.number + 1 if last_passport else 1
 
-        passport.cut = cut  # Link passport directly to the cut
-        passport.save()
-        # Get the selected combination. The value is like "12|5"
-        combination = form.cleaned_data['combination']
-        color_id, fabric_id = combination.split("|")
+        passport.cut = cut  # Link passport directly to the cut.
+        passport.save()     # Save first to have an instance for m2m relations.
 
-        # Filter the cut's cut_sizes so that we only include those with matching color and fabric.
+        # Handle passport sizes based on the selected combination.
+        combination = form.cleaned_data['combination']
+        layers = form.cleaned_data['layers']
+        color_id, fabric_id = combination.split("|")
         matching_cut_sizes = cut.cut_sizes.filter(
             size_quantity__color_id=color_id,
             size_quantity__fabrics_id=fabric_id
         )
-        # For each matching cut_size, create a PassportSize (and ProductionPieces)
         for cut_size in matching_cut_sizes:
             passport_size = PassportSize.objects.create(
                 passport=passport,
                 size_quantity=cut_size.size_quantity,
-                quantity=form.cleaned_data['layers'],  # Use layers from the form input
-                extra=cut_size.extra  # Use extra from CutSize
+                quantity=layers,
+                extra=cut_size.extra
             )
             quantity = int(passport_size.quantity)
             for i in range(1, quantity + 1):
@@ -437,12 +435,38 @@ class PassportCreateView(CreateView):
                     passport_size=passport_size,
                     piece_number=i
                 )
+        
+        # New logic: assign the selected roll to the passport.
+        selected_roll = form.cleaned_data['roll']
+        passport.roll = selected_roll
+        passport.save()
+        
+        # Update the selected roll’s remainder.
+        new_remainder = form.cleaned_data['remainder']
+        selected_roll.remainder = new_remainder
+        selected_roll.length_p = new_remainder+layers*cut.length
+        selected_roll.is_used = True
+        selected_roll.save()
 
         return redirect(self.get_success_url())
 
 
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})
+    
+def ajax_get_rolls(request):
+    color_id = request.GET.get('color_id')
+    fabric_id = request.GET.get('fabric_id')
+    if color_id and fabric_id:
+        # Adjust the fields as needed (for display, here using the roll’s name or a concatenation)
+        rolls_qs = Roll.objects.filter(color_id=color_id, fabric_id=fabric_id, is_used=False)
+        rolls = [
+            {"id": roll.id, "label": f"{roll.color.name} {roll.fabric.name} (Roll #{roll.name})"}
+            for roll in rolls_qs
+        ]
+    else:
+        rolls = []
+    return JsonResponse({"rolls": rolls})
     
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportDetailView(DetailView):

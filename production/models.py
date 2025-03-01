@@ -312,6 +312,14 @@ class Cut(CompanyAwareModel):
 
     def save(self, *args, **kwargs):
         if not self.pk:  # Only assign number on creation
+            # Ensure company is assigned
+            if not self.company_id:
+                current_company = get_current_company()
+                if current_company:
+                    self.company = current_company
+                else:
+                    raise ValueError("Cut must have a company assigned before saving.")
+
             current_year = date.today().year
             # Reset company's cut counter if the year has changed
             if self.company.cut_year != current_year:

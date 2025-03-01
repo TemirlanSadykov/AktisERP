@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.views.decorators.http import require_POST
+from decimal import Decimal, InvalidOperation
 
 from ..decorators import keeper_required
 from ..forms import *
@@ -293,14 +294,30 @@ class RollBulkCreateView(CreateView):
         
         weights = self.request.POST.getlist('weight')
         lengths = self.request.POST.getlist('length')
+        cleaned_weights = []
+        cleaned_lengths = []
+
+        for w in weights:
+            try:
+                # Convert empty string to None (or set a default like 0)
+                cleaned_weights.append(Decimal(w) if w.strip() else None)
+            except InvalidOperation:
+                cleaned_weights.append(None)  # or handle error as needed
+
+        for l in lengths:
+            try:
+                cleaned_lengths.append(Decimal(l) if l.strip() else None)
+            except InvalidOperation:
+                cleaned_lengths.append(None)
+
         existing_count = Roll.objects.filter(color=color, fabric=fabric, supplier=supplier).count()
         current_company = get_current_company()  # should be valid
         
         new_rolls = []
         for i in range(quantity):
             roll_name = str(existing_count + i + 1)
-            weight_value = weights[i] if i < len(weights) else None
-            length_value = lengths[i] if i < len(lengths) else None
+            weight_value = cleaned_weights[i] if i < len(cleaned_weights) else None
+            length_value = cleaned_lengths[i] if i < len(cleaned_lengths) else None
             new_rolls.append(Roll(
                 color=color,
                 fabric=fabric,

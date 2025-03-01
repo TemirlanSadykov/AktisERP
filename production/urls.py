@@ -212,4 +212,6 @@ urlpatterns = [
     path('keeper/rolls/combinations/<int:color_id>/<int:fabric_id>/<int:supplier_id>/', RollsByCombinationListView.as_view(), name='roll_combination_detail'),
     path('keeper/rolls/create_bulk/', RollBulkCreateView.as_view(), name='roll_bulk_create'),
 
+    path('ajax/get-rolls/', ajax_get_rolls, name='ajax_get_rolls'),
+
 ]
