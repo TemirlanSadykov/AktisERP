@@ -133,6 +133,37 @@
         });
     });
 
+    document.getElementById('payment-details-container').addEventListener('change', function(e) {
+      if (e.target && e.target.id === 'stageSelect') {
+        showLoading();
+        const selectedStage = e.target.value;
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const paymentUrl = new URL("{% url 'payment_details' %}", window.location.origin);
+        paymentUrl.searchParams.append('start_date', startDate);
+        paymentUrl.searchParams.append('end_date', endDate);
+        paymentUrl.searchParams.append('stages', selectedStage);
+    
+        fetch(paymentUrl)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error("Network response was not OK");
+            }
+            return response.text();
+          })
+          .then(html => {
+            document.getElementById('payment-details-container').innerHTML = html;
+            attachEmployeeLinkListeners();
+          })
+          .catch(error => {
+            alert('Error fetching payment details: ' + error);
+          })
+          .finally(() => {
+            hideLoading();
+          });
+      }
+    });
+    
     function attachEmployeeLinkListeners() {
       document.querySelectorAll('.employee-details-link').forEach(function(link) {
         link.addEventListener('click', function(event) {

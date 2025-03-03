@@ -261,10 +261,13 @@ def order_details_api(request, order_id):
 def payment_details_view(request):
     """
     Returns an HTML snippet (table) with employee payment details
-    for all AssignedWork records created within the date range.
+    for all AssignedWork records created within the date range, filtering
+    based on production piece stage if provided.
     """
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    # Use get() with a default value of 'NOT_CHECKED'
+    selected_stage = request.GET.get('stages', 'NOT_CHECKED')
 
     try:
         start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -276,16 +279,24 @@ def payment_details_view(request):
     # Filter AssignedWork records within the date range
     assigned_works = AssignedWork.objects.filter(
         created_at__date__range=[start_dt, end_dt]
-    ).select_related('employee', 'work__operation')
+    ).select_related('employee', 'work__operation', 'work__passport_size')
 
-    # Aggregate employee data
+    # Aggregate employee data using effective quantities based on production pieces
     employee_data_map = {}
     for aw in assigned_works:
         emp = aw.employee
-        # Use operation details for timing and payment values
         operation = aw.work.operation
         preferred_time = operation.preferred_completion_time or 0
         payment_per_operation = operation.payment or 0
+
+        # Count production pieces for the passport size with the selected stage
+        production_qs = ProductionPiece.objects.filter(passport_size=aw.work.passport_size)
+        if selected_stage:
+            production_qs = production_qs.filter(stage=selected_stage)
+        production_count = production_qs.count()
+
+        # Use the lesser of the assigned work quantity and the production pieces count
+        effective_quantity = min(aw.quantity, production_count)
 
         if emp not in employee_data_map:
             employee_data_map[emp] = {
@@ -293,9 +304,9 @@ def payment_details_view(request):
                 'seconds_worked': 0,
                 'payment': 0,
             }
-        employee_data_map[emp]['units_produced'] += aw.quantity
-        employee_data_map[emp]['seconds_worked'] += aw.quantity * preferred_time
-        employee_data_map[emp]['payment'] += aw.quantity * payment_per_operation
+        employee_data_map[emp]['units_produced'] += effective_quantity
+        employee_data_map[emp]['seconds_worked'] += effective_quantity * preferred_time
+        employee_data_map[emp]['payment'] += effective_quantity * payment_per_operation
 
     # Convert to a list for easier iteration in the template
     employee_data_list = []
@@ -312,7 +323,10 @@ def payment_details_view(request):
     # Optionally, sort by units produced descending
     employee_data_list.sort(key=lambda e: e['units_produced'], reverse=True)
 
-    context = {'employee_data': employee_data_list}
+    context = {
+        'employee_data': employee_data_list,
+        'selected_stage': selected_stage,  # For display in the template
+    }
     return render(request, 'admin/partial_payment_details.html', context)
 
 @login_required

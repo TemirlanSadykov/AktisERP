@@ -1,5 +1,17 @@
 {% load i18n %}
 <!-- Employee Data Table -->
+<label for="stageSelect">{% trans "Select Stage:" %}</label>
+<select id="stageSelect" name="stages">
+  <option value="NOT_CHECKED" {% if selected_stage == "NOT_CHECKED" or not selected_stage %}selected{% endif %}>
+    {% trans "Raw" %}
+  </option>
+  <option value="CHECKED" {% if selected_stage == "CHECKED" %}selected{% endif %}>
+    {% trans "Checked" %}
+  </option>
+  <option value="PACKED" {% if selected_stage == "PACKED" %}selected{% endif %}>
+    {% trans "Packed" %}
+  </option>
+</select>
 <table class="table rounded-table">
   <thead>
     <tr>
