@@ -443,13 +443,24 @@ class PassportCreateView(CreateView):
         
         # Update the selected roll’s remainder.
         new_remainder = form.cleaned_data['remainder']
-        selected_roll.remainder = new_remainder
+
         selected_roll.length_p = new_remainder+layers*cut.length
         selected_roll.is_used = True
         selected_roll.save()
+
+        remainder_roll = Roll.objects.create(
+            color=selected_roll.color,
+            fabric=selected_roll.fabric,
+            supplier=selected_roll.supplier,
+            name=selected_roll.name,
+            length_t=new_remainder,
+            length_p=new_remainder,
+            width=selected_roll.width,
+            weight=selected_roll.weight,
+            original_roll=selected_roll,
+            is_used=False
+        )
         
-        cut.consumption_p = selected_roll.length_p/passport.quantity # Use length_p or length_t?
-        cut.save()
         return redirect(self.get_success_url())
 
 
@@ -461,10 +472,13 @@ def ajax_get_rolls(request):
     fabric_id = request.GET.get('fabric_id')
     if color_id and fabric_id:
         # Adjust the fields as needed (for display, here using the roll’s name or a concatenation)
-        rolls_qs = Roll.objects.filter(color_id=color_id, fabric_id=fabric_id, is_used=False)
+        rolls_qs = Roll.objects.filter(color_id=color_id, fabric_id=fabric_id, is_used=False).order_by('length_t')
         rolls = [
-            {"id": roll.id, "label": f"{roll.color.name} {roll.fabric.name} (Roll #{roll.name})"}
-            for roll in rolls_qs
+            {
+                "id": roll.id,
+                "label": f"#{i} {roll.length_t} (Остаток)" if roll.original_roll else f"#{i} {roll.length_t}"
+            }
+            for i, roll in enumerate(rolls_qs, start=1)
         ]
     else:
         rolls = []

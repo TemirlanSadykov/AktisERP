@@ -357,9 +357,15 @@ class Roll(CompanyAwareModel):
     length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
     width = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Ширина (м)', null=True, blank=True)
     weight = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Вес (кг)', null=True, blank=True)
-    remainder = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Остаток (м)', null=True, blank=True)
+    original_roll = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Original Roll',
+        related_name='remainders'
+    )
     is_used = models.BooleanField(default=False, verbose_name='Is Used')
-    # additional fields like received_date, status, etc. can be added as needed
 
     def __str__(self):
         return f"Roll: {self.color.name} - {self.fabric.name}"

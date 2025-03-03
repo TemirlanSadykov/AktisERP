@@ -28,7 +28,7 @@
       <table class="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>{% trans "Name" %}</th>
+            <th>{% trans "Number" %}</th>
             <th>{% trans "Length" %}</th>
             <th>{% trans "Width" %}</th>
             <th>{% trans "Weight" %}</th>
@@ -37,7 +37,7 @@
         <tbody>
           {% for roll in rolls %}
             <tr>
-              <td><a href="{% url 'roll_detail' roll.pk %}">{{ roll.name }}</a></td>
+              <td><a href="{% url 'roll_detail' roll.pk %}">{% if roll.original_roll %}#{{ forloop.counter }} (Остаток){% else %}#{{ forloop.counter }} {% endif %}</a></td>
               <td>{{ roll.length_t }}</td>
               <td>{{ roll.width }}</td>
               <td>{{ roll.weight }}</td>
