@@ -182,11 +182,16 @@ class PassportForm(forms.ModelForm):
     roll = forms.ModelChoiceField(
         queryset=Roll.objects.none(),
         label="Roll",
-        required=True,
+        required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    remainder = forms.DecimalField(
+    layers = forms.DecimalField(
         required=True,
+        label="Layers",
+        widget=forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
+    )
+    remainder = forms.DecimalField(
+        required=False,
         label="Remainder",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
@@ -194,9 +199,6 @@ class PassportForm(forms.ModelForm):
     class Meta:
         model = Passport
         fields = ['combination', 'roll', 'layers', 'remainder']
-        widgets = {
-            'layers': forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
-        }
     
     def __init__(self, *args, **kwargs):
         cut = kwargs.pop('cut', None)

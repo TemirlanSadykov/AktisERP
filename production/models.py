@@ -366,7 +366,16 @@ class Roll(CompanyAwareModel):
         related_name='remainders'
     )
     is_used = models.BooleanField(default=False, verbose_name='Is Used')
-
+    @property
+    def length_u(self):
+        """
+        Returns length_p minus the sum of all remainders (i.e. the length_t of each remainder)
+        for an original roll. For remainder rolls, it returns length_p as is.
+        """
+        remainder_total = sum(
+            r.length_t for r in self.remainders.all() if r.length_t is not None
+        )
+        return self.length_p - remainder_total
     def __str__(self):
         return f"Roll: {self.color.name} - {self.fabric.name}"
 

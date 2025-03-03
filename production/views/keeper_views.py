@@ -262,7 +262,7 @@ class RollsByCombinationListView(ListView):
         color_id = self.kwargs.get('color_id')
         fabric_id = self.kwargs.get('fabric_id')
         supplier_id = self.kwargs.get('supplier_id')
-        return Roll.objects.filter(is_used=False, color_id=color_id, fabric_id=fabric_id, supplier_id=supplier_id).order_by('length_t')
+        return Roll.objects.filter(is_used=False, color_id=color_id, fabric_id=fabric_id, supplier_id=supplier_id, original_roll__isnull=True).order_by('length_t')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

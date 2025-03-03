@@ -284,7 +284,6 @@ class CutDetailView(DetailView):
         passports = cut.passports.all().order_by('-number')
 
         # Get overall sizes from CutSizes—but only those that have been used in passports.
-        # We'll build a set of (size, extra) pairs from all PassportSize records.
         passport_sizes_set = set()
         for passport in passports:
             for ps in passport.passport_sizes.all():
@@ -305,11 +304,15 @@ class CutDetailView(DetailView):
         # Total layers from all passports.
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
+        # Retrieve the rolls related to the cut via passports.
+        rolls = Roll.objects.filter(passports__cut=cut).distinct()
+
         context.update({
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
-            'passport_sizes_display': passport_sizes_display,  # New variable for overall passport sizes.
+            'passport_sizes_display': passport_sizes_display,
+            'rolls': rolls,  # New: sending roll information to the template.
             'sidebar_type': 'cutter'
         })
         return context
@@ -438,28 +441,43 @@ class PassportCreateView(CreateView):
         
         # New logic: assign the selected roll to the passport.
         selected_roll = form.cleaned_data['roll']
-        passport.roll = selected_roll
-        passport.save()
-        
-        # Update the selected roll’s remainder.
-        new_remainder = form.cleaned_data['remainder']
 
-        selected_roll.length_p = new_remainder+layers*cut.length
-        selected_roll.is_used = True
-        selected_roll.save()
+        if selected_roll:
+            passport.roll = selected_roll
+            passport.save()
+            
+            # Update the selected roll’s remainder.
+            new_remainder = form.cleaned_data['remainder']
 
-        remainder_roll = Roll.objects.create(
-            color=selected_roll.color,
-            fabric=selected_roll.fabric,
-            supplier=selected_roll.supplier,
-            name=selected_roll.name,
-            length_t=new_remainder,
-            length_p=new_remainder,
-            width=selected_roll.width,
-            weight=selected_roll.weight,
-            original_roll=selected_roll,
-            is_used=False
-        )
+            if new_remainder:
+                selected_roll.length_p = new_remainder+layers*cut.length
+
+                remainder_roll = Roll.objects.create(
+                    color=selected_roll.color,
+                    fabric=selected_roll.fabric,
+                    supplier=selected_roll.supplier,
+                    name=selected_roll.name,
+                    length_t=new_remainder,
+                    length_p=new_remainder,
+                    width=selected_roll.width,
+                    weight=selected_roll.weight,
+                    original_roll=selected_roll,
+                    is_used=False
+                )
+            else:
+                selected_roll.length_p = layers*cut.length
+
+            selected_roll.is_used = True
+            selected_roll.save()
+
+            cut.consumption_p = sum(
+                (p.roll.length_t - sum(r.length_t for r in p.roll.remainders.all() if r.is_used))
+                for p in cut.passports.all()
+            ) / sum(
+                sum(ps.quantity for ps in p.passport_sizes.all())
+                for p in cut.passports.all()
+            )            
+            cut.save()
         
         return redirect(self.get_success_url())
 
