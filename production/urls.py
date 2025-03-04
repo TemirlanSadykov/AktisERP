@@ -214,4 +214,14 @@ urlpatterns = [
 
     path('ajax/get-rolls/', ajax_get_rolls, name='ajax_get_rolls'),
 
+    path('qc/manual_check_page/', manual_check_page, name='manual_check_page'),
+    path('qc/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
+    path('qc/ajax/get-cuts/', ajax_get_cuts, name='ajax_get_cuts'),
+    path('qc/cuts/get-cut-table-data/<int:cut_id>/', get_cut_table_data, name='get_cut_table_data'),
+    path('qc/orders/update-piece-status-by-passport-size/', update_piece_status_by_passport_size, name='update_piece_status_by_passport_size'),
+
+    path('packer/manual_check_page/', manual_pack_page, name='manual_pack_page'),
+    path('packer/cuts/get-cut-table-data/<int:cut_id>/', get_cut_table_data_packer, name='get_cut_table_data_packer'),
+    path('packer/orders/pack-piece-status-by-passport-size/', pack_piece_status_by_passport_size, name='pack_piece_status_by_passport_size'),
+
 ]

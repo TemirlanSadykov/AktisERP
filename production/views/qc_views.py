@@ -430,3 +430,159 @@ def scan_qc_page(request):
             'sidebar_type': 'qc_page'
             }
     return render(request, 'qc/scans/detail.html', context)
+
+@login_required
+@qc_required
+def manual_check_page(request):
+    client_orders = ClientOrder.objects.all()  
+    context = {
+        'sidebar_type': 'qc_page',
+        'client_orders': client_orders,
+    }
+    return render(request, 'qc/scans/manual.html', context)
+
+@login_required
+def ajax_get_orders(request):
+    client_order_id = request.GET.get('client_order_id')
+    orders_data = []
+    if client_order_id:
+        orders = Order.objects.filter(client_order_id=client_order_id)
+        for order in orders:
+            # Get the model name.
+            model_name = order.model.name if hasattr(order.model, 'name') else str(order.model)
+            
+            # Collect unique color & fabric combinations from size_quantities.
+            unique_combos = set()
+            for sq in order.size_quantities.all():
+                if sq.color and sq.fabrics:
+                    # The __str__ methods on Color and Fabrics will be used.
+                    unique_combos.add(f"{sq.color} {sq.fabrics}")
+            
+            combos_str = ", ".join(sorted(unique_combos))
+            
+            # Build the label including model, combos, and order quantity.
+            label = f"{model_name} - {combos_str} - Кол: {order.quantity}"
+            orders_data.append({"id": order.id, "label": label})
+    return JsonResponse({"orders": orders_data})
+
+@login_required
+def ajax_get_cuts(request):
+    # When an order is chosen, return its related cuts.
+    order_id = request.GET.get('order_id')
+    cuts_data = []
+    if order_id:
+        cuts = Cut.objects.filter(order_id=order_id)
+        for cut in cuts:
+            cuts_data.append({"id": cut.id, "label": cut.number})
+    return JsonResponse({"cuts": cuts_data})
+
+def get_passport_checked_counts(passport):
+    """
+    For a given Passport, returns a dict mapping each size to a dictionary
+    with the total required quantity (from the PassportSize.quantity field)
+    and the count of ProductionPiece items in the CHECKED stage.
+    
+    Output format:
+      {
+         "S": {"checked": 5, "required": 10},
+         "M": {"checked": 2, "required": 8},
+         ...
+      }
+    """
+    counts = {}
+    # Loop over all PassportSize records related to the passport.
+    for ps in passport.passport_sizes.all():
+        size = ps.size_quantity.size  # e.g., "S", "M", etc.
+        required = ps.quantity or 0
+        # Count ProductionPiece objects that are checked for this passport size.
+        checked = ps.pieces.filter(stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]).count()
+        # If multiple passport sizes have the same size, sum them up.
+        if size in counts:
+            counts[size]["required"] += required
+            counts[size]["checked"] += checked
+        else:
+            counts[size] = {"required": required, "checked": checked}
+    return counts
+
+@login_required
+def get_cut_table_data(request, cut_id):
+    # Fetch the cut and related data for the table.
+    cut = get_object_or_404(Cut, id=cut_id)
+    
+    # Get unique sizes from the cut's size_quantities.
+    size_set = {sq.size for sq in cut.size_quantities.all() if sq.size}
+    all_sizes = sorted(size_set)
+    
+    # Get passports associated with this cut.
+    passports_qs = cut.passports.all()
+    passports_data = []
+    for passport in passports_qs:
+        # Build a label from passport.number and one of its passport_sizes (if exists)
+        passport_sqs = passport.passport_sizes.all()
+        if passport_sqs.exists():
+            rep_sq = passport_sqs.first()
+            rep_label = f"Passport {passport.number or passport.id} - {rep_sq.size_quantity.color} {rep_sq.size_quantity.fabrics}"
+        else:
+            rep_label = f"Passport {passport.number or passport.id}"
+        
+        # Get the checked/required counts per size.
+        size_counts = get_passport_checked_counts(passport)
+        
+        # For the cut table, you'll want to ensure every size from all_sizes is represented.
+        # For sizes not present in size_counts, assume 0.
+        quantities = {}
+        for size in all_sizes:
+            if size in size_counts:
+                quantities[size] = size_counts[size]
+            else:
+                quantities[size] = {"checked": 0, "required": 0}
+        
+        passports_data.append({
+            "passport_id": passport.id,
+            "label": rep_label,
+            "quantities": quantities,
+        })
+
+    data = {
+        "cut_id": cut.id,
+        "cut_number": cut.number,
+        "all_sizes": all_sizes,
+        "passports": passports_data,
+    }
+    return JsonResponse(data)
+
+@login_required
+def update_piece_status_by_passport_size(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            passport_id = data.get("passport_id")
+            size = data.get("size")
+            status = data.get("status")
+            if status not in ["CHECKED", "NOT_CHECKED"]:
+                return JsonResponse({"success": False, "message": "Invalid status"}, status=400)
+            
+            if status == "CHECKED":
+                # When checking, find a piece that's not yet checked.
+                piece = ProductionPiece.objects.filter(
+                    passport_size__passport_id=passport_id,
+                    passport_size__size_quantity__size=size,
+                    stage=ProductionPiece.StageChoices.NOT_CHECKED
+                ).first()
+            elif status == "NOT_CHECKED":
+                # When unchecking, find a piece that is currently checked.
+                piece = ProductionPiece.objects.filter(
+                    passport_size__passport_id=passport_id,
+                    passport_size__size_quantity__size=size,
+                    stage=ProductionPiece.StageChoices.CHECKED
+                ).first()
+
+            if not piece:
+                return JsonResponse({"success": False, "message": "No available production piece found"}, status=404)
+            
+            piece.stage = status
+            piece.save()
+            return JsonResponse({"success": True, "piece_id": piece.id})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=500)
+    return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)

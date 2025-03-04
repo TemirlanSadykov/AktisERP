@@ -149,7 +149,10 @@
                     <a href="{% url 'scan_qc_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
-                    {% if request.user.userprofile.type == 0 %}
+                    <a href="{% url 'manual_check_page' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
+                        <i class="fas fa-solid fa-keyboard fa-fw"></i><span class="sidetext">{% trans 'Manual' %}</span></a>
+                        {% if request.user.userprofile.type == 0 %}
                     <a href="{% url 'admin_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
                         data-id="Return">
@@ -166,6 +169,9 @@
                     <a href="{% url 'scan_packer_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
+                    <a href="{% url 'manual_pack_page' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
+                        <i class="fas fa-solid fa-keyboard fa-fw"></i><span class="sidetext">{% trans 'Manual' %}</span></a>
                     {% if request.user.userprofile.type == 0 %}
                     <a href="{% url 'admin_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
@@ -174,6 +180,7 @@
                         <span class="sidetext">{% trans 'Return' %}</span>
                     </a>
                     {% endif %}  
+                </div>
                 {% elif sidebar_type == 'keeper' %}
                     <div id="sidebar" class="list-group list-group-flush sidenavres">
                         <a href="{% url 'roll_combinations' %}"
