@@ -25,6 +25,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, DeleteView, UpdateView
 from django.views.generic.edit import CreateView
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models.functions import Cast
+from django.db.models import IntegerField
 
 from django.db.models.functions import TruncMonth
 
@@ -333,7 +335,7 @@ def payment_details_view(request):
         employee_data_map[emp]['payment'] += aw.quantity * payment_per_operation
 
     # Retrieve all employees ordered by employee_id
-    all_employees = UserProfile.objects.all().order_by('employee_id')
+    all_employees = UserProfile.objects.exclude(type__in=[0, 1]).order_by(Cast('employee_id', IntegerField()))
     employee_data_list = []
     for emp in all_employees:
         data = employee_data_map.get(emp, {
