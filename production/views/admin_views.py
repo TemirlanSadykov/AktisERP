@@ -290,6 +290,7 @@ def payment_details_view(request):
     Returns an HTML snippet (table) with employee payment details
     for all AssignedWork records created within the date range.
     If order_ids are provided in the GET params, filters assigned works to include only those orders.
+    Even if an employee has no work done, they will be displayed with 0 values.
     """
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -309,9 +310,11 @@ def payment_details_view(request):
     # Optionally filter by order_ids if provided (multiple order_ids can be passed)
     order_ids = request.GET.getlist('order_ids')
     if order_ids:
-        assigned_works = assigned_works.filter(work__passport_size__passport__cut__order__id__in=order_ids)
+        assigned_works = assigned_works.filter(
+            work__passport_size__passport__cut__order__id__in=order_ids
+        )
 
-    # Aggregate employee data
+    # Aggregate employee data for those with assigned works
     employee_data_map = {}
     for aw in assigned_works:
         emp = aw.employee
@@ -329,8 +332,15 @@ def payment_details_view(request):
         employee_data_map[emp]['seconds_worked'] += aw.quantity * preferred_time
         employee_data_map[emp]['payment'] += aw.quantity * payment_per_operation
 
+    # Retrieve all employees ordered by employee_id
+    all_employees = UserProfile.objects.all().order_by('employee_id')
     employee_data_list = []
-    for emp, data in employee_data_map.items():
+    for emp in all_employees:
+        data = employee_data_map.get(emp, {
+            'units_produced': 0,
+            'seconds_worked': 0,
+            'payment': 0,
+        })
         employee_data_list.append({
             'id': emp.id,
             'employee_id': emp.employee_id,
@@ -339,8 +349,6 @@ def payment_details_view(request):
             'seconds_worked': int(data['seconds_worked']),
             'payment': int(data['payment']),
         })
-
-    employee_data_list.sort(key=lambda e: e['units_produced'], reverse=True)
 
     context = {'employee_data': employee_data_list}
     return render(request, 'admin/partial_payment_details.html', context)
