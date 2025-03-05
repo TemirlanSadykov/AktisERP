@@ -77,6 +77,8 @@
       </div>
     </div>
   </div>  
+  <!-- Container for Order Filter -->
+  <div id="orders-filter-container"></div>
 
   <!-- Placeholder for Payment Details (already implemented) -->
   <div id="payment-details-container"></div>
@@ -104,15 +106,67 @@
 <script>
 
   document.addEventListener('DOMContentLoaded', function() {
-    // Payment details (existing functionality)
     const paymentCard = document.getElementById('payment-card');
     paymentCard.addEventListener('click', function(){
+      showLoading();
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+
+      // Fetch payment details
+      const paymentUrl = new URL("{% url 'payment_details' %}", window.location.origin);
+      paymentUrl.searchParams.append('start_date', startDate);
+      paymentUrl.searchParams.append('end_date', endDate);
+      
+      // Also fetch the orders filter snippet
+      const ordersUrl = new URL("{% url 'order_filter' %}", window.location.origin);
+      ordersUrl.searchParams.append('start_date', startDate);
+      ordersUrl.searchParams.append('end_date', endDate);
+
+      Promise.all([
+        fetch(paymentUrl).then(response => {
+          if (!response.ok) { throw new Error("Network response was not OK for payment details"); }
+          return response.text();
+        }),
+        fetch(ordersUrl).then(response => {
+          if (!response.ok) { throw new Error("Network response was not OK for order filter"); }
+          return response.text();
+        })
+      ])
+      .then(([paymentHtml, ordersHtml]) => {
+        document.getElementById('payment-details-container').innerHTML = paymentHtml;
+        document.getElementById('orders-filter-container').innerHTML = ordersHtml;
+        attachEmployeeLinkListeners();
+        attachOrderCheckboxListeners();
+      })
+      .catch(error => {
+        alert('Error fetching data: ' + error);
+      })
+      .finally(() => {
+        hideLoading();
+      });
+    });
+
+    // Attach listeners for order checkboxes
+    function attachOrderCheckboxListeners() {
+      document.querySelectorAll('.order-checkbox').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+          const selectedOrderIds = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+            .map(cb => cb.value);
+          updatePaymentDetails(selectedOrderIds);
+        });
+      });
+    }
+
+    function updatePaymentDetails(orderIds) {
       showLoading();
       const startDate = document.getElementById('start_date').value;
       const endDate = document.getElementById('end_date').value;
       const paymentUrl = new URL("{% url 'payment_details' %}", window.location.origin);
       paymentUrl.searchParams.append('start_date', startDate);
       paymentUrl.searchParams.append('end_date', endDate);
+      
+      // Append each selected order id to the query string
+      orderIds.forEach(id => paymentUrl.searchParams.append('order_ids', id));
 
       fetch(paymentUrl)
         .then(response => {
@@ -126,13 +180,14 @@
           attachEmployeeLinkListeners();
         })
         .catch(error => {
-          alert('Error fetching payment details: ' + error);
+          alert('Error updating payment details: ' + error);
         })
         .finally(() => {
           hideLoading();
         });
-    });
-
+    }
+    
+    // Existing employee link listener function
     function attachEmployeeLinkListeners() {
       document.querySelectorAll('.employee-details-link').forEach(function(link) {
         link.addEventListener('click', function(event) {

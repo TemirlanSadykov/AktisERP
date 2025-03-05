@@ -259,10 +259,37 @@ def order_details_api(request, order_id):
 
 @login_required
 @admin_required
+def order_filter_view(request):
+    """
+    Returns an HTML snippet (a list with checkboxes) of orders that are associated with
+    AssignedWork records within the specified date range.
+    """
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return render(request, 'admin/partial_order_filter.html', {'orders': []})
+
+    assigned_works = AssignedWork.objects.filter(
+        created_at__date__range=[start_dt, end_dt]
+    ).select_related('work__passport_size__passport__cut__order')
+
+    # Extract unique order IDs from the assigned works
+    order_ids = assigned_works.values_list('work__passport_size__passport__cut__order__id', flat=True).distinct()
+    orders = Order.objects.filter(id__in=order_ids)
+
+    return render(request, 'admin/partial_order_filter.html', {'orders': orders})
+
+@login_required
+@admin_required
 def payment_details_view(request):
     """
     Returns an HTML snippet (table) with employee payment details
     for all AssignedWork records created within the date range.
+    If order_ids are provided in the GET params, filters assigned works to include only those orders.
     """
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -277,13 +304,17 @@ def payment_details_view(request):
     # Filter AssignedWork records within the date range
     assigned_works = AssignedWork.objects.filter(
         created_at__date__range=[start_dt, end_dt]
-    ).select_related('employee', 'work__operation')
+    ).select_related('employee', 'work__operation', 'work__passport_size__passport__cut__order')  # assuming an 'order' relation
+
+    # Optionally filter by order_ids if provided (multiple order_ids can be passed)
+    order_ids = request.GET.getlist('order_ids')
+    if order_ids:
+        assigned_works = assigned_works.filter(work__passport_size__passport__cut__order__id__in=order_ids)
 
     # Aggregate employee data
     employee_data_map = {}
     for aw in assigned_works:
         emp = aw.employee
-        # Use operation details for timing and payment values
         operation = aw.work.operation
         preferred_time = operation.preferred_completion_time or 0
         payment_per_operation = operation.payment or 0
@@ -298,7 +329,6 @@ def payment_details_view(request):
         employee_data_map[emp]['seconds_worked'] += aw.quantity * preferred_time
         employee_data_map[emp]['payment'] += aw.quantity * payment_per_operation
 
-    # Convert to a list for easier iteration in the template
     employee_data_list = []
     for emp, data in employee_data_map.items():
         employee_data_list.append({
@@ -310,7 +340,6 @@ def payment_details_view(request):
             'payment': int(data['payment']),
         })
 
-    # Optionally, sort by units produced descending
     employee_data_list.sort(key=lambda e: e['units_produced'], reverse=True)
 
     context = {'employee_data': employee_data_list}
