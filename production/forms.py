@@ -6,11 +6,40 @@ from django.core.validators import FileExtensionValidator
 from django.forms import ModelChoiceField
 from django.db import transaction
 from collections import defaultdict
+from django.contrib.auth import authenticate
 
 import json
 from .models import *
 from django.db.models import F
 
+class CustomLoginForm(forms.Form):
+    company = forms.CharField(label="Company")
+    employee_id = forms.CharField(label="Employee ID")
+    password = forms.CharField(label="Password", widget=forms.PasswordInput)
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        company = cleaned_data.get('company')
+        employee_id = cleaned_data.get('employee_id')
+        password = cleaned_data.get('password')
+
+        user = authenticate(
+            request=self.request, 
+            company=company, 
+            employee_id=employee_id, 
+            password=password
+        )
+        if user is None:
+            raise forms.ValidationError("Invalid credentials")
+        cleaned_data['user'] = user
+        return cleaned_data
+
+    def get_user(self):
+        return self.cleaned_data.get('user')
 
 class UserWithProfileForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))

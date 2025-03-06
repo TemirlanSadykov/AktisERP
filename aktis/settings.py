@@ -49,6 +49,11 @@ INSTALLED_APPS = [
     'django_extensions',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'production.auth_backends.CompanyEmployeeIDAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

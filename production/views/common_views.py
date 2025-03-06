@@ -3,11 +3,12 @@ from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from ..models import UserProfile
-from django.http import JsonResponse
-import json
-from geopy.distance import geodesic
-from django.conf import settings
+from django.contrib.auth.views import LoginView
+from ..forms import CustomLoginForm
 
+class CustomLoginView(LoginView):
+    authentication_form = CustomLoginForm
+    template_name = 'login.html'
 
 @login_required
 def user_redirect(request):
