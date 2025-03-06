@@ -192,7 +192,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://prod.lumaerp.com']
+CSRF_TRUSTED_ORIGINS = ['https://main.lumaerp.com']
 
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
