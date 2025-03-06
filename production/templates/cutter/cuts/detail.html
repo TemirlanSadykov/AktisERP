@@ -33,35 +33,102 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="details" >
+                    <div class="col-md-6">
+                      <div class="details">
                         <p><strong>{% trans "Date:" %}</strong> {{ cut.date }}</p>
                         <p><strong>{% trans "Order:" %}</strong> {{ cut.order.client_order }}</p>
                         <p><strong>{% trans "Model:" %}</strong> {{ cut.order.model }}</p>
                         <!-- Display overall sizes used (ignoring color/fabric) -->
                         <p>
-                            <strong>{% trans "Sizes:" %}</strong>
-                            {% for size, extra in passport_sizes_display %}
-                              {{ size }}{% if extra %}-{{ extra }}{% endif %}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
+                          <strong>{% trans "Sizes:" %}</strong>
+                          {% for size, extra in passport_sizes_display %}
+                            {{ size }}{% if extra %}-{{ extra }}{% endif %}{% if not forloop.last %}, {% endif %}
+                          {% endfor %}
                         </p>
                         <p><strong>{% trans "Length:" %}</strong> {{ cut.length }}</p>
                         <p><strong>{% trans "Width:" %}</strong> {{ cut.width }}</p>
-                        <p><strong>{% trans "Consumption:" %}</strong> {{ cut.consumption }}</p>
-                        <a href="{% url 'cut_edit' cut.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
-                        <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+                        <p><strong>{% trans "Consumption Theoretical:" %}</strong> {{ cut.consumption }}</p>
+                        <p><strong>{% trans "Consumption Practical:" %}</strong> {{ cut.consumption_p }}</p>
+                        <a href="{% url 'cut_edit' cut.pk %}">
+                          <img src="{% static 'img/compose.png' %}" alt="" class="editimg" />
+                        </a>
+                        <a href="javascript:void(0);" id="deleteBtn">
+                          <img src="{% static 'img/trash.png' %}" alt="" class="deleteimg">
+                        </a>
+                      </div>
                     </div>
-                    <form id="deleteForm" action="{% url 'cut_delete' cut.pk %}" method="post" style="display:none;">
-                      {% csrf_token %}
-                    </form>
-                    <div class="modal" id="deleteModal">
-                        <div class="modal-content">
-                            <span class="close" id="closeBtn">&times;</span>
-                            <p>{% trans "Are you sure you want to delete this cut?" %}</p>
-                            <div class="modal-buttons">
-                                <button class="btn confirm" id="confirmDeleteBtn">{% trans "Confirm" %}</button>
-                                <button class="btn cancel" id="cancelBtn">{% trans "Cancel" %}</button>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                      <div class="rolls">
+                        <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>{% trans "Color" %}</th>
+                              <th>{% trans "Fabric" %}</th>
+                              <th>{% trans "Length T" %}</th>
+                              <th>{% trans "Length P" %}</th>
+                              <th>{% trans "Length U" %}</th>
+                              <th>{% trans "Remainder" %}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for roll in rolls %}
+                              <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ roll.color.name }}</td>
+                                <td>{{ roll.fabric.name }}</td>
+                                <td>{{ roll.length_t }}</td>
+                                <td>{{ roll.length_p }}</td>
+                                <td>{{ roll.length_u }}</td>
+                                <td>
+                                {% for remainder in roll.remainders.all %}
+                                    {% if not remainder.is_used %}
+                                        {{ remainder.length_t }}
+                                    {% else %}
+                                        {% with remainder.passports.first as passport %}
+                                            {% if passport and passport.cut %}
+                                                <a href="{% url 'cut_detail'  passport.cut.pk %}"> {% trans "Used in cut" %} {{ passport.cut.number }} </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endif %} 
+                                {% endfor %}
+                                </td>
+                              </tr>
+                            {% empty %}
+                              <tr>
+                                <td colspan="6">{% trans "No rolls available." %}</td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  <form id="deleteForm" action="{% url 'cut_delete' cut.pk %}" method="post" style="display:none;">
+                    {% csrf_token %}
+                  </form>
+                  <div class="modal" id="deleteModal">
+                    <div class="modal-content">
+                      <span class="close" id="closeBtn">&times;</span>
+                      <p>{% trans "Are you sure you want to delete this cut?" %}</p>
+                      <div class="modal-buttons">
+                        <button class="btn confirm" id="confirmDeleteBtn">{% trans "Confirm" %}</button>
+                        <button class="btn cancel" id="cancelBtn">{% trans "Cancel" %}</button>
+                      </div>
+                    </div>
+                  </div>                  
+                  
+                <form id="deleteForm" action="{% url 'cut_delete' cut.pk %}" method="post" style="display:none;">
+                {% csrf_token %}
+                </form>
+                <div class="modal" id="deleteModal">
+                    <div class="modal-content">
+                        <span class="close" id="closeBtn">&times;</span>
+                        <p>{% trans "Are you sure you want to delete this cut?" %}</p>
+                        <div class="modal-buttons">
+                        <button class="btn confirm" id="confirmDeleteBtn">{% trans "Confirm" %}</button>
+                        <button class="btn cancel" id="cancelBtn">{% trans "Cancel" %}</button>
+                      </div>
                     </div>
                 </div>
 

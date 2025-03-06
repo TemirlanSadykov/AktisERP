@@ -23,14 +23,15 @@
     <div class="container clients-wrapper maincontr">
         <!-- <div class="clients-container"> -->
             <div class="clients-header">
-              <span class="operation-text">{% trans "Rolls" %}</span>
-                <a href="{% url 'roll_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+              <span class="operation-text">{% trans "Suppliers" %}</span>
+                <a href="{% url 'supplier_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+                <a href="{% url 'archived_suppliers_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
             </div>
             <ul class="clients-list">
-              {% for roll in rolls %}
-              <a href="{% url 'roll_detail' roll.pk %}">
+              {% for supplier in suppliers %}
+              <a href="{% url 'supplier_detail' supplier.pk %}">
                 <li class="list-group-item" style="padding:18px;">
-                  {{ roll.name }}
+                  {{ supplier.name }}
                 </li>
               </a>
               {% endfor %}

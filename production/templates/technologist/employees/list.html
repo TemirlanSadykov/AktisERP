@@ -35,7 +35,7 @@
             <li class="list-group-item d-flex align-items-center" style="border: 1px solid rgba(0, 0, 0, .125) !important; color:#007bff; padding:18px;">
               <span class="status-dot bg-success"></span>
                 <span class="status-indicator {% if employee.status %}status-true{% else %}status-false{% endif %}"></span>
-                {{ employee.employee_id }} - {{ employee.user.get_full_name }} - {{ employee.get_station_display }}
+                {{ employee.employee_id }} - {{ employee.user.get_full_name }}
             </li></a>
             {% endfor %}
         </ul>

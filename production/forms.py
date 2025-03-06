@@ -12,17 +12,6 @@ from .models import *
 from django.db.models import F
 
 
-class BranchForm(forms.ModelForm):
-    class Meta:
-        model = Branch
-        fields = ['name', 'latitude', 'longitude', 'radius']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'latitude': forms.HiddenInput(),
-            'longitude': forms.HiddenInput(),
-            'radius': forms.HiddenInput(attrs={'value': 200}),
-        }
-
 class UserWithProfileForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -70,17 +59,6 @@ class UserEditForm(forms.ModelForm):
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin:7px 0px 0px 10px'})
     )
-    station = forms.ChoiceField(
-        choices=UserProfile.STATION_CHOICES,
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    branch = forms.ModelChoiceField(
-        queryset=Branch.objects.all(),
-        required=True,
-        label='Branch',
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
     new_password = forms.CharField(
         label='New Password',
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -90,7 +68,7 @@ class UserEditForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status', 'station', 'branch']
+        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -103,8 +81,6 @@ class UserEditForm(forms.ModelForm):
             self.fields['employee_id'].initial = self.instance.userprofile.employee_id
             self.fields['type'].initial = self.instance.userprofile.type
             self.fields['status'].initial = self.instance.userprofile.status
-            self.fields['station'].initial = self.instance.userprofile.station
-            self.fields['branch'].initial = self.instance.userprofile.branch
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -119,8 +95,6 @@ class UserEditForm(forms.ModelForm):
             user.userprofile.employee_id = self.cleaned_data['employee_id']
             user.userprofile.type = self.cleaned_data['type']
             user.userprofile.status = self.cleaned_data['status']
-            user.userprofile.station = self.cleaned_data['station']
-            user.userprofile.branch = self.cleaned_data['branch']
             user.userprofile.save()
         return user
     
@@ -134,7 +108,7 @@ class CutForm(forms.ModelForm):
 
     class Meta:
         model = Cut
-        exclude = ['order', 'date', 'number', 'size_quantities']
+        exclude = ['order', 'date', 'number', 'size_quantities', 'company']
 
     def __init__(self, *args, **kwargs):
         order = kwargs.pop('order', None)
@@ -200,51 +174,63 @@ class CutForm(forms.ModelForm):
                     )
 
 class PassportForm(forms.ModelForm):
-    # New field for selecting the unique combination.
     combination = forms.ChoiceField(
         label="Color & Fabric", 
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+    roll = forms.ModelChoiceField(
+        queryset=Roll.objects.none(),
+        label="Roll",
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    layers = forms.DecimalField(
+        required=True,
+        label="Layers",
+        widget=forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
+    )
+    remainder = forms.DecimalField(
+        required=False,
+        label="Remainder",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
     
     class Meta:
         model = Passport
-        # Include combination in the fields so it renders.
-        fields = ['combination', 'layers']
-        widgets = {
-            'layers': forms.NumberInput(attrs={'type': 'number', 'step': '1', 'class': 'form-control'}),
-        }
+        fields = ['combination', 'roll', 'layers', 'remainder']
     
     def __init__(self, *args, **kwargs):
         cut = kwargs.pop('cut', None)
         super().__init__(*args, **kwargs)
         if cut:
             unique_combinations = set()
-            # Loop over all cut_sizes to get unique (color, fabric) combinations.
             for cut_size in cut.cut_sizes.all():
-                color = cut_size.size_quantity.color      # Model instance.
-                fabric = cut_size.size_quantity.fabrics    # Model instance.
-                # Store a tuple: (color_id, fabric_id, color_name, fabric_name)
+                color = cut_size.size_quantity.color
+                fabric = cut_size.size_quantity.fabrics
                 unique_combinations.add((color.id, fabric.id, str(color), str(fabric)))
-            # Build choices: value "12|5", label "Blue Cotton"
             choices = [
                 (f"{color_id}|{fabric_id}", f"{color_name} {fabric_name}")
                 for (color_id, fabric_id, color_name, fabric_name) in unique_combinations
             ]
-            # Sort choices alphabetically by label.
             choices = sorted(choices, key=lambda x: x[1])
-            # Insert a placeholder choice at the beginning.
             choices.insert(0, ("", "------"))
             self.fields['combination'].choices = choices
-            # Optionally, you can set the initial value to the placeholder (which will force validation if not changed)
             self.initial['combination'] = ""
+            
+            # Update the roll queryset if POST data is present
+            if 'combination' in self.data:
+                combination = self.data.get('combination')
+                if combination:
+                    color_id, fabric_id = combination.split("|")
+                    self.fields['roll'].queryset = Roll.objects.filter(color_id=color_id, fabric_id=fabric_id, is_used=False)
+                else:
+                    self.fields['roll'].queryset = Roll.objects.none()
+            else:
+                self.fields['roll'].queryset = Roll.objects.none()
         else:
             self.fields['combination'].choices = [("", "------")]
-
-# class PassportForm(forms.ModelForm):
-#     class Meta:
-#         model = Passport
-#         exclude = ['size_quantities', 'rolls', 'is_completed']
+            self.fields['roll'].queryset = Roll.objects.none()
 
 class OperationAssignmentForm(forms.ModelForm):
     employee_id = forms.ModelChoiceField(queryset=UserProfile.objects.filter(type=UserProfile.EMPLOYEE), to_field_name="employee_id", empty_label="Select Employee")
@@ -287,72 +273,6 @@ class DateRangeForm(forms.Form):
         required=False
     )
 
-class SalaryListForm(forms.Form):
-    start_date = forms.DateField(
-        label='Начало',
-        widget=forms.TextInput(attrs={'type': 'date','class': 'form-control'}),
-        required=False 
-    )
-    end_date = forms.DateField(
-        label='Окончание',
-        widget=forms.TextInput(attrs={'type': 'date', 'class': 'form-control'}),
-        required=False
-    )
-    salary_type = forms.ChoiceField(
-        label='Тип зарплаты',
-        choices=(('non_fixed', 'По факту'), ('fixed', 'Оклад')),
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        required=False
-    )
-
-# class PassportRollForm(forms.ModelForm):
-#     class Meta:
-#         model = PassportRoll
-#         fields = ['roll', 'meters']
-#         widgets = {
-#             'roll': forms.Select(attrs={'class': 'form-control'}),
-#             'meters': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'})
-#         }
-
-#     def __init__(self, *args, **kwargs):
-#         passport = kwargs.pop('passport', None)
-#         super().__init__(*args, **kwargs)
-#         if passport and passport.order:
-#             self.fields['roll'].queryset = Roll.objects.filter(
-#                 color__in=passport.order.colors.all(),
-#                 fabrics__in=passport.order.fabrics.all()
-#             )
-#         else:
-#             self.fields['roll'].queryset = Roll.objects.none()
-
-# class SizeQuantityChoiceField(ModelChoiceField):
-#     def label_from_instance(self, obj):
-#         return f'{obj.size} - {obj.color}'
-# class RollChoiceField(forms.ModelChoiceField):
-#     def label_from_instance(self, obj):
-#         return f'{obj.name} - {obj.color} - {obj.fabrics}'
-# class PassportSizeForm(forms.ModelForm):
-#     size_quantity = SizeQuantityChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}))
-#     roll = RollChoiceField(queryset=None, empty_label="---------", widget=forms.Select(attrs={'class': 'form-control'}))  # Add this line
-
-#     class Meta:
-#         model = PassportSize
-#         fields = ['size_quantity', 'quantity', 'roll']  # Include 'roll' here
-#         widgets = {
-#             'size_quantity': forms.Select(attrs={'class': 'form-control'}),
-#             'quantity': forms.NumberInput(attrs={'type': 'number', 'min': '0', 'class': 'form-control'}),
-#             'roll': forms.Select(attrs={'class': 'form-control'}),  # Add this line
-#         }
-
-#     def __init__(self, *args, **kwargs):
-#         passport_id = kwargs.pop('passport_id', None)
-#         super().__init__(*args, **kwargs)
-        
-#         if passport_id:
-#             passport = Passport.objects.get(pk=passport_id)
-#             self.fields['size_quantity'].queryset = passport.order.size_quantities.all()
-#             self.fields['roll'].queryset = passport.rolls.all()  # Add this line to filter rolls based on the passport
-
 class OperationForm(forms.ModelForm):
     class Meta:
         model = Operation
@@ -377,18 +297,6 @@ class OperationForm(forms.ModelForm):
         # Prepend an "Add New Node" option.
         node_choices = list(self.fields['node'].choices)
         self.fields['node'].choices = [("add_new", "Add New Node")] + node_choices
-
-class RollForm(forms.ModelForm):
-    class Meta:
-        model = Roll
-        fields = ['name', 'color', 'fabrics', 'meters', 'width']
-        widgets = {
-                'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
-                'color': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter color'}),
-                'fabrics': forms.Select(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics'}),
-                'meters': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter meters'}),
-                'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter width'}),
-            }
     
 class AssortmentForm(forms.ModelForm):
     class Meta:
@@ -437,13 +345,16 @@ class ModelCustomForm(forms.ModelForm):
         
         if commit:
             model_instance.save()
-            self.save_m2m()
             if 'operations_data' in self.cleaned_data and self.cleaned_data['operations_data']:
                 operations_data = json.loads(self.cleaned_data['operations_data'])
                 self.update_operations_order(model_instance, operations_data)
         return model_instance
 
     def update_operations_order(self, model_instance, operations_data):
+        current_company = get_current_company()
+        if not current_company:
+            raise ValueError("No current company set for creating a ModelOperation.")
+
         with transaction.atomic():
             # Clear existing operations to reset them with new order
             ModelOperation.objects.filter(model=model_instance).delete()
@@ -456,7 +367,8 @@ class ModelCustomForm(forms.ModelForm):
                 ModelOperation.objects.create(
                     model=model_instance,
                     operation=operation,
-                    order=order
+                    order=order,
+                    company=current_company
                 )
 
 class ClientForm(forms.ModelForm):
@@ -552,33 +464,9 @@ class FabricsForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
         }
 
-class AbstractAccessoryForm(forms.ModelForm):
-    class Meta:
-        model = AbstractAccessory
-        fields = ['name', 'unit']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter accessory name'}),
-            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter unit of measurement'}),
-        }
-
 class SizeQuantityChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.size
-
-class FixedSalaryForm(forms.ModelForm):
-    employees = forms.ModelMultipleChoiceField(
-        queryset=UserProfile.objects.all().order_by('employee_id'),
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
-
-    class Meta:
-        model = FixedSalary
-        fields = ['position', 'salary', 'employees']
-        widgets = {
-            'position': forms.TextInput(attrs={'class': 'form-control'}),
-            'salary': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
         
 class UploadFileForm(forms.Form):
     excel_file = forms.FileField(
@@ -586,17 +474,87 @@ class UploadFileForm(forms.Form):
         help_text='Maximum size allowed is 10MB',
         validators=[FileExtensionValidator(allowed_extensions=['xlsx'])]
     )
-
-class ErrorResponsibilityForm(forms.ModelForm):
+    
+class SupplierForm(forms.ModelForm):
     class Meta:
-        model = ErrorResponsibility
-        fields = ['employee', 'percentage']
+        model = Supplier
+        fields = ['name']
         widgets = {
-            'employee': forms.Select(attrs={'class': 'form-control'}),
-            'percentage': forms.NumberInput(attrs={'type': 'number', 'step': '0.01', 'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
         }
 
+class RollForm(forms.ModelForm):
+    class Meta:
+        model = Roll
+        fields = [
+            'color',
+            'fabric',
+            'supplier',
+            'length_t',
+            'width',
+            'weight',
+        ]
+        widgets = {
+            'color': forms.Select(attrs={'class': 'form-control'}),
+            'fabric': forms.Select(attrs={'class': 'form-control'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'length_t': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Длина Т (м)'}),
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Вес (кг)'}),
+        }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['employee'].queryset = UserProfile.objects.all().order_by('employee_id')
+        self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
+        # Prepend an "Add New Equipment" option.
+        color_choices = list(self.fields['color'].choices)
+        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
 
+        # Prepend an "Add New Node" option.
+        fabric_choices = list(self.fields['fabric'].choices)
+        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+
+        # Prepend an "Add New Node" option.
+        supplier_choices = list(self.fields['supplier'].choices)
+        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+
+class BulkRollForm(forms.ModelForm):
+    quantity = forms.IntegerField(min_value=1, label="Quantity", widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}))
+    
+    class Meta:
+        model = Roll
+        # We only need the following fields from the Roll model for bulk creation.
+        # In this case, color, fabric, supplier come from the initial selection,
+        # while weight is provided per roll in the table.
+        fields = [
+            'color',
+            'fabric',
+            'supplier',
+            'width'
+        ]
+        widgets = {
+            'color': forms.Select(attrs={'class': 'form-control'}),
+            'fabric': forms.Select(attrs={'class': 'form-control'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'})
+        }
+    
+    def __init__(self, *args, **kwargs):
+        # Remove any 'instance' passed in so that ModelForm does not complain
+        kwargs.pop('instance', None)
+        super().__init__(*args, **kwargs)
+        # Use the same choices as RollForm for consistency.
+        self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
+        
+        # Prepend an "Add New" option (same as in RollForm)
+        color_choices = list(self.fields['color'].choices)
+        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+
+        fabric_choices = list(self.fields['fabric'].choices)
+        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+
+        supplier_choices = list(self.fields['supplier'].choices)
+        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices

@@ -33,14 +33,25 @@
       <div class="card-body">
         <form method="post" class="date-filter-form" style="align-items: flex-end;">
           {% csrf_token %}
-          <!-- New select for unique Color & Fabric combinations -->
+          <!-- Select for Color & Fabric combination -->
           <div class="form-group">
             <label>{% trans "Fabric:" %}</label>
             {{ form.combination }}
           </div>
+          <!-- New select for Roll -->
+          <div class="form-group">
+            <label>{% trans "Roll:" %}</label>
+            {{ form.roll }}
+          </div>
+          <!-- Field for Layers -->
           <div class="form-group">
             <label>{% trans "Layers:" %}</label>
             {{ form.layers }}
+          </div>
+          <!-- Field for Remainder -->
+          <div class="form-group">
+            <label>{% trans "Remainder:" %}</label>
+            {{ form.remainder }}
           </div>
           <button type="submit" class="btn edit-btn mb-2">{% trans "Add" %}</button>
         </form>
@@ -213,4 +224,49 @@
       }
     });
   </script>  
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const combinationSelect = document.getElementById("id_combination");
+      const rollSelect = document.getElementById("id_roll");
+    
+      combinationSelect.addEventListener("change", function() {
+        const selectedValue = combinationSelect.value;
+        if (selectedValue) {
+          // Split the value "color_id|fabric_id" into its parts.
+          const [colorId, fabricId] = selectedValue.split("|");
+    
+          // Call the AJAX endpoint to get matching rolls.
+          fetch(`/production/ajax/get-rolls/?color_id=${colorId}&fabric_id=${fabricId}`)
+            .then(response => response.json())
+            .then(data => {
+              // Clear out current options.
+              rollSelect.innerHTML = "";
+              // Insert a placeholder option.
+              const placeholder = document.createElement("option");
+              placeholder.value = "";
+              placeholder.textContent = "------";
+              rollSelect.appendChild(placeholder);
+    
+              // Append each roll as an option.
+              data.rolls.forEach(function(roll) {
+                const option = document.createElement("option");
+                option.value = roll.id;
+                option.textContent = roll.label;
+                rollSelect.appendChild(option);
+              });
+            })
+            .catch(error => {
+              console.error("Error fetching rolls:", error);
+            });
+        } else {
+          // Reset roll field if no combination selected.
+          rollSelect.innerHTML = "";
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "------";
+          rollSelect.appendChild(placeholder);
+        }
+      });
+    });
+  </script>
 {% endblock %}

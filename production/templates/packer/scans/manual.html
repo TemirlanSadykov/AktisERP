@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Ensure the quantity text is inline and has some right margin */
+    .cell-text {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+    /* Ensure buttons are inline and have a little left margin */
+    .btn {
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+</style>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Manual Pack" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Logout" %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="margin-top: 30px;">
+  <h2 class="mb-4">{% trans "Manual Order Scanning" %}</h2>
+  <form id="manual-scan-form">
+    <!-- Dropdown for Client Orders -->
+    <div class="form-group">
+      <label for="client-order-select">{% trans "Select Client Order" %}</label>
+      <select id="client-order-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+        {% for co in client_orders %}
+          <option value="{{ co.id }}">{{ co.client.name }} - {{ co.order_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <!-- Dropdown for Orders -->
+    <div class="form-group">
+      <label for="order-select">{% trans "Select Order" %}</label>
+      <select id="order-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+      </select>
+    </div>
+    <!-- Dropdown for Cuts -->
+    <div class="form-group">
+      <label for="cut-select">{% trans "Select Cut" %}</label>
+      <select id="cut-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+      </select>
+    </div>
+  </form>
+  <!-- Container for the dynamic cut table -->
+  <div id="cut-table-container" class="mt-4"></div>
+</div>
+
+<script>
+    // Helper to get CSRF token.
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + "=")) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
+    document.addEventListener("DOMContentLoaded", function() {
+      const clientOrderSelect = document.getElementById("client-order-select");
+      const orderSelect = document.getElementById("order-select");
+      const cutSelect = document.getElementById("cut-select");
+      const cutTableContainer = document.getElementById("cut-table-container");
+    
+      let currentCutId = null;
+    
+      // When a client order is chosen, fetch its related orders.
+      clientOrderSelect.addEventListener("change", function() {
+        const clientOrderId = clientOrderSelect.value;
+        if (clientOrderId) {
+          fetch(`/production/qc/ajax/get-orders/?client_order_id=${clientOrderId}`)
+            .then(response => response.json())
+            .then(data => {
+              orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+              cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+              cutTableContainer.innerHTML = "";
+              data.orders.forEach(function(order) {
+                const option = document.createElement("option");
+                option.value = order.id;
+                option.textContent = order.label;
+                orderSelect.appendChild(option);
+              });
+            })
+            .catch(error => console.error("Error fetching orders:", error));
+        } else {
+          orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+          cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+          cutTableContainer.innerHTML = "";
+        }
+      });
+    
+      // When an order is chosen, fetch its related cuts.
+      orderSelect.addEventListener("change", function() {
+        const orderId = orderSelect.value;
+        if (orderId) {
+          fetch(`/production/qc/ajax/get-cuts/?order_id=${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+              cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+              cutTableContainer.innerHTML = "";
+              data.cuts.forEach(function(cut) {
+                const option = document.createElement("option");
+                option.value = cut.id;
+                option.textContent = cut.label;
+                cutSelect.appendChild(option);
+              });
+            })
+            .catch(error => console.error("Error fetching cuts:", error));
+        } else {
+          cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+          cutTableContainer.innerHTML = "";
+        }
+      });
+    
+      // When a cut is chosen, load and render the cut table.
+      cutSelect.addEventListener("change", function() {
+        const cutId = cutSelect.value;
+        if (cutId) {
+          currentCutId = cutId;
+          loadCutTableData(cutId)
+            .then(function(cutData) {
+              initializeCutTable(cutData);
+            })
+            .catch(function(err) {
+              console.error("Error loading cut table data:", err);
+            });
+        } else {
+          cutTableContainer.innerHTML = "";
+        }
+      });
+    
+      // Function to load cut table data.
+      function loadCutTableData(cutId) {
+        return fetch(`/production/packer/cuts/get-cut-table-data/${cutId}/`)
+          .then(function(response) {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          });
+      }
+    
+      // Initialize the cut table using the fetched data.
+      function initializeCutTable(cutData) {
+        renderCutTable(cutData);
+      }
+    
+      // Render the cut table with +/- buttons in every cell.
+      // Render the cut table with updated button classes.
+      function renderCutTable(cutData) {
+        if (!cutData) return;
+        var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+        html += '<th>{% trans "Passports" %}</th>';
+        // Render header for each size.
+        cutData.all_sizes.forEach(function(size) {
+          html += '<th>' + size + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        // For each passport, display its label and quantities for each size.
+        cutData.passports.forEach(function(passport) {
+          html += '<tr>';
+          html += '<td>' + passport.label + '</td>';
+          cutData.all_sizes.forEach(function(size) {
+            var cellData = passport.quantities[size] || {packed: 0, required: 0};
+            // Render cell with inline styles.
+            html += '<td id="cell-' + passport.passport_id + '-' + size + '">';
+            html += '<span class="cell-text" style="display:inline-block;vertical-align:middle;margin-right:5px;">' + cellData.packed + '/' + cellData.required + '</span>';
+            html += ' <button class="btn btn-sm btn-primary plus-btn" style="vertical-align:middle;margin-left:2px;width:auto;margin-bottom:0;" data-passport-id="' + passport.passport_id + '" data-size="' + size + '">+</button>';
+            html += ' <button class="btn btn-sm btn-danger minus-btn" style="vertical-align:middle;margin-left:2px;width:auto;margin-bottom:0;" data-passport-id="' + passport.passport_id + '" data-size="' + size + '">-</button>';
+            html += '</td>';
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        cutTableContainer.innerHTML = html;
+      }      
+      
+  
+    
+      // Delegate click events for plus and minus buttons.
+      cutTableContainer.addEventListener("click", function(event) {
+        if (event.target.classList.contains("plus-btn")) {
+          updatePieceStatus(event.target, "PACKED");
+        } else if (event.target.classList.contains("minus-btn")) {
+          updatePieceStatus(event.target, "CHECKED");
+        }
+      });
+    
+      // Function to update a production piece status.
+      function updatePieceStatus(button, status) {
+        // Get passport id and size from data attributes.
+        const passportId = button.getAttribute("data-passport-id");
+        const size = button.getAttribute("data-size");
+        
+        fetch('/production/packer/orders/pack-piece-status-by-passport-size/', {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            passport_id: passportId,
+            size: size,
+            status: status
+          })
+        })
+        .then(response => {
+          if (!response.ok) throw new Error("Server error");
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            if (status === "PACKED") {
+              // Find the corresponding cell's text span.
+              const cellSpan = button.parentElement.querySelector(".cell-text");
+              if (cellSpan) {
+                // The current text is in the form "packed/required".
+                let parts = cellSpan.textContent.split("/");
+                let currentPacked = parseInt(parts[0]) || 0;
+                // Increment the packed count.
+                currentPacked += 1;
+                cellSpan.textContent = currentPacked + "/" + parts[1];
+              }
+            } else if (status === "CHECKED") {
+              // Find the corresponding cell's text span.
+              const cellSpan = button.parentElement.querySelector(".cell-text");
+              if (cellSpan) {
+                // The current text is in the form "packed/required".
+                let parts = cellSpan.textContent.split("/");
+                let currentPacked = parseInt(parts[0]) || 0;
+                // Increment the packed count.
+                currentPacked -= 1;
+                cellSpan.textContent = currentPacked + "/" + parts[1];
+              }
+            }
+          } else {
+            alert("Failed to update piece: " + data.message);
+          }
+        })
+        .catch(error => {
+          alert("Error updating piece status: " + error.message);
+          console.error("Error updating piece status:", error);
+        });
+      }
+    });
+</script>    
+{% endblock %}

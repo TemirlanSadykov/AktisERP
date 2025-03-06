@@ -20,7 +20,6 @@ from django.db.models import Q
 
 from ..decorators import cutter_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -35,7 +34,7 @@ def cutter_page(request):
     return render(request, 'cutter_page.html', context)
 
 @method_decorator([login_required, cutter_required], name='dispatch')
-class ClientOrderListCutterView(RestrictBranchMixin, ListView):
+class ClientOrderListCutterView(ListView):
     model = ClientOrder
     template_name = 'cutter/client/orders/list.html'
     context_object_name = 'orders'
@@ -112,7 +111,7 @@ class ClientOrderDetailCutterView(DetailView):
         return context
 
 @method_decorator([login_required, cutter_required], name='dispatch')
-class OrderListCutterView(RestrictOrderBranchMixin, ListView):
+class OrderListCutterView(ListView):
     model = Order
     template_name = 'cutter/orders/list.html'
     context_object_name = 'orders'
@@ -196,7 +195,7 @@ class OrderDetailCutterView(DetailView):
         # ----- Other context data (pass along your existing context) -----
         associated_cuts = order.cuts.all().order_by('number')
         passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'stage': None, 'extra': None}))
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
         total_per_size = defaultdict(int)
         for passport in passports:
             passport_number = passport.id
@@ -205,7 +204,6 @@ class OrderDetailCutterView(DetailView):
                 extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
                 size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
                 size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport_number]['stage'] = passport_size.stage
                 size_data[extra_key][passport_number]['extra'] = passport_size.extra
                 total_per_size[size] += passport_size.quantity
 
@@ -286,7 +284,6 @@ class CutDetailView(DetailView):
         passports = cut.passports.all().order_by('-number')
 
         # Get overall sizes from CutSizes—but only those that have been used in passports.
-        # We'll build a set of (size, extra) pairs from all PassportSize records.
         passport_sizes_set = set()
         for passport in passports:
             for ps in passport.passport_sizes.all():
@@ -307,11 +304,15 @@ class CutDetailView(DetailView):
         # Total layers from all passports.
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
+        # Retrieve the rolls related to the cut via passports.
+        rolls = Roll.objects.filter(passports__cut=cut).distinct()
+
         context.update({
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
-            'passport_sizes_display': passport_sizes_display,  # New variable for overall passport sizes.
+            'passport_sizes_display': passport_sizes_display,
+            'rolls': rolls,  # New: sending roll information to the template.
             'sidebar_type': 'cutter'
         })
         return context
@@ -409,30 +410,27 @@ class PassportCreateView(CreateView):
         cut_id = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_id)
         passport = form.save(commit=False)
-
-        # Generate passport number starting from 1 for each cut
+        # Generate passport number starting from 1 for each cut.
         last_passport = Passport.objects.filter(cut=cut).order_by('number').last()
         passport.number = last_passport.number + 1 if last_passport else 1
 
-        passport.cut = cut  # Link passport directly to the cut
-        passport.save()
-        # Get the selected combination. The value is like "12|5"
-        combination = form.cleaned_data['combination']
-        color_id, fabric_id = combination.split("|")
+        passport.cut = cut  # Link passport directly to the cut.
+        passport.save()     # Save first to have an instance for m2m relations.
 
-        # Filter the cut's cut_sizes so that we only include those with matching color and fabric.
+        # Handle passport sizes based on the selected combination.
+        combination = form.cleaned_data['combination']
+        layers = form.cleaned_data['layers']
+        color_id, fabric_id = combination.split("|")
         matching_cut_sizes = cut.cut_sizes.filter(
             size_quantity__color_id=color_id,
             size_quantity__fabrics_id=fabric_id
         )
-        # For each matching cut_size, create a PassportSize (and ProductionPieces)
         for cut_size in matching_cut_sizes:
             passport_size = PassportSize.objects.create(
                 passport=passport,
                 size_quantity=cut_size.size_quantity,
-                quantity=form.cleaned_data['layers'],  # Use layers from the form input
-                stage=0,  # Default stage (CUTTING)
-                extra=cut_size.extra  # Use extra from CutSize
+                quantity=layers,
+                extra=cut_size.extra
             )
             quantity = int(passport_size.quantity)
             for i in range(1, quantity + 1):
@@ -440,12 +438,69 @@ class PassportCreateView(CreateView):
                     passport_size=passport_size,
                     piece_number=i
                 )
+        
+        # New logic: assign the selected roll to the passport.
+        selected_roll = form.cleaned_data['roll']
 
+        if selected_roll:
+            passport.roll = selected_roll
+            passport.save()
+            
+            # Update the selected roll’s remainder.
+            new_remainder = form.cleaned_data['remainder']
+
+            if new_remainder:
+                selected_roll.length_p = new_remainder+layers*cut.length
+
+                remainder_roll = Roll.objects.create(
+                    color=selected_roll.color,
+                    fabric=selected_roll.fabric,
+                    supplier=selected_roll.supplier,
+                    name=selected_roll.name,
+                    length_t=new_remainder,
+                    length_p=new_remainder,
+                    width=selected_roll.width,
+                    weight=selected_roll.weight,
+                    original_roll=selected_roll,
+                    is_used=False
+                )
+            else:
+                selected_roll.length_p = layers*cut.length
+
+            selected_roll.is_used = True
+            selected_roll.save()
+
+            cut.consumption_p = sum(
+                (p.roll.length_t - sum(r.length_t for r in p.roll.remainders.all() if r.is_used))
+                for p in cut.passports.all()
+            ) / sum(
+                sum(ps.quantity for ps in p.passport_sizes.all())
+                for p in cut.passports.all()
+            )            
+            cut.save()
+        
         return redirect(self.get_success_url())
 
 
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})
+    
+def ajax_get_rolls(request):
+    color_id = request.GET.get('color_id')
+    fabric_id = request.GET.get('fabric_id')
+    if color_id and fabric_id:
+        # Adjust the fields as needed (for display, here using the roll’s name or a concatenation)
+        rolls_qs = Roll.objects.filter(color_id=color_id, fabric_id=fabric_id, is_used=False).order_by('length_t')
+        rolls = [
+            {
+                "id": roll.id,
+                "label": f"#{i} {roll.length_t} (Остаток)" if roll.original_roll else f"#{i} {roll.length_t}"
+            }
+            for i, roll in enumerate(rolls_qs, start=1)
+        ]
+    else:
+        rolls = []
+    return JsonResponse({"rolls": rolls})
     
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportDetailView(DetailView):
@@ -469,162 +524,19 @@ def delete_passport(request, pk):
         return JsonResponse({'status': 'success'}, status=200)
     return JsonResponse({'status': 'error'}, status=400)
 
-# @method_decorator([login_required, cutter_required], name='dispatch')
-# class PassportSizeCreateView(CreateView):
-#     model = PassportSize
-#     form_class = PassportSizeForm
-#     template_name = 'cutter/passports/create_passport_size_quantity.html'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         passport_id = self.kwargs.get('passport_id')
-#         passport = get_object_or_404(Passport, pk=passport_id)
-#         context['passport'] = passport
-#         context['passport_sizes'] = PassportSize.objects.filter(passport=passport).order_by('size_quantity__size')
-#         context['sidebar_type'] = 'cutter'
-#         return context
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         passport_id = self.kwargs.get('passport_id')
-#         kwargs['passport_id'] = passport_id
-#         return kwargs
-
-#     def form_valid(self, form):
-#         passport_id = self.kwargs['passport_id']
-#         passport = get_object_or_404(Passport, pk=passport_id)
-#         passport_size = form.save(commit=False)
-#         passport_size.passport = passport
-
-#         # Check if the size_quantity already exists
-#         existing_sizes = PassportSize.objects.filter(passport=passport, size_quantity=passport_size.size_quantity)
-#         if existing_sizes.exists():
-#             # Generate an 'extra' letter (A-Z)
-#             used_extras = [ps.extra for ps in existing_sizes if ps.extra]
-#             new_extra = self.generate_new_extra(used_extras)
-#             passport_size.extra = new_extra
-
-#         passport_size.save()
-
-#         for i in range(1, passport_size.quantity + 1):
-#             ProductionPiece.objects.create(
-#                 passport_size=passport_size,
-#                 piece_number=i,
-#                 stage=ProductionPiece.StageChoices.NOT_CHECKED
-#             )
-
-#         return redirect(self.get_success_url())
-
-#     def generate_new_extra(self, used_extras):
-#         available_extras = [chr(i) for i in range(65, 91)]  # A-Z
-#         for extra in available_extras:
-#             if extra not in used_extras:
-#                 return extra
-#         raise ValueError("All extra letters (A-Z) are used for this size_quantity.")
-
-#     def get_success_url(self):
-#         return reverse('create_passport_size', kwargs={'passport_id': self.kwargs['passport_id']})
-    
 # @login_required
 # @cutter_required
-# @require_POST
-# def edit_passport_size_quantity(request, sq_id):
+# def mark_as_sewing(request, passport_size_id):
 #     try:
-#         # Convert JSON data to Python dictionary
-#         data = json.loads(request.body)
-#         quantity = int(data.get('quantity'))
-        
-#         # Find the PassportSize instance
-#         passport_size = PassportSize.objects.get(id=sq_id)
-#         # Update the quantity
-#         passport_size.quantity = quantity
-#         passport_size.save()
+#         passport_size = PassportSize.objects.get(id=passport_size_id)
+#         with transaction.atomic():
+#             if passport_size.stage == PassportSize.SEWING:
+#                 passport_size.stage = PassportSize.CUTTING
+#             else:
+#                 passport_size.stage = PassportSize.SEWING
+#             passport_size.save()
 
-#         # Return success response
-#         return JsonResponse({'status': 'success', 'message': 'Quantity updated successfully'})
-    
+#         return JsonResponse({'success': True})
+
 #     except PassportSize.DoesNotExist:
-#         return JsonResponse({'status': 'error', 'message': 'PassportSize not found'}, status=404)
-    
-#     except Exception as e:
-#         # Handle unexpected errors
-#         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-# @login_required
-# @cutter_required
-# @require_POST
-# def delete_passport_size_quantity(request, sq_id):
-#     passport_size = get_object_or_404(PassportSize, id=sq_id)
-#     passport_size.delete()
-#     return JsonResponse({'status': 'success'}, status=200)
-
-# @method_decorator([login_required, cutter_required], name='dispatch')
-# class PassportDetailView(DetailView):
-#     model = Passport
-#     template_name = 'cutter/passports/detail.html'
-#     context_object_name = 'passport'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         passport = context['passport']
-#         context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
-#         context['passport_rolls'] = passport.passport_rolls.all()
-#         context['sidebar_type'] = 'cutter'
-#         return context
-
-# @login_required
-# @cutter_required
-# @require_POST
-# def passport_delete(request, passport_id):
-#     passport = get_object_or_404(Passport, id=passport_id)
-#     order = passport.order
-#     client_order = order.client_order
-
-#     with transaction.atomic():
-#         if passport.is_completed:
-#             total_quantity = PassportSize.objects.filter(passport=passport).aggregate(Sum('quantity'))['quantity__sum'] or 0
-
-#             if order.completed_quantity is not None:
-#                 order.completed_quantity -= total_quantity
-#                 order.save()
-
-#         passport_rolls = PassportRoll.objects.filter(passport=passport)
-#         for passport_roll in passport_rolls:
-#             roll = passport_roll.roll
-#             if roll.used_meters is not None:
-#                 roll.used_meters -= passport_roll.meters
-#                 roll.save()
-
-#         passport.delete()
-#         messages.success(request, 'Passport deleted successfully.')
-
-#         remaining_passports = Passport.objects.filter(order=order).exists()
-#         if not remaining_passports:
-#             order.status = Order.NEW
-#             order.save()
-#             messages.info(request, 'Order status set to NEW due to no remaining passports.')
-
-#         other_in_progress_orders = Order.objects.filter(client_order=client_order, status=Order.IN_PROGRESS).exists()
-#         if not other_in_progress_orders:
-#             client_order.status = ClientOrder.NEW
-#             client_order.save()
-#             messages.info(request, 'ClientOrder status set to NEW as no other orders are IN PROGRESS.')
-
-#     return redirect(reverse('order_detail_cutter', args=[order.id]))
-
-@login_required
-@cutter_required
-def mark_as_sewing(request, passport_size_id):
-    try:
-        passport_size = PassportSize.objects.get(id=passport_size_id)
-        with transaction.atomic():
-            if passport_size.stage == PassportSize.SEWING:
-                passport_size.stage = PassportSize.CUTTING
-            else:
-                passport_size.stage = PassportSize.SEWING
-            passport_size.save()
-
-        return JsonResponse({'success': True})
-
-    except PassportSize.DoesNotExist:
-        return JsonResponse({'error': 'PassportSize not found'}, status=404)
+#         return JsonResponse({'error': 'PassportSize not found'}, status=404)

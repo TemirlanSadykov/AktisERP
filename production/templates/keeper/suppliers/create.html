@@ -20,12 +20,13 @@
     </ul>
   </div>
 </nav>
+
 <div class="container maincontr">
   <div class="row justify-content-center">
     <div class="col-md-12">
       <!-- <div class="card"> -->
         <div class="card-header">
-          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Roll:" %} {{ roll.name }}</h2>
+          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Supplier" %}</h2>
         </div>
         <div class="card-body">
           <form method="post">
@@ -36,10 +37,10 @@
             <div class="form-group">
               <div class="row">
                 <div class="col text-left">
-                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
+                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
                 </div>
                 <div class="col text-right">
-                  <a href="{% url 'roll_detail' roll.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
+                  <a href="{% url 'supplier_list' %}" class=" btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
                 </div>
             </div>
             </div>

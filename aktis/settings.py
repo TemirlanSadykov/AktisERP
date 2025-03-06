@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'production.middleware.HandleCSRFMiddleware',
     'production.middleware.SessionExpiredMiddleware',
+    'production.middleware.CompanyMiddleware',
 ]
 
 ROOT_URLCONF = 'aktis.urls'
@@ -91,12 +92,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('PROD_AKTIS_DB_ENGINE'),
-        'NAME': config('PROD_AKTIS_DB_NAME'),
-        'USER': config('PROD_AKTIS_DB_USER'),
-        'PASSWORD': config('PROD_AKTIS_DB_PASSWORD'),
-        'HOST': config('PROD_AKTIS_DB_HOST'),
-        'PORT': config('PROD_AKTIS_DB_PORT'),
+        'ENGINE': config('LUMA_LIGHT_DB_ENGINE'),
+        'NAME': config('LUMA_LIGHT_DB_NAME'),
+        'USER': config('LUMA_LIGHT_DB_USER'),
+        'PASSWORD': config('LUMA_LIGHT_DB_PASSWORD'),
+        'HOST': config('LUMA_LIGHT_DB_HOST'),
+        'PORT': config('LUMA_LIGHT_DB_PORT'),
     }
 }
 
@@ -191,7 +192,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://prod-aktis.up.railway.app', 'https://prod-aktis-old.up.railway.app', 'https://luma-light.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://prod-aktis.up.railway.app', 'https://luma-light.up.railway.app', 'https://dev.lumaerp.com']
 
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),

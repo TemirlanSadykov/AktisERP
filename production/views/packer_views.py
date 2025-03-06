@@ -16,7 +16,6 @@ from django.db.models import Count
 
 from ..decorators import packer_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -31,7 +30,7 @@ def packer_page(request):
     return render(request, 'packer_page.html' , context)
 
 @method_decorator([login_required, packer_required], name='dispatch')
-class ClientOrderListPackerView(RestrictBranchMixin, ListView):
+class ClientOrderListPackerView(ListView):
     model = ClientOrder
     template_name = 'packer/client/orders/list.html'
     context_object_name = 'orders'
@@ -105,7 +104,7 @@ class ClientOrderDetailPackerView(DetailView):
         return context
 
 @method_decorator([login_required, packer_required], name='dispatch')
-class OrderListPackerView(RestrictOrderBranchMixin, ListView):
+class OrderListPackerView(ListView):
     model = Order
     template_name = 'packer/orders/list.html'
     context_object_name = 'orders'
@@ -361,20 +360,6 @@ def get_order_table_data_packer(request, order_id):
         return JsonResponse(data)
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
-
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyDetailView(DetailView):
-    model = Error
-    template_name = 'packer/discrepancies/detail.html'
-    context_object_name = 'error'
-
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyDeleteView(DeleteView):
-    model = Error
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
     
 @login_required
 @packer_required
@@ -392,37 +377,6 @@ def mark_as_done(request, passport_size_id):
 
     except PassportSize.DoesNotExist:
         return JsonResponse({'error': 'PassportSize not found'}, status=404)
-    
-@login_required
-@packer_required
-@require_POST
-def calculate_discrepancies(request, order_pk):
-    try:
-        order = Order.objects.get(pk=order_pk)
-    except Order.DoesNotExist:
-        return JsonResponse({'error': 'Order does not exist'}, status=404)
-
-    pieces = ProductionPiece.objects.filter(
-        passport_size__passport__order=order,
-        stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.NOT_CHECKED]
-    )
-
-    discrepancies_created = 0
-
-    for piece in pieces:
-        error, created = Error.objects.get_or_create(
-            piece=piece,
-            error_type=Error.ErrorType.DISCREPANCY,
-            defaults={
-                'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
-                'status': Error.Status.REPORTED,
-                'reported_date': timezone.now()
-            }
-        )
-        if created:
-            discrepancies_created += 1
-
-    return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})
 
 @login_required
 @packer_required
@@ -431,3 +385,123 @@ def scan_packer_page(request):
             'sidebar_type': 'packer'
             }
     return render(request, 'packer/scans/detail.html', context)
+
+@login_required
+@packer_required
+def manual_pack_page(request):
+    client_orders = ClientOrder.objects.all()  
+    context = {
+        'sidebar_type': 'packer',
+        'client_orders': client_orders,
+    }
+    return render(request, 'packer/scans/manual.html', context)
+
+def get_passport_packed_counts(passport):
+    """
+    For a given Passport, returns a dict mapping each size to a dictionary
+    with the total required quantity (from the PassportSize.quantity field)
+    and the count of ProductionPiece items in the CHECKED stage.
+    
+    Output format:
+      {
+         "S": {"checked": 5, "required": 10},
+         "M": {"checked": 2, "required": 8},
+         ...
+      }
+    """
+    counts = {}
+    # Loop over all PassportSize records related to the passport.
+    for ps in passport.passport_sizes.all():
+        size = ps.size_quantity.size  # e.g., "S", "M", etc.
+        required = ps.quantity or 0
+        # Count ProductionPiece objects that are packed for this passport size.
+        packed = ps.pieces.filter(stage=ProductionPiece.StageChoices.PACKED).count()
+        # If multiple passport sizes have the same size, sum them up.
+        if size in counts:
+            counts[size]["required"] += required
+            counts[size]["packed"] += packed
+        else:
+            counts[size] = {"required": required, "packed": packed}
+    return counts
+
+@login_required
+def get_cut_table_data_packer(request, cut_id):
+    # Fetch the cut and related data for the table.
+    cut = get_object_or_404(Cut, id=cut_id)
+    
+    # Get unique sizes from the cut's size_quantities.
+    size_set = {sq.size for sq in cut.size_quantities.all() if sq.size}
+    all_sizes = sorted(size_set)
+    
+    # Get passports associated with this cut.
+    passports_qs = cut.passports.all()
+    passports_data = []
+    for passport in passports_qs:
+        # Build a label from passport.number and one of its passport_sizes (if exists)
+        passport_sqs = passport.passport_sizes.all()
+        if passport_sqs.exists():
+            rep_sq = passport_sqs.first()
+            rep_label = f"Passport {passport.number or passport.id} - {rep_sq.size_quantity.color} {rep_sq.size_quantity.fabrics}"
+        else:
+            rep_label = f"Passport {passport.number or passport.id}"
+        
+        # Get the packed/required counts per size.
+        size_counts = get_passport_packed_counts(passport)
+        
+        # For the cut table, you'll want to ensure every size from all_sizes is represented.
+        # For sizes not present in size_counts, assume 0.
+        quantities = {}
+        for size in all_sizes:
+            if size in size_counts:
+                quantities[size] = size_counts[size]
+            else:
+                quantities[size] = {"packed": 0, "required": 0}
+        
+        passports_data.append({
+            "passport_id": passport.id,
+            "label": rep_label,
+            "quantities": quantities,
+        })
+
+    data = {
+        "cut_id": cut.id,
+        "cut_number": cut.number,
+        "all_sizes": all_sizes,
+        "passports": passports_data,
+    }
+    return JsonResponse(data)
+
+@login_required
+def pack_piece_status_by_passport_size(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            passport_id = data.get("passport_id")
+            size = data.get("size")
+            status = data.get("status")
+            if status not in ["PACKED", "CHECKED"]:
+                return JsonResponse({"success": False, "message": "Invalid status"}, status=400)
+
+            # If we want to mark as PACKED, look for a piece currently CHECKED.
+            # If we want to revert to CHECKED, look for a piece currently PACKED.
+            if status == "PACKED":
+                piece = ProductionPiece.objects.filter(
+                    passport_size__passport_id=passport_id,
+                    passport_size__size_quantity__size=size,
+                    stage=ProductionPiece.StageChoices.CHECKED
+                ).first()
+            elif status == "CHECKED":
+                piece = ProductionPiece.objects.filter(
+                    passport_size__passport_id=passport_id,
+                    passport_size__size_quantity__size=size,
+                    stage=ProductionPiece.StageChoices.PACKED
+                ).first()
+
+            if not piece:
+                return JsonResponse({"success": False, "message": "No available production piece found"}, status=404)
+            piece.stage = status
+            piece.save()
+            return JsonResponse({"success": True, "piece_id": piece.id})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=500)
+    return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
