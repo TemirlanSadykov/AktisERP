@@ -7,13 +7,19 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     
-    path('employee/', employee_page, name='employee_page'),
-    path('technologist/', technologist_page, name='technologist_page'),
     path('admin/', admin_page, name='admin_page'),
-    path('cutter/', cutter_page, name='cutter_page'),
-    path('qc/', qc_page, name='qc_page'),
-    path('packer/', packer_page, name='packer_page'),
-    path('keeper/', keeper_page, name='keeper_page'),
+
+    path('technologist/', ClientOrderListView.as_view(), name='technologist_page'),
+
+    path('cutter/', ClientOrderListCutterView.as_view(), name='cutter_page'),
+
+    path('qc/', ClientOrderListQcView.as_view(), name='qc_page'),
+
+    path('packer/', ClientOrderListPackerView.as_view(), name='packer_page'),
+
+    path('keeper/', ColorFabricListView.as_view(), name='keeper_page'),
+
+    path('employee/', employee_page, name='employee_page'),
 
     # Admin management of employees
     path('technologist/employees/', EmployeeListView.as_view(), name='employee_list'),
