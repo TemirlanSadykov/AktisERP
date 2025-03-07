@@ -322,7 +322,7 @@ class ModelCustomForm(forms.ModelForm):
         self.assortment_id = kwargs.pop('a_id', None)
         copy_id = kwargs.pop('copy_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
-        queryset = Operation.objects.filter(is_archived=False).select_related('node').order_by('number')
+        queryset = Operation.objects.filter(is_archived=False).select_related('node').order_by('node__name', 'name')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
             queryset=queryset,
             widget=forms.CheckboxSelectMultiple,
