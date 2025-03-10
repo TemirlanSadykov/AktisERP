@@ -172,7 +172,7 @@
         if (input !== firstInput) {
           return;
         }
-        const value = input.value.trim();
+        const value = input.value;
         // Propagate to all inputs in that row
         row.querySelectorAll('.employee-input').forEach(inp => {
           inp.value = value;
@@ -241,56 +241,88 @@
     });
   }
 </script>
+
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    document.querySelector('#operationAssignmentForm').addEventListener('dblclick', function(event) {
-      if (event.target.classList.contains('editable')) {
-        var span = event.target;
-        var originalText = span.textContent.trim();
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.value = originalText;
-        input.className = 'edit-input';
-        input.style.width = '80px';
-        input.setAttribute('data-work', span.getAttribute('data-work'));
+    var operationAssignmentForm = document.querySelector('#operationAssignmentForm');
 
-        // Replace the span with the input field
-        span.parentNode.replaceChild(input, span);
-        input.focus();
+    // Helper function to convert an editable span into an input field
+    function handleEditableAction(span) {
+      var originalText = span.textContent.trim();
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.value = originalText;
+      input.className = 'edit-input';
+      input.style.width = '80px';
+      input.setAttribute('data-work', span.getAttribute('data-work'));
+      
+      // Replace the span with the input field and focus it
+      span.parentNode.replaceChild(input, span);
+      input.focus();
 
-        // Flag to ensure the revert function runs only once
-        var isReplaced = false;
-        var revertToSpan = function(newValue) {
-          if (isReplaced) return;  // Already replaced, so do nothing
-          isReplaced = true;
-          if (!input.parentNode || !input.parentNode.contains(input)) return; // Guard against missing node
-
+      // Flag to prevent multiple replacements
+      var isReplaced = false;
+      var revertToSpan = function(newValue) {
+        if (isReplaced) return;
+        isReplaced = true;
+        if (!input.parentNode || !input.parentNode.contains(input)) return;
+        
+        // If newValue is empty (or null), remove the input entirely
+        if (!newValue || newValue.trim() === "") {
+          input.parentNode.removeChild(input);
+        } else {
           var newSpan = document.createElement('span');
-          newSpan.textContent = newValue || originalText;
+          newSpan.textContent = newValue;
           newSpan.className = 'editable';
-          newSpan.style.color = span.style.color;  // Copy any styling if needed
+          newSpan.style.color = span.style.color; // Copy styling if needed
           newSpan.setAttribute('data-work', span.getAttribute('data-work'));
           input.parentNode.replaceChild(newSpan, input);
-        };
+        }
+      };
 
-        // On blur, revert back to a span with the (possibly updated) text.
-        input.addEventListener('blur', function() {
-          revertToSpan(input.value);
-        });
+      // Revert on blur
+      input.addEventListener('blur', function() {
+        revertToSpan(input.value);
+      });
 
-        // On Enter, update via AJAX then revert.
-        input.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            var workId = input.getAttribute('data-work');
-            updateWork(workId, input.value, revertToSpan, originalText);
-          }
-        });
+      // On Enter, update via AJAX then revert.
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var workId = input.getAttribute('data-work');
+          updateWork(workId, input.value, revertToSpan, originalText);
+        }
+      });
+    }
+
+    // Desktop: use dblclick event
+    operationAssignmentForm.addEventListener('dblclick', function(event) {
+      if (event.target.classList.contains('editable')) {
+        handleEditableAction(event.target);
+      }
+    });
+
+    // Mobile: use touchend to detect double-tap (within 500ms)
+    var lastTap = 0;
+    operationAssignmentForm.addEventListener('touchend', function(event) {
+      var currentTime = new Date().getTime();
+      var tapLength = currentTime - lastTap;
+      lastTap = currentTime;
+      if (tapLength < 500 && tapLength > 0) { // Adjust threshold as needed
+        if (event.target.classList.contains('editable')) {
+          event.preventDefault();
+          handleEditableAction(event.target);
+        }
       }
     });
   });
 
   function updateWork(workId, newValue, callback, originalText) {
+    activeRequests++;
+    if (activeRequests === 1) {
+      showLoading();
+    }
+    
     fetch(`/production/technologist/passports/update_work/`, {
       method: 'POST',
       headers: {
@@ -303,10 +335,17 @@
         value: newValue
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      // Only continue if we received a 200-status response
+      if (!response.ok) {
+        throw new Error("Server responded with status " + response.status);
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.status === 'success') {
-        callback(newValue);
+        // If newValue is empty, pass null to remove the span
+        callback(newValue.trim() ? newValue : null);
       } else {
         console.error('Failed to update work', data.message);
         alert('Не получилось обновить');
@@ -317,6 +356,12 @@
       console.error('Error:', error);
       alert('Не получилось обновить');
       callback(originalText);
+    })
+    .finally(() => {
+      activeRequests--;
+      if (activeRequests === 0) {
+        hideLoading();
+      }
     });
   }
 </script>

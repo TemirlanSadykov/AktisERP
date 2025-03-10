@@ -1147,7 +1147,7 @@ def assign_operations_by_cut(request, cut_id):
                         
                     ).first()
                     if not employee_profile:
-                        continue
+                        raise Exception(f"Employee not found.")
 
                     work, created = Work.objects.get_or_create(
                         operation_id=operation_id,
@@ -1211,7 +1211,7 @@ def update_work(request):
                 ).first()
 
             if not employee_profile:
-                continue
+                raise Exception(f"Employee not found.")
 
             # Handle the first item by updating existing assigned work
             if first:
