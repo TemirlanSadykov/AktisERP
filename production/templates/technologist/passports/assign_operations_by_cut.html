@@ -180,7 +180,7 @@
       });
   
       // On Enter, process every input in the same row
-      input.addEventListener('keypress', function(event) {
+      input.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
           event.preventDefault();
           const row = input.closest('tr');
@@ -286,7 +286,7 @@
       });
 
       // On Enter, update via AJAX then revert.
-      input.addEventListener('keypress', function(e) {
+      input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           var workId = input.getAttribute('data-work');
