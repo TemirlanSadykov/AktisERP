@@ -61,210 +61,218 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  var barcodeInput = document.getElementById('barcode-input');
-  var currentPieceId = null;
-  // Store the most recent scanned piece for later table update.
-  var lastScannedPiece = null;
-
-  // Global variables for order table management.
-  var activeOrderId = null;
-  var orderTableData = null; 
-  // orderTableData structure:
-  // {
-  //   orderName: "Order Model Name",
-  //   allSizes: ["40", "42", "44"],
-  //   rows: {
-  //     "Red Cotton": { 
-  //         required: { "40": 10, "42": 10, "44": 10 },
-  //         scanned: { "40": <current count>, "42": <current count>, "44": <current count> }
-  //     },
-  //     ...
-  //   }
-  // }
-
-  // Render the order table into #order-table-container.
-  function renderOrderTable() {
-    if (!orderTableData) return;
-    var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-    html += '<th>Order: ' + orderTableData.orderName + '</th>';
-    orderTableData.allSizes.forEach(function(size) {
-      html += '<th>' + size + '</th>';
-    });
-    html += '</tr></thead><tbody>';
-    for (var combo in orderTableData.rows) {
-      html += '<tr><td>' + combo + '</td>';
+  document.addEventListener('DOMContentLoaded', function() {
+    var barcodeInput = document.getElementById('barcode-input');
+    var currentPieceId = null;
+    // Store the most recent scanned piece for later table update.
+    var lastScannedPiece = null;
+    // Global variable to mark the cell that was just updated.
+    var lastUpdatedCell = null;
+  
+    // Global variables for order table management.
+    var activeOrderId = null;
+    var orderTableData = null; 
+    // orderTableData structure:
+    // {
+    //   orderName: "Order Model Name",
+    //   allSizes: ["40", "42", "44"],
+    //   rows: {
+    //     "Red Cotton": { 
+    //         required: { "40": 10, "42": 10, "44": 10 },
+    //         scanned: { "40": <current count>, "42": <current count>, "44": <current count> }
+    //     },
+    //     ...
+    //   }
+    // }
+  
+    // Render the order table into #order-table-container.
+    function renderOrderTable() {
+      if (!orderTableData) return;
+      var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+      html += '<th>Order: ' + orderTableData.orderName + '</th>';
       orderTableData.allSizes.forEach(function(size) {
-        var scanned = orderTableData.rows[combo].scanned[size] || 0;
-        var required = orderTableData.rows[combo].required[size] || 0;
-        html += '<td>' + scanned + '/' + required + '</td>';
+        html += '<th>' + size + '</th>';
       });
-      html += '</tr>';
-    }
-    html += '</tbody></table></div>';
-    document.getElementById('order-table-container').innerHTML = html;
-  }
-
-  // Initialize the order table with data fetched from the server,
-  // using the checked_counts to pre-populate the scanned counts.
-  function initializeOrderTable(orderData) {
-    activeOrderId = orderData.order_id;
-    orderTableData = {
-      orderName: orderData.order_name,
-      allSizes: orderData.all_sizes,
-      rows: {}  // e.g. { "Red Cotton": { required: {...}, scanned: {...} }, ... }
-    };
-    for (var combo in orderData.pivot_data) {
-      orderTableData.rows[combo] = {
-        required: orderData.pivot_data[combo],
-        scanned: {}
-      };
-      orderData.all_sizes.forEach(function(size) {
-        var count = 0;
-        if (orderData.checked_counts &&
-            orderData.checked_counts[combo] &&
-            orderData.checked_counts[combo][size]) {
-          count = orderData.checked_counts[combo][size];
-        }
-        orderTableData.rows[combo].scanned[size] = count;
-      });
-    }
-    renderOrderTable();
-  }
-
-  // Fetch order table data from API for a given order_id.
-  function loadOrderTableData(orderId) {
-    return fetch('/production/qc/orders/get-order-table-data/' + orderId + '/')
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      });
-  }
-
-  // Update (or initialize) the order table with the scanned piece.
-  // The parameter addCount should be true only when status is "Checked".
-  function updateOrderTableWithScan(scannedPiece, addCount) {
-    if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
-      // A different order was scanned – load new order data and initialize table.
-      loadOrderTableData(scannedPiece.order_id)
-        .then(function(orderData) {
-          initializeOrderTable(orderData);
-          // Do not manually add the count here,
-          // because orderData.checked_counts already reflect the update.
-          renderOrderTable();
-        })
-        .catch(function(err) {
-          console.error('Error loading order table data:', err);
+      html += '</tr></thead><tbody>';
+      for (var combo in orderTableData.rows) {
+        html += '<tr><td>' + combo + '</td>';
+        orderTableData.allSizes.forEach(function(size) {
+          var scanned = orderTableData.rows[combo].scanned[size] || 0;
+          var required = orderTableData.rows[combo].required[size] || 0;
+          // If this cell was just updated, add a red border.
+          if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
+            html += '<td style="border-top: 3px solid red; border-right: 3px solid red; border-bottom: 3px solid red; border-left: 3px solid red;">' + scanned + '/' + required + '</td>';
+          } else {
+            html += '<td>' + scanned + '/' + required + '</td>';
+          }
         });
-    } else {
-      // Same order – update the scanned count manually if addCount is true.
-      if (addCount) {
-        var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
-        if (orderTableData.rows[combo]) {
-          orderTableData.rows[combo].scanned[scannedPiece.size] =
-            (orderTableData.rows[combo].scanned[scannedPiece.size] || 0) + 1;
-        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('order-table-container').innerHTML = html;
+    }
+  
+    // Initialize the order table with data fetched from the server,
+    // using the checked_counts to pre-populate the scanned counts.
+    function initializeOrderTable(orderData) {
+      activeOrderId = orderData.order_id;
+      orderTableData = {
+        orderName: orderData.order_name,
+        allSizes: orderData.all_sizes,
+        rows: {}  // e.g. { "Red Cotton": { required: {...}, scanned: {...} }, ... }
+      };
+      for (var combo in orderData.pivot_data) {
+        orderTableData.rows[combo] = {
+          required: orderData.pivot_data[combo],
+          scanned: {}
+        };
+        orderData.all_sizes.forEach(function(size) {
+          var count = 0;
+          if (orderData.checked_counts &&
+              orderData.checked_counts[combo] &&
+              orderData.checked_counts[combo][size]) {
+            count = orderData.checked_counts[combo][size];
+          }
+          orderTableData.rows[combo].scanned[size] = count;
+        });
       }
       renderOrderTable();
     }
-  }
   
-
-  // Process the barcode input: fetch piece info and show modal.
-  function processBarcode() {
-    var barcode = barcodeInput.value.trim();
-    if (barcode) {
-      fetch('/production/qc/orders/api/get-piece-info/' + barcode + '/')
+    // Fetch order table data from API for a given order_id.
+    function loadOrderTableData(orderId) {
+      return fetch('/production/qc/orders/get-order-table-data/' + orderId + '/')
         .then(function(response) {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
           return response.json();
-        })
-        .then(function(data) {
-          // Populate the modal with piece details.
-          document.getElementById('modal-piece').textContent = data.piece_number;
-          document.getElementById('modal-model').textContent = data.model;
-          document.getElementById('modal-cut').textContent = data.cut;
-          document.getElementById('modal-passport').textContent = data.passport_number;
-          document.getElementById('modal-color').textContent = data.color;
-          document.getElementById('modal-fabrics').textContent = data.fabrics;
-          document.getElementById('modal-size').textContent = data.size;
-          document.getElementById('modal-stage').textContent = data.stage;
-          currentPieceId = data.piece_id;
-          // Store this piece for later update.
-          lastScannedPiece = data;
-
-          $('#scanModal').modal('show');
-        })
-        .catch(function(error) {
-          console.error('Error fetching item details:', error);
-        })
-        .finally(function() {
-          barcodeInput.value = '';
-          barcodeInput.focus();
         });
     }
-  }
-
-  barcodeInput.addEventListener('change', processBarcode);
-
-  $('#scanModal').on('hidden.bs.modal', function (e) {
-    barcodeInput.focus();
-  });
-
-  // When a status button is clicked, update the piece and (if appropriate) update the table.
-  document.getElementById('defect-button').addEventListener('click', function() {
-    updatePieceStatus('Defect');
-  });
-
-  document.getElementById('checked-button').addEventListener('click', function() {
-    updatePieceStatus('Checked');
-  });
-
-  function updatePieceStatus(status) {
-    var updateData = { status: status };
-    fetch('/production/qc/orders/update-piece-status/' + currentPieceId + '/', {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken'),
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updateData)
-    })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-      if (data.success) {
-        $('#scanModal').modal('hide');
-        // If the piece was marked as "Checked", update the table with an increment.
-        // If it's "Defect" and no table exists yet, initialize the table (without incrementing).
-        if (status === 'Checked') {
-          updateOrderTableWithScan(lastScannedPiece, true);
-        } else if (!activeOrderId) {
-          updateOrderTableWithScan(lastScannedPiece, false);
-        }
+  
+    // Update (or initialize) the order table with the scanned piece.
+    // The parameter addCount should be true only when status is "Checked".
+    function updateOrderTableWithScan(scannedPiece, addCount) {
+      if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
+        // A different order was scanned – load new order data and initialize table.
+        loadOrderTableData(scannedPiece.order_id)
+          .then(function(orderData) {
+            initializeOrderTable(orderData);
+            renderOrderTable();
+          })
+          .catch(function(err) {
+            console.error('Error loading order table data:', err);
+          });
       } else {
-        alert('Failed to update status to ' + status + ': ' + data.message);
-      }
-    })
-    .catch(function(error) {
-      console.error('Error updating status:', error);
-    });
-  }
-
-  function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+        // Same order – update the scanned count manually if addCount is true.
+        if (addCount) {
+          var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
+          if (orderTableData.rows[combo]) {
+            orderTableData.rows[combo].scanned[scannedPiece.size] =
+              (orderTableData.rows[combo].scanned[scannedPiece.size] || 0) + 1;
+            // Mark this cell as updated so it will have a red border.
+            lastUpdatedCell = { combo: combo, size: scannedPiece.size };
+            renderOrderTable();
+          }
+        } else {
+          renderOrderTable();
         }
       }
     }
-    return cookieValue;
-  }
-});
-</script>
+    
+    // Process the barcode input: fetch piece info and show modal.
+    function processBarcode() {
+      var barcode = barcodeInput.value.trim();
+      if (barcode) {
+        fetch('/production/qc/orders/api/get-piece-info/' + barcode + '/')
+          .then(function(response) {
+            return response.json();
+          })
+          .then(function(data) {
+            // Populate the modal with piece details.
+            document.getElementById('modal-piece').textContent = data.piece_number;
+            document.getElementById('modal-model').textContent = data.model;
+            document.getElementById('modal-cut').textContent = data.cut;
+            document.getElementById('modal-passport').textContent = data.passport_number;
+            document.getElementById('modal-color').textContent = data.color;
+            document.getElementById('modal-fabrics').textContent = data.fabrics;
+            document.getElementById('modal-size').textContent = data.size;
+            document.getElementById('modal-stage').textContent = data.stage;
+            currentPieceId = data.piece_id;
+            // Store this piece for later update.
+            lastScannedPiece = data;
+  
+            $('#scanModal').modal('show');
+          })
+          .catch(function(error) {
+            console.error('Error fetching item details:', error);
+          })
+          .finally(function() {
+            barcodeInput.value = '';
+            barcodeInput.focus();
+          });
+      }
+    }
+  
+    barcodeInput.addEventListener('change', processBarcode);
+  
+    $('#scanModal').on('hidden.bs.modal', function (e) {
+      barcodeInput.focus();
+    });
+  
+    // When a status button is clicked, update the piece and (if appropriate) update the table.
+    document.getElementById('defect-button').addEventListener('click', function() {
+      updatePieceStatus('Defect');
+    });
+  
+    document.getElementById('checked-button').addEventListener('click', function() {
+      updatePieceStatus('Checked');
+    });
+  
+    function updatePieceStatus(status) {
+      var updateData = { status: status };
+      fetch('/production/qc/orders/update-piece-status/' + currentPieceId + '/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        if (data.success) {
+          $('#scanModal').modal('hide');
+          // If the piece was marked as "Checked", update the table with an increment.
+          // If it's "Defect" and no table exists yet, initialize the table (without incrementing).
+          if (status === 'Checked') {
+            updateOrderTableWithScan(lastScannedPiece, true);
+          } else if (!activeOrderId) {
+            updateOrderTableWithScan(lastScannedPiece, false);
+          }
+        } else {
+          alert('Failed to update status to ' + status + ': ' + data.message);
+        }
+      })
+      .catch(function(error) {
+        console.error('Error updating status:', error);
+      });
+    }
+  
+    function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  });
+</script>  
 {% endblock %}

@@ -53,181 +53,182 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  var barcodeInput = document.getElementById('barcode-input');
-  var currentPieceId = null;
-  // Store the most recent scanned piece for later table update.
-  var lastScannedPiece = null;
-
-  // Global variables for order table management.
-  var activeOrderId = null;
-  var orderTableData = null;
-  // orderTableData structure:
-  // {
-  //   orderName: "Order Model Name",
-  //   allSizes: ["40", "42", "44"],
-  //   rows: {
-  //     "Red Cotton": {
-  //         required: { "40": 10, "42": 10, "44": 10 },
-  //         packed: { "40": currentCount, "42": currentCount, "44": currentCount }
-  //     },
-  //     ...
-  //   }
-  // }
-
-  // Render the order table into #order-table-container.
-  function renderOrderTable() {
-    if (!orderTableData) return;
-    var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-    html += '<th>Order: ' + orderTableData.orderName + '</th>';
-    orderTableData.allSizes.forEach(function(size) {
-      html += '<th>' + size + '</th>';
-    });
-    html += '</tr></thead><tbody>';
-    for (var combo in orderTableData.rows) {
-      html += '<tr><td>' + combo + '</td>';
+  document.addEventListener('DOMContentLoaded', function() {
+    var barcodeInput = document.getElementById('barcode-input');
+    var currentPieceId = null;
+    // Store the most recent scanned piece for later table update.
+    var lastScannedPiece = null;
+    // Global variable to mark the cell that was just updated.
+    var lastUpdatedCell = null;
+    
+    // Global variables for order table management.
+    var activeOrderId = null;
+    var orderTableData = null; 
+    // orderTableData structure:
+    // {
+    //   orderName: "Order Model Name",
+    //   allSizes: ["40", "42", "44"],
+    //   rows: {
+    //     "Red Cotton": { 
+    //         required: { "40": 10, "42": 10, "44": 10 },
+    //         packed: { "40": currentCount, "42": currentCount, "44": currentCount }
+    //     },
+    //     ...
+    //   }
+    // }
+  
+    // Render the order table into #order-table-container.
+    function renderOrderTable() {
+      if (!orderTableData) return;
+      var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+      html += '<th>Order: ' + orderTableData.orderName + '</th>';
       orderTableData.allSizes.forEach(function(size) {
-        var packed = orderTableData.rows[combo].packed[size] || 0;
-        var required = orderTableData.rows[combo].required[size] || 0;
-        html += '<td>' + packed + '/' + required + '</td>';
+        html += '<th>' + size + '</th>';
       });
-      html += '</tr>';
-    }
-    html += '</tbody></table></div>';
-    document.getElementById('order-table-container').innerHTML = html;
-  }
-
-  // Initialize the order table with data fetched from the server,
-  // using the packed_counts to pre-populate the packed counts.
-  function initializeOrderTable(orderData) {
-    activeOrderId = orderData.order_id;
-    orderTableData = {
-      orderName: orderData.order_name,
-      allSizes: orderData.all_sizes,
-      rows: {} // e.g. { "Red Cotton": { required: {...}, packed: {...} }, ... }
-    };
-    for (var combo in orderData.pivot_data) {
-      orderTableData.rows[combo] = {
-        required: orderData.pivot_data[combo],
-        packed: {}
-      };
-      orderData.all_sizes.forEach(function(size) {
-        var count = 0;
-        if (orderData.packed_counts &&
-            orderData.packed_counts[combo] &&
-            orderData.packed_counts[combo][size]) {
-          count = orderData.packed_counts[combo][size];
-        }
-        orderTableData.rows[combo].packed[size] = count;
-      });
-    }
-    renderOrderTable();
-  }
-
-  // Fetch order table data from API for a given order_id.
-  function loadOrderTableData(orderId) {
-    return fetch('/production/packer/orders/get-order-table-data/' + orderId + '/')
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      });
-  }
-
-  // Update (or initialize) the order table with the scanned piece.
-  // The parameter addCount should be true when a piece is successfully packed.
-  function updateOrderTableWithScan(scannedPiece, addCount) {
-    if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
-      // A different order was scanned – load new order data and initialize table.
-      loadOrderTableData(scannedPiece.order_id)
-        .then(function(orderData) {
-          initializeOrderTable(orderData);
-          // Do not manually add the count here because the server data already reflects the update.
-          renderOrderTable();
-        })
-        .catch(function(err) {
-          console.error('Error loading order table data:', err);
+      html += '</tr></thead><tbody>';
+      for (var combo in orderTableData.rows) {
+        html += '<tr><td>' + combo + '</td>';
+        orderTableData.allSizes.forEach(function(size) {
+          var packed = orderTableData.rows[combo].packed[size] || 0;
+          var required = orderTableData.rows[combo].required[size] || 0;
+          // If this cell was just updated, add a red border.
+          if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
+            html += '<td style="border: 3px solid red;">' + packed + '/' + required + '</td>';
+          } else {
+            html += '<td>' + packed + '/' + required + '</td>';
+          }
         });
-    } else {
-      // Same order – update the packed count for the corresponding cell if addCount is true.
-      if (addCount) {
-        var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
-        if (orderTableData.rows[combo]) {
-          orderTableData.rows[combo].packed[scannedPiece.size] =
-            (orderTableData.rows[combo].packed[scannedPiece.size] || 0) + 1;
-        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('order-table-container').innerHTML = html;
+    }
+  
+    // Initialize the order table with data fetched from the server.
+    function initializeOrderTable(orderData) {
+      activeOrderId = orderData.order_id;
+      orderTableData = {
+        orderName: orderData.order_name,
+        allSizes: orderData.all_sizes,
+        rows: {} // e.g. { "Red Cotton": { required: {...}, packed: {...} }, ... }
+      };
+      for (var combo in orderData.pivot_data) {
+        orderTableData.rows[combo] = {
+          required: orderData.pivot_data[combo],
+          packed: {}
+        };
+        orderData.all_sizes.forEach(function(size) {
+          var count = 0;
+          if (orderData.packed_counts &&
+              orderData.packed_counts[combo] &&
+              orderData.packed_counts[combo][size]) {
+            count = orderData.packed_counts[combo][size];
+          }
+          orderTableData.rows[combo].packed[size] = count;
+        });
       }
       renderOrderTable();
     }
-  }  
-
-  // Process the barcode input: extract piece ID and mark it as packed.
-  function processBarcode() {
-    var barcode = barcodeInput.value.trim();
-    if (barcode) {
-      let ids = barcode.split('-');
-      let pieceId = ids[ids.length - 1]; // Assume the last part is the piece ID.
-      
-      fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken'),
-          'Content-Type': 'application/json'
-        },
-        // The payload isn’t used by the view since it determines the stage internally.
-        body: JSON.stringify({stage: 'Packed'})
-      })
-      .then(function(response) { return response.json(); })
-      .then(function(data) {
-        if (data.success) {
-          // Optionally, you could show a brief success message.
-          currentPieceId = data.piece_id;
-          // Add the order info to the scanned piece data.
-          // (Assuming data.order_id and data.order_name are available via get_order_table_data_packer.)
-          // Here, we re-use the piece data from the update response.
-          // For simplicity, we assume the piece belongs to the currently active order.
-          // If no table is yet active, updateOrderTableWithScan() will load it.
-          data.order_id = data.order_id || (activeOrderId ? activeOrderId : data.order_id);
-          lastScannedPiece = data;
-          updateOrderTableWithScan(lastScannedPiece, true);
-        } else {
-          document.getElementById('errorModalMessage').textContent = data.message;
-          $('#errorModal').modal('show');
-        }
-      })
-      .catch(function(error) {
-        console.error('Error updating piece:', error);
-        document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
-        $('#errorModal').modal('show');
-      });
+  
+    // Fetch order table data from API for a given order_id.
+    function loadOrderTableData(orderId) {
+      return fetch('/production/packer/orders/get-order-table-data/' + orderId + '/')
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        });
     }
-    barcodeInput.value = '';
-    barcodeInput.focus();
-  }
-
-  barcodeInput.addEventListener('change', processBarcode);
-
-  // Refocus barcode input when error modal is closed.
-  $('#errorModal').on('hidden.bs.modal', function () {
-    barcodeInput.focus();
-  });
-
-  // Utility function to get CSRF token.
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+  
+    // Update (or initialize) the order table with the scanned piece.
+    // The parameter addCount should be true when a piece is successfully packed.
+    function updateOrderTableWithScan(scannedPiece, addCount) {
+      if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
+        // A different order was scanned – load new order data and initialize table.
+        loadOrderTableData(scannedPiece.order_id)
+          .then(function(orderData) {
+            initializeOrderTable(orderData);
+            renderOrderTable();
+          })
+          .catch(function(err) {
+            console.error('Error loading order table data:', err);
+          });
+      } else {
+        // Same order – update the packed count for the corresponding cell if addCount is true.
+        if (addCount) {
+          var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
+          if (orderTableData.rows[combo]) {
+            orderTableData.rows[combo].packed[scannedPiece.size] =
+              (orderTableData.rows[combo].packed[scannedPiece.size] || 0) + 1;
+            // Mark this cell as updated so it will have a red border.
+            lastUpdatedCell = { combo: combo, size: scannedPiece.size };
+            renderOrderTable();
+          }
+        } else {
+          renderOrderTable();
         }
       }
     }
-    return cookieValue;
-  }
-});
+  
+    // Process the barcode input.
+    function processBarcode() {
+      var barcode = barcodeInput.value.trim();
+      if (barcode) {
+        let ids = barcode.split('-');
+        let pieceId = ids[ids.length - 1]; // Assume the last part is the piece ID.
+        
+        fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ stage: 'Packed' })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+          if (data.success) {
+            currentPieceId = data.piece_id;
+            data.order_id = data.order_id || (activeOrderId ? activeOrderId : data.order_id);
+            lastScannedPiece = data;
+            updateOrderTableWithScan(lastScannedPiece, true);
+          } else {
+            document.getElementById('errorModalMessage').textContent = data.message;
+            $('#errorModal').modal('show');
+          }
+        })
+        .catch(function(error) {
+          console.error('Error updating piece:', error);
+          document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
+          $('#errorModal').modal('show');
+        });
+      }
+      barcodeInput.value = '';
+      barcodeInput.focus();
+    }
+  
+    barcodeInput.addEventListener('change', processBarcode);
+  
+    $('#errorModal').on('hidden.bs.modal', function () {
+      barcodeInput.focus();
+    });
+  
+    // Utility function to get CSRF token.
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  });
 </script>
 {% endblock %}
