@@ -254,6 +254,7 @@
       input.value = originalText;
       input.className = 'edit-input';
       input.style.width = '80px';
+      input.setAttribute('enterkeyhint', 'done');
       input.setAttribute('data-work', span.getAttribute('data-work'));
       
       // Replace the span with the input field and focus it
