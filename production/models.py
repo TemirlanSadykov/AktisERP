@@ -62,7 +62,11 @@ class CompanyAwareQuerySet(models.QuerySet):
 
 class CompanyAwareManager(models.Manager):
     def get_queryset(self):
-        return CompanyAwareQuerySet(self.model, using=self._db)
+        qs = super().get_queryset()
+        current_company = get_current_company()
+        if current_company is not None:
+            qs = qs.filter(company=current_company)
+        return qs
     
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
