@@ -761,8 +761,8 @@ class OrderCreateView(CreateView):
         context['client_order_pk'] = self.kwargs.get('client_order_pk')
         context['sidebar_type'] = 'technology'
         # Pass available colors and fabrics (and sizes) for use in the template.
-        context['colors'] = Color.objects.all().order_by('name')
-        context['fabrics'] = Fabrics.objects.all().order_by('name')
+        context['colors'] = Color.objects.filter(is_archived=False).order_by('name')
+        context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
         return context
     
 @require_POST
@@ -807,8 +807,8 @@ class OrderUpdateView(UpdateView):
         context = super(OrderUpdateView, self).get_context_data(**kwargs)
         context['client_order_pk'] = self.object.client_order.pk
         context['sidebar_type'] = 'technology'
-        context['colors'] = Color.objects.all().order_by('name')
-        context['fabrics'] = Fabrics.objects.all().order_by('name')
+        context['colors'] = Color.objects.filter(is_archived=False).order_by('name')
+        context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
         
         # --- Build the table header & rows from existing size quantities ---
         # Get all size quantities for this order
@@ -1415,7 +1415,7 @@ def operation_download(request):
     headers = ["№ПП (авто генерация)", "Тех-процесс", "Узел", "№ узла", "Оборудование", "Время", "Оплата"]
     sheet.append(headers)
 
-    for operation in Operation.objects.all().order_by('number'):
+    for operation in Operation.objects.filter(is_archived=False).order_by('number'):
         row = [
             operation.number,
             operation.name,

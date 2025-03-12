@@ -434,7 +434,7 @@ def scan_qc_page(request):
 @login_required
 @qc_required
 def manual_check_page(request):
-    client_orders = ClientOrder.objects.all()  
+    client_orders = ClientOrder.objects.filter(is_archived=False)
     context = {
         'sidebar_type': 'qc_page',
         'client_orders': client_orders,

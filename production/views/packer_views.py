@@ -389,7 +389,7 @@ def scan_packer_page(request):
 @login_required
 @packer_required
 def manual_pack_page(request):
-    client_orders = ClientOrder.objects.all()  
+    client_orders = ClientOrder.objects.filter(is_archived=False)
     context = {
         'sidebar_type': 'packer',
         'client_orders': client_orders,
