@@ -164,29 +164,41 @@ def employee_upload(request):
         try:
             workbook = openpyxl.load_workbook(excel_file)
             sheet = workbook.active
+            # Get the current company from thread-local storage.
+            current_company = get_current_company()
+            if current_company is None:
+                messages.error(request, 'No company found in context.')
+                return redirect(reverse_lazy('employee_list'))
+
             with transaction.atomic():
+                # Iterate rows skipping the header (starting at row 2)
                 for row in sheet.iter_rows(min_row=2, values_only=True):
-                    company_id, first_name, last_name, username, employee_id, type, station, password = row
-                    company = Company.objects.get(id=company_id)
+                    first_name, last_name, employee_id, emp_type, password = row
+                    
+                    # Generate username using current company ID and employee ID.
+                    username = f"{current_company.id}-{employee_id}"
+                    
                     try:
-                        # Attempt to find an existing UserProfile with given employee_id and company
-                        profile = UserProfile.objects.get(employee_id=employee_id, company=company)
-                        
+                        # Because of your custom manager, this lookup is already company-aware.
+                        profile = UserProfile.objects.get(employee_id=employee_id)
                     except UserProfile.DoesNotExist:
-                        # If it does not exist, create User and UserProfile
-                        user = User.objects.create(username=username, first_name=first_name, last_name=last_name)
+                        # Create a new user and UserProfile.
+                        user = User.objects.create(
+                            username=username,
+                            first_name=first_name,
+                            last_name=last_name
+                        )
                         user.set_password(password)
                         user.save()
+                        print(user)
+                        # The save method on CompanyAwareModel will assign the current company.
                         profile = UserProfile.objects.create(
-                            user=user, 
-                            company=company, 
-                            employee_id=employee_id, 
-                            type=type, 
-                            station=station, 
-                            status=False
+                            user=user,
+                            employee_id=employee_id,
+                            type=int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
                         )
                     else:
-                        # If UserProfile exists, update both User and UserProfile
+                        # Update existing user and profile.
                         user = profile.user
                         user.first_name = first_name
                         user.last_name = last_name
@@ -194,8 +206,7 @@ def employee_upload(request):
                         user.set_password(password)
                         user.save()
                         
-                        profile.type = type
-                        profile.station = station
+                        profile.type = int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
                         profile.save()
 
             messages.success(request, 'Employees uploaded successfully.')
