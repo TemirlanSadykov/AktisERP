@@ -1,18 +1,22 @@
 {% load i18n %}
 
 <div class="orders-filter">
-    <h4>{% trans "Filter by Orders" %}</h4>
-    <form id="orders-filter-form">
-      {% for order in orders %}
-        <div class="form-check">
-          <input class="form-check-input order-checkbox" type="checkbox" 
-                 name="order_ids" value="{{ order.id }}" id="order{{ order.id }}">
-          <label class="form-check-label" for="order{{ order.id }}">
-            {% trans "Order" %} #{{ order.model.name }} - {{ order.client_order.client.name }}
-          </label>
-        </div>
-      {% empty %}
-        <p>{% trans "No orders found for this date range." %}</p>
-      {% endfor %}
-    </form>
-</div>  
+  <h4>{% trans "Filter by Orders" %}</h4>
+  <form id="orders-filter-form">
+    {% for order in orders %}
+      <div class="form-check">
+        <input class="form-check-input order-checkbox" type="checkbox" 
+               name="order_ids" value="{{ order.id }}" id="order{{ order.id }}">
+        <label class="form-check-label" for="order{{ order.id }}">
+          {% trans "Order" %} #{{ order.model.name }} - {{ order.client_order.client.name }}
+        </label>
+      </div>
+    {% empty %}
+      <p>{% trans "No orders found for this date range." %}</p>
+    {% endfor %}
+    <!-- New Filter Button -->
+    <button type="button" id="orders-filter-btn" class="btn btn-primary mt-2">
+      {% trans "Filter" %}
+    </button>
+  </form>
+</div>
