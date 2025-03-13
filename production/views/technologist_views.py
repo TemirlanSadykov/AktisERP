@@ -1205,6 +1205,43 @@ def assign_operations_by_cut(request, cut_id):
         'sidebar_type': 'technology'
     })
 
+@require_POST
+@technologist_required
+@login_required
+def update_passport_quantity(request):
+    """
+    Updates the factual quantity for a given PassportSize and updates all 
+    AssignedWork records related to that PassportSize.
+    """
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON."}, status=400)
+    
+    passport_size_id = data.get("passport_size_id")
+    new_quantity = data.get("new_quantity")
+    
+    if passport_size_id is None or new_quantity is None:
+        return JsonResponse({"status": "error", "message": "Missing parameters."}, status=400)
+    
+    try:
+        new_quantity = int(new_quantity)
+    except ValueError:
+        return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
+    
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "PassportSize not found."}, status=404)
+    
+    # Update the factual field of PassportSize.
+    passport_size.factual = new_quantity
+    passport_size.save()
+    
+    # Update all AssignedWork records related to this PassportSize.
+    AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
+    
+    return JsonResponse({"status": "success"})
 
 @login_required
 @technologist_required
