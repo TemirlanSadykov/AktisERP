@@ -310,49 +310,52 @@ def update_piece_packer(request, piece_id):
 @login_required
 @packer_required
 def get_order_table_data_packer(request, order_id):
-    """
-    Returns pivot data for the required quantities for an order,
-    as well as the current counts of pieces marked as PACKED.
-    """
     try:
         order = Order.objects.get(id=order_id)
-        # Assume order.size_quantities.all() returns objects with attributes:
-        # size, color, fabrics, and quantity.
-        required_qs = order.size_quantities.all().order_by('size')
-        pivot_data = {}  # keys: "Color Fabrics", value: { size: required_quantity }
+        # Get the size quantities for the order.
+        # Each size quantity is assumed to have attributes:
+        # size, color, fabrics, quantity, packed, and packed.
+        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
+        
+        # Build pivot data: key is "Color Fabrics" and value is a dict mapping size to required quantity.
+        pivot_data = {}
         all_sizes_set = set()
         for sq in required_qs:
             all_sizes_set.add(sq.size)
-            key = f"{sq.color} {sq.fabrics}"  # Combine color & fabric
+            key = f"{sq.color} {sq.fabrics}"
             if key not in pivot_data:
                 pivot_data[key] = {}
             pivot_data[key][sq.size] = sq.quantity
-
+        
         # Sort sizes (if numeric, sort by integer value)
         try:
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
         except ValueError:
             all_sizes = sorted(all_sizes_set)
-
-        # Get current packed pieces counts.
+        
+        # For each size quantity, if the packed field is still null,
+        # count the production pieces (PACKED) and update it.
+        for sq in required_qs:
+            if sq.packed is None:
+                count = ProductionPiece.objects.filter(
+                    passport_size__size_quantity=sq,
+                    passport_size__passport__cut__order=order,
+                    stage=ProductionPiece.StageChoices.PACKED
+                ).count()
+                sq.packed = count
+                sq.save(update_fields=['packed'])
+        
+        # Build packed_counts from the size quantities.
+        # This dictionary uses the same key ("Color Fabrics") and maps each size to its packed value.
         packed_counts = {}
-        pieces = ProductionPiece.objects.filter(
-            passport_size__passport__cut__order=order,
-            stage=ProductionPiece.StageChoices.PACKED
-        )
-        for piece in pieces:
-            col = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
-            fab = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
-            key = f"{col} {fab}"
-            size = piece.passport_size.size_quantity.size
+        for sq in required_qs:
+            key = f"{sq.color} {sq.fabrics}"
             if key not in packed_counts:
                 packed_counts[key] = {}
-            packed_counts[key][size] = packed_counts[key].get(size, 0) + 1
-
+            packed_counts[key][sq.size] = sq.packed if sq.packed is not None else 0
         data = {
             'order_id': order.id,
-            # For display we use the order’s model name.
-            'order_name': order.model.name,
+            'order_name': order.model.name,  # Using model name for display.
             'all_sizes': all_sizes,
             'pivot_data': pivot_data,
             'packed_counts': packed_counts,
@@ -360,23 +363,6 @@ def get_order_table_data_packer(request, order_id):
         return JsonResponse(data)
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
-    
-@login_required
-@packer_required
-def mark_as_done(request, passport_size_id):
-    try:
-        passport_size = PassportSize.objects.get(id=passport_size_id)
-        with transaction.atomic():
-            if passport_size.stage == PassportSize.DONE:
-                passport_size.stage = PassportSize.PACKING
-            else:
-                passport_size.stage = PassportSize.DONE
-            passport_size.save()
-
-        return JsonResponse({'success': True})
-
-    except PassportSize.DoesNotExist:
-        return JsonResponse({'error': 'PassportSize not found'}, status=404)
 
 @login_required
 @packer_required
@@ -396,112 +382,45 @@ def manual_pack_page(request):
     }
     return render(request, 'packer/scans/manual.html', context)
 
-def get_passport_packed_counts(passport):
-    """
-    For a given Passport, returns a dict mapping each size to a dictionary
-    with the total required quantity (from the PassportSize.quantity field)
-    and the count of ProductionPiece items in the CHECKED stage.
-    
-    Output format:
-      {
-         "S": {"checked": 5, "required": 10},
-         "M": {"checked": 2, "required": 8},
-         ...
-      }
-    """
-    counts = {}
-    # Loop over all PassportSize records related to the passport.
-    for ps in passport.passport_sizes.all():
-        size = ps.size_quantity.size  # e.g., "S", "M", etc.
-        required = ps.quantity or 0
-        # Count ProductionPiece objects that are packed for this passport size.
-        packed = ps.pieces.filter(stage=ProductionPiece.StageChoices.PACKED).count()
-        # If multiple passport sizes have the same size, sum them up.
-        if size in counts:
-            counts[size]["required"] += required
-            counts[size]["packed"] += packed
-        else:
-            counts[size] = {"required": required, "packed": packed}
-    return counts
-
+@require_POST
 @login_required
-def get_cut_table_data_packer(request, cut_id):
-    # Fetch the cut and related data for the table.
-    cut = get_object_or_404(Cut, id=cut_id)
+@packer_required
+def update_packed_quantity(request):
+    """
+    Expects JSON with:
+      - order_id: ID of the order
+      - combo: a string in the format "ColorName FabricsName"
+      - size: the size to update (as stored in SizeQuantity.size)
+      - quantity: the desired number of production pieces to mark as packed.
+      
+    This view directly assigns the provided quantity to the SizeQuantity.packed field.
+    """
+    try:
+        data = json.loads(request.body)
+        order_id = data.get('order_id')
+        combo = data.get('combo')  # e.g. "Red Cotton"
+        size = data.get('size')
+        quantity = int(data.get('quantity', 0))
+        
+        # Split combo into color and fabric. Expects format "ColorName FabricsName".
+        parts = combo.split(" ", 1)
+        color_name, fabric_name = parts[0].strip(), parts[1].strip()
+        
+        # Retrieve the order.
+        order = Order.objects.get(id=order_id)
+        
+        # Get the SizeQuantity record associated with the order.
+        sq = order.size_quantities.get(
+            size=size.strip(),
+            color__name=color_name,
+            fabrics__name=fabric_name
+        )
+        
+        # Directly assign the provided quantity to the packed field.
+        sq.packed = quantity
+        sq.save(update_fields=['packed'])
+        
+        return JsonResponse({'success': True, 'updated_packed': quantity})
     
-    # Get unique sizes from the cut's size_quantities.
-    size_set = {sq.size for sq in cut.size_quantities.all() if sq.size}
-    all_sizes = sorted(size_set)
-    
-    # Get passports associated with this cut.
-    passports_qs = cut.passports.all()
-    passports_data = []
-    for passport in passports_qs:
-        # Build a label from passport.number and one of its passport_sizes (if exists)
-        passport_sqs = passport.passport_sizes.all()
-        if passport_sqs.exists():
-            rep_sq = passport_sqs.first()
-            rep_label = f"Passport {passport.number or passport.id} - {rep_sq.size_quantity.color} {rep_sq.size_quantity.fabrics}"
-        else:
-            rep_label = f"Passport {passport.number or passport.id}"
-        
-        # Get the packed/required counts per size.
-        size_counts = get_passport_packed_counts(passport)
-        
-        # For the cut table, you'll want to ensure every size from all_sizes is represented.
-        # For sizes not present in size_counts, assume 0.
-        quantities = {}
-        for size in all_sizes:
-            if size in size_counts:
-                quantities[size] = size_counts[size]
-            else:
-                quantities[size] = {"packed": 0, "required": 0}
-        
-        passports_data.append({
-            "passport_id": passport.id,
-            "label": rep_label,
-            "quantities": quantities,
-        })
-
-    data = {
-        "cut_id": cut.id,
-        "cut_number": cut.number,
-        "all_sizes": all_sizes,
-        "passports": passports_data,
-    }
-    return JsonResponse(data)
-
-@login_required
-def pack_piece_status_by_passport_size(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            passport_id = data.get("passport_id")
-            size = data.get("size")
-            status = data.get("status")
-            if status not in ["PACKED", "CHECKED"]:
-                return JsonResponse({"success": False, "message": "Invalid status"}, status=400)
-
-            # If we want to mark as PACKED, look for a piece currently CHECKED.
-            # If we want to revert to CHECKED, look for a piece currently PACKED.
-            if status == "PACKED":
-                piece = ProductionPiece.objects.filter(
-                    passport_size__passport_id=passport_id,
-                    passport_size__size_quantity__size=size,
-                    stage=ProductionPiece.StageChoices.CHECKED
-                ).first()
-            elif status == "CHECKED":
-                piece = ProductionPiece.objects.filter(
-                    passport_size__passport_id=passport_id,
-                    passport_size__size_quantity__size=size,
-                    stage=ProductionPiece.StageChoices.PACKED
-                ).first()
-
-            if not piece:
-                return JsonResponse({"success": False, "message": "No available production piece found"}, status=404)
-            piece.stage = status
-            piece.save()
-            return JsonResponse({"success": True, "piece_id": piece.id})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": str(e)}, status=500)
-    return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

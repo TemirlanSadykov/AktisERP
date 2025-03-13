@@ -93,7 +93,7 @@
           var required = orderTableData.rows[combo].required[size] || 0;
           // If this cell was just updated, add a red border.
           if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
-            html += '<td style="border: 3px solid red;">' + packed + '/' + required + '</td>';
+            html += '<td style="border-top: 3px solid red; border-right: 3px solid red; border-bottom: 3px solid red; border-left: 3px solid red;">' + packed + '/' + required + '</td>';
           } else {
             html += '<td>' + packed + '/' + required + '</td>';
           }

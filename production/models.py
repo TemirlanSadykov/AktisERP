@@ -244,6 +244,8 @@ class ModelOperation(CompanyAwareModel):
 class SizeQuantity(CompanyAwareModel):
     size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
     quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
+    checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
+    packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
     fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
 
