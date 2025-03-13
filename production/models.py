@@ -293,7 +293,7 @@ class Order(CompanyAwareModel):
         (COMPLETED, 'Завершен'),
     ]
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
-    quantity = models.IntegerField(verbose_name='Количество')
+    quantity = models.IntegerField(verbose_name='Количество', default=0)
     completed_quantity = models.IntegerField(default=0, verbose_name='Завершенное количество')
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')

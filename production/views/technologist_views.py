@@ -697,6 +697,7 @@ class OrderDetailView(DetailView):
             'sidebar_type': 'technology'
         })
         return context  
+
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderCreateView(CreateView):
     model = Order
@@ -708,26 +709,30 @@ class OrderCreateView(CreateView):
         self.object.client_order = get_object_or_404(ClientOrder, pk=self.kwargs['client_order_pk'])
         self.object.save()
         form.save_m2m()
-        # Process the dynamic table data
-        self.handle_size_quantities(self.object, self.request.POST)
+        try:
+            self.handle_size_quantities(self.object, self.request.POST)
+        except ValidationError as e:
+            # If a duplicate combination is found, delete the created order
+            self.object.delete()
+            form.add_error(None, e.message)
+            return self.form_invalid(form)
         return redirect('order_detail', pk=self.object.pk)
 
     def handle_size_quantities(self, order, post_data):
         """
-        Expected post_data keys:
-          - header_0, header_1, …      (the size for each column)
-          - row-0_color, row-0_fabric    (color and fabric for row 0)
-          - cell_0_0, cell_0_1, …        (quantity for row 0, for each size column)
-          - row-1_color, row-1_fabric, cell_1_0, cell_1_1, etc.
-          
-        For each row and column where quantity > 0, a SizeQuantity object is created and
-        associated with the order. Additionally, the color and fabric used for each row
-        are collected and saved to the order's many-to-many fields.
+        Process the dynamic table data:
+          - Ensures that each row's (color, fabric) combination is unique.
+          - Sums up all provided quantities per cell.
+          - Creates SizeQuantity objects and associates them with the order.
+          - Updates the order's overall quantity based on the sum.
         """
+        used_combinations = set()  # To track (color_id, fabric_id) per row
         used_colors = set()
         used_fabrics = set()
         sizes = []
-        # Get the number of columns from the header row inputs
+        total_quantity = 0  # Running total of quantities
+
+        # Retrieve the sizes from header inputs.
         col = 0
         while f'header_{col}' in post_data:
             sizes.append(post_data[f'header_{col}'])
@@ -737,31 +742,42 @@ class OrderCreateView(CreateView):
         while f'row-{row}_color' in post_data:
             color_id = post_data.get(f'row-{row}_color')
             fabric_id = post_data.get(f'row-{row}_fabric')
-            # Lookup the color and fabric objects:
+
+            # Validate uniqueness of the color–fabric combination per row.
+            combination_key = (color_id, fabric_id)
+            if combination_key in used_combinations:
+                raise ValidationError("Цвет-ткань должна быть уникальной.")
+            used_combinations.add(combination_key)
+
+            # Lookup the color and fabric objects.
             color = Color.objects.filter(pk=color_id).first() if color_id else None
             fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
 
-            # Collect these for saving later on the order
             if color:
                 used_colors.add(color)
             if fabric:
                 used_fabrics.add(fabric)
 
-            # Process each column for the current row
+            # Process each size column for the current row.
             for col_index, size in enumerate(sizes):
                 quantity = post_data.get(f'cell_{row}_{col_index}', 0)
                 if quantity and int(quantity) > 0:
-                    # Create and save the SizeQuantity object
+                    quantity_int = int(quantity)
+                    total_quantity += quantity_int
                     size_qty = SizeQuantity.objects.create(
                         size=size,
-                        quantity=int(quantity),
+                        quantity=quantity_int,
                         color=color,
                         fabrics=fabric
                     )
                     order.size_quantities.add(size_qty)
             row += 1
 
-        # Save the collected colors and fabrics to the order
+        # Update the order's overall quantity with the calculated total.
+        order.quantity = total_quantity
+        order.save(update_fields=['quantity'])
+
+        # Save the collected colors and fabrics to the order.
         if used_colors:
             order.colors.add(*used_colors)
         if used_fabrics:
@@ -822,27 +838,21 @@ class OrderUpdateView(UpdateView):
         context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
         
         # --- Build the table header & rows from existing size quantities ---
-        # Get all size quantities for this order
         size_quantities = self.object.size_quantities.all()
-        # Build a list of unique sizes (in order of appearance)
         sizes = []
         for sq in size_quantities:
             if sq.size not in sizes:
                 sizes.append(sq.size)
-        # If no sizes exist yet, provide one empty header:
         if not sizes:
             sizes = ['']
         
-        # Group size quantities by the combination (color, fabric)
         rows_dict = {}
         for sq in size_quantities:
             key = (sq.color_id, sq.fabrics_id)
             if key not in rows_dict:
                 rows_dict[key] = {}
-            # For each size in that row store the quantity and its pk
             rows_dict[key][sq.size] = {'quantity': sq.quantity, 'id': sq.pk}
         
-        # Now build a list of rows that the template can iterate over
         table_rows = []
         for (color_id, fabric_id), cells in rows_dict.items():
             row_data = {
@@ -850,7 +860,6 @@ class OrderUpdateView(UpdateView):
                 'fabric_id': fabric_id,
                 'cells': []
             }
-            # For each header size, get the cell value (or leave blank)
             for size in sizes:
                 if size in cells:
                     row_data['cells'].append({
@@ -866,7 +875,6 @@ class OrderUpdateView(UpdateView):
                     })
             table_rows.append(row_data)
         
-        # If there are no rows at all, create one empty row with one column
         if not table_rows:
             table_rows = [{
                 'color_id': '',
@@ -884,30 +892,28 @@ class OrderUpdateView(UpdateView):
         self.object = form.save(commit=False)
         self.object.save()
         form.save_m2m()
-        self.handle_size_quantities_update(self.object, self.request.POST)
+        try:
+            self.handle_size_quantities_update(self.object, self.request.POST)
+        except ValidationError as e:
+            form.add_error(None, e.message)
+            return self.form_invalid(form)
         return redirect('order_detail', pk=self.object.pk)
 
     def handle_size_quantities_update(self, order, post_data):
         """
-        Process the dynamic table for editing.
-        
-        Expected POST keys:
-          - header_0, header_1, … (the header sizes)
-          - For each row:
-              row-0_color, row-0_fabric
-              cell_0_0, cell_0_1, … (quantities for each size)
-              (optionally) cell_id_0_0, cell_id_0_1, … (hidden IDs for existing SizeQuantity objects)
-        
-        For each cell:
-          • If a quantity > 0 is given:
-              – If a hidden ID exists, update that SizeQuantity.
-              – Otherwise, create a new SizeQuantity and add it to the order.
-          • If the cell is empty or 0 and a SizeQuantity exists (via hidden ID), remove and delete it.
-        Finally, update the order’s many-to-many “colors” and “fabrics” using the row data.
+        Process the dynamic table for editing:
+          • Ensures that each (color, fabric) combination is unique.
+          • Updates existing SizeQuantity objects, creates new ones as needed,
+            or deletes ones where quantity is now 0/empty.
+          • Sums up all provided quantities and updates order.quantity accordingly.
+          • Updates the order's many-to-many colors and fabrics.
         """
+        used_combinations = set()  # Track (color_id, fabric_id) per row for uniqueness.
         used_colors = set()
         used_fabrics = set()
         sizes = []
+        total_quantity = 0  # Running total of all quantities
+
         col = 0
         while f'header_{col}' in post_data:
             sizes.append(post_data[f'header_{col}'])
@@ -918,6 +924,12 @@ class OrderUpdateView(UpdateView):
         while f'row-{row}_color' in post_data:
             color_id = post_data.get(f'row-{row}_color')
             fabric_id = post_data.get(f'row-{row}_fabric')
+            combination_key = (color_id, fabric_id)
+            if combination_key in used_combinations:
+                raise ValidationError("Цвет-ткань должна быть уникальной.")
+            used_combinations.add(combination_key)
+
+            # Lookup color and fabric objects.
             color = Color.objects.filter(pk=color_id).first() if color_id else None
             fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
 
@@ -926,42 +938,42 @@ class OrderUpdateView(UpdateView):
             if fabric:
                 used_fabrics.add(fabric)
             
-            # Process each cell in the row
+            # Process each cell in this row.
             for col_index, size in enumerate(sizes):
                 cell_val = post_data.get(f'cell_{row}_{col_index}', '')
                 cell_sq_id = post_data.get(f'cell_id_{row}_{col_index}', None)
                 if cell_val and cell_val.isdigit() and int(cell_val) > 0:
+                    quantity_val = int(cell_val)
+                    total_quantity += quantity_val
                     if cell_sq_id:
                         try:
                             sq_obj = SizeQuantity.objects.get(pk=cell_sq_id)
-                            sq_obj.quantity = int(cell_val)
-                            sq_obj.size = size  # update header in case it changed
+                            sq_obj.quantity = quantity_val
+                            sq_obj.size = size  # Update header if changed.
                             sq_obj.color = color
                             sq_obj.fabrics = fabric
                             sq_obj.save()
                             processed_sq_ids.add(sq_obj.pk)
                         except SizeQuantity.DoesNotExist:
-                            # In rare cases the ID may not exist: create new.
                             sq_obj = SizeQuantity.objects.create(
                                 size=size,
-                                quantity=int(cell_val),
+                                quantity=quantity_val,
                                 color=color,
                                 fabrics=fabric
                             )
                             order.size_quantities.add(sq_obj)
                             processed_sq_ids.add(sq_obj.pk)
                     else:
-                        # No existing object; create one (this happens if you add a new size column)
                         sq_obj = SizeQuantity.objects.create(
                             size=size,
-                            quantity=int(cell_val),
+                            quantity=quantity_val,
                             color=color,
                             fabrics=fabric
                         )
                         order.size_quantities.add(sq_obj)
                         processed_sq_ids.add(sq_obj.pk)
                 else:
-                    # If the cell is empty (or 0) but a SizeQuantity was previously there, remove it.
+                    # If cell is empty or 0 but an object existed, remove it.
                     if cell_sq_id:
                         try:
                             sq_obj = SizeQuantity.objects.get(pk=cell_sq_id)
@@ -971,13 +983,13 @@ class OrderUpdateView(UpdateView):
                             pass
             row += 1
 
-        # (Optional) Remove any SizeQuantity objects not present in the submitted data.
+        # (Optional) Remove any SizeQuantity not present in the submitted data.
         for sq in order.size_quantities.all():
             if sq.pk not in processed_sq_ids:
                 order.size_quantities.remove(sq)
                 sq.delete()
 
-        # Update order colors and fabrics from the rows
+        # Update order many-to-many fields.
         if used_colors:
             order.colors.set(list(used_colors))
         else:
@@ -986,6 +998,10 @@ class OrderUpdateView(UpdateView):
             order.fabrics.set(list(used_fabrics))
         else:
             order.fabrics.clear()
+
+        # Finally, update the order's overall quantity.
+        order.quantity = total_quantity
+        order.save(update_fields=['quantity'])
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderDeleteView(DeleteView):
