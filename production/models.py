@@ -62,7 +62,11 @@ class CompanyAwareQuerySet(models.QuerySet):
 
 class CompanyAwareManager(models.Manager):
     def get_queryset(self):
-        return CompanyAwareQuerySet(self.model, using=self._db)
+        qs = super().get_queryset()
+        current_company = get_current_company()
+        if current_company is not None:
+            qs = qs.filter(company=current_company)
+        return qs
     
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
@@ -240,6 +244,8 @@ class ModelOperation(CompanyAwareModel):
 class SizeQuantity(CompanyAwareModel):
     size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
     quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
+    checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
+    packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
     fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
 
@@ -287,7 +293,7 @@ class Order(CompanyAwareModel):
         (COMPLETED, 'Завершен'),
     ]
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
-    quantity = models.IntegerField(verbose_name='Количество')
+    quantity = models.IntegerField(verbose_name='Количество', default=0)
     completed_quantity = models.IntegerField(default=0, verbose_name='Завершенное количество')
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')

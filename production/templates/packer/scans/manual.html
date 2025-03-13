@@ -4,23 +4,18 @@
 
 {% block content %}
 <style>
-    /* Ensure the quantity text is inline and has some right margin */
+    /* Basic styling for inline text and table responsiveness */
     .cell-text {
       display: inline-block;
       vertical-align: middle;
       margin-right: 5px;
-    }
-    /* Ensure buttons are inline and have a little left margin */
-    .btn {
-      vertical-align: middle;
-      margin-left: 2px;
     }
 </style>
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Manual Pack" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Manual Scan" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
@@ -54,16 +49,9 @@
         <option value="">{% trans "------" %}</option>
       </select>
     </div>
-    <!-- Dropdown for Cuts -->
-    <div class="form-group">
-      <label for="cut-select">{% trans "Select Cut" %}</label>
-      <select id="cut-select" class="form-control">
-        <option value="">{% trans "------" %}</option>
-      </select>
-    </div>
   </form>
-  <!-- Container for the dynamic cut table -->
-  <div id="cut-table-container" class="mt-4"></div>
+  <!-- Container for the dynamic order table -->
+  <div id="order-table-container" class="mt-4"></div>
 </div>
 
 <script>
@@ -86,21 +74,21 @@
     document.addEventListener("DOMContentLoaded", function() {
       const clientOrderSelect = document.getElementById("client-order-select");
       const orderSelect = document.getElementById("order-select");
-      const cutSelect = document.getElementById("cut-select");
-      const cutTableContainer = document.getElementById("cut-table-container");
+      const orderTableContainer = document.getElementById("order-table-container");
     
-      let currentCutId = null;
+      let activeOrderId = null;
+      let orderTableData = null;
+      let lastUpdatedCell = null; // Optional: to highlight recently updated cells
     
       // When a client order is chosen, fetch its related orders.
       clientOrderSelect.addEventListener("change", function() {
         const clientOrderId = clientOrderSelect.value;
         if (clientOrderId) {
-          fetch(`/production/qc/ajax/get-orders/?client_order_id=${clientOrderId}`)
+          fetch(`/production/packer/ajax/get-orders/?client_order_id=${clientOrderId}`)
             .then(response => response.json())
             .then(data => {
               orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-              cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-              cutTableContainer.innerHTML = "";
+              orderTableContainer.innerHTML = "";
               data.orders.forEach(function(order) {
                 const option = document.createElement("option");
                 option.value = order.id;
@@ -111,54 +99,29 @@
             .catch(error => console.error("Error fetching orders:", error));
         } else {
           orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-          cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-          cutTableContainer.innerHTML = "";
+          orderTableContainer.innerHTML = "";
         }
       });
     
-      // When an order is chosen, fetch its related cuts.
+      // When an order is chosen, fetch its order table data.
       orderSelect.addEventListener("change", function() {
         const orderId = orderSelect.value;
         if (orderId) {
-          fetch(`/production/qc/ajax/get-cuts/?order_id=${orderId}`)
-            .then(response => response.json())
-            .then(data => {
-              cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-              cutTableContainer.innerHTML = "";
-              data.cuts.forEach(function(cut) {
-                const option = document.createElement("option");
-                option.value = cut.id;
-                option.textContent = cut.label;
-                cutSelect.appendChild(option);
-              });
-            })
-            .catch(error => console.error("Error fetching cuts:", error));
-        } else {
-          cutSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-          cutTableContainer.innerHTML = "";
-        }
-      });
-    
-      // When a cut is chosen, load and render the cut table.
-      cutSelect.addEventListener("change", function() {
-        const cutId = cutSelect.value;
-        if (cutId) {
-          currentCutId = cutId;
-          loadCutTableData(cutId)
-            .then(function(cutData) {
-              initializeCutTable(cutData);
+          loadOrderTableData(orderId)
+            .then(function(orderData) {
+              initializeOrderTable(orderData);
             })
             .catch(function(err) {
-              console.error("Error loading cut table data:", err);
+              console.error("Error loading order table data:", err);
             });
         } else {
-          cutTableContainer.innerHTML = "";
+          orderTableContainer.innerHTML = "";
         }
       });
     
-      // Function to load cut table data.
-      function loadCutTableData(cutId) {
-        return fetch(`/production/packer/cuts/get-cut-table-data/${cutId}/`)
+      // Function to fetch order table data from the server.
+      function loadOrderTableData(orderId) {
+        return fetch(`/production/packer/orders/get-order-table-data/${orderId}/`)
           .then(function(response) {
             if (!response.ok) {
               throw new Error("Network response was not ok");
@@ -167,108 +130,219 @@
           });
       }
     
-      // Initialize the cut table using the fetched data.
-      function initializeCutTable(cutData) {
-        renderCutTable(cutData);
+      // Initialize the order table with data fetched from the server.
+      function initializeOrderTable(orderData) {
+        activeOrderId = orderData.order_id;
+        orderTableData = {
+          orderName: orderData.order_name,
+          allSizes: orderData.all_sizes,
+          rows: {}  // Structure: { "Color Fabrics": { required: {...}, scanned: {...} } }
+        };
+        for (var combo in orderData.pivot_data) {
+          orderTableData.rows[combo] = {
+            required: orderData.pivot_data[combo],
+            scanned: {}
+          };
+          orderData.all_sizes.forEach(function(size) {
+            var count = 0;
+            if (orderData.packed_counts &&
+                orderData.packed_counts[combo] &&
+                orderData.packed_counts[combo][size]) {
+              count = orderData.packed_counts[combo][size];
+            }
+            orderTableData.rows[combo].scanned[size] = count;
+          });
+        }
+        renderOrderTable();
       }
     
-      // Render the cut table with +/- buttons in every cell.
-      // Render the cut table with updated button classes.
-      function renderCutTable(cutData) {
-        if (!cutData) return;
+      // Render the order table.
+      function renderOrderTable() {
+        if (!orderTableData) return;
         var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-        html += '<th>{% trans "Passports" %}</th>';
-        // Render header for each size.
-        cutData.all_sizes.forEach(function(size) {
+        html += '<th>{% trans "Order:" %} ' + orderTableData.orderName + '</th>';
+        orderTableData.allSizes.forEach(function(size) {
           html += '<th>' + size + '</th>';
         });
         html += '</tr></thead><tbody>';
-        // For each passport, display its label and quantities for each size.
-        cutData.passports.forEach(function(passport) {
-          html += '<tr>';
-          html += '<td>' + passport.label + '</td>';
-          cutData.all_sizes.forEach(function(size) {
-            var cellData = passport.quantities[size] || {packed: 0, required: 0};
-            // Render cell with inline styles.
-            html += '<td id="cell-' + passport.passport_id + '-' + size + '">';
-            html += '<span class="cell-text" style="display:inline-block;vertical-align:middle;margin-right:5px;">' + cellData.packed + '/' + cellData.required + '</span>';
-            html += ' <button class="btn btn-sm btn-primary plus-btn" style="vertical-align:middle;margin-left:2px;width:auto;margin-bottom:0;" data-passport-id="' + passport.passport_id + '" data-size="' + size + '">+</button>';
-            html += ' <button class="btn btn-sm btn-danger minus-btn" style="vertical-align:middle;margin-left:2px;width:auto;margin-bottom:0;" data-passport-id="' + passport.passport_id + '" data-size="' + size + '">-</button>';
-            html += '</td>';
+        for (var combo in orderTableData.rows) {
+          html += '<tr><td>' + combo + '</td>';
+          orderTableData.allSizes.forEach(function(size) {
+            var scanned = orderTableData.rows[combo].scanned[size] || 0;
+            var required = orderTableData.rows[combo].required[size] || 0;
+            var cellContent = '';
+            if (scanned === 0) {
+              // If no scanned value, display an input field (this input does NOT get the "edited-input" class).
+              cellContent = '<input type="text" data-combo="'+combo+'" data-size="'+size+'" style="width:50px;" placeholder="0" />/' + required;
+            } else {
+              // If scanned value exists, wrap it in a span for editing.
+              cellContent = '<span class="editable" data-combo="'+combo+'" data-size="'+size+'">' + scanned + '</span>/' + required;
+            }
+            if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
+              html += '<td style="border: 3px solid red;">' + cellContent + '</td>';
+            } else {
+              html += '<td>' + cellContent + '</td>';
+            }
           });
           html += '</tr>';
-        });
+        }
         html += '</tbody></table></div>';
-        cutTableContainer.innerHTML = html;
-      }      
-      
-  
+        orderTableContainer.innerHTML = html;
+      }
     
-      // Delegate click events for plus and minus buttons.
-      cutTableContainer.addEventListener("click", function(event) {
-        if (event.target.classList.contains("plus-btn")) {
-          updatePieceStatus(event.target, "PACKED");
-        } else if (event.target.classList.contains("minus-btn")) {
-          updatePieceStatus(event.target, "CHECKED");
+      // Listen for changes on the input fields using event delegation.
+      // Only handle inputs that do not have the "edited-input" class.
+      orderTableContainer.addEventListener('change', function(event) {
+        if (event.target.tagName.toLowerCase() === 'input' &&
+            !event.target.classList.contains('edited-input')) {
+          const inputEl = event.target;
+          const qty = parseInt(inputEl.value, 10);
+          if (isNaN(qty) || qty <= 0) {
+            return; // Ignore invalid input.
+          }
+          const combo = inputEl.getAttribute('data-combo');
+          const size = inputEl.getAttribute('data-size');
+          const orderId = activeOrderId;
+    
+          const payload = {
+            order_id: orderId,
+            combo: combo,
+            size: size,
+            quantity: qty
+          };
+    
+          fetch('/production/packer/ajax/orders/update-packed-quantity/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+          })
+          .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              // Update the scanned count for this cell and refresh the table.
+              orderTableData.rows[combo].scanned[size] = (orderTableData.rows[combo].scanned[size] || 0) + qty;
+              renderOrderTable();
+            } else {
+              alert('Failed to update: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error updating packed quantity:', error);
+            alert('Error updating packed quantity: ' + error.message);
+          });
         }
       });
     
-      // Function to update a production piece status.
-      function updatePieceStatus(button, status) {
-        // Get passport id and size from data attributes.
-        const passportId = button.getAttribute("data-passport-id");
-        const size = button.getAttribute("data-size");
-        
-        fetch('/production/packer/orders/pack-piece-status-by-passport-size/', {
-          method: "POST",
+      // Add event listeners for double-click (desktop) and double-tap (mobile) on editable spans.
+      orderTableContainer.addEventListener("dblclick", function(event) {
+        if (event.target.classList.contains("editable")) {
+          handleEditableAction(event.target);
+        }
+      });
+    
+      let lastTap = 0;
+      orderTableContainer.addEventListener("touchend", function(event) {
+        let currentTime = new Date().getTime();
+        let tapLength = currentTime - lastTap;
+        lastTap = currentTime;
+        if (tapLength < 500 && tapLength > 0) {
+          if (event.target.classList.contains("editable")) {
+            event.preventDefault();
+            handleEditableAction(event.target);
+          }
+        }
+      });
+    
+      // Function to replace the span with an input field for editing.
+      function handleEditableAction(span) {
+        const originalValue = span.textContent.trim();
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = originalValue;
+        input.className = "edit-input edited-input"; // Mark as edited-input so change event ignores it.
+        input.style.width = "50px";
+        input.setAttribute("data-combo", span.getAttribute("data-combo"));
+        input.setAttribute("data-size", span.getAttribute("data-size"));
+    
+        span.parentNode.replaceChild(input, span);
+        input.focus();
+    
+        let updateSubmitted = false;  // Flag to ensure update is only submitted once.
+    
+        const revertToSpan = function(newValue) {
+          if (!input.parentNode) return;
+          const finalValue = (newValue && newValue.trim() !== "") ? newValue : originalValue;
+          const newSpan = document.createElement("span");
+          newSpan.className = "editable";
+          newSpan.textContent = finalValue;
+          newSpan.setAttribute("data-combo", input.getAttribute("data-combo"));
+          newSpan.setAttribute("data-size", input.getAttribute("data-size"));
+          input.parentNode.replaceChild(newSpan, input);
+        };
+    
+        const submitUpdate = function() {
+          if (updateSubmitted) return;
+          updateSubmitted = true;
+          updateScannedQuantity(input.getAttribute("data-combo"), input.getAttribute("data-size"), input.value, revertToSpan, originalValue);
+        };
+    
+        input.addEventListener("blur", function() {
+          submitUpdate();
+        });
+    
+        input.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitUpdate();
+          }
+        });
+      }
+    
+      // Function to send the updated scanned quantity via AJAX.
+      function updateScannedQuantity(combo, size, newValue, callback, originalValue) {
+        const orderId = activeOrderId;
+        const payload = {
+          order_id: orderId,
+          combo: combo,
+          size: size,
+          quantity: parseInt(newValue, 10)
+        };
+    
+        fetch('/production/packer/ajax/orders/update-packed-quantity/', {
+          method: 'POST',
           headers: {
-            "X-CSRFToken": getCookie("csrftoken"),
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
           },
-          body: JSON.stringify({
-            passport_id: passportId,
-            size: size,
-            status: status
-          })
+          body: JSON.stringify(payload)
         })
         .then(response => {
-          if (!response.ok) throw new Error("Server error");
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
           return response.json();
         })
         .then(data => {
           if (data.success) {
-            if (status === "PACKED") {
-              // Find the corresponding cell's text span.
-              const cellSpan = button.parentElement.querySelector(".cell-text");
-              if (cellSpan) {
-                // The current text is in the form "packed/required".
-                let parts = cellSpan.textContent.split("/");
-                let currentPacked = parseInt(parts[0]) || 0;
-                // Increment the packed count.
-                currentPacked += 1;
-                cellSpan.textContent = currentPacked + "/" + parts[1];
-              }
-            } else if (status === "CHECKED") {
-              // Find the corresponding cell's text span.
-              const cellSpan = button.parentElement.querySelector(".cell-text");
-              if (cellSpan) {
-                // The current text is in the form "packed/required".
-                let parts = cellSpan.textContent.split("/");
-                let currentPacked = parseInt(parts[0]) || 0;
-                // Increment the packed count.
-                currentPacked -= 1;
-                cellSpan.textContent = currentPacked + "/" + parts[1];
-              }
-            }
+            callback(newValue);
           } else {
-            alert("Failed to update piece: " + data.message);
+            alert("Failed to update: " + data.message);
+            callback(originalValue);
           }
         })
         .catch(error => {
-          alert("Error updating piece status: " + error.message);
-          console.error("Error updating piece status:", error);
+          console.error("Error updating scanned quantity:", error);
+          alert("Error updating scanned quantity: " + error.message);
+          callback(originalValue);
         });
       }
+    
     });
 </script>    
 {% endblock %}

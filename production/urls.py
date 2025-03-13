@@ -144,7 +144,7 @@ urlpatterns = [
     path('qc/client/orders/order/', OrderListQcView.as_view(), name='order_list_qc'),
     path('qc/client/orders/order/<int:pk>/', OrderDetailQcView.as_view(), name='order_detail_qc'),
     path('qc/orders/api/get-piece-info/<str:barcode>/', get_piece_info, name='get_piece_info'),
-    path('qc/orders/get-order-table-data/<int:order_id>/', get_order_table_data, name='get_order_table_data'),
+    path('qc/orders/get-order-table-data/<int:order_id>/', get_order_table_data_qc, name='get_order_table_data_qc'),
     path('qc/orders/update-piece-status/<int:piece_id>/', update_piece_qc, name='update_piece_qc'),
     path('qc/scan/', scan_qc_page, name='scan_qc_page'),
     
@@ -172,11 +172,6 @@ urlpatterns = [
     path('keeper/fabrics<int:pk>/unarchive/', FabricsUnArchiveView.as_view(), name='fabrics_unarchive'), 
     path('keeper/fabrics/<int:pk>/delete/', FabricsDeleteView.as_view(), name='fabrics_delete'),
     
-    # path('packer/orders/mark-as-done/<int:passport_size_id>/', mark_as_done, name='mark-as-done'),
-    # path('cutter/orders/mark-as-sewing/<int:passport_size_id>/', mark_as_sewing, name='mark-as-sewing'),
-    # path('qc/orders/mark-as-qc/<int:passport_size_id>/', mark_as_qc, name='mark-as-qc'),
-    # path('qc/orders/mark-as-packing/<int:passport_size_id>/', mark_as_packing, name='mark-as-packing'),
-
     # For name changes
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
 
@@ -223,12 +218,10 @@ urlpatterns = [
 
     path('qc/manual_check_page/', manual_check_page, name='manual_check_page'),
     path('qc/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
-    path('qc/ajax/get-cuts/', ajax_get_cuts, name='ajax_get_cuts'),
-    path('qc/cuts/get-cut-table-data/<int:cut_id>/', get_cut_table_data, name='get_cut_table_data'),
-    path('qc/orders/update-piece-status-by-passport-size/', update_piece_status_by_passport_size, name='update_piece_status_by_passport_size'),
+    path('qc/ajax/orders/update-checked-quantity/', update_checked_quantity, name='update_checked_quantity'),
 
-    path('packer/manual_check_page/', manual_pack_page, name='manual_pack_page'),
-    path('packer/cuts/get-cut-table-data/<int:cut_id>/', get_cut_table_data_packer, name='get_cut_table_data_packer'),
-    path('packer/orders/pack-piece-status-by-passport-size/', pack_piece_status_by_passport_size, name='pack_piece_status_by_passport_size'),
+    path('packer/manual_pack_page/', manual_pack_page, name='manual_pack_page'),
+    path('packer/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
+    path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity, name='update_packed_quantity'),
 
 ]
