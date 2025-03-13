@@ -91,19 +91,32 @@
                             </div>
                         {% endif %}
                         <div class="form-group">
-                            <label for="id_username">{% trans "Username" %}</label>
-                            <input type="text" name="username" id="id_username" class="form-control">
-                            {% if form.errors.username %}
-                                {% for error in form.errors.username %}
+                            <label for="id_company">{% trans "Company" %}</label>
+                            <input type="text" name="company" id="id_company" class="form-control">
+                            {% if form.errors.company %}
+                                {% for error in form.errors.company %}
                                     {% if error == 'This field is required.' %}
-                                        <div class="error-message">Username is required.</div>
+                                        <div class="error-message">Company is required.</div>
                                     {% else %}
                                         <div class="error-message">{{ error }}</div>
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
                         </div>
-                            <div class="form-group">
+                        <div class="form-group">
+                            <label for="id_employee_id">{% trans "Employee ID" %}</label>
+                            <input type="text" name="employee_id" id="id_employee_id" class="form-control">
+                            {% if form.errors.employee_id %}
+                                {% for error in form.errors.employee_id %}
+                                    {% if error == 'This field is required.' %}
+                                        <div class="error-message">Employee is required.</div>
+                                    {% else %}
+                                        <div class="error-message">{{ error }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
                                 <label for="id_password">{% trans "Password" %}</label>
                                 <input type="password" name="password" id="id_password" class="form-control">
                                 {% if form.errors.password %}
@@ -115,7 +128,7 @@
                                     {% endif %}
                                 {% endfor %}
                             {% endif %}
-                            </div>
+                        </div>
                             <button type="submit" class="btn btn-primary btn-block button-height">{% trans "Login" %}</button>
                         </form>
                     </div>
