@@ -113,56 +113,6 @@
         </tbody>
       </table>
     </div>
-
-    <!-- Size Quantities Table -->
-    <h3>{% trans "Size Quantities by Passports" %}</h3>
-    <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th rowspan="2">{% trans "Size\Cut" %}</th>
-            {% for cut in associated_cuts %}
-              {% if cut.passports.exists %}
-                <th colspan="{{ cut.passports.count }}">{{ cut.number }}</th>
-              {% endif %}
-            {% endfor %}
-            <th rowspan="2">{% trans "Sum" %}</th>
-            <th rowspan="2">{% trans "Required" %}</th>
-            <th rowspan="2">{% trans "Missing" %}</th>
-          </tr>
-          <tr>
-            {% for cut in associated_cuts %}
-              {% if cut.passports.exists %}
-                {% for passport in cut.passports.all %}
-                  <th>№{{ passport }}</th>
-                {% endfor %}
-              {% endif %}
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for size, data in size_data.items %}
-            <tr>
-              <td>{{ size }}</td>
-              {% for cut in associated_cuts %}
-                {% if cut.passports.exists %}
-                  {% for passport in cut.passports.all %}
-                    <td>{{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}</td>
-                  {% endfor %}
-                {% endif %}
-              {% endfor %}
-              <td>{{ total_per_size|get_item:size|default:"0" }}</td>
-              <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
-              <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-"|display_over }}</td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="{{ associated_cuts|length|add:4 }}">{% trans "No size quantities available." %}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
   </div><br>
 
   <div class="container-fluid bottomContainer">

@@ -172,68 +172,80 @@ class OrderDetailCutterView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- Build pivot data for "Required Quantities" table -----
-        # We'll use order.size_quantities.all() (assumed to include both color and fabric)
+        # ----- (Optional) Build pivot data for "Required Quantities" table -----
         required_qs = order.size_quantities.all().order_by('size')
         pivot_data = {}  # keys: (color, fabric), value: {size: quantity}
         all_sizes_set = set()
         for sq in required_qs:
-            # Collect the size (header) value.
             all_sizes_set.add(sq.size)
-            # Use a tuple (color, fabric) as the key.
-            key = (sq.color, sq.fabrics)  # Adjust field names if needed.
+            key = (sq.color, sq.fabrics)
             if key not in pivot_data:
                 pivot_data[key] = {}
             pivot_data[key][sq.size] = sq.quantity
 
-        # Sort sizes. (If sizes are numeric strings, convert to int for sorting.)
         try:
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
         except ValueError:
             all_sizes = sorted(all_sizes_set)
 
-        # ----- Other context data (pass along your existing context) -----
+        # ----- Get associated cuts and passports -----
         associated_cuts = order.cuts.all().order_by('number')
         passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
-        total_per_size = defaultdict(int)
+
+        # ----- Build "Size Quantities by Passports" data aggregated by composite key -----
+        # We'll use a composite key: "Color|Fabric|Size"
+        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None}))
+        total_per_combo = defaultdict(int)
         for passport in passports:
             passport_number = passport.id
             for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-                size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport_number]['extra'] = passport_size.extra
-                total_per_size[size] += passport_size.quantity
+                sq = passport_size.size_quantity
+                # Form the composite key
+                key = f"{sq.color}|{sq.fabrics}|{sq.size}"
+                size_data[key][passport_number]['quantity'] += passport_size.quantity
+                size_data[key][passport_number]['passport_size_id'] = passport_size.id
+                total_per_combo[key] += passport_size.quantity
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+        # ----- Aggregate required quantities by the same composite key from order.size_quantities -----
+        required_by_combo = defaultdict(int)
+        for sq in order.size_quantities.all().order_by('size'):
+            key = f"{sq.color}|{sq.fabrics}|{sq.size}"
+            required_by_combo[key] += sq.quantity
 
-        def sort_key(x):
-            parts = x.split('-')
+        required_missing = {
+            key: {
+                'required': required_by_combo[key],
+                'missing': required_by_combo[key] - total_per_combo.get(key, 0)
+            }
+            for key in required_by_combo
+        }
+
+        # ----- Sort the composite keys (by color, then fabrics, then size numerically if possible) -----
+        def sort_key(combo):
+            parts = combo.split("|")
+            color = parts[0]
+            fabrics = parts[1]
             try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
+                size_val = int(parts[2])
+            except (ValueError, IndexError):
+                size_val = parts[2] if len(parts) > 2 else 0
+            return (color.lower(), fabrics.lower(), size_val)
+
         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
 
         context.update({
-            'pivot_data': pivot_data,  # Our new pivoted required data
-            'all_sizes': all_sizes,    # List of sizes for the header row
-            # (Include your other context items as before.)
+            'pivot_data': pivot_data,          # (Optional) for the Required Quantities table
+            'all_sizes': all_sizes,            # (Optional) header for that table
             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_size),
+            'total_per_size': dict(total_per_combo),
             'required_missing': required_missing,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'days_left': (order.client_order.term - timezone.now().date()).days
+                         if order.client_order.term >= timezone.now().date() else 0,
             'associated_passports': passports,
             'associated_cuts': associated_cuts,
             'sidebar_type': 'cutter'
         })
-        return context  
+        return context
     
 @method_decorator([login_required, cutter_required], name='dispatch')
 class CutCreateView(CreateView):
