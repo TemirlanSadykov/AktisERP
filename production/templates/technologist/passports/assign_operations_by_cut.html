@@ -169,18 +169,7 @@
     // Only propagate value if it's the first cell in the row
     document.querySelectorAll('.employee-input').forEach(input => {
       input.addEventListener('input', function(event) {
-        const row = input.closest('tr');
-        // Get the first input in the row
-        const firstInput = row.querySelector('.employee-input');
-        // Only propagate if the changed input is the first one
-        if (input !== firstInput) {
-          return;
-        }
-        const value = input.value;
-        // Propagate to all inputs in that row
-        row.querySelectorAll('.employee-input').forEach(inp => {
-          inp.value = value;
-        });
+        
       });
   
       // On Enter, process every input in the same row
