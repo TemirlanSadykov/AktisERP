@@ -64,20 +64,18 @@
           const diffX = touch.clientX - startX;
           const diffY = touch.clientY - startY;
     
-          // If the swipe is more than 50px down and less than 30px horizontal.
-          if (diffY > 100 && Math.abs(diffX) < 30) {
-            // Show the loading mask.
+          // Only trigger the reload if the page is at the top.
+          if (window.pageYOffset === 0 && diffY > 100 && Math.abs(diffX) < 30) {
             showLoading();
-            // Delay briefly to let the mask appear before reloading.
             setTimeout(function () {
               window.location.reload();
             }, 100);
-            // Reset start values.
+            // Reset touch coordinates.
             startX = null;
             startY = null;
           }
         }, false);
-      </script>
+    </script>    
     
 </head>
 
