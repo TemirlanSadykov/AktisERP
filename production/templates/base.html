@@ -132,6 +132,9 @@
                     <a href="{% url 'client_order_list_cutter' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                    <a href="{% url 'roll_combinations' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
+                        <i class="fas fa-clipboard fa-fw"></i><span class="sidetext">{% trans 'Keeper' %}</span></a>
                     {% if request.user.userprofile.type == 0 %}
                     <a href="{% url 'admin_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
@@ -206,7 +209,15 @@
                             <i class="fas fa-backward fa-fw"></i>
                             <span class="sidetext">{% trans 'Return' %}</span>
                         </a>
-                        {% endif %}                
+                        {% endif %}  
+                        {% if request.user.userprofile.type == 3 %}
+                        <a href="{% url 'cutter_page' %}"
+                            class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
+                            data-id="Return">
+                            <i class="fas fa-backward fa-fw"></i>
+                            <span class="sidetext">{% trans 'Return' %}</span>
+                        </a>
+                        {% endif %}              
                 </div>
                 {% comment %} {% elif sidebar_type == 'keeper' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">

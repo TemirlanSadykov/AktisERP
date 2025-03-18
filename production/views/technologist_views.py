@@ -655,44 +655,43 @@ class OrderDetailView(DetailView):
         except ValueError:
             all_sizes = sorted(all_sizes_set)
 
-        # ----- Other context data (pass along your existing context) -----
+        # # ----- Other context data (pass along your existing context) -----
         associated_cuts = order.cuts.all().order_by('number')
-        passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
-        total_per_size = defaultdict(int)
-        for passport in passports:
-            passport_number = passport.id
-            for passport_size in passport.passport_sizes.all():
-                size = passport_size.size_quantity.size
-                extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-                size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
-                size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-                size_data[extra_key][passport_number]['extra'] = passport_size.extra
-                total_per_size[size] += passport_size.quantity
+        # passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
+        # size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
+        # total_per_size = defaultdict(int)
+        # for passport in passports:
+        #     passport_number = passport.id
+        #     for passport_size in passport.passport_sizes.all():
+        #         size = passport_size.size_quantity.size
+        #         extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
+        #         size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
+        #         size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
+        #         size_data[extra_key][passport_number]['extra'] = passport_size.extra
+        #         total_per_size[size] += passport_size.quantity
 
-        required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-                            for sq in order.size_quantities.all().order_by('size')}
-        for size in total_per_size:
-            if size not in required_missing:
-                required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+        # required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
+        #                     for sq in order.size_quantities.all().order_by('size')}
+        # for size in total_per_size:
+        #     if size not in required_missing:
+        #         required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
 
-        def sort_key(x):
-            parts = x.split('-')
-            try:
-                return int(parts[0]), x
-            except ValueError:
-                return float('inf'), x
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        # def sort_key(x):
+        #     parts = x.split('-')
+        #     try:
+        #         return int(parts[0]), x
+        #     except ValueError:
+        #         return float('inf'), x
+        # sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
 
         context.update({
             'pivot_data': pivot_data,  # Our new pivoted required data
             'all_sizes': all_sizes,    # List of sizes for the header row
             # (Include your other context items as before.)
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_size),
-            'required_missing': required_missing,
+            # 'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
+            # 'total_per_size': dict(total_per_size),
+            # 'required_missing': required_missing,
             'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'associated_passports': passports,
             'associated_cuts': associated_cuts,
             'sidebar_type': 'technology'
         })
@@ -1205,6 +1204,43 @@ def assign_operations_by_cut(request, cut_id):
         'sidebar_type': 'technology'
     })
 
+@require_POST
+@technologist_required
+@login_required
+def update_passport_quantity(request):
+    """
+    Updates the factual quantity for a given PassportSize and updates all 
+    AssignedWork records related to that PassportSize.
+    """
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON."}, status=400)
+    
+    passport_size_id = data.get("passport_size_id")
+    new_quantity = data.get("new_quantity")
+    
+    if passport_size_id is None or new_quantity is None:
+        return JsonResponse({"status": "error", "message": "Missing parameters."}, status=400)
+    
+    try:
+        new_quantity = int(new_quantity)
+    except ValueError:
+        return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
+    
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "PassportSize not found."}, status=404)
+    
+    # Update the factual field of PassportSize.
+    passport_size.factual = new_quantity
+    passport_size.save()
+    
+    # Update all AssignedWork records related to this PassportSize.
+    AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
+    
+    return JsonResponse({"status": "success"})
 
 @login_required
 @technologist_required

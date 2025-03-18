@@ -55,7 +55,7 @@ def packer_required(view_func):
 def keeper_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
-        if not hasattr(request.user, 'userprofile') or request.user.userprofile.type != UserProfile.KEEPER and request.user.userprofile.type != UserProfile.ADMIN:
+        if not hasattr(request.user, 'userprofile') or request.user.userprofile.type != UserProfile.KEEPER and request.user.userprofile.type != UserProfile.ADMIN and request.user.userprofile.type != UserProfile.CUTTER:
             return redirect('login')
         return view_func(request, *args, **kwargs)
     return _wrapped_view

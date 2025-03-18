@@ -408,7 +408,7 @@ class PassportSize(CompanyAwareModel):
     extra = models.CharField(max_length=5, blank=True, null=True)
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
     quantity = models.IntegerField(verbose_name='Количество')
-    
+    factual = models.IntegerField(verbose_name='Факт', blank=True, null=True)
     
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"

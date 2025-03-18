@@ -102,9 +102,7 @@
   function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
   }
-</script>
-<script>
-
+  
   document.addEventListener('DOMContentLoaded', function() {
     const paymentCard = document.getElementById('payment-card');
     paymentCard.addEventListener('click', function(){
@@ -136,7 +134,7 @@
         document.getElementById('payment-details-container').innerHTML = paymentHtml;
         document.getElementById('orders-filter-container').innerHTML = ordersHtml;
         attachEmployeeLinkListeners();
-        attachOrderCheckboxListeners();
+        attachOrderFilterButtonListener();
       })
       .catch(error => {
         alert('Error fetching data: ' + error);
@@ -146,15 +144,16 @@
       });
     });
 
-    // Attach listeners for order checkboxes
-    function attachOrderCheckboxListeners() {
-      document.querySelectorAll('.order-checkbox').forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
+    // Attach listener for the order filter button instead of per-checkbox changes
+    function attachOrderFilterButtonListener() {
+      const filterButton = document.getElementById('orders-filter-btn');
+      if (filterButton) {
+        filterButton.addEventListener('click', function() {
           const selectedOrderIds = Array.from(document.querySelectorAll('.order-checkbox:checked'))
             .map(cb => cb.value);
           updatePaymentDetails(selectedOrderIds);
         });
-      });
+      }
     }
 
     function updatePaymentDetails(orderIds) {
@@ -282,7 +281,7 @@
         })
         .then(html => {
           document.getElementById('production-details-container').innerHTML = html;
-          attachOrderLinkListeners()
+          attachOrderLinkListeners();
         })
         .catch(error => {
           alert('Error fetching production details: ' + error);
@@ -377,7 +376,5 @@
     }
     
   });
-
-  // Existing function to attach employee link listeners (if needed)
 </script>
 {% endblock %}
