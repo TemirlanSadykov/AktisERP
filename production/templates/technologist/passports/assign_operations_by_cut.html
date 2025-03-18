@@ -169,7 +169,19 @@
     // Only propagate value if it's the first cell in the row
     document.querySelectorAll('.employee-input').forEach(input => {
       input.addEventListener('input', function(event) {
-        
+        const row = input.closest('tr');
+        // Get all inputs in the row and select the last one
+        const inputs = row.querySelectorAll('.employee-input');
+        const lastInput = inputs[inputs.length - 1];
+        // Only propagate if the changed input is the last one
+        if (input !== lastInput) {
+          return;
+        }
+        const value = input.value;
+        // Propagate to all inputs in that row
+        inputs.forEach(inp => {
+          inp.value = value;
+        });
       });
   
       // On Enter, process every input in the same row
