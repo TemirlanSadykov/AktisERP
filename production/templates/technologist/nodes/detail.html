@@ -26,7 +26,7 @@
 <div class="container maincontr">
   <div class="container">
     <div class="card-header d-flex justify-content-between align-items-center">
-      {% trans "Node Details:" %} {{ node.name }}
+      {{ node.name }}
       {% if node.is_archived %}
         <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans "Un Archive" %}</a>
       {% endif %}
@@ -34,9 +34,6 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-6 details">
-          <p><strong>{% trans "Number:" %}</strong> {{ node.number }}</p>
-          <p><strong>{% trans "Is common:" %}</strong> {{ node.is_common }}</p>
-          <p><strong>{% trans "Type:" %}</strong> {{ node.get_type_display }}</p>
           {% if not node.is_archived %}
             <a href="{% url 'node_edit' node.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
           {% endif %}

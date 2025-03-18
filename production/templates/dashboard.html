@@ -230,7 +230,7 @@
             </div>
             <div id="sidebar" class="list-group list-group-flush sidenavres">
                 <a href="#" onclick="openTab(event, 'Overview')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="user_redirect">
-                    <i class="fas fa-cubes fa-fw"></i><span class="sidetext">{% trans 'Overview' %}</span>
+                    <i class="fas fa-sitemap fa-fw"></i><span class="sidetext">{% trans 'Dashboard' %}</span>
                 </a>
                 <a href="#" onclick="openTab(event, 'Search')" class="list-group-item list-group-item-action text-black collapsesidebarset tablink" data-id="search">
                     <i class="fas fa-search fa-fw"></i><span class="sidetext">{% trans 'Search' %} </span>
@@ -648,30 +648,46 @@
                 </div>
               </nav>
               <div class="container" style="padding:5%;">
-            <table class="table rounded-table">
-                <thead>
-                    <tr>
-                        <th>{% trans 'Model Name' %}</th>
-                        <th>{% trans 'Quantity' %}</th>
-                        <th>{% trans 'Price' %}</th>
-                        <th>{% trans 'Assortment' %}</th>
-                        <th>{% trans 'Color' %}</th>
-                        <th>{% trans 'Fabrics' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders_data %}
-                    <tr>
-                        <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
-                        <td>{{ order.quantity }}</td>
-                        <td>{{ order.total_price }}</td>
-                        <td>{{ order.assortment_name }}</td>
-                        <td>{{ order.color }}</td>
-                        <td>{{ order.fabrics }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                <table class="table rounded-table">
+                    <thead>
+                        <tr>
+                            <th>{% trans 'Model Name' %}</th>
+                            <th>{% trans 'Quantity' %}</th>
+                            <th>{% trans 'Price' %}</th>
+                            <th>{% trans 'Assortment' %}</th>
+                            <th>{% trans 'Color' %}</th>
+                            <th>{% trans 'Fabrics' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders_data %}
+                        <tr>
+                            <td><a href="#" class="linkset" data-toggle="modal" data-target="#orderModal" onclick="fetchOrderDetails({{ order.id }})">{{ order.model_name }}</a></td>
+                            <td>{{ order.quantity }}</td>
+                            <td>{{ order.total_price }}</td>
+                            <td>{{ order.assortment_name }}</td>
+                            <td>
+                                {% if order.colors_list %}
+                                    {% for color in order.colors_list %}
+                                        {{ color }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% trans "No colors" %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.fabrics_list %}
+                                    {% for fabric in order.fabrics_list %}
+                                        {{ fabric }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% trans "No fabrics" %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
         
             <div class="modal fade" id="orderModal" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
@@ -729,8 +745,8 @@
                 <tbody>
                     {% for roll in inventory_data %}
                         <td><a href="#" data-toggle="modal" class="linkset" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
-                        <td>{{ roll.color }}</td>
-                        <td>{{ roll.fabrics }}</td>
+                        <td>{{ roll.color_name }}</td>
+                        <td>{{ roll.fabrics_name }}</td>
                         <td>{{ roll.meters }}</td>
                         <td>{{ roll.used_meters }}</td>
                         <td>{{ roll.available_meters }}</td>
@@ -858,9 +874,6 @@
                                     <p><strong>Имя:</strong> ${data.name}</p>
                                 </div>
                                 <div class="col-12 mb-2">
-                                    <p><strong>Контактная Информация:</strong> ${data.contact_info}</p>
-                                </div>
-                                <div class="col-12 mb-2">
                                     <p><strong>Затраты:</strong> ${data.total_spendings}</p>
                                 </div>
                                 <div class="col-12">
@@ -911,18 +924,52 @@
         }
     </script>
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('start_date');
+        const endDate = urlParams.get('end_date');
         function fetchEmployeeDetails(employeeId) {
-            fetch(`/production/api/employees/${employeeId}/`)
+            fetch(`/production/api/employees/${employeeId}/?start_date=${startDate}&end_date=${endDate}`)
                 .then(response => response.json())
                 .then(data => {
                     const modalBody = document.querySelector('#employeeModal .modal-body');
-                    const operationsList = data.operations.map(op => `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            ${op.operation}: ${op.quantity}
-                            <span class="badge badge-primary badge-pill">Avg Time: ${op.average_time_per_unit.toFixed(2)}s (Preferred: ${op.preferred_completion_time}s)</span>
-                        </li>
-                    `).join('');
-    
+                    
+                    // Extract unique operations and orders
+                    const operations = data.operations; // Keep full objects
+                    const orders = data.orders.map(order => ({ id: order.id, model_name: order.model_name }));
+                    
+                    // Ensure operation distribution exists
+                    const operationDistribution = data.operation_distribution || [];
+        
+                    // Create table header
+                    let tableHtml = `
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Операция</th>
+                                        <th>Норма времени (сек)</th>  <!-- New Column -->
+                                        ${orders.map(order => `<th>${order.model_name}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+        
+                    // Populate table body with operation quantities per order
+                    operations.forEach(op => {
+                        tableHtml += `<tr>
+                            <td><strong>${op.operation}</strong></td>
+                            <td class="text-center">${op.preferred_completion_time}</td>  <!-- New Column -->                    
+                            `;
+                        orders.forEach(order => {
+                            const operationData = operationDistribution.find(d => d.operation === op.operation && d.order === order.id);
+                            const quantity = operationData ? operationData.quantity : 0;
+                            tableHtml += `<td class="text-center">${quantity}</td>`;
+                        });
+                        tableHtml += `</tr>`;
+                    });
+        
+                    tableHtml += `</tbody></table></div>`;
+        
                     modalBody.innerHTML = `
                         <div class="employee-details container-fluid">
                             <div class="row">
@@ -940,7 +987,10 @@
                                 </div>
                                 <div class="col-12 mb-2">
                                     <p><strong>Работал(-а) над операциями:</strong></p>
-                                    <ul class="list-group">${operationsList}</ul>
+                                    ${tableHtml}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <p><strong>Время активной работы:</strong> ${data.total_time}с</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Число браков:</strong> ${data.total_defects}</p>
@@ -951,10 +1001,11 @@
                             </div>
                         </div>
                     `;
-    
+        
+                    // Generate production chart
                     const labels = data.units_over_time.map(item => item.date);
                     const unitsProduced = data.units_over_time.map(item => item.units);
-    
+        
                     var ctx = document.getElementById('productionChart').getContext('2d');
                     var productionChart = new Chart(ctx, {
                         type: 'line', 
@@ -969,6 +1020,8 @@
                             }]
                         },
                         options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
                             scales: {
                                 y: {
                                     beginAtZero: true
@@ -978,7 +1031,7 @@
                     });
                 })
                 .catch(error => console.error('Error loading employee details:', error));
-        }
+        }                
     </script>
 
     <script>
@@ -991,11 +1044,9 @@
                         <div class="passport-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Паспорт:</strong> ${passport.passport_number}<br>
+                                    <strong>Крой:</strong> ${passport.cut_number}<br>
                                     <strong>Размеры:</strong> ${passport.size_range}<br>
-                                    ${passport.rolls.map(roll => `
-                                        <span>${roll.roll_name}: ${roll.meters} метров</span>
-                                    `).join(', ')}
                                 </p>
                             </a>
                         </div>
@@ -1005,7 +1056,7 @@
                         <div class="order-details container-fluid">
                             <div class="row">
                                 <div class="col-12 mb-2">
-                                    <p><strong>Модель:</strong> ${data.model_name}</p>
+                                    <p><strong>Модель:</strong> ${data.model_name} - ${data.assortment}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Количество:</strong> ${data.quantity}</p>
@@ -1020,7 +1071,7 @@
                                     <p><strong>Статус:</strong> ${data.status}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Ассортимент:</strong> ${data.assortment}</p>
+                                    <p><strong>Ткань:</strong> ${data.fabrics}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Цвет:</strong> ${data.color}</p>
@@ -1046,7 +1097,8 @@
                         <div class="passport-item mb-3 p-3 border rounded shadow-sm">
                             <a href="/production/admin/passports/${passport.passport_id}/" class="text-decoration-none text-dark" target="_blank">
                                 <p>
-                                    <strong>Паспорт ID:</strong> ${passport.passport_id}<br>
+                                    <strong>Паспорт:</strong> ${passport.passport_number}<br>
+                                    <strong>Крой:</strong> ${passport.cut_number}<br>
                                     <strong>Метров использовано:</strong> ${passport.meters_used}<br>
                                     <strong>Модель:</strong> ${passport.passport_details.order ? passport.passport_details.order : 'N/A'}
                                 </p>

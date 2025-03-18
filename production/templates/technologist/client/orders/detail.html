@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Technologist Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+  <div class="container maincontr">
+  <div class="container">
+    <!-- <div class="card"> -->
+          <div class="card-header">
+            <div class="row">
+              <div class="col-md-9" style="margin:auto">
+                {{ client_order.order_number }}
+              </div>
+              <div class="col-md-3 text-right">
+                  <form action="{% url 'client_order_complete' client_order.pk %}" method="post" class="complete-order-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn completebutton">{% if client_order.status == client_order.NEW %}{% trans "In progress" %}{% elif client_order.status == client_order.IN_PROGRESS %}{% trans "Complete" %}{% else %}{% trans "Initiate" %}{% endif %}</button>
+                  </form>
+                {% if client_order.is_archived %}
+                  <a href="javascript:void(0);" id="unArchiveBtn" class="btn btn-warning unarchive-btn">{% trans "Unarchive" %}</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-md-6 details">
+                    <p><strong>{% trans "Client:" %}</strong> {{ client_order.client.name }}</p>
+                    <p><strong>{% trans "Launch:" %}</strong> {{ client_order.launch|date:"Y-m-d" }}</p>
+                    <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
+                    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+                    <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
+                    <p><strong>{% trans "Info:" %}</strong> {% if client_order.info %} {{ client_order.info }} {% endif %} </p>
+                    {% if not client_order.is_archived %}  
+                      <a href="{% url 'client_order_edit' client_order.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
+                    {% endif %} 
+                    <a href="javascript:void(0);" id="deleteBtn" ><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+                  </div>
+                  <form id="archiveForm" action="{% if client_order.is_archived %} 
+                  {% url 'client_order_delete' client_order.pk %}
+                  {% else %}
+                  {% url 'client_order_archive' client_order.pk %}
+                  {% endif %}"
+                  method="post" style="display:none;">
+                    {% csrf_token %}
+                  </form>
+                  <form id="unArchiveForm" action="{% url 'client_order_unarchive' client_order.pk %}" method="post" style="display:none;">
+                    {% csrf_token %}
+                  </form>
+                  <div class="col-md-5 text-center">
+                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+                  </div>
+              </div>
+          </div>
+          <div class="container-fluid bottomContainer">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>{% trans "Associated Models" %}</h3>
+            </div>
+            <div class="col-md-6 text-center">
+                <a href="{% url 'order_create' client_order.pk %}" class="btn btn-primary">{% trans 'Create New Task' %}</a>
+            </div>
+            </div><br>
+            {% if orders %}
+            {% for order in orders %}
+            <div class="list-group" >
+                <a href="{% url 'order_detail' order.pk %}"
+                  class="list-group-item list-group-item-action"
+                  style="color: {% if order.status == 2 %}green{% else %}red{% endif %}; border: 1px solid #ced4da; border-radius:0px;">
+                  {{ order.model.name }} - {% for color in order.colors.all %}
+                                              {{ color }}{% if not forloop.last %}, {% endif %}
+                                          {% empty %}
+                                              {% trans "No colors selected" %}
+                                          {% endfor %} - 
+                                          {% for fabric in order.fabrics.all %}
+                                              {{ fabric }}{% if not forloop.last %}, {% endif %}
+                                          {% empty %}
+                                              {% trans "No fabrics selected" %}
+                                          {% endfor %} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})
+                </a>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="list-group" >
+                <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+                  {% trans "No associated models." %}
+                </a>
+            </div>
+            {% endif %}
+            </div>
+          <div class="modal" id="deleteModal">
+            <div class="modal-content">
+                <span class="close" id="closeBtn">&times;</span>
+                <p>{% trans "Are you sure you want to delete this client?" %}</p>
+                <div class="modal-buttons">
+                    <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+                    <button class="btn cancel" id="cancelBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal" id="unarchiveModal">
+            <div class="modal-content">
+                <span class="close" id="closeUnarchiveBtn">&times;</span>
+                <p>{% trans "Are you sure you want to unarchive this client order?" %}</p>
+                <div class="modal-buttons">
+                    <button class="btn confirm" id="confirmUnarchiveBtn">{% trans 'Confirm' %}</button>
+                    <button class="btn cancel" id="cancelUnarchiveBtn">{% trans 'Cancel' %}</button>
+                </div>
+            </div>
+        </div>
+<!-- </div> -->
+      </div>
+</div>
+  <script>
+    document.getElementById('deleteBtn').onclick = function() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    };
+
+    document.getElementById('closeBtn').onclick = function() {
+        document.getElementById('deleteModal').style.display = 'none';
+    };
+
+    document.getElementById('cancelBtn').onclick = function() {
+        document.getElementById('deleteModal').style.display = 'none';
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        document.getElementById('archiveForm').submit();
+    };
+
+    document.getElementById('unArchiveBtn').onclick = function() {
+        document.getElementById('unarchiveModal').style.display = 'flex';
+    };
+
+    document.getElementById('closeUnarchiveBtn').onclick = function() {
+        document.getElementById('unarchiveModal').style.display = 'none';
+    };
+
+  document.getElementById('confirmUnarchiveBtn').onclick = function() {
+      document.getElementById('unArchiveForm').submit();
+  };
+</script>
+{% endblock %}

@@ -27,118 +27,72 @@
 
 <div class="container maincontr" style="max-width: 100%;">
   <div class="card-header">
-    {% trans "Assign Operations for Passport" %} №{{ passport.id }}        
+    {% trans "Assign Operations for Passport" %} №{{ passport }}    
   </div>
   <div class="container" style="max-width: 100%;">
-    <!-- <div class="card"> -->
-
           <div class="card-body">
-              <!-- <div class="row"> -->
-                  <!-- <div class="col-md-12 details"> -->
                     <p>
                       <strong>{% trans "Model:" %}</strong> {{ passport.cut.order.model.name }},
-                      <strong>{% trans "Roll:" %}</strong> {{ passport.roll }},
-                      <strong>{% trans "Usage:" %}</strong> {{ passport.meters }}м,
+                      <strong>{% trans "Color:" %}</strong>
+                        {% if passport.passport_sizes.all %}
+                          {% with ps=passport.passport_sizes.all.0 %}
+                            {{ ps.size_quantity.color }}
+                          {% endwith %}
+                        {% else %}
+                          -
+                        {% endif %}
+                        <strong>{% trans "Fabrics:" %}</strong>
+                        {% if passport.passport_sizes.all %}
+                          {% with ps=passport.passport_sizes.all.0 %}
+                            {{ ps.size_quantity.fabrics }}
+                          {% endwith %}
+                        {% else %}
+                          -
+                        {% endif %}
                       <strong>{% trans "Date:" %}</strong> {{ passport.cut.date|date:"Y-m-d" }}
                     </p>
-                  <!-- </div> -->
-
-
-
-              <!-- </div> -->
           </div>
 
-<!-- </div> -->
-
-          <form id="operationAssignmentForm" class="operation-form">
-            {% csrf_token %}
-            <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
-                  {% for ps in size_quantities %}
-                    <th>
-                      {{ ps.size_quantity.size }}<br>
-                      ({{ ps.quantity }})
-                    </th>
+<form id="operationAssignmentForm" class="operation-form">
+  {% csrf_token %}
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th style="padding: 0px 161px 0px 4px;">{% trans "Operation \ Size" %}</th>
+          {% for ps in size_quantities %}
+            <th>
+              {% if ps.extra %}{{ ps.size_quantity.size }} - {{ ps.extra }}{% else %}{{ ps.size_quantity.size }}{% endif %}<br>
+              ({{ ps.quantity }})
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for operation in operations %}
+          <tr>
+            <td>{{ operation.name }}</td>
+            {% for sq in size_quantities %}
+              <td>
+                {% get_work work_by_op_and_size operation.id sq.id as works %}
+                {% if works %}
+                  {% for work in works %}
+                    <div style="display: block;">
+                      <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
+                    </div>
                   {% endfor %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for operation in operations %}
-                    {% if not operation.node.is_common %}
-                    <tr>
-                        <td>{{ operation.name }}</td>
-                        {% for sq in size_quantities %}
-                        <td>
-                            {% get_work work_by_op_and_size operation.id sq.id as works %}
-                            {% if works %}
-                                {% for work in works %}
-                                <div style="display: block;">
-                                    <span class="{{ work.id }} editable" style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" data-work="{{ work.id }}">{{ work.employee.employee_id }} ({{ work.quantity }})</span><br>
-                                    {% if work.end_time %}
-                                      <input type="checkbox" class="success-checkbox" data-work="{{ work.id }}" style="display: inline; margin-left: 10px;" {% if work.is_success %} checked {% endif %}>
-                                      <i class="fas fa-redo reassign-icon" data-work="{{ work.id }}" title="{% trans 'Reassign Work' %}" style="display: inline; margin-left: 5px;"></i>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;" enterkeyhint="done">
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endif %}
-                {% endfor %}
-            </tbody>    
-            </table>
-          </div>
-          </form>
-          <div class="form-actions">
-            {% comment %} <form method="post" action="{% url 'complete_passport' passport.id %}" class="completion-form">
-              {% csrf_token %}
-              {% if passport.is_completed %}
-                <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to reopen this passport?' %}');">{% trans "Reopen" %}</button>
-              {% else %}
-                <button type="submit" class="btn complete-btn" onclick="return confirm('{% trans 'Are you sure you want to mark this passport as completed?' %}');">{% trans "Complete" %}</button>
-              {% endif %}
-            </form> {% endcomment %}
-            {% comment %} <a href="{% url 'download_passport_excel' passport.id %}" class="btn edit-btn">{% trans "Download Excel" %}</a>
-            <a href="{% url 'order_detail_technologist' passport.cut.order.pk %}" class="btn back-btn">{% trans "Back" %}</a> {% endcomment %}
-          </div>
-          <div id="reassignPopupOverlay" class="reassign-popup-overlay" style="display: none;">
-            <div id="reassignPopup" class="reassign-popup" style="display: none;">
-              <div id="reassignedWorksList" class="reassigned-works-list">
-                <!-- Reassigned works will be displayed here as bullet points -->
-              </div>
-              <form id="reassignForm" class="reassign-form">
-                <label for="newEmployeeId">{% trans "New Employee ID" %}:</label>
-                <input type="text" id="newEmployeeId" name="newEmployeeId">
-            
-                <label for="reassignQuantity">{% trans "Quantity" %}:</label>
-                <input type="number" id="reassignQuantity" name="reassignQuantity">
-          
-                <label for="reassignReason">{% trans "Reason" %}:</label>
-                <input type="text" id="reassignReason" name="reassignReason">
-            
-                <input type="hidden" id="reassignWorkId" name="reassignWorkId">
-                <div class="modal-buttons">
-
-                <button type="submit" class="buttonsetting" style="background-color: #007bff !important;">{% trans "Submit" %}</button>
-                <button type="button" onclick="closePopup()" class="cancel">{% trans "Cancel" %}</button>
-                </div>
-              </form>
-            </div>  
-          </div>
-          <div class="modal" id="messageModal">
-            <div class="modal-content">
-                <span class="close" id="closeMessageBtn">&times;</span>
-                <p id="messageModalContent"></p>
-            </div>
-        </div>
+                {% else %}
+                  <input type="text" name="employee_{{ operation.id }}_{{ sq.id }}" class="employee-input" placeholder="{% trans 'ID (Quan.)' %}" style="width: 80px;" enterkeyhint="done">
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
 </div>
-      <!-- </div> -->
 </div>
 
 
@@ -214,102 +168,6 @@
         });
       }
     });
-  
-    document.querySelectorAll('.success-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        const workId = this.getAttribute('data-work');
-        const isChecked = this.checked;
-        updateWorkSuccess(workId, isChecked);
-      });
-    });
-    
-    document.querySelectorAll('.reassign-icon').forEach(icon => {
-      icon.addEventListener('click', function() {
-          const assignedWorkId = this.getAttribute('data-work');
-          document.getElementById('reassignWorkId').value = assignedWorkId;
-          fetch(`/production/technologist/passports/api/reassigned_works/${assignedWorkId}/`, {
-              headers: {
-                  'X-Requested-With': 'XMLHttpRequest'
-              },
-          })
-          .then(response => response.json())
-          .then(data => {
-              const reassignedWorksList = document.getElementById('reassignedWorksList');
-              reassignedWorksList.innerHTML = ''; // Clear previous content
-  
-              if (data.reassigned_works && data.reassigned_works.length > 0) {
-                  const list = document.createElement('ul');
-                  data.reassigned_works.forEach(work => {
-                      const item = document.createElement('li');
-                      item.innerHTML = `Employee ID: ${work.new_employee__employee_id}, Quantity: ${work.reassigned_quantity}, Reason: ${work.reason}`;
-                      if (work.is_completed) item.style.color = 'red';
-                      if (work.is_success) item.style.color = 'green';           
-                      const checkbox = document.createElement('input');
-                      checkbox.type = 'checkbox';
-                      checkbox.addEventListener('change', () => {
-                        const formData = new FormData();
-                        formData.append('reassigned_work_id', work.id);
-                        fetch('/production/technologist/passports/reassign-work/complete/', {
-                            method: 'POST',
-                            body: formData,
-                            headers: {'X-CSRFToken': getCookie('csrftoken')},
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            alert('Не получилось обновить');
-                            closePopup();
-                        })
-                        .catch(error => console.error('Error:', error));
-                      });
-  
-                      item.appendChild(checkbox);
-                      list.appendChild(item);
-                  });
-                  reassignedWorksList.appendChild(list);
-              } else {
-                  reassignedWorksList.textContent = 'No reassigned works yet.';
-              }
-  
-              showPopup();
-          });
-      });
-    });
-  
-    document.getElementById('reassignForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-    
-      const workId = document.getElementById('reassignWorkId').value;
-      const newEmployeeId = document.getElementById('newEmployeeId').value;
-      const quantity = document.getElementById('reassignQuantity').value;
-      const reason = document.getElementById('reassignReason').value;
-    
-      const xhr = new XMLHttpRequest();
-      const url = `/production/technologist/passports/reassign-work/`;
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-    
-      const data = {
-        work_id: workId,
-        new_employee_id: newEmployeeId,
-        quantity: parseInt(quantity),
-        reason: reason
-      };
-    
-      xhr.onload = function() {
-        const response = JSON.parse(xhr.responseText);
-        if (xhr.status === 200) {
-          alert("Успешное обновление");
-          closePopup();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-          alert('Не получилось обновить');
-        }
-      };
-    
-      xhr.send(JSON.stringify(data));
-    });
-    
   });
   
   function assignOperation(operationId, passport_size_id, value, inputElement) {
@@ -371,37 +229,6 @@
     };
   
     xhr.send(JSON.stringify(data));
-  }
-  
-  function updateWorkSuccess(workId, isSuccess) {
-    const xhr = new XMLHttpRequest();
-    const url = `/production/technologist/passports/update_work_success/`;
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
-  
-    xhr.onload = function() {
-      if (xhr.status === 200) {
-        const span = document.querySelector(`span[data-work="${workId}"]`);
-        if (span) {
-          span.style.color = isSuccess ? 'green' : 'red';
-        }
-      } else {
-        console.error('Failed to update work success status');
-        alert('Не получилось обновить');
-      }
-    };
-  
-    xhr.send(`work_id=${workId}&is_success=${isSuccess}`);
-  }
-  function showPopup() {
-    document.getElementById('reassignPopup').style.display = 'block';
-    document.getElementById('reassignPopupOverlay').style.display = 'flex';
-  }
-  
-  function closePopup() {
-    document.getElementById('reassignPopup').style.display = 'none';
-    document.getElementById('reassignPopupOverlay').style.display = 'none';
   }
 </script>
 <script>

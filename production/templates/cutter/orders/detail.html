@@ -8,7 +8,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Cutter Dashboard" %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Cutter Dashboard" %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -26,7 +26,7 @@
 
 <div class="container maincontr">
   <div class="card-header">
-    {% trans "Model Details:" %} {{ order.model.name }}          
+    {{ order.model.name }}          
   </div>
   <div class="container">
     <div class="card-body">
@@ -48,75 +48,131 @@
             {% endfor %}
           </p>
           <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
-          <p><strong>{% trans "Completed Quantity:" %}</strong> {{ order.completed_quantity }}</p>
           <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
           <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
         </div>
         <div class="col-md-5 text-center">
-          <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+          {% if order.model.photo %}
+            <div class="operation-photo">
+              <img src="{{ order.model.photo.url }}" alt="{% trans 'Model Photo' %}">
+            </div>
+          {% else %}
+            <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
+          {% endif %}
         </div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-6">
-        <h3>{% trans "Required Quantities" %}</h3>
-      </div>
-    </div><br>
+    <!-- Required Quantities Table -->
+    <h3>{% trans "Required Quantities" %}</h3>
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>{% trans "Color & Fabric" %}</th>
+            {% for size in all_sizes %}
+              <th>{{ size }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, row in pivot_data.items %}
+            <tr>
+              <td>
+                {{ key.0 }} &amp; {{ key.1 }}
+              </td>
+              {% for size in all_sizes %}
+                <td>{{ row|get_item:size|default:"" }}</td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="{{ all_sizes|length|add:'1' }}">{% trans "No required quantities available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h3>{% trans "Size Quantities by Passports" %}</h3>
     <div class="table-responsive">
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>{% trans "Size" %}</th>
-            <th>{% trans "Color" %}</th>
-            <th>{% trans "Required" %}</th>
+            <th rowspan="2">{% trans "Size\Cut" %}</th>
+            {% for cut in associated_cuts %}
+              {% if cut.passports.exists %}
+                <th colspan="{{ cut.passports.count }}">{{ cut.number }}</th>
+              {% endif %}
+            {% endfor %}
+            <th rowspan="2">{% trans "Sum" %}</th>
+            <th rowspan="2">{% trans "Required" %}</th>
+            <th rowspan="2">{% trans "Missing" %}</th>
+          </tr>
+          <tr>
+            {% for cut in associated_cuts %}
+              {% if cut.passports.exists %}
+                {% for passport in cut.passports.all %}
+                  <th>№{{ passport }}</th>
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
           </tr>
         </thead>
         <tbody>
-          {% for item in required_data %}
+          {% for size, data in size_data.items %}
             <tr>
-              <td>{{ item.size }}</td>
-              <td>{{ item.color }}</td>
-              <td>{{ item.required }}</td>
+              <td>{{ size }}</td>
+              {% for cut in associated_cuts %}
+                {% if cut.passports.exists %}
+                  {% for passport in cut.passports.all %}
+                    <td>{{ size_data|get_item:size|get_item:passport.id|get_item:"quantity"|default_if_none:"0" }}</td>
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+              <td>{{ total_per_size|get_item:size|default:"0" }}</td>
+              <td>{{ required_missing|get_item:size|get_item:"required"|default:"-" }}</td>
+              <td>{{ required_missing|get_item:size|get_item:"missing"|default:"-"|display_over }}</td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="3">{% trans "No required sizes available." %}</td>
+              <td colspan="{{ associated_cuts|length|add:4 }}">{% trans "No size quantities available." %}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div><br>
-  
+
   <div class="container-fluid bottomContainer">
     <div class="row">
       <div class="col-md-6" style="margin:auto;">
         <h3>{% trans "Associated Cuts" %}</h3>
       </div>
       <div class="col-md-6 text-center">
-          <a href="{% url 'cut_create' order.pk %}" class="btn btn-primary">{% trans "Create New Cut" %}</a>
+        <a href="{% url 'cut_create' order.pk %}" class="btn btn-primary">{% trans "Create New Cut" %}</a>
       </div>
     </div><br>
-      {% if associated_cuts %}
+    {% if associated_cuts %}
+      <div class="list-group">
         {% for cut in associated_cuts %}
-        <div class="list-group">
-          <a href="{% url 'cut_detail' cut.pk %}"
-            class="list-group-item list-group-item-action"
-            style="border: 1px solid #ced4da; border-radius: 0px;">
-            {% trans "Cut Number:" %} {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
-          </a>
-        </div>
+            <a href="{% url 'cut_detail' cut.pk %}"
+               class="list-group-item list-group-item-action cut-link" 
+               style="border: 1px solid #ced4da;"
+               data-bs-target="#collapse{{ cut.id }}"
+               aria-expanded="false" 
+               aria-controls="collapse{{ cut.id }}">
+              {% trans "Cut" %}: {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
+            </a>
         {% endfor %}
-      {% else %}
-        <div class="list-group">
-          <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-            {% trans "No associated cuts." %}
-          </a>
-        </div>
-      {% endif %}
-    </div>
+      </div>
+    {% else %}
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
+          {% trans "No associated cuts." %}
+        </a>
+      </div>
+    {% endif %}
   </div>
-
-
+</div>
 {% endblock %}

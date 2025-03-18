@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+{% load custom_filters %}
+
+
+<h2>{% trans "Order Selection" %}</h2>
+
+<!-- Step 1: Date range filter form -->
+<form method="get" class="form-row align-items-end">
+  <div class="col-md-4 mb-3">
+    <label for="start_date">{% trans 'Start Date' %}</label>
+    <input type="date" id="start_date" name="start_date" class="form-control"
+           value="{{ start_date|default_if_none:'' }}">
+  </div>
+  <div class="col-md-4 mb-3">
+    <label for="end_date">{% trans 'End Date' %}</label>
+    <input type="date" id="end_date" name="end_date" class="form-control"
+           value="{{ end_date|default_if_none:'' }}">
+  </div>
+  <div class="col-md-4 mb-3">
+    <button type="submit" class="btn btn-primary w-100">
+      {% trans "Filter Orders" %}
+    </button>
+  </div>
+</form>
+
+<!-- Step 2: If orders found, display them in a form to let user select which orders -->
+{% if orders %}
+  <hr>
+  <form method="post" class="form">
+    {% csrf_token %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>{% trans "Select" %}</th>
+          <th>{% trans "Model" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          <tr>
+            <td>
+              <input type="checkbox" name="order_ids" value="{{ order.id }}">
+            </td>
+            <td>{{ order.model.name }} - {% for color in order.colors.all %}
+                                            {{ color }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                            {% trans "No colors selected" %}
+                                        {% endfor %} - 
+                                        {% for fabric in order.fabrics.all %}
+                                            {{ fabric }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                            {% trans "No fabrics selected" %}
+                                        {% endfor %} - {{ order.quantity }} {% trans "pcs" %} ({{ order|size_range }})</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-success">
+      {% trans "Compute Employee Data" %}
+    </button>
+  </form>
+{% else %}
+  {% if start_date and end_date %}
+    <p><em>{% trans "No orders found in this date range." %}</em></p>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

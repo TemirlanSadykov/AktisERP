@@ -52,7 +52,7 @@
               <li class="list-group-item custom-list-item" 
               style="
                   color: 
-                      {% if attendance.distance < 100 and attendance.fingerprint == attendance.employee.fingerprint %}
+                      {% if attendance.distance < attendance.branch.radius and attendance.fingerprint == attendance.employee.fingerprint %}
                           green;
                       {% else %}
                           red;
@@ -60,7 +60,7 @@
               padding:18px;">
               {{ attendance.employee }} - {{ attendance.timestamp|date:"Y-m-d H:i" }}
               
-              {% if attendance.distance >= 100 %}
+              {% if attendance.distance >= attendance.branch.radius %}
                   (Outside allowed distance: {{ attendance.distance }} meters)
               {% elif attendance.fingerprint != attendance.employee.fingerprint %}
                   (Fingerprint mismatch)

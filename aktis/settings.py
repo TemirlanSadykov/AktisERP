@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_xjd+91ehm=p=8-vnho+v=ia5lb2rkesti30sgb1*x^=&kiwvs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG'),
 
 ALLOWED_HOSTS = ["*"]
 
@@ -45,6 +45,13 @@ INSTALLED_APPS = [
     'django_select2',
     'whitenoise.runserver_nostatic',
     'storages',
+    'django_crontab',
+    'django_extensions',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'production.auth_backends.CompanyEmployeeIDAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +66,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'production.middleware.HandleCSRFMiddleware',
     'production.middleware.SessionExpiredMiddleware',
+    'production.middleware.CompanyMiddleware',
 ]
 
 ROOT_URLCONF = 'aktis.urls'
@@ -89,12 +97,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('MERPS_TEST_DB_ENGINE'),
-        'NAME': config('MERPS_TEST_DB_NAME'),
-        'USER': config('MERPS_TEST_DB_USER'),
-        'PASSWORD': config('MERPS_TEST_DB_PASSWORD'),
-        'HOST': config('MERPS_TEST_DB_HOST'),
-        'PORT': config('MERPS_TEST_DB_PORT'),
+        'ENGINE': config('LUMA_LIGHT_PROD_DB_ENGINE'),
+        'NAME': config('LUMA_LIGHT_PROD_DB_NAME'),
+        'USER': config('LUMA_LIGHT_PROD_DB_USER'),
+        'PASSWORD': config('LUMA_LIGHT_PROD_DB_PASSWORD'),
+        'HOST': config('LUMA_LIGHT_PROD_DB_HOST'),
+        'PORT': config('LUMA_LIGHT_PROD_DB_PORT'),
     }
 }
 
@@ -189,25 +197,30 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://merps-test.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://main.lumaerp.com', 'https://dev.lumaerp.com']
 
-# Load the environment variables
-WORKPLACE_LAT = config('MERPS_TEST_WORKPLACE_LAT', cast=float)
-WORKPLACE_LON = config('MERPS_TEST_WORKPLACE_LON', cast=float)
-ALLOWED_RADIUS = config('MERPS_TEST_ALLOWED_RADIUS', cast=int)
+CRONJOBS = [
+    ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
+    
+]
+#for every minute
+# CRONJOBS = [
+#     ('* * * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
+    
+# ]
 
-# AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-# AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-# AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
-# AWS_S3_SIGNATURE_VERSION = 's3v4'
-# AWS_S3_FILE_OVERWRITE = False
-# AWS_DEFAULT_ACL = None
-# AWS_S3_VERIFY = True
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-# AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-# AWS_S3_ADDRESSING_STYLE = "virtual"
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+AWS_S3_ADDRESSING_STYLE = "virtual"
 
 # LOGGING = {
 #     'version': 1,

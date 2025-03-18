@@ -7,131 +7,374 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}
-  </h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Admin Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
-      <li class="nav-item dropdown" style="margin: 10px;">
-        {{ request.user.username }}
-      </li>
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
   </div>
 </nav>
-<!-- <div class="container-fluid" style="margin-top: 20px;"> -->
-  <!-- <div class="row"> -->
 
-  <!-- </div> -->
-<!-- </div> -->
+<div class="container maincontr">
+  <div class="d-flex justify-content-end mb-3">
+    <span class="operation-text">{% trans "Summary" %}</span>
+  </div>
+  <hr>
 
-    <div class="container-fluid ">
-      <div class="row mt-4">
-        <div class="col-md-6 col-sm-6 mb-4">
-          <a href="{% url 'technologist_page' %}" style="text-decoration: none;">
-          <div class="card text-black h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title">{% trans 'Technologist' %}</h5>
-                </div>
-                <div class="icon">
-                  <img src="{% static 'img/tech.png' %}" alt="" style="width: 100px;">
-                </div>
-              </div>
+  <!-- Date range filter form -->
+  <form method="get" class="form-row align-items-end">
+    <div class="col-md-4 mb-3">
+      <label for="start_date">{% trans 'Start Date' %}</label>
+      <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date|default_if_none:'' }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label for="end_date">{% trans 'End Date' %}</label>
+      <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date|default_if_none:'' }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
+    </div>
+  </form>
+
+  <!-- Summary Cards (Production and Payment) -->
+  <div class="row mt-4">
+    <div class="col-md-6 col-sm-12 mb-4">
+      <div id="production-card" class="card text-black h-100" style="cursor:pointer;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title text-left">{% trans 'Production' %}</h5>
+              <p>{{ summary_data.total_production }}</p>
+            </div>
+            <div class="icon">
+              <img src="{% static 'img/gears.png' %}" alt="" style="width: 80px;">
             </div>
           </div>
-        </a>
-        </div>
-        <div class="col-md-6 col-sm-6 mb-4">
-          <a href="{% url 'cutter_page' %}" style="text-decoration: none;">
-          <div class="card text-black h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title">{% trans 'Cutter' %}</h5>
-                </div>
-                <div class="icon">
-                  <img src="{% static 'img/cutter.png' %}" alt="" style="width: 100px;">
-                </div>
-              </div>
-            </div>
-          </div>
-        </a>
-        </div>
-      </div>
-      <div class="row mt-4">
-        <div class="col-md-6 col-sm-6 mb-4">
-          <a href="{% url 'qc_page' %}" style="text-decoration: none;">
-          <div class="card text-black h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title">{% trans 'QC' %}</h5>
-                </div>
-                <div class="icon">
-                  <img src="{% static 'img/qc.png' %}" alt="" style="width: 100px;">
-                </div>
-              </div>
-            </div>
-          </div>
-        </a>
-        </div>
-        <div class="col-md-6 col-sm-6 mb-4">
-          <a href="{% url 'packer_page' %}" style="text-decoration: none;">
-          <div class="card text-black h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title">{% trans 'Packer' %}</h5>
-                </div>
-                <div class="icon">
-                  <img src="{% static 'img/packer.png' %}" alt="" style="width: 100px;">
-                </div>
-              </div>
-            </div>
-          </div>
-        </a>
-        </div>
-      </div>
-      <div class="row mt-4">
-        <div class="col-md-6 col-sm-6 mb-4">
-          <a href="{% url 'keeper_page' %}" style="text-decoration: none;">
-            <div class="card text-black h-100">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                      <h5 class="card-title">{% trans 'Keeper' %}</h5>
-                  </div>
-                  <div class="icon">
-                    <img src="{% static 'img/keeper.png' %}" alt="" style="width: 100px;">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </a>
         </div>
       </div>
     </div>
-    <div class="col-md-4 mt-4">
-      <form id="branchSwitchForm" action="{% url 'branch_switch' %}" method="post" class="branch-switch-form">
-        {% csrf_token %}
-        <div class="form-group d-flex align-items-center">
-          <h4 class="mb-0 mr-3">Филиал:</h4>
-          <select id="branchSelect" name="branch" class="form-control" onchange="document.getElementById('branchSwitchForm').submit();">
-            {% for branch in branches %}
-            {% if not branch.is_archived %}
-              <option value="{{ branch.id }}" {% if branch.id == request.user.userprofile.branch.id %}selected{% endif %}>
-                {{ branch.name }}
-              </option>
-              {% endif %}
-            {% endfor %}
-          </select>
+  
+    <!-- Payment Card: make it clickable -->
+    <div class="col-md-6 col-sm-12 mb-4">
+      <div id="payment-card" class="card text-black h-100" style="cursor:pointer;">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title text-left">{% trans 'Payment' %}</h5>
+              <p>{{ summary_data.total_payment }}</p>
+            </div>
+            <div class="icon">
+              <img src="{% static 'img/allocation.png' %}" alt="" style="width: 80px;">
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
+  </div>  
+  <!-- Container for Order Filter -->
+  <div id="orders-filter-container"></div>
+
+  <!-- Placeholder for Payment Details (already implemented) -->
+  <div id="payment-details-container"></div>
+
+  <!-- New Empty Div for Client Orders -->
+  <div id="production-details-container"></div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 9999;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">{% trans "Loading..." %}</span>
+  </div>
+</div>
+
+<script>
+  // Functions to show and hide the loading overlay
+  function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+  }
+  function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const paymentCard = document.getElementById('payment-card');
+    paymentCard.addEventListener('click', function(){
+      showLoading();
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+
+      // Fetch payment details
+      const paymentUrl = new URL("{% url 'payment_details' %}", window.location.origin);
+      paymentUrl.searchParams.append('start_date', startDate);
+      paymentUrl.searchParams.append('end_date', endDate);
+      
+      // Also fetch the orders filter snippet
+      const ordersUrl = new URL("{% url 'order_filter' %}", window.location.origin);
+      ordersUrl.searchParams.append('start_date', startDate);
+      ordersUrl.searchParams.append('end_date', endDate);
+
+      Promise.all([
+        fetch(paymentUrl).then(response => {
+          if (!response.ok) { throw new Error("Network response was not OK for payment details"); }
+          return response.text();
+        }),
+        fetch(ordersUrl).then(response => {
+          if (!response.ok) { throw new Error("Network response was not OK for order filter"); }
+          return response.text();
+        })
+      ])
+      .then(([paymentHtml, ordersHtml]) => {
+        document.getElementById('payment-details-container').innerHTML = paymentHtml;
+        document.getElementById('orders-filter-container').innerHTML = ordersHtml;
+        attachEmployeeLinkListeners();
+        attachOrderFilterButtonListener();
+      })
+      .catch(error => {
+        alert('Error fetching data: ' + error);
+      })
+      .finally(() => {
+        hideLoading();
+      });
+    });
+
+    // Attach listener for the order filter button instead of per-checkbox changes
+    function attachOrderFilterButtonListener() {
+      const filterButton = document.getElementById('orders-filter-btn');
+      if (filterButton) {
+        filterButton.addEventListener('click', function() {
+          const selectedOrderIds = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+            .map(cb => cb.value);
+          updatePaymentDetails(selectedOrderIds);
+        });
+      }
+    }
+
+    function updatePaymentDetails(orderIds) {
+      showLoading();
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+      const paymentUrl = new URL("{% url 'payment_details' %}", window.location.origin);
+      paymentUrl.searchParams.append('start_date', startDate);
+      paymentUrl.searchParams.append('end_date', endDate);
+      
+      // Append each selected order id to the query string
+      orderIds.forEach(id => paymentUrl.searchParams.append('order_ids', id));
+
+      fetch(paymentUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not OK");
+          }
+          return response.text();
+        })
+        .then(html => {
+          document.getElementById('payment-details-container').innerHTML = html;
+          attachEmployeeLinkListeners();
+        })
+        .catch(error => {
+          alert('Error updating payment details: ' + error);
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+    
+    // Existing employee link listener function
+    function attachEmployeeLinkListeners() {
+      document.querySelectorAll('.employee-details-link').forEach(function(link) {
+        link.addEventListener('click', function(event) {
+          event.preventDefault();
+          const employeeId = this.dataset.employeeId;
+          fetchEmployeeDetails(employeeId);
+        });
+      });
+    }
+  
+    function fetchEmployeeDetails(employeeId) {
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+  
+      fetch(`/production/api/employees_payment_details/${employeeId}/?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const modalBody = document.querySelector('#employeeModal .modal-body');
+          // Build the operations table as before…
+          let tableHtml = `<div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Операция</th>
+                  <th>Норма времени (сек)</th>
+                  <th>Плата (сом)</th>
+                  ${data.orders.map(order => `<th>${order.model_name}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>`;
+          data.operations.forEach(op => {
+            tableHtml += `<tr>
+              <td><strong>${op.operation}</strong></td>
+              <td class="text-center">${op.preferred_completion_time}</td>
+              <td class="text-center">${op.payment}</td>`;
+            data.orders.forEach(order => {
+              const operationData = data.operation_distribution.find(d =>
+                d.operation === op.operation && d.order === order.id
+              );
+              const quantity = operationData ? operationData.quantity : 0;
+              tableHtml += `<td class="text-center">${quantity}</td>`;
+            });
+            tableHtml += `</tr>`;
+          });
+          tableHtml += `</tbody></table></div>`;
+  
+          modalBody.innerHTML = `<div class="employee-details container-fluid">
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <p><strong>Имя:</strong> ${data.full_name}</p>
+              </div>
+              <div class="col-md-6 mb-2">
+                <p><strong>ID:</strong> ${data.employee_id}</p>
+              </div>
+              <div class="col-md-6 mb-2">
+                <p><strong>Время активной работы:</strong> ${data.total_time}с</p>
+              </div>
+              <div class="col-md-6 mb-2">
+                <p><strong>Общий заработок:</strong> ${data.total_payment}с</p>
+              </div>
+              <div class="col-12 mb-2">
+                <p><strong>Работал(-а) над операциями:</strong></p>
+                ${tableHtml}
+              </div>
+            </div>
+          </div>`;
+        })
+        .catch(error => console.error('Error loading employee details:', error));
+    }
+
+    // Production card event listener
+    const productionCard = document.getElementById('production-card');
+    productionCard.addEventListener('click', function(){
+      showLoading();
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+      const productionUrl = new URL("{% url 'production_details' %}", window.location.origin);
+      productionUrl.searchParams.append('start_date', startDate);
+      productionUrl.searchParams.append('end_date', endDate);
+
+      fetch(productionUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not OK");
+          }
+          return response.text();
+        })
+        .then(html => {
+          document.getElementById('production-details-container').innerHTML = html;
+          attachOrderLinkListeners();
+        })
+        .catch(error => {
+          alert('Error fetching production details: ' + error);
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    });
+
+    function attachOrderLinkListeners() {
+      document.querySelectorAll('.order-details-link').forEach(function(link) {
+        link.addEventListener('click', function(event) {
+          event.preventDefault();
+          const orderId = this.dataset.orderId;
+          fetchOrderDetails(orderId);
+        });
+      });
+    }
+    
+    function fetchOrderDetails(orderId) {
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+      
+      fetch(`/production/api/order_details_api/${orderId}/?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          let html = `<div class="order-details container-fluid">`;
+          
+          // Optionally display model name if provided
+          if (data.model_name) {
+            html += `
+              <div class="row">
+                <div class="col-md-12 mb-2">
+                  <p><strong>Model:</strong> ${data.model_name}</p>
+                </div>
+              </div>`;
+          }
+          
+          // Build table(s) for each color/fabric group
+          if (data.groups && data.groups.length > 0) {
+            data.groups.forEach(group => {
+              html += `<h5>${group.color} / ${group.fabric}</h5>`;
+              html += `
+                <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Size</th>
+                      <th>Total</th>
+                      <th>Cut</th>
+                      <th>Sew</th>
+                      <th>Check</th>
+                      <th>Packed</th>
+                    </tr>
+                  </thead>
+                  <tbody>`;
+              group.sizes.forEach(item => {
+                html += `
+                    <tr>
+                      <td>${item.size}</td>
+                      <td>${item.total}</td>
+                      <td>${item.cut}</td>
+                      <td>${item.sew}</td>
+                      <td>${item.check}</td>
+                      <td>${item.packed}</td>
+                    </tr>`;
+              });
+              html += `
+                  </tbody>
+                </table>`;
+            });
+          } else {
+            html += `<p>No production data found.</p>`;
+          }
+          
+          html += `</div>`;
+          
+          // Insert the generated HTML into the modal body
+          const modalBody = document.querySelector('#orderModal .modal-body');
+          modalBody.innerHTML = html;
+          
+          // Using vanilla JS (Bootstrap 5) to show the modal:
+          const modalEl = document.getElementById('orderModal');
+          const orderModal = new bootstrap.Modal(modalEl, { backdrop: false });
+          orderModal.show();
+        })
+        .catch(error => console.error('Error loading order details:', error));
+    }
+    
+  });
+</script>
 {% endblock %}

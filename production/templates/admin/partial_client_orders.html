@@ -1,0 +1,60 @@
+{% load i18n %}
+<table class="table rounded-table" id="clientOrdersTable">
+  <thead>
+    <tr>
+      <th>{% trans 'Model' %}</th>
+      <th>{% trans 'Color' %}</th>
+      <th>{% trans 'Fabrics' %}</th>
+      <th>{% trans 'Quantity' %}</th>
+      <th>{% trans 'Sizes' %}</th>
+      <th>{% trans "Actions" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for co in client_orders %}
+      <!-- Client Order Header Row -->
+      <tr class="client-order-header" style="background-color: #f1f1f1;">
+        <td colspan="6">
+          <strong>{{ co.client_name }}</strong>
+          ({{ co.launch|date:"Y-m-d" }} to {{ co.term|date:"Y-m-d" }})
+        </td>
+      </tr>
+      <!-- Rows for each order belonging to the client order -->
+      {% for order in co.orders %}
+      <tr class="order-row">
+        <td>{{ order.model_name }}</td>
+        <td>{{ order.colors }}</td>
+        <td>{{ order.fabrics }}</td>
+        <td>{{ order.quantity }}</td>
+        <td>{{ order.sizes }}</td>
+        <td>
+          <a href="#" 
+          class="btn btn-sm btn-primary order-details-link" 
+          data-order-id="{{ order.id }}" 
+          data-toggle="modal"
+          data-target="#orderModal">
+            {% trans "View" %}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+<!-- Modal for Order Details -->
+<div class="modal fade" id="orderModal" data-backdrop="false" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+      <div class="modal-content" style="max-width: 100%; width: 100%;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderModalLabel">{% trans 'Order Details' %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Order details will be injected here -->
+        </div>
+      </div>
+    </div>
+</div>
+  

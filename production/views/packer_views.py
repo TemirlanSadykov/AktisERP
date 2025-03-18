@@ -12,10 +12,10 @@ from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views.decorators.http import require_POST
 from django.db.models import Q
+from django.db.models import Count
 
 from ..decorators import packer_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -30,7 +30,81 @@ def packer_page(request):
     return render(request, 'packer_page.html' , context)
 
 @method_decorator([login_required, packer_required], name='dispatch')
-class OrderListPackerView(RestrictOrderBranchMixin, ListView):
+class ClientOrderListPackerView(ListView):
+    model = ClientOrder
+    template_name = 'packer/client/orders/list.html'
+    context_object_name = 'orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=False)
+        today = timezone.localdate()
+
+        # Get the term filter from the request, defaulting to 'upcoming'
+        term_filter = self.request.GET.get('term', 'upcoming').lower()
+
+        if term_filter == 'upcoming':
+            queryset = queryset.filter(term__gte=today).order_by('term')
+        elif term_filter == 'passed':
+            queryset = queryset.filter(term__lt=today).order_by('-term')
+        else:
+            queryset = queryset.filter(term__gte=today).order_by('term')
+
+        # Apply optional date range filtering
+        form = self.form_class(self.request.GET)
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+            if start_date and end_date:
+                queryset = queryset.filter(launch__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(launch__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(launch__lte=end_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None)
+        today = timezone.localdate()
+
+        # Calculate days_left for each order
+        orders_with_days_left = []
+        for order in context['orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+        context['orders_with_days_left'] = orders_with_days_left
+
+        # Pass the current term filter to the template
+        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
+        context['ClientOrder'] = ClientOrder
+        context['sidebar_type'] = 'packer'
+        return context
+    
+@method_decorator([login_required, packer_required], name='dispatch')
+class ClientOrderDetailPackerView(DetailView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'packer/client/orders/detail.html'
+    context_object_name = 'client_order'
+
+    def get_context_data(self, **kwargs):
+        context = super(ClientOrderDetailPackerView, self).get_context_data(**kwargs)
+        client_order = context['client_order']
+        context['orders'] = client_order.orders.all()
+        today = timezone.localdate()
+        if client_order.term >= today:
+            days_left = (client_order.term - today).days
+        else:
+            days_left = 0
+        context['days_left'] = days_left
+        context['sidebar_type'] = 'packer'
+        return context
+
+@method_decorator([login_required, packer_required], name='dispatch')
+class OrderListPackerView(ListView):
     model = Order
     template_name = 'packer/orders/list.html'
     context_object_name = 'orders'
@@ -40,6 +114,8 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         status = self.request.GET.get('status', None)
         search_query = self.request.GET.get('search', None)
         queryset = super().get_queryset().order_by('client_order__term')
+
+        queryset = queryset.filter(client_order__is_archived=False)
 
         if status:
             try:
@@ -78,74 +154,6 @@ class OrderListPackerView(RestrictOrderBranchMixin, ListView):
         context['sidebar_type'] = 'packer'
         return context
 
-# @method_decorator([login_required, packer_required], name='dispatch')
-# class OrderDetailPackerView(DetailView):
-#     model = Order
-#     template_name = 'packer/orders/detail.html'
-#     context_object_name = 'order'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         order = context['order']
-#         passport = Passport.objects.filter(order=order).first()
-        
-#         if passport:
-#             context['errors'] = Error.objects.filter(piece__passport_size__passport=passport, error_type=Error.ErrorType.DISCREPANCY)
-#         else:
-#             context['errors'] = Error.objects.none()
-
-#         today = timezone.localdate()
-#         days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
-#         context['days_left'] = days_left
-
-#         passports = order.passports.all()
-
-#         # Initialize data structures to track quantity and packed quantities
-#         size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'packed_quantity': 0, 'extra': None}))
-#         total_per_size = defaultdict(int)
-
-#         for passport in passports:
-#             for passport_size in passport.passport_sizes.all():
-#                 size = passport_size.size_quantity.size
-#                 color = passport_size.size_quantity.color
-#                 extra_key = f'{size} - {color}'
-#                 size_data[extra_key][passport.id]['stage'] = passport_size.stage
-#                 size_data[extra_key][passport.id]['quantity'] += passport_size.quantity
-#                 size_data[extra_key][passport.id]['passport_size_id'] = passport_size.id
-#                 size_data[extra_key][passport.id]['extra'] = passport_size.extra
-
-#                 # Count packed pieces only
-#                 packed_pieces = ProductionPiece.objects.filter(passport_size=passport_size, stage=ProductionPiece.StageChoices.PACKED).count()
-#                 size_data[extra_key][passport.id]['packed_quantity'] += packed_pieces
-                
-#                 total_per_size[size] += passport_size.quantity
-
-#         required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-#                             for sq in order.size_quantities.all().order_by('size')}
-
-#         for size in total_per_size:
-#             if size not in required_missing:
-#                 required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
-
-#         # Sorting size_data keys
-#         def sort_key(x):
-#             parts = x.split('-')
-#             try:
-#                 return int(parts[0]), x
-#             except ValueError:
-#                 return float('inf'), x
-
-#         sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
-
-#         context.update({
-#             'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-#             'total_per_size': dict(total_per_size),
-#             'required_missing': required_missing,
-#             'passports': passports,
-#             'sidebar_type' : 'packer',
-#         })
-#         return context
-
 @method_decorator([login_required, packer_required], name='dispatch')
 class OrderDetailPackerView(DetailView):
     model = Order
@@ -156,30 +164,52 @@ class OrderDetailPackerView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # Data for the "Required Quantities" table
-        required_data = []
+        # ----- Build pivot data for "Required Quantities" table -----
+        required_qs = order.size_quantities.all().order_by('size')
+        pivot_data = {}          # keys: (color, fabric), value: {size: required quantity}
+        pivot_data_checked = {}  # keys: (color, fabric), value: {size: checked count}
+        all_sizes_set = set()
 
-        for sq in order.size_quantities.all().order_by('size'):
-            key = f'{sq.size} - {sq.color}'
-            required = sq.quantity
+        # Pre-calculate the checked counts for each SizeQuantity in this order.
+        # We join ProductionPiece through passport_size -> passport -> cut -> order.
+        checked_counts_qs = ProductionPiece.objects.filter(
+            passport_size__passport__cut__order=order,
+            stage=ProductionPiece.StageChoices.PACKED
+        ).values('passport_size__size_quantity').annotate(checked_count=Count('id'))
 
-            # Add to required_data for the "Required Quantities" table
-            required_data.append({
-                'size': sq.size,
-                'color': sq.color,
-                'required': required,
-            })
+        # Create a lookup dictionary: {SizeQuantity_id: checked_count}
+        checked_counts_dict = {
+            item['passport_size__size_quantity']: item['checked_count']
+            for item in checked_counts_qs
+        }
 
-        # Get associated cuts for the order
-        associated_cuts = order.cuts.all().order_by('-date')
+        # Build our pivot data structures.
+        for sq in required_qs:
+            all_sizes_set.add(sq.size)
+            key = (sq.color, sq.fabrics)  # tuple key based on color and fabric
+
+            if key not in pivot_data:
+                pivot_data[key] = {}
+                pivot_data_checked[key] = {}
+
+            pivot_data[key][sq.size] = sq.quantity
+            # Use the pre-computed count, defaulting to 0 if none found.
+            pivot_data_checked[key][sq.size] = checked_counts_dict.get(sq.id, 0)
+
+        # Sort sizes (if sizes are numeric strings, sort numerically).
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
 
         context.update({
-            'required_data': required_data,  # Data for the "Required Quantities" table
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
-            'associated_cuts': associated_cuts,  # Associated cuts to display
+            'pivot_data': pivot_data,             # required quantities pivot
+            'pivot_data_checked': pivot_data_checked,  # checked counts pivot
+            'all_sizes': all_sizes,               # list of sizes for header row
+            'days_left': (order.client_order.term - timezone.now().date()).days
+                          if order.client_order.term >= timezone.now().date() else 0,
             'sidebar_type': 'packer'
         })
-
         return context
     
 @method_decorator([login_required, packer_required], name='dispatch')
@@ -192,8 +222,6 @@ class CutDetailPackerView(DetailView):
         context = super().get_context_data(**kwargs)
         cut_pk = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_pk)
-        # Get all consumptions related to the cut
-        consumptions = cut.consumptions.all()
 
         # Get all passports related to the cut
         passports = cut.passports.all()
@@ -207,7 +235,6 @@ class CutDetailPackerView(DetailView):
         total_layers = sum(passport.layers for passport in passports if passport.layers)
 
         context.update({
-            'consumptions': consumptions,
             'passports': passports,
             'total_quantity_per_size': dict(total_quantity_per_size),
             'total_layers': total_layers,
@@ -216,6 +243,19 @@ class CutDetailPackerView(DetailView):
 
         return context
     
+@method_decorator([login_required, packer_required], name='dispatch')
+class PassportDetailPackerView(DetailView):
+    model = Passport
+    template_name = 'packer/passports/detail.html'
+    context_object_name = 'passport'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        passport = context['passport']
+        context['passport_sizes'] = passport.passport_sizes.all().order_by('size_quantity__size')
+        context['sidebar_type'] = 'packer'
+        return context
+
 @require_POST
 @login_required
 @packer_required
@@ -223,30 +263,41 @@ def update_piece_packer(request, piece_id):
     try:
         piece = ProductionPiece.objects.get(id=piece_id)
         
+        # Check conditions for packing
         if piece.stage == ProductionPiece.StageChoices.PACKED:
-            return JsonResponse({'success': False, 'message': 'Piece is already packed.'}, status=409)
+            return JsonResponse({'success': False, 'message': 'Единица уже упакована.'}, status=409)
         elif piece.stage == ProductionPiece.StageChoices.DEFECT:
-            return JsonResponse({'success': False, 'message': 'Piece is marked as defect.'}, status=409)
+            return JsonResponse({'success': False, 'message': 'Единица бракована.'}, status=409)
         elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
-            return JsonResponse({'success': False, 'message': 'Piece is not checked and cannot be packed.'}, status=409)
+            return JsonResponse({'success': False, 'message': 'Единица еще не проверена.'}, status=409)
 
+        # Update piece status to PACKED
         piece.stage = ProductionPiece.StageChoices.PACKED
         piece.save()
 
-        Error.objects.filter(piece=piece, error_type=Error.ErrorType.DISCREPANCY).delete()
-
+        # Prepare response data
         size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
-
+        cut = piece.passport_size.passport.cut.number
+        model = piece.passport_size.passport.cut.order.model.name
+        color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
+        fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
+        passport_id = piece.passport_size.passport.id
+        passport_number = piece.passport_size.passport.number
+        
         # Forming the response with piece details
         data = {
             'success': True,
             'message': 'Piece status updated to Packed.',
             'piece_id': piece.id,
-            'passport': piece.passport_size.passport.id,
-            'order': piece.passport_size.passport.order.model.name,
-            'passport_size': piece.passport_size.id,
+            'order_id': piece.passport_size.passport.cut.order.id,
+            'piece_number': piece.piece_number,
+            'passport_id': passport_id,
+            'passport_number': passport_number,
+            'cut': cut,
+            'model': model,
+            'color': color,
+            'fabrics': fabrics,
             'size': size,
-            'defect': piece.defect_type if piece.defect_type else "--",
             'stage': piece.get_stage_display()
         }
         return JsonResponse(data)
@@ -255,91 +306,63 @@ def update_piece_packer(request, piece_id):
         return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyDetailView(DetailView):
-    model = Error
-    template_name = 'packer/discrepancies/detail.html'
-    context_object_name = 'error'
-
-@method_decorator([login_required, packer_required], name='dispatch')
-class DiscrepancyDeleteView(DeleteView):
-    model = Error
-
-    def get_success_url(self):
-        order_pk = self.kwargs['order_pk']
-        return reverse_lazy('order_detail_packer', kwargs={'pk': order_pk})
     
 @login_required
 @packer_required
-def mark_as_done(request, passport_size_id):
+def get_order_table_data_packer(request, order_id):
     try:
-        passport_size = PassportSize.objects.get(id=passport_size_id)
-        order = passport_size.passport.order
-        operations = Operation.objects.filter(node__type=Node.PACKING, node__is_common=True)
-        with transaction.atomic():
-            if passport_size.stage == PassportSize.DONE:
-                passport_size.stage = PassportSize.PACKING
-                for operation in operations:
-                    work = Work.objects.filter(passport_size=passport_size, operation=operation)
-                    work.delete()
-                order.completed_quantity -= passport_size.quantity
-                order.save()
-            else:
-                for operation in operations:
-                    work = Work.objects.create(
-                        operation=operation,
-                        passport=passport_size.passport,
-                        passport_size=passport_size
-                    )
-                    AssignedWork.objects.create(
-                        work=work,
-                        employee=operation.employee,
-                        quantity=passport_size.quantity,
-                        start_time=timezone.now(),
-                        end_time=timezone.now(),
-                        is_success=True
-                    )
-                passport_size.stage = PassportSize.DONE
-                order.completed_quantity += passport_size.quantity
-                order.save()
-            passport_size.save()
-
-        return JsonResponse({'success': True})
-
-    except PassportSize.DoesNotExist:
-        return JsonResponse({'error': 'PassportSize not found'}, status=404)
-    
-@login_required
-@packer_required
-@require_POST
-def calculate_discrepancies(request, order_pk):
-    try:
-        order = Order.objects.get(pk=order_pk)
+        order = Order.objects.get(id=order_id)
+        # Get the size quantities for the order.
+        # Each size quantity is assumed to have attributes:
+        # size, color, fabrics, quantity, packed, and packed.
+        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
+        
+        # Build pivot data: key is "Color Fabrics" and value is a dict mapping size to required quantity.
+        pivot_data = {}
+        all_sizes_set = set()
+        for sq in required_qs:
+            all_sizes_set.add(sq.size)
+            key = f"{sq.color} {sq.fabrics}"
+            if key not in pivot_data:
+                pivot_data[key] = {}
+            pivot_data[key][sq.size] = sq.quantity
+        
+        # Sort sizes (if numeric, sort by integer value)
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
+        
+        # For each size quantity, if the packed field is still null,
+        # count the production pieces (PACKED) and update it.
+        for sq in required_qs:
+            if sq.packed is None:
+                count = ProductionPiece.objects.filter(
+                    passport_size__size_quantity=sq,
+                    passport_size__passport__cut__order=order,
+                    stage=ProductionPiece.StageChoices.PACKED
+                ).count()
+                sq.packed = count
+                sq.save(update_fields=['packed'])
+        
+        # Build packed_counts from the size quantities.
+        # This dictionary uses the same key ("Color Fabrics") and maps each size to its packed value.
+        packed_counts = {}
+        for sq in required_qs:
+            key = f"{sq.color} {sq.fabrics}"
+            if key not in packed_counts:
+                packed_counts[key] = {}
+            packed_counts[key][sq.size] = sq.packed if sq.packed is not None else 0
+        data = {
+            'order_id': order.id,
+            'order_name': order.model.name,  # Using model name for display.
+            'all_sizes': all_sizes,
+            'pivot_data': pivot_data,
+            'packed_counts': packed_counts,
+        }
+        return JsonResponse(data)
     except Order.DoesNotExist:
-        return JsonResponse({'error': 'Order does not exist'}, status=404)
-
-    pieces = ProductionPiece.objects.filter(
-        passport_size__passport__order=order,
-        stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.NOT_CHECKED]
-    )
-
-    discrepancies_created = 0
-
-    for piece in pieces:
-        error, created = Error.objects.get_or_create(
-            piece=piece,
-            error_type=Error.ErrorType.DISCREPANCY,
-            defaults={
-                'cost': piece.passport_size.passport.order.payment if piece.passport_size.passport.order.payment else 0,
-                'status': Error.Status.REPORTED,
-                'reported_date': timezone.now()
-            }
-        )
-        if created:
-            discrepancies_created += 1
-
-    return JsonResponse({'success': True, 'discrepancies_created': discrepancies_created})
+        return JsonResponse({'error': 'Order not found'}, status=404)
 
 @login_required
 @packer_required
@@ -348,3 +371,56 @@ def scan_packer_page(request):
             'sidebar_type': 'packer'
             }
     return render(request, 'packer/scans/detail.html', context)
+
+@login_required
+@packer_required
+def manual_pack_page(request):
+    client_orders = ClientOrder.objects.filter(is_archived=False)
+    context = {
+        'sidebar_type': 'packer',
+        'client_orders': client_orders,
+    }
+    return render(request, 'packer/scans/manual.html', context)
+
+@require_POST
+@login_required
+@packer_required
+def update_packed_quantity(request):
+    """
+    Expects JSON with:
+      - order_id: ID of the order
+      - combo: a string in the format "ColorName FabricsName"
+      - size: the size to update (as stored in SizeQuantity.size)
+      - quantity: the desired number of production pieces to mark as packed.
+      
+    This view directly assigns the provided quantity to the SizeQuantity.packed field.
+    """
+    try:
+        data = json.loads(request.body)
+        order_id = data.get('order_id')
+        combo = data.get('combo')  # e.g. "Red Cotton"
+        size = data.get('size')
+        quantity = int(data.get('quantity', 0))
+        
+        # Split combo into color and fabric. Expects format "ColorName FabricsName".
+        parts = combo.split(" ", 1)
+        color_name, fabric_name = parts[0].strip(), parts[1].strip()
+        
+        # Retrieve the order.
+        order = Order.objects.get(id=order_id)
+        
+        # Get the SizeQuantity record associated with the order.
+        sq = order.size_quantities.get(
+            size=size.strip(),
+            color__name=color_name,
+            fabrics__name=fabric_name
+        )
+        
+        # Directly assign the provided quantity to the packed field.
+        sq.packed = quantity
+        sq.save(update_fields=['packed'])
+        
+        return JsonResponse({'success': True, 'updated_packed': quantity})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

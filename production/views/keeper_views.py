@@ -12,10 +12,13 @@ from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.db.models import Q
+from django.urls import reverse_lazy, reverse
+from django.views.generic import FormView
+from django.views.decorators.http import require_POST
+from decimal import Decimal, InvalidOperation
 
 from ..decorators import keeper_required
 from ..forms import *
-from ..mixins import *
 from ..models import *
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
@@ -30,36 +33,140 @@ def keeper_page(request):
     return render(request, 'keeper_page.html' , context)
 
 @method_decorator([login_required, keeper_required], name='dispatch')
-class RollListView(RestrictBranchMixin, ListView):
-    model = Roll
-    template_name = 'keeper/rolls/list.html'
-    context_object_name = 'rolls'
+class SupplierListView(ListView):
+    model = Supplier
+    template_name = 'keeper/suppliers/list.html'
+    context_object_name = 'suppliers'
     paginate_by = 10
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(is_archived=False).order_by('name')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ArchivedRollListView(RestrictBranchMixin, ListView):
-    model = Roll
-    template_name = 'keeper/rolls/list.html'
-    context_object_name = 'rolls'
-    paginate_by = 10
-    def get_queryset(self):
-        return super().get_queryset().filter(is_archived=True).order_by('name')
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
 
+    def get_queryset(self):
+        return Supplier.objects.filter(is_archived=False).order_by('name')
+
+
 @method_decorator([login_required, keeper_required], name='dispatch')
-class RollCreateView(AssignBranchMixin, CreateView):
+class ArchivedSupplierListView(ListView):
+    template_name = 'keeper/suppliers/list.html'
+    context_object_name = 'suppliers'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Supplier.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class SupplierCreateView(CreateView):
+    model = Supplier
+    form_class = SupplierForm
+    template_name = 'keeper/suppliers/create.html'
+    success_url = reverse_lazy('supplier_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class SupplierDetailView(DetailView):
+    model = Supplier
+    template_name = 'keeper/suppliers/detail.html'
+    context_object_name = 'supplier'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class SupplierUpdateView(UpdateView):
+    model = Supplier
+    form_class = SupplierForm
+    template_name = 'keeper/suppliers/edit.html'
+
+    def get_success_url(self):
+        return reverse('supplier_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class SupplierDeleteView(DeleteView):
+    model = Supplier
+    template_name = 'keeper/suppliers/delete.html'
+    success_url = reverse_lazy('supplier_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class SupplierArchiveView(UpdateView):
+    model = Supplier
+    template_name = 'keeper/suppliers/delete.html'
+    success_url = reverse_lazy('supplier_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        supplier = self.get_object()
+        supplier.is_archived = True
+        supplier.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class SupplierUnArchiveView(UpdateView):
+    model = Supplier
+    template_name = 'keeper/suppliers/delete.html'
+    success_url = reverse_lazy('supplier_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        supplier = self.get_object()
+        supplier.is_archived = False
+        supplier.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollListView(ListView):
+    model = Roll
+    template_name = 'keeper/rolls/list.html'
+    context_object_name = 'rolls'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Roll.objects.all().order_by('name')
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollCreateView(CreateView):
     model = Roll
     form_class = RollForm
     template_name = 'keeper/rolls/create.html'
@@ -82,11 +189,13 @@ class RollDetailView(DetailView):
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
-class RollUpdateView(RestrictBranchMixin, UpdateView):
+class RollUpdateView(UpdateView):
     model = Roll
     form_class = RollForm
     template_name = 'keeper/rolls/edit.html'
-    success_url = reverse_lazy('roll_list')
+
+    def get_success_url(self):
+        return reverse('roll_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -94,7 +203,7 @@ class RollUpdateView(RestrictBranchMixin, UpdateView):
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
-class RollDeleteView(RestrictBranchMixin, DeleteView):
+class RollDeleteView(DeleteView):
     model = Roll
     template_name = 'keeper/rolls/delete.html'
     success_url = reverse_lazy('roll_list')
@@ -103,330 +212,131 @@ class RollDeleteView(RestrictBranchMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
+    
+@require_POST
+@login_required
+def add_supplier_api(request):
+    form = SupplierForm(request.POST)
+    if form.is_valid():
+        supplier = form.save()
+        data = {
+            'success': True,
+            'supplier_id': supplier.id,
+            'supplier_name': supplier.name,
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 @method_decorator([login_required, keeper_required], name='dispatch')
-class RollArchiveView(RestrictBranchMixin, UpdateView):
+class ColorFabricListView(ListView):
+    template_name = 'keeper/rolls/color_fabric_list.html'
+    context_object_name = 'combinations'
+    
+    def get_queryset(self):
+        qs = Roll.objects.filter(is_used=False)
+        # Return distinct combinations including supplier, along with names for display
+        return qs.values(
+            'color',
+            'fabric',
+            'supplier',
+            color_name=F('color__name'),
+            fabric_name=F('fabric__name'),
+            supplier_name=F('supplier__name')
+        ).distinct()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class RollsByCombinationListView(ListView):
     model = Roll
-    template_name = 'keeper/rolls/delete.html'
-    success_url = reverse_lazy('roll_list')
+    template_name = 'keeper/rolls/combination_detail.html'
+    context_object_name = 'rolls'
+    paginate_by = 10
     
-    def post(self, request, *args, **kwargs):
-        roll = self.get_object()
-        roll.is_archived = True
-        roll.save()
-        return HttpResponseRedirect(self.success_url)
-
+    def get_queryset(self):
+        color_id = self.kwargs.get('color_id')
+        fabric_id = self.kwargs.get('fabric_id')
+        supplier_id = self.kwargs.get('supplier_id')
+        return Roll.objects.filter(is_used=False, color_id=color_id, fabric_id=fabric_id, supplier_id=supplier_id, original_roll__isnull=True).order_by('length_t')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        first_roll = self.get_queryset().first()
+        if first_roll:
+            context['color'] = first_roll.color.name
+            context['fabric'] = first_roll.fabric.name
+            context['supplier'] = first_roll.supplier.name
+        else:
+            context['color'] = ''
+            context['fabric'] = ''
+            context['supplier'] = ''
+        return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
-class RollUnArchiveView(RestrictBranchMixin, UpdateView):
+class RollBulkCreateView(CreateView):
     model = Roll
-    template_name = 'keeper/rolls/delete.html'
-    success_url = reverse_lazy('roll_list')
+    form_class = BulkRollForm
+    template_name = 'keeper/rolls/bulk_create.html'
+    success_url = reverse_lazy('roll_combinations')
 
-    def post(self, request, *args, **kwargs):
-        roll = self.get_object()
-        roll.is_archived = False
-        roll.save()
-        return HttpResponseRedirect(self.success_url)
+    def form_valid(self, form):
+        color = form.cleaned_data['color']
+        fabric = form.cleaned_data['fabric']
+        supplier = form.cleaned_data['supplier']
+        width = form.cleaned_data['width']
+        quantity = form.cleaned_data['quantity']
+        
+        weights = self.request.POST.getlist('weight')
+        lengths = self.request.POST.getlist('length')
+        cleaned_weights = []
+        cleaned_lengths = []
 
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorListView(ListView):
-    model = Color
-    template_name = 'keeper/color/list.html'
-    context_object_name = 'color'
-    paginate_by = 10
+        for w in weights:
+            try:
+                # Convert empty string to None (or set a default like 0)
+                cleaned_weights.append(Decimal(w) if w.strip() else None)
+            except InvalidOperation:
+                cleaned_weights.append(None)  # or handle error as needed
 
-    def get_queryset(self):
-        return Color.objects.filter(is_archived=False).order_by('name')
+        for l in lengths:
+            try:
+                cleaned_lengths.append(Decimal(l) if l.strip() else None)
+            except InvalidOperation:
+                cleaned_lengths.append(None)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ArchivedColorListView(ListView):
-    model = Color
-    template_name = 'keeper/color/list.html'
-    context_object_name = 'color'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return Color.objects.filter(is_archived=True).order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorArchiveView(UpdateView):
-    model = Color
-    template_name = 'keeper/color/delete.html'
-    success_url = reverse_lazy('color_list')
-
-    def post(self, request, *args, **kwargs):
-        color = self.get_object()
-        color.is_archived = True
-        color.save()
-        return HttpResponseRedirect(self.success_url)
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorUnArchiveView(UpdateView):
-    model = Color
-    template_name = 'keeper/color/delete.html'
-    success_url = reverse_lazy('color_list')
-
-    def post(self, request, *args, **kwargs):
-        color = self.get_object()
-        color.is_archived = False
-        color.save()
-        return HttpResponseRedirect(self.success_url)
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorCreateView(CreateView):
-    model = Color
-    form_class = ColorForm
-    template_name = 'keeper/color/create.html'
-    success_url = reverse_lazy('color_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorDetailView(DetailView):
-    model = Color
-    template_name = 'keeper/color/detail.html'
-    context_object_name = 'color'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorUpdateView(UpdateView):
-    model = Color
-    form_class = ColorForm
-    template_name = 'keeper/color/edit.html'
-    success_url = reverse_lazy('color_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ColorDeleteView(DeleteView):
-    model = Color
-    template_name = 'keeper/color/delete.html'
-    success_url = reverse_lazy('color_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsListView(ListView):
-    model = Fabrics
-    template_name = 'keeper/fabrics/list.html'
-    context_object_name = 'fabrics'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return Fabrics.objects.filter(is_archived=False).order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ArchivedFabricsListView(ListView):
-    model = Fabrics
-    template_name = 'keeper/fabrics/list.html'
-    context_object_name = 'fabrics'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return Fabrics.objects.filter(is_archived=True).order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsArchiveView(UpdateView):
-    model = Fabrics
-    template_name = 'keeper/fabrics/delete.html'
-    success_url = reverse_lazy('fabrics_list')
-
-    def post(self, request, *args, **kwargs):
-        fabric = self.get_object()
-        fabric.is_archived = True
-        fabric.save()
-        return HttpResponseRedirect(self.success_url)
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsUnArchiveView(UpdateView):
-    model = Fabrics
-    template_name = 'keeper/fabrics/delete.html'
-    success_url = reverse_lazy('fabrics_list')
-
-    def post(self, request, *args, **kwargs):
-        fabric = self.get_object()
-        fabric.is_archived = False
-        fabric.save()
-        return HttpResponseRedirect(self.success_url)
-    
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsCreateView(CreateView):
-    model = Fabrics
-    form_class = FabricsForm
-    template_name = 'keeper/fabrics/create.html'
-    success_url = reverse_lazy('fabrics_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsDetailView(DetailView):
-    model = Fabrics
-    template_name = 'keeper/fabrics/detail.html'
-    context_object_name = 'fabric'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsUpdateView(UpdateView):
-    model = Fabrics
-    form_class = FabricsForm
-    template_name = 'keeper/fabrics/edit.html'
-    success_url = reverse_lazy('fabrics_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class FabricsDeleteView(DeleteView):
-    model = Fabrics
-    template_name = 'keeper/fabrics/delete.html'
-    success_url = reverse_lazy('fabrics_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryListView(ListView):
-    model = Accessory
-    template_name = 'keeper/accessory/list.html'
-    context_object_name = 'accessory'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return Accessory.objects.filter(is_archived=False).order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class ArchivedAccessoryListView(ListView):
-    model = Accessory
-    template_name = 'keeper/accessory/list.html'
-    context_object_name = 'accessory'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return Accessory.objects.filter(is_archived=True).order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryArchiveView(UpdateView):
-    model = Accessory
-    template_name = 'keeper/accessory/delete.html'
-    success_url = reverse_lazy('accessory_list')
-
-    def post(self, request, *args, **kwargs):
-        accessory = self.get_object()
-        accessory.is_archived = True
-        accessory.save()
-        return HttpResponseRedirect(self.success_url)
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryUnArchiveView(UpdateView):
-    model = Accessory
-    template_name = 'keeper/accessory/delete.html'
-    success_url = reverse_lazy('accessory_list')
-
-    def post(self, request, *args, **kwargs):
-        accessory = self.get_object()
-        accessory.is_archived = False
-        accessory.save()
-        return HttpResponseRedirect(self.success_url)
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryCreateView(CreateView):
-    model = Accessory
-    form_class = AccessoryForm
-    template_name = 'keeper/accessory/create.html'
-    success_url = reverse_lazy('accessory_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryDetailView(DetailView):
-    model = Accessory
-    template_name = 'keeper/accessory/detail.html'
-    context_object_name = 'accessory'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryUpdateView(UpdateView):
-    model = Accessory
-    form_class = AccessoryForm
-    template_name = 'keeper/accessory/edit.html'
-    success_url = reverse_lazy('accessory_list')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class AccessoryDeleteView(DeleteView):
-    model = Accessory
-    template_name = 'keeper/accessory/delete.html'
-    success_url = reverse_lazy('accessory_list')
-
+        existing_count = Roll.objects.filter(color=color, fabric=fabric, supplier=supplier).count()
+        current_company = get_current_company()  # should be valid
+        
+        new_rolls = []
+        for i in range(quantity):
+            roll_name = str(existing_count + i + 1)
+            weight_value = cleaned_weights[i] if i < len(cleaned_weights) else None
+            length_value = cleaned_lengths[i] if i < len(cleaned_lengths) else None
+            new_rolls.append(Roll(
+                color=color,
+                fabric=fabric,
+                supplier=supplier,
+                width=width,
+                weight=weight_value,
+                length_t=length_value,
+                name=roll_name,
+                is_used=False,
+                company=current_company,
+            ))
+        Roll.objects.bulk_create(new_rolls)
+        
+        # Set self.object to one of the created rolls (if any)
+        if new_rolls:
+            self.object = new_rolls[0]
+        
+        return HttpResponseRedirect(self.get_success_url())
+      
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'

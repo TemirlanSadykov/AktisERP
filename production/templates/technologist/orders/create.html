@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="max-width: 100%;">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <!-- The form for creating a new task -->
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Task" %}</h2>
+      </div>
+      <div class="card-body">
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="id_model">{% trans "Model:" %}</label>
+            {{ form.model }}
+          </div>
+      
+          <h3>{% trans "Size Quantities" %}</h3>
+          <table id="sizeQuantityTable" class="table table-bordered">
+            <thead>
+              <tr>
+                <!-- First column for Color & Fabric -->
+                <th>{% trans "Color & Fabric" %}</th>
+                <!-- One dynamic column for size header (with manual text input) -->
+                <th>
+                  <input type="text" name="header_0" class="form-control" placeholder="{% trans 'Enter Size' %}">
+                </th>
+                <!-- Extra column on the far right for column controls -->
+                <th class="control-col" style="width:50px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-row="0">
+                <!-- Color & Fabric cell with side-by-side selects.
+                     (This initial row is rendered server-side.) -->
+                <td>
+                  <div class="row">
+                    <div class="col">
+                      <select name="row-0_color" class="form-control color-select">
+                        <option value="">{% trans "-------" %}</option>
+                        <option value="add_new_color">{% trans "Add New Color" %}</option>
+                        {% for color in colors %}
+                          <option value="{{ color.pk }}">{{ color.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col">
+                      <select name="row-0_fabric" class="form-control fabric-select">
+                        <option value="">{% trans "-------" %}</option>
+                        <option value="add_new_fabric">{% trans "Add New Fabric" %}</option>
+                        {% for fabric in fabrics %}
+                          <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                </td>
+                <!-- One dynamic cell for quantity (corresponding to the size header) -->
+                <td>
+                  <input type="number" name="cell_0_0" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
+                </td>
+                <!-- Extra (control) cell for the column on the far right -->
+                <td class="control-col" style="width:50px;"></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="control-row" style="height:50px;">
+                <!-- This cell spans all “normal” columns (first column + dynamic columns) -->
+                <td id="rowControlCell" colspan="2">
+                  <div style="display:flex; height:100%;">
+                    <!-- Left half for row addition -->
+                    <div id="addRowControl" style="flex:1; display:flex; align-items:center; justify-content:center; border-right:1px solid #ccc; cursor:pointer;">
+                      +
+                    </div>
+                    <!-- Right half for row deletion -->
+                    <div id="deleteRowControl" style="flex:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                      –
+                    </div>
+                  </div>
+                </td>
+                <!-- Rightmost cell: dedicated for column controls -->
+                <td class="control-col" style="width:50px; padding:0;">
+                  <div style="height:100%; display:flex; flex-direction:column;">
+                    <!-- Top half for column addition -->
+                    <div id="addColumnControl" style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #ccc; cursor:pointer;">
+                      +
+                    </div>
+                    <!-- Bottom half for column deletion -->
+                    <div id="deleteColumnControl" style="flex:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                      –
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+      
+          <br>
+          <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+          <a href="{% url 'client_order_detail' client_order_pk %}" class="btn btn-outline-secondary">{% trans "Back" %}</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== -->
+<!-- Add New Color Modal -->
+<!-- ======================== -->
+<div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-labelledby="addColorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addColorForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addColorModalLabel">{% trans "Add New Color" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_color_name">{% trans "Color Name" %}</label>
+            <input type="text" class="form-control" id="id_color_name" name="name" placeholder="{% trans 'Enter color name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== -->
+<!-- Add New Fabric Modal -->
+<!-- ======================== -->
+<div class="modal" data-backdrop="false" id="addFabricModal" tabindex="-1" role="dialog" aria-labelledby="addFabricModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addFabricForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addFabricModalLabel">{% trans "Add New Fabric" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_fabric_name">{% trans "Fabric Name" %}</label>
+            <input type="text" class="form-control" id="id_fabric_name" name="name" placeholder="{% trans 'Enter fabric name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== -->
+<!-- JavaScript Section -->
+<!-- ======================== -->
+<script>
+// ===========================
+// Global arrays for colors and fabrics.
+// These arrays are populated from the server context.
+var globalColors = [
+  {% for color in colors %}
+    { id: "{{ color.pk }}", name: "{{ color.name }}" },
+  {% endfor %}
+];
+var globalFabrics = [
+  {% for fabric in fabrics %}
+    { id: "{{ fabric.pk }}", name: "{{ fabric.name }}" },
+  {% endfor %}
+];
+
+// Helper function to get CSRF token from cookies.
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Helper functions to generate option markup from global arrays.
+function getColorOptionsHTML() {
+  let html = '<option value="">{% trans "-------" %}</option>';
+  html += '<option value="add_new_color">{% trans "Add New Color" %}</option>';
+  globalColors.forEach(function(color) {
+    html += `<option value="${color.id}">${color.name}</option>`;
+  });
+  return html;
+}
+
+function getFabricOptionsHTML() {
+  let html = '<option value="">{% trans "-------" %}</option>';
+  html += '<option value="add_new_fabric">{% trans "Add New Fabric" %}</option>';
+  globalFabrics.forEach(function(fabric) {
+    html += `<option value="${fabric.id}">${fabric.name}</option>`;
+  });
+  return html;
+}
+
+// Custom modal show/hide functions (using vanilla JS).
+function showModal(modalEl) {
+  modalEl.classList.add('show');
+  modalEl.style.display = 'block';
+  modalEl.removeAttribute('aria-hidden');
+}
+function hideModal(modalEl) {
+  modalEl.classList.remove('show');
+  modalEl.style.display = 'none';
+  modalEl.setAttribute('aria-hidden', 'true');
+  // Remove any modal backdrop if present.
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) {
+    backdrop.parentNode.removeChild(backdrop);
+  }
+}
+
+// Update all color selects with a new option if not already present.
+function updateAllColorSelects(newOptionValue, newOptionText) {
+  document.querySelectorAll('select.color-select').forEach(function(select) {
+    if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
+      let option = document.createElement('option');
+      option.value = newOptionValue;
+      option.text = newOptionText;
+      select.appendChild(option);
+    }
+  });
+}
+
+// Update all fabric selects with a new option if not already present.
+function updateAllFabricSelects(newOptionValue, newOptionText) {
+  document.querySelectorAll('select.fabric-select').forEach(function(select) {
+    if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
+      let option = document.createElement('option');
+      option.value = newOptionValue;
+      option.text = newOptionText;
+      select.appendChild(option);
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  // --------------------------
+  // Dynamic Table Functionality
+  // --------------------------
+  let rowCount = 1;  // one row already exists (data-row="0")
+  let colCount = 1;  // one dynamic column initially
+  function updateRowControlColspan() {
+    const rowControlCell = document.getElementById("rowControlCell");
+    rowControlCell.colSpan = 1 + colCount;
+  }
+  updateRowControlColspan();
+
+  function addRow() {
+    const tbody = document.querySelector("#sizeQuantityTable tbody");
+    const newRow = document.createElement("tr");
+    newRow.setAttribute("data-row", rowCount);
+    let rowHtml = "";
+    // Build the Color & Fabric cell using our helper functions.
+    rowHtml += `<td>
+                  <div class="row">
+                    <div class="col">
+                      <select name="row-${rowCount}_color" class="form-control color-select">
+                        ${getColorOptionsHTML()}
+                      </select>
+                    </div>
+                    <div class="col">
+                      <select name="row-${rowCount}_fabric" class="form-control fabric-select">
+                        ${getFabricOptionsHTML()}
+                      </select>
+                    </div>
+                  </div>
+                </td>`;
+    // Cells for dynamic size columns.
+    for (let col = 0; col < colCount; col++) {
+      rowHtml += `<td>
+                    <input type="number" name="cell_${rowCount}_${col}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
+                  </td>`;
+    }
+    // Extra control cell.
+    rowHtml += `<td class="control-col" style="width:50px;"></td>`;
+    newRow.innerHTML = rowHtml;
+    tbody.appendChild(newRow);
+    rowCount++;
+  }
+
+  function deleteRow() {
+    const tbody = document.querySelector("#sizeQuantityTable tbody");
+    if(tbody.children.length > 1) {
+      tbody.removeChild(tbody.lastElementChild);
+      rowCount--;
+    } else {
+      alert("{% trans 'At least one row must remain.' %}");
+    }
+  }
+
+  function addColumn() {
+    colCount++;
+    const theadRow = document.querySelector("#sizeQuantityTable thead tr");
+    const newHeaderCell = document.createElement("th");
+    newHeaderCell.innerHTML = `<input type="text" name="header_${colCount-1}" class="form-control" placeholder="{% trans 'Enter Size' %}">`;
+    theadRow.insertBefore(newHeaderCell, theadRow.lastElementChild);
+    const rows = document.querySelectorAll("#sizeQuantityTable tbody tr");
+    rows.forEach(function(row) {
+      const newCell = document.createElement("td");
+      let currentRow = row.getAttribute("data-row");
+      newCell.innerHTML = `<input type="number" name="cell_${currentRow}_${colCount-1}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">`;
+      row.insertBefore(newCell, row.lastElementChild);
+    });
+    updateRowControlColspan();
+  }
+
+  function deleteColumn() {
+    if (colCount > 1) {
+      const theadRow = document.querySelector("#sizeQuantityTable thead tr");
+      theadRow.removeChild(theadRow.children[theadRow.children.length - 2]);
+      const rows = document.querySelectorAll("#sizeQuantityTable tbody tr");
+      rows.forEach(function(row) {
+        row.removeChild(row.children[row.children.length - 2]);
+      });
+      colCount--;
+      updateRowControlColspan();
+    } else {
+      alert("{% trans 'At least one column must remain.' %}");
+    }
+  }
+
+  document.getElementById("addRowControl").addEventListener("click", addRow);
+  document.getElementById("deleteRowControl").addEventListener("click", deleteRow);
+  document.getElementById("addColumnControl").addEventListener("click", addColumn);
+  document.getElementById("deleteColumnControl").addEventListener("click", deleteColumn);
+
+  // ---------------------------------
+  // Delegate events for color/fabric selects
+  // ---------------------------------
+  document.addEventListener('change', function(e) {
+    if(e.target.matches('select.color-select')) {
+      if(e.target.value === 'add_new_color') {
+        // Open the Add Color modal.
+        let addColorModalEl = document.getElementById('addColorModal');
+        // Save the name of the triggering select so we can update it later.
+        addColorModalEl.dataset.triggerSelect = e.target.name;
+        e.target.value = ""; // reset selection
+        showModal(addColorModalEl);
+      }
+    }
+    if(e.target.matches('select.fabric-select')) {
+      if(e.target.value === 'add_new_fabric') {
+        let addFabricModalEl = document.getElementById('addFabricModal');
+        addFabricModalEl.dataset.triggerSelect = e.target.name;
+        e.target.value = "";
+        showModal(addFabricModalEl);
+      }
+    }
+  });
+
+  // ------------------------------
+  // Handle Add Color form submission.
+  // ------------------------------
+  document.getElementById('addColorForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    fetch("{% url 'add_color_api' %}", {
+      method: "POST",
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.success) {
+        // Add the new color to our global array.
+        globalColors.push({ id: data.color_id.toString(), name: data.color_name });
+        // Update all color selects with the new color.
+        updateAllColorSelects(data.color_id.toString(), data.color_name);
+        // Optionally, set the newly added color as selected in the triggering select.
+        let triggerSelectName = document.getElementById('addColorModal').dataset.triggerSelect;
+        if(triggerSelectName) {
+          document.querySelector(`select[name="${triggerSelectName}"]`).value = data.color_id;
+        }
+        hideModal(document.getElementById('addColorModal'));
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+
+  // ------------------------------
+  // Handle Add Fabric form submission.
+  // ------------------------------
+  document.getElementById('addFabricForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    fetch("{% url 'add_fabric_api' %}", {
+      method: "POST",
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if(data.success) {
+        globalFabrics.push({ id: data.fabric_id.toString(), name: data.fabric_name });
+        updateAllFabricSelects(data.fabric_id.toString(), data.fabric_name);
+        let triggerSelectName = document.getElementById('addFabricModal').dataset.triggerSelect;
+        if(triggerSelectName) {
+          document.querySelector(`select[name="${triggerSelectName}"]`).value = data.fabric_id;
+        }
+        hideModal(document.getElementById('addFabricModal'));
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+});
+</script>
+{% endblock %}

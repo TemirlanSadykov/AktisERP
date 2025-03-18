@@ -1,1 +1,1 @@
-web: gunicorn aktis.wsgi --log-file -
+web: gunicorn --timeout 600 aktis.wsgi --log-file -

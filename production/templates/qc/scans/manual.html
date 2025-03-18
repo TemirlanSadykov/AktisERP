@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Basic styling for inline text and table responsiveness */
+    .cell-text {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+</style>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Manual Scan" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Logout" %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="margin-top: 30px;">
+  <h2 class="mb-4">{% trans "Manual Order Scanning" %}</h2>
+  <form id="manual-scan-form">
+    <!-- Dropdown for Client Orders -->
+    <div class="form-group">
+      <label for="client-order-select">{% trans "Select Client Order" %}</label>
+      <select id="client-order-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+        {% for co in client_orders %}
+          <option value="{{ co.id }}">{{ co.client.name }} - {{ co.order_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <!-- Dropdown for Orders -->
+    <div class="form-group">
+      <label for="order-select">{% trans "Select Order" %}</label>
+      <select id="order-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+      </select>
+    </div>
+  </form>
+  <!-- Container for the dynamic order table -->
+  <div id="order-table-container" class="mt-4"></div>
+</div>
+
+<script>
+    // Helper to get CSRF token.
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + "=")) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
+    document.addEventListener("DOMContentLoaded", function() {
+      const clientOrderSelect = document.getElementById("client-order-select");
+      const orderSelect = document.getElementById("order-select");
+      const orderTableContainer = document.getElementById("order-table-container");
+    
+      let activeOrderId = null;
+      let orderTableData = null;
+      let lastUpdatedCell = null; // Optional: to highlight recently updated cells
+    
+      // When a client order is chosen, fetch its related orders.
+      clientOrderSelect.addEventListener("change", function() {
+        const clientOrderId = clientOrderSelect.value;
+        if (clientOrderId) {
+          fetch(`/production/qc/ajax/get-orders/?client_order_id=${clientOrderId}`)
+            .then(response => response.json())
+            .then(data => {
+              orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+              orderTableContainer.innerHTML = "";
+              data.orders.forEach(function(order) {
+                const option = document.createElement("option");
+                option.value = order.id;
+                option.textContent = order.label;
+                orderSelect.appendChild(option);
+              });
+            })
+            .catch(error => console.error("Error fetching orders:", error));
+        } else {
+          orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+          orderTableContainer.innerHTML = "";
+        }
+      });
+    
+      // When an order is chosen, fetch its order table data.
+      orderSelect.addEventListener("change", function() {
+        const orderId = orderSelect.value;
+        if (orderId) {
+          loadOrderTableData(orderId)
+            .then(function(orderData) {
+              initializeOrderTable(orderData);
+            })
+            .catch(function(err) {
+              console.error("Error loading order table data:", err);
+            });
+        } else {
+          orderTableContainer.innerHTML = "";
+        }
+      });
+    
+      // Function to fetch order table data from the server.
+      function loadOrderTableData(orderId) {
+        return fetch(`/production/qc/orders/get-order-table-data/${orderId}/`)
+          .then(function(response) {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          });
+      }
+    
+      // Initialize the order table with data fetched from the server.
+      function initializeOrderTable(orderData) {
+        activeOrderId = orderData.order_id;
+        orderTableData = {
+          orderName: orderData.order_name,
+          allSizes: orderData.all_sizes,
+          rows: {}  // Structure: { "Color Fabrics": { required: {...}, scanned: {...} } }
+        };
+        for (var combo in orderData.pivot_data) {
+          orderTableData.rows[combo] = {
+            required: orderData.pivot_data[combo],
+            scanned: {}
+          };
+          orderData.all_sizes.forEach(function(size) {
+            var count = 0;
+            if (orderData.checked_counts &&
+                orderData.checked_counts[combo] &&
+                orderData.checked_counts[combo][size]) {
+              count = orderData.checked_counts[combo][size];
+            }
+            orderTableData.rows[combo].scanned[size] = count;
+          });
+        }
+        renderOrderTable();
+      }
+    
+      // Render the order table.
+      function renderOrderTable() {
+        if (!orderTableData) return;
+        var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+        html += '<th>{% trans "Order:" %} ' + orderTableData.orderName + '</th>';
+        orderTableData.allSizes.forEach(function(size) {
+          html += '<th>' + size + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        for (var combo in orderTableData.rows) {
+          html += '<tr><td>' + combo + '</td>';
+          orderTableData.allSizes.forEach(function(size) {
+            var scanned = orderTableData.rows[combo].scanned[size] || 0;
+            var required = orderTableData.rows[combo].required[size] || 0;
+            var cellContent = '';
+            if (scanned === 0) {
+              // If no scanned value, display an input field (this input does NOT get the "edited-input" class).
+              cellContent = '<input type="text" data-combo="'+combo+'" data-size="'+size+'" style="width:50px;" placeholder="0" />/' + required;
+            } else {
+              // If scanned value exists, wrap it in a span for editing.
+              cellContent = '<span class="editable" data-combo="'+combo+'" data-size="'+size+'">' + scanned + '</span>/' + required;
+            }
+            if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
+              html += '<td style="border: 3px solid red;">' + cellContent + '</td>';
+            } else {
+              html += '<td>' + cellContent + '</td>';
+            }
+          });
+          html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        orderTableContainer.innerHTML = html;
+      }
+    
+      // Listen for changes on the input fields using event delegation.
+      // Only handle inputs that do not have the "edited-input" class.
+      orderTableContainer.addEventListener('change', function(event) {
+        if (event.target.tagName.toLowerCase() === 'input' &&
+            !event.target.classList.contains('edited-input')) {
+          const inputEl = event.target;
+          const qty = parseInt(inputEl.value, 10);
+          if (isNaN(qty) || qty <= 0) {
+            return; // Ignore invalid input.
+          }
+          const combo = inputEl.getAttribute('data-combo');
+          const size = inputEl.getAttribute('data-size');
+          const orderId = activeOrderId;
+    
+          const payload = {
+            order_id: orderId,
+            combo: combo,
+            size: size,
+            quantity: qty
+          };
+    
+          fetch('/production/qc/ajax/orders/update-checked-quantity/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+          })
+          .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              // Update the scanned count for this cell and refresh the table.
+              orderTableData.rows[combo].scanned[size] = (orderTableData.rows[combo].scanned[size] || 0) + qty;
+              renderOrderTable();
+            } else {
+              alert('Failed to update: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error updating checked quantity:', error);
+            alert('Error updating checked quantity: ' + error.message);
+          });
+        }
+      });
+    
+      // Add event listeners for double-click (desktop) and double-tap (mobile) on editable spans.
+      orderTableContainer.addEventListener("dblclick", function(event) {
+        if (event.target.classList.contains("editable")) {
+          handleEditableAction(event.target);
+        }
+      });
+    
+      let lastTap = 0;
+      orderTableContainer.addEventListener("touchend", function(event) {
+        let currentTime = new Date().getTime();
+        let tapLength = currentTime - lastTap;
+        lastTap = currentTime;
+        if (tapLength < 500 && tapLength > 0) {
+          if (event.target.classList.contains("editable")) {
+            event.preventDefault();
+            handleEditableAction(event.target);
+          }
+        }
+      });
+    
+      // Function to replace the span with an input field for editing.
+      function handleEditableAction(span) {
+        const originalValue = span.textContent.trim();
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = originalValue;
+        input.className = "edit-input edited-input"; // Mark as edited-input so change event ignores it.
+        input.style.width = "50px";
+        input.setAttribute("data-combo", span.getAttribute("data-combo"));
+        input.setAttribute("data-size", span.getAttribute("data-size"));
+    
+        span.parentNode.replaceChild(input, span);
+        input.focus();
+    
+        let updateSubmitted = false;  // Flag to ensure update is only submitted once.
+    
+        const revertToSpan = function(newValue) {
+          if (!input.parentNode) return;
+          const finalValue = (newValue && newValue.trim() !== "") ? newValue : originalValue;
+          const newSpan = document.createElement("span");
+          newSpan.className = "editable";
+          newSpan.textContent = finalValue;
+          newSpan.setAttribute("data-combo", input.getAttribute("data-combo"));
+          newSpan.setAttribute("data-size", input.getAttribute("data-size"));
+          input.parentNode.replaceChild(newSpan, input);
+        };
+    
+        const submitUpdate = function() {
+          if (updateSubmitted) return;
+          updateSubmitted = true;
+          updateScannedQuantity(input.getAttribute("data-combo"), input.getAttribute("data-size"), input.value, revertToSpan, originalValue);
+        };
+    
+        input.addEventListener("blur", function() {
+          submitUpdate();
+        });
+    
+        input.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submitUpdate();
+          }
+        });
+      }
+    
+      // Function to send the updated scanned quantity via AJAX.
+      function updateScannedQuantity(combo, size, newValue, callback, originalValue) {
+        const orderId = activeOrderId;
+        const payload = {
+          order_id: orderId,
+          combo: combo,
+          size: size,
+          quantity: parseInt(newValue, 10)
+        };
+    
+        fetch('/production/qc/ajax/orders/update-checked-quantity/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            callback(newValue);
+          } else {
+            alert("Failed to update: " + data.message);
+            callback(originalValue);
+          }
+        })
+        .catch(error => {
+          console.error("Error updating scanned quantity:", error);
+          alert("Error updating scanned quantity: " + error.message);
+          callback(originalValue);
+        });
+      }
+    
+    });
+</script>    
+{% endblock %}

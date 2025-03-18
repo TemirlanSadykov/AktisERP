@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<!-- Inline CSS to display two items per row -->
+<style>
+  /* Arrange each size choice in two columns */
+  #size-choices {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 10px;
+    align-items: center;
+  }
+  /* Ensure each label shows its contents inline */
+  #size-choices label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Cutter Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Logout" %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card-header">
+        <h2 class="card-title">{% trans "Edit Cut for Order:" %} #{{ order.pk }}</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" id="cut-form">
+          {% csrf_token %}
+          <!-- Render the unique sizes checkboxes in a grid -->
+          <div id="size-choices">
+            {{ form.size_choices }}
+          </div>
+
+          <!-- Render Width and Length fields -->
+          <div class="form-group">
+            <label for="id_width">{% trans "Width" %}</label>
+            {{ form.width }}
+          </div>
+          <div class="form-group">
+            <label for="id_length">{% trans "Length" %}</label>
+            {{ form.length }}
+          </div>
+          <!-- Display Consumption (auto-calculated) -->
+          <div class="form-group">
+            <label>{% trans "Consumption (auto-calculated)" %}</label>
+            <input type="text" id="id_consumption_display" readonly class="form-control">
+          </div>
+          <!-- Hidden field to store consumption for submission -->
+          <input type="hidden" name="consumption" id="id_consumption">
+          <!-- Hidden field to store quantities as JSON -->
+          <input type="hidden" name="quantities" id="id_quantities" value='{{ form.initial.quantities|default:"{}" }}'>
+
+          <button type="submit" class="btn btn-primary mt-3">{% trans "Save" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    // Object to store the quantity for each selected size.
+    const quantities = {};
+  
+    // Function to recalculate consumption.
+    // Formula: consumption = length / (sum of all quantities for selected sizes)
+    function recalcConsumption() {
+        const lengthInput = document.getElementById('id_length');
+        const consumptionDisplay = document.getElementById('id_consumption_display');
+        const hiddenConsumption = document.getElementById('id_consumption');
+        const lengthVal = parseFloat(lengthInput.value);
+        if (isNaN(lengthVal)) {
+            consumptionDisplay.value = "";
+            hiddenConsumption.value = "";
+            return;
+        }
+        let totalPieces = 0;
+        for (let size in quantities) {
+            totalPieces += parseInt(quantities[size]) || 0;
+        }
+        if (totalPieces > 0) {
+            const consumption = lengthVal / totalPieces;
+            consumptionDisplay.value = consumption.toFixed(2);
+            hiddenConsumption.value = consumption.toFixed(2);
+        } else {
+            consumptionDisplay.value = "";
+            hiddenConsumption.value = "";
+        }
+    }
+  
+    // Listen for changes on the length input to update consumption.
+    document.getElementById('id_length').addEventListener('input', recalcConsumption);
+  
+    // For each size checkbox, when checked, add an inline quantity input.
+    document.querySelectorAll('input[name="size_choices"]').forEach(function(sizeCheckbox) {
+        sizeCheckbox.addEventListener('change', function() {
+            const sizeValue = sizeCheckbox.value;
+            // Find the closest label (the checkbox is usually wrapped in one).
+            let parentLabel = sizeCheckbox.closest('label') || sizeCheckbox;
+  
+            if (sizeCheckbox.checked) {
+                // If input doesn't exist already, create it.
+                if (!document.getElementById('quantity_' + sizeValue)) {
+                    const quantityInput = document.createElement('input');
+                    quantityInput.type = 'number';
+                    quantityInput.id = 'quantity_' + sizeValue;
+                    quantityInput.name = 'quantity_' + sizeValue;
+                    quantityInput.min = 1;
+                    // Use the default value 1 (or later updated by initialization).
+                    quantityInput.value = 1;
+                    quantityInput.style.width = '80px';
+                    quantityInput.style.marginLeft = '10px';
+                    quantityInput.classList.add('form-control', 'form-control-sm');
+  
+                    // Append the quantity input next to the label.
+                    parentLabel.appendChild(quantityInput);
+  
+                    // Initialize quantity for this size.
+                    quantities[sizeValue] = parseInt(quantityInput.value) || 1;
+  
+                    // Listen for changes on this input.
+                    quantityInput.addEventListener('input', function(e) {
+                        quantities[sizeValue] = parseInt(e.target.value) || 1;
+                        document.getElementById('id_quantities').value = JSON.stringify(quantities);
+                        recalcConsumption();
+                    });
+                }
+            } else {
+                // If unchecked, remove the corresponding input field.
+                const quantityInput = document.getElementById('quantity_' + sizeValue);
+                if (quantityInput) {
+                    quantityInput.remove();
+                }
+                delete quantities[sizeValue];
+            }
+            // Update the hidden quantities field.
+            document.getElementById('id_quantities').value = JSON.stringify(quantities);
+            recalcConsumption();
+        });
+    });
+  
+    // Initialize existing quantities and set checkboxes/inputs accordingly.
+    try {
+        // Parse the initial quantities JSON from the hidden field.
+        const initialQuantities = JSON.parse(document.getElementById('id_quantities').value || '{}');
+        for (const [size, qty] of Object.entries(initialQuantities)) {
+            // Save the value in our quantities object.
+            quantities[size] = qty;
+            // Find the corresponding checkbox.
+            const checkbox = document.querySelector('input[name="size_choices"][value="' + size + '"]');
+            if (checkbox) {
+                // Force the checkbox to be checked.
+                checkbox.checked = true;
+                // Instead of dispatching a change event (which would override our value),
+                // manually create the quantity input if it doesn't exist.
+                let parentLabel = checkbox.closest('label') || checkbox;
+                let qtyInput = document.getElementById('quantity_' + size);
+                if (!qtyInput) {
+                    qtyInput = document.createElement('input');
+                    qtyInput.type = 'number';
+                    qtyInput.id = 'quantity_' + size;
+                    qtyInput.name = 'quantity_' + size;
+                    qtyInput.min = 1;
+                    qtyInput.style.width = '80px';
+                    qtyInput.style.marginLeft = '10px';
+                    qtyInput.classList.add('form-control', 'form-control-sm');
+                    parentLabel.appendChild(qtyInput);
+                }
+                // Set the quantity input's value to the initial quantity.
+                qtyInput.value = qty;
+                // Update the quantities object in case it was overwritten.
+                quantities[size] = parseInt(qtyInput.value) || 1;
+            }
+        }
+        // Update the hidden field and recalc consumption.
+        document.getElementById('id_quantities').value = JSON.stringify(quantities);
+        recalcConsumption();
+    } catch(e) {
+        console.error("Error initializing quantities: ", e);
+    }
+</script>  
+{% endblock %}

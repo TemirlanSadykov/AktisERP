@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+{% load i18n custom_filters static %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 class="navfont" style="color: #232323; margin:auto;">{% trans "Technologist Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Logout" %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="max-width: 100%;">
+  <div class="card-header">
+    {% trans "Assign Operations for Cut" %} №{{ cut.number }}
+  </div>
+  <div class="container" style="max-width: 100%;">
+    <div class="card-body">
+      <p>
+        <strong>{% trans "Order:" %}</strong> {{ cut.order.client_order.client.name }} - {{ cut.order.client_order.order_number }},
+        <strong>{% trans "Model:" %}</strong> {{ cut.order.model.name }},
+        <strong>{% trans "Date:" %}</strong> {{ cut.date|date:"Y-m-d" }}
+      </p>
+    </div>
+    <form id="operationAssignmentForm" class="operation-form">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <!-- Change from rowspan to colspan="3" to cover the three subcolumns -->
+              <th colspan="3" style="vertical-align: middle;">{% trans "Passport" %}</th>
+              {% for passport in passports %}
+                {% with sizes=passport_sizes_by_passport|get_item:passport.id %}
+                  <th colspan="{{ sizes|length }}" style="text-align: center;">
+                    №{{ passport.number }}
+                    {% if passport.passport_sizes.all %}
+                      {% with ps=passport.passport_sizes.all.0 %}
+                        {{ ps.size_quantity.color }}
+                      {% endwith %}
+                    {% else %}
+                      -
+                    {% endif %}
+                    {% if passport.passport_sizes.all %}
+                      {% with ps=passport.passport_sizes.all.0 %}
+                        {{ ps.size_quantity.fabrics }}
+                      {% endwith %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </th>
+                {% endwith %}
+              {% endfor %}
+            </tr>
+            <tr>
+              <!-- New sub-header row for the operation information -->
+              <th>{% trans "Node" %}</th>
+              <th>{% trans "Equipment" %}</th>
+              <th>{% trans "Operation" %}</th>
+              {% for passport in passports %}
+                {% with sizes=passport_sizes_by_passport|get_item:passport.id %}
+                  {% for ps in sizes %}
+                    <th style="text-align: center;">
+                      {% if ps.extra %}
+                        {{ ps.size_quantity.size }} - {{ ps.extra }}
+                      {% else %}
+                        {{ ps.size_quantity.size }}
+                      {% endif %}
+                      {% if ps.factual %}
+                        (<span class="editable-quantity" data-passport-size-id="{{ ps.id }}">{{ ps.factual }}</span> | {{ ps.quantity }})
+                      {% else %}
+                        (<span class="editable-quantity" data-passport-size-id="{{ ps.id }}">{{ ps.quantity }})
+                      {% endif %}
+                    </th>                  
+                  {% endfor %}
+                {% endwith %}
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for operation in operations %}
+              <tr>
+                <!-- Split the original single cell into three separate cells -->
+                <td>{{ operation.node.name }}</td>
+                <td>{{ operation.equipment.name }}</td>
+                <td>{{ operation.name }}</td>
+                {% for passport in passports %}
+                  {% with sizes=passport_sizes_by_passport|get_item:passport.id %}
+                    {% for ps in sizes %}
+                      <td>
+                        {% get_work work_by_op_and_size operation.id ps.id as works %}
+                        {% if works %}
+                          {% for work in works %}
+                            <div style="display: block;">
+                              <span class="{{ work.id }} editable" 
+                                    style="color: {{ work.is_success|yesno:'green,red' }}; display: inline-block;" 
+                                    data-work="{{ work.id }}">
+                                {{ work.employee.employee_id }} ({{ work.quantity }})
+                              </span>
+                              <br>
+                            </div>
+                          {% endfor %}
+                        {% else %}
+                          <input type="text" name="employee_{{ operation.id }}_{{ ps.id }}" 
+                                 class="employee-input" 
+                                 placeholder="{% trans 'ID (Quan.)' %}" 
+                                 style="width: 80px;" 
+                                 enterkeyhint="done">
+                        {% endif %}
+                      </td>
+                    {% endfor %}
+                  {% endwith %}
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Loading overlay to prevent duplicate submissions -->
+<div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 9999;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">{% trans "Loading..." %}</span>
+  </div>
+</div>
+
+<script>
+  // Counter to track ongoing submissions
+  var activeRequests = 0;
+  function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+  }
+  function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+
+  var passportId = "{{ passport.id }}";
+  var cutId = "{{ cut.id }}";
+  
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function() {
+    // Only propagate value if it's the first cell in the row
+    document.querySelectorAll('.employee-input').forEach(input => {
+      input.addEventListener('input', function(event) {
+        
+      });
+  
+      // On Enter, process every input in the same row
+      input.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const row = input.closest('tr');
+          row.querySelectorAll('.employee-input').forEach(inp => {
+            const nameParts = inp.name.split('_'); // expected: employee_{operationId}_{passportSizeId}
+            const operationId = nameParts[1];
+            const passportSizeId = nameParts[2];
+            const value = inp.value.trim();
+            if (value !== '') {
+              assignOperation(operationId, passportSizeId, value, inp);
+            }
+          });
+        }
+      });
+    });
+  });
+  
+  function assignOperation(operationId, passportSizeId, value, inputElement) {
+    activeRequests++;
+    if (activeRequests === 1) {
+      showLoading();
+    }
+    
+    fetch(`/production/technologist/passports/${cutId}/assign_operations_by_cut/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        operation_id: operationId,
+        passport_size_id: passportSizeId,
+        value: value
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        inputElement.value = ''; // Clear the input field
+        const newSpan = document.createElement('span');
+        newSpan.className = 'editable';
+        newSpan.textContent = value;
+        inputElement.parentNode.replaceChild(newSpan, inputElement);
+      } else {
+        console.error('Failed to assign operation', data.message);
+        alert('Не получилось обновить');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    })
+    .finally(() => {
+      activeRequests--;
+      if (activeRequests === 0) {
+        hideLoading();
+      }
+    });
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Attach dblclick listener to all quantity spans
+    document.querySelectorAll('.editable-quantity').forEach(function(span) {
+      span.addEventListener('dblclick', function() {
+        handleEditableQuantityAction(span);
+      });
+    });
+  });
+
+  function handleEditableQuantityAction(span) {
+    var originalValue = span.textContent.trim();
+    var passportSizeId = span.getAttribute('data-passport-size-id');
+
+    // Create an input element with the current quantity
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = originalValue;
+    input.className = 'edit-quantity-input';
+    input.style.width = '50px'; // Adjust as needed
+
+    // Replace the span with the input
+    span.parentNode.replaceChild(input, span);
+    input.focus();
+
+    // Function to revert back to the original span
+    function revert() {
+      var newSpan = document.createElement('span');
+      newSpan.className = 'editable-quantity';
+      newSpan.setAttribute('data-passport-size-id', passportSizeId);
+      newSpan.textContent = originalValue;
+      input.parentNode.replaceChild(newSpan, input);
+      newSpan.addEventListener('dblclick', function() {
+        handleEditableQuantityAction(newSpan);
+      });
+    }
+
+    // Function to save the new quantity value
+    function save() {
+      var newValue = input.value.trim();
+      if (newValue === "") {
+        revert();
+        return;
+      }
+      if (newValue === originalValue) {
+        revert();
+        return;
+      }
+
+      // Show a loading indicator if desired
+      showLoading();
+      fetch('/production/technologist/passports/update_passport_quantity/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          passport_size_id: passportSizeId,
+          new_quantity: newValue
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Server responded with status " + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.status === 'success') {
+          // Update all instances of this passport size's quantity
+          document.querySelectorAll('.editable-quantity[data-passport-size-id="' + passportSizeId + '"]').forEach(function(el) {
+            el.textContent = newValue;
+          });
+        } else {
+          alert('Failed to update quantity: ' + data.message);
+          revert();
+        }
+      })
+      .catch(error => {
+        console.error('Error updating passport quantity:', error);
+        alert('Error updating quantity');
+        revert();
+      })
+      .finally(() => {
+        hideLoading();
+      });
+
+      // Replace the input with a span showing the new value
+      var newSpan = document.createElement('span');
+      newSpan.className = 'editable-quantity';
+      newSpan.setAttribute('data-passport-size-id', passportSizeId);
+      newSpan.textContent = newValue;
+      input.parentNode.replaceChild(newSpan, input);
+      newSpan.addEventListener('dblclick', function() {
+        handleEditableQuantityAction(newSpan);
+      });
+    }
+
+    // Save on blur or when Enter is pressed
+    input.addEventListener('blur', function() {
+      revert();
+    });
+    input.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        save();
+      }
+    });
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var operationAssignmentForm = document.querySelector('#operationAssignmentForm');
+
+    // Helper function to convert an editable span into an input field
+    function handleEditableAction(span) {
+      var originalText = span.textContent.trim();
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.value = originalText;
+      input.className = 'edit-input';
+      input.style.width = '80px';
+      input.setAttribute('enterkeyhint', 'done');
+      input.setAttribute('data-work', span.getAttribute('data-work'));
+      
+      // Replace the span with the input field and focus it
+      span.parentNode.replaceChild(input, span);
+      input.focus();
+
+      // Flag to prevent multiple replacements
+      var isReplaced = false;
+      var revertToSpan = function(newValue) {
+        if (isReplaced) return;
+        isReplaced = true;
+        if (!input.parentNode || !input.parentNode.contains(input)) return;
+        
+        // If newValue is empty (or null), remove the input entirely
+        if (!newValue || newValue.trim() === "") {
+          input.parentNode.removeChild(input);
+        } else {
+          var newSpan = document.createElement('span');
+          newSpan.textContent = newValue;
+          newSpan.className = 'editable';
+          newSpan.style.color = span.style.color; // Copy styling if needed
+          newSpan.setAttribute('data-work', span.getAttribute('data-work'));
+          input.parentNode.replaceChild(newSpan, input);
+        }
+      };
+
+      // Revert on blur
+      input.addEventListener('blur', function() {
+        revertToSpan(input.value);
+      });
+
+      // On Enter, update via AJAX then revert.
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var workId = input.getAttribute('data-work');
+          updateWork(workId, input.value, revertToSpan, originalText);
+        }
+      });
+    }
+
+    // Desktop: use dblclick event
+    operationAssignmentForm.addEventListener('dblclick', function(event) {
+      if (event.target.classList.contains('editable')) {
+        handleEditableAction(event.target);
+      }
+    });
+
+    // Mobile: use touchend to detect double-tap (within 500ms)
+    var lastTap = 0;
+    operationAssignmentForm.addEventListener('touchend', function(event) {
+      var currentTime = new Date().getTime();
+      var tapLength = currentTime - lastTap;
+      lastTap = currentTime;
+      if (tapLength < 500 && tapLength > 0) { // Adjust threshold as needed
+        if (event.target.classList.contains('editable')) {
+          event.preventDefault();
+          handleEditableAction(event.target);
+        }
+      }
+    });
+  });
+
+  function updateWork(workId, newValue, callback, originalText) {
+    activeRequests++;
+    if (activeRequests === 1) {
+      showLoading();
+    }
+    
+    fetch(`/production/technologist/passports/update_work/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        work_id: workId,
+        value: newValue
+      })
+    })
+    .then(response => {
+      // Only continue if we received a 200-status response
+      if (!response.ok) {
+        throw new Error("Server responded with status " + response.status);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.status === 'success') {
+        // If newValue is empty, pass null to remove the span
+        callback(newValue.trim() ? newValue : null);
+      } else {
+        console.error('Failed to update work', data.message);
+        alert('Не получилось обновить');
+        callback(originalText);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Не получилось обновить');
+      callback(originalText);
+    })
+    .finally(() => {
+      activeRequests--;
+      if (activeRequests === 0) {
+        hideLoading();
+      }
+    });
+  }
+</script>
+{% endblock %}

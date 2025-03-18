@@ -1,40 +1,44 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load static %}
+
 {% block content %}
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-<button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
-<i class="fas fa-bars"></i>
-</button>
-<h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Scan" %}</h4>
-<div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
-<ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
-  <li class="nav-item dropdown" style="margin: 10px;">
-    {{ request.user.username }}
-  </li>
-  <li class="nav-item dropdown">
-    <form action="{% url 'logout' %}" method="post">
-      {% csrf_token %}
-        <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
-    </form>
-  </li>
-</ul>
-</div>
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Scan" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
 </nav>
+
 <div class="container clients-wrapper maincontr">
-      <div class="clients-header">
-        <span class="operation-text">{% trans "Scanned Items" %}</span>
-        <input type="text" id="barcode-input" autofocus style="padding: 8px;" placeholder="Ручной ввод"/>
-      </div>
-      <ul class="clients-list" id="scanned-items-list">
-      </ul>
+  <div class="clients-header">
+    <span class="operation-text">{% trans "Scan Items" %}</span>
+    <input type="text" id="barcode-input" autofocus style="padding: 8px;" placeholder="Ручной ввод"/>
+  </div>
+  
+  <!-- Container for the dynamic order table -->
+  <div id="order-table-container"></div>
 </div>
+
 <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true" data-backdrop="false">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="errorModalLabel">Error</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <h5 class="modal-title" id="errorModalLabel">{% trans "Ошибка" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -42,52 +46,175 @@
         <!-- Error message will be displayed here -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Закрыть" %}</button>
       </div>
     </div>
   </div>
 </div>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     var barcodeInput = document.getElementById('barcode-input');
-
-    barcodeInput.addEventListener('change', function() {
+    var currentPieceId = null;
+    // Store the most recent scanned piece for later table update.
+    var lastScannedPiece = null;
+    // Global variable to mark the cell that was just updated.
+    var lastUpdatedCell = null;
+    
+    // Global variables for order table management.
+    var activeOrderId = null;
+    var orderTableData = null; 
+    // orderTableData structure:
+    // {
+    //   orderName: "Order Model Name",
+    //   allSizes: ["40", "42", "44"],
+    //   rows: {
+    //     "Red Cotton": { 
+    //         required: { "40": 10, "42": 10, "44": 10 },
+    //         packed: { "40": currentCount, "42": currentCount, "44": currentCount }
+    //     },
+    //     ...
+    //   }
+    // }
+  
+    // Render the order table into #order-table-container.
+    function renderOrderTable() {
+      if (!orderTableData) return;
+      var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+      html += '<th>Order: ' + orderTableData.orderName + '</th>';
+      orderTableData.allSizes.forEach(function(size) {
+        html += '<th>' + size + '</th>';
+      });
+      html += '</tr></thead><tbody>';
+      for (var combo in orderTableData.rows) {
+        html += '<tr><td>' + combo + '</td>';
+        orderTableData.allSizes.forEach(function(size) {
+          var packed = orderTableData.rows[combo].packed[size] || 0;
+          var required = orderTableData.rows[combo].required[size] || 0;
+          // If this cell was just updated, add a red border.
+          if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
+            html += '<td style="border-top: 3px solid red; border-right: 3px solid red; border-bottom: 3px solid red; border-left: 3px solid red;">' + packed + '/' + required + '</td>';
+          } else {
+            html += '<td>' + packed + '/' + required + '</td>';
+          }
+        });
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      document.getElementById('order-table-container').innerHTML = html;
+    }
+  
+    // Initialize the order table with data fetched from the server.
+    function initializeOrderTable(orderData) {
+      activeOrderId = orderData.order_id;
+      orderTableData = {
+        orderName: orderData.order_name,
+        allSizes: orderData.all_sizes,
+        rows: {} // e.g. { "Red Cotton": { required: {...}, packed: {...} }, ... }
+      };
+      for (var combo in orderData.pivot_data) {
+        orderTableData.rows[combo] = {
+          required: orderData.pivot_data[combo],
+          packed: {}
+        };
+        orderData.all_sizes.forEach(function(size) {
+          var count = 0;
+          if (orderData.packed_counts &&
+              orderData.packed_counts[combo] &&
+              orderData.packed_counts[combo][size]) {
+            count = orderData.packed_counts[combo][size];
+          }
+          orderTableData.rows[combo].packed[size] = count;
+        });
+      }
+      renderOrderTable();
+    }
+  
+    // Fetch order table data from API for a given order_id.
+    function loadOrderTableData(orderId) {
+      return fetch('/production/packer/orders/get-order-table-data/' + orderId + '/')
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        });
+    }
+  
+    // Update (or initialize) the order table with the scanned piece.
+    // The parameter addCount should be true when a piece is successfully packed.
+    function updateOrderTableWithScan(scannedPiece, addCount) {
+      if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
+        // A different order was scanned – load new order data and initialize table.
+        loadOrderTableData(scannedPiece.order_id)
+          .then(function(orderData) {
+            initializeOrderTable(orderData);
+            renderOrderTable();
+          })
+          .catch(function(err) {
+            console.error('Error loading order table data:', err);
+          });
+      } else {
+        // Same order – update the packed count for the corresponding cell if addCount is true.
+        if (addCount) {
+          var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
+          if (orderTableData.rows[combo]) {
+            orderTableData.rows[combo].packed[scannedPiece.size] =
+              (orderTableData.rows[combo].packed[scannedPiece.size] || 0) + 1;
+            // Mark this cell as updated so it will have a red border.
+            lastUpdatedCell = { combo: combo, size: scannedPiece.size };
+            renderOrderTable();
+          }
+        } else {
+          renderOrderTable();
+        }
+      }
+    }
+  
+    // Process the barcode input.
+    function processBarcode() {
       var barcode = barcodeInput.value.trim();
       if (barcode) {
         let ids = barcode.split('-');
-        let pieceId = ids[ids.length - 1];  // Get the piece ID from barcode
-
+        let pieceId = ids[ids.length - 1]; // Assume the last part is the piece ID.
+        
         fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
           method: 'POST',
           headers: {
             'X-CSRFToken': getCookie('csrftoken'),
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({stage: 'Packed'})
+          body: JSON.stringify({ stage: 'Packed' })
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
           if (data.success) {
-            var listItem = document.createElement('li');
-            listItem.className = 'list-group-item';
-            listItem.style.padding = '18px';
-            listItem.textContent = `${data.piece_id} - ${data.order} - Паспорт №${data.passport} - Размер ${data.size} - ${data.stage}`;
-            document.getElementById('scanned-items-list').appendChild(listItem);
+            currentPieceId = data.piece_id;
+            data.order_id = data.order_id || (activeOrderId ? activeOrderId : data.order_id);
+            lastScannedPiece = data;
+            updateOrderTableWithScan(lastScannedPiece, true);
           } else {
             document.getElementById('errorModalMessage').textContent = data.message;
             $('#errorModal').modal('show');
           }
         })
-        .catch(error => {
+        .catch(function(error) {
           console.error('Error updating piece:', error);
           document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
           $('#errorModal').modal('show');
         });
       }
-      barcodeInput.value = ''; // Clear the input
-      barcodeInput.focus();   // Refocus the input
+      barcodeInput.value = '';
+      barcodeInput.focus();
+    }
+  
+    barcodeInput.addEventListener('change', processBarcode);
+  
+    $('#errorModal').on('hidden.bs.modal', function () {
+      barcodeInput.focus();
     });
-
+  
+    // Utility function to get CSRF token.
     function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
@@ -103,5 +230,5 @@
       return cookieValue;
     }
   });
-</script> 
+</script>
 {% endblock %}

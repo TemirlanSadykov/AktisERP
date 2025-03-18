@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+        <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+            <li class="nav-item dropdown" style="margin: 10px;">
+                {{ request.user.username }}
+            </li>
+            <li class="nav-item dropdown">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container maincontr">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card-header">
+                <h2 class="card-title">{% trans "Add Accessories for Model:" %} {{ model.name }}</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" id="accessories-form">
+                    {% csrf_token %}
+                    
+                    <label>{% trans "Select Accessories" %}</label>
+                    <div id="accessories-container">
+                        {% for accessory in accessories %}
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="accessory" 
+                                           value="{{ accessory.id }}" 
+                                           data-name="{{ accessory.name }}" 
+                                           data-unit="{{ accessory.unit }}">
+                                    {{ accessory.name }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div id="quantity-fields" style="margin-top: 20px;">
+                        <!-- Quantity input fields with accessory labels will be added here dynamically -->
+                    </div>
+
+                    <input type="hidden" name="accessories_data" id="id_accessories_data">
+                    <button type="submit" class="btn btn-primary mt-3">{% trans "Save Accessories" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const accessoriesData = {};
+
+    document.querySelectorAll('input[name="accessory"]').forEach(accessoryCheckbox => {
+        accessoryCheckbox.addEventListener('change', () => {
+            const quantityFields = document.getElementById('quantity-fields');
+            const accessoryId = accessoryCheckbox.value;
+            const accessoryName = accessoryCheckbox.getAttribute('data-name');
+            const accessoryUnit = accessoryCheckbox.getAttribute('data-unit');
+
+            if (accessoryCheckbox.checked) {
+                // Create a new container for the accessory and input field
+                const container = document.createElement('div');
+                container.classList.add('d-flex', 'align-items-center', 'mb-2');
+                container.dataset.accessoryId = accessoryId;
+
+                // Label displaying the accessory name and unit
+                const label = document.createElement('span');
+                label.textContent = `${accessoryName} (${accessoryUnit}): `;
+                label.classList.add('mr-2');
+
+                // Quantity input field
+                const quantityInput = document.createElement('input');
+                quantityInput.type = 'number';
+                quantityInput.name = `quantity_${accessoryId}`;
+                quantityInput.min = 1;
+                quantityInput.value = 1;
+                quantityInput.classList.add('form-control', 'form-control-sm');
+                quantityInput.style.width = '80px';
+
+                // Append label and input to the container, then add to the form
+                container.appendChild(label);
+                container.appendChild(quantityInput);
+                quantityFields.appendChild(container);
+
+                // Initialize quantity in the JSON object
+                accessoriesData[accessoryId] = 1;
+                document.getElementById('id_accessories_data').value = JSON.stringify(accessoriesData);
+
+                // Update the quantities JSON as the input value changes
+                quantityInput.addEventListener('input', (e) => {
+                    accessoriesData[accessoryId] = parseInt(e.target.value) || 1;
+                    document.getElementById('id_accessories_data').value = JSON.stringify(accessoriesData);
+                });
+            } else {
+                // Remove the quantity input and label for this accessory if unchecked
+                const containerToRemove = document.querySelector(`div[data-accessory-id="${accessoryId}"]`);
+                if (containerToRemove) {
+                    containerToRemove.remove();
+                    delete accessoriesData[accessoryId];
+                    document.getElementById('id_accessories_data').value = JSON.stringify(accessoriesData);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

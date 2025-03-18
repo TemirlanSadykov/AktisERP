@@ -1,4 +1,5 @@
 from django import template
+from collections import defaultdict
 
 register = template.Library()
 
@@ -56,10 +57,6 @@ def subtract(required, produced):
     except TypeError:
         return required
     
-@register.filter(name='available_meters')
-def available_meters(roll):
-    return roll.meters - roll.used_meters
-
 @register.filter(name='status_color')
 def status_color(value):
     colors = {
@@ -106,3 +103,30 @@ def split_part(value, arg):
         return value.split(" - ")[part_index]
     except (IndexError, ValueError):
         return None
+    
+@register.filter
+def checked_pieces(passport_size):
+    # Count the number of pieces with the stage 'CHECKED'
+    return passport_size.pieces.filter(stage='CHECKED').count()
+
+@register.filter
+def packed_pieces(passport_size):
+    # Count the number of pieces with the stage 'CHECKED'
+    return passport_size.pieces.filter(stage='PACKED').count()
+
+@register.filter
+def multiply(value, arg):
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return ''
+    
+@register.filter
+def group_by_node(operations):
+    grouped = defaultdict(list)
+    for operation in operations:
+        grouped[operation.node].append(operation)
+
+    # Sort nodes numerically by their `number` field
+    sorted_grouped = sorted(grouped.items(), key=lambda item: int(item[0].number))
+    return sorted_grouped  # Return a sorted list of tuples

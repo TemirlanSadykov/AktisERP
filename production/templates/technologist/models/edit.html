@@ -1,34 +1,15 @@
 {% extends "base.html" %}
 {% load i18n %}
-
+{% load custom_filters %}
 {% block content %}
-
-
 <style>
   .assign-operations-container {
     padding: 60px;
-    /* background-color: #f7f7f7; */
-    /* border-radius: 8px; */
-    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
   }
 
   .form-heading {
     color: #333;
     margin-bottom: 20px;
-  }
-
-  .checkbox label {
-    display: block;
-    padding: 10px;
-    margin: 0px 0;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    /* border-radius: 4px; */
-    cursor: pointer;
-  }
-
-  .checkbox input[type="checkbox"] {
-    margin-right: 10px;
   }
 
   .sortable-item {
@@ -80,7 +61,7 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
@@ -93,115 +74,147 @@
     <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Copying Model:" %} {{ copy_model.name }}</h2>
     {% else %}
     <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Model" %}</h2>
-    {% endif %}  
-  </div>        
+    {% endif %}
+  </div>
   <div class="col-md-12">
-    <form method="post" id="modelForm" class="crud-form">
-        {% csrf_token %}
-        <input type="hidden" id="operationsOrder" value="{{ operations_order_json }}">
-        <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
-        {{ form.name }}
-        {% if form.name.errors %}
-            <div class="error">{{ form.name.errors }}</div>
-        {% endif %}
-        <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
-        <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by number...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
+    <form method="post" id="modelForm" class="crud-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" id="operationsOrder" value="{{ operations_order_json }}">
+
+      <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+      {{ form.name }}
+      {% if form.name.errors %}
+      <div class="error">{{ form.name.errors }}</div>
+      {% endif %}
+
+      <label for="{{ form.photo.id_for_label }}">{{ form.photo.label }}</label>
+      {{ form.photo }}
+      {% if form.photo.errors %}
+      <div class="error">{{ form.photo.errors }}</div>
+      {% endif %}
+
+      <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
+      <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by name...' %}" aria-label="Search"
+        style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
-            {% for operation in form.fields.operations.queryset %}
-                <div class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
-                    <label>
-                        <input type="checkbox" name="operations" value="{{ operation.id }}"
-                        {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
-                        {{ operation }}
-                    </label>
-                </div>
-            {% endfor %}
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>{% trans 'Node' %}</th>
+                <th>{% trans 'Select' %}</th>
+                <th>{% trans 'Name' %}</th>
+                <th>{% trans 'Equipment' %}</th>
+                <th>{% trans 'Time' %}</th>
+                <th>{% trans 'Payment' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for operation in form.fields.operations.queryset %}
+              <tr class="checkbox" data-operation-content="{{ operation.number }} - {{ operation.node.name }} - {{ operation.name }}">
+                <td>{{ operation.node.name }}</td>
+                <td>
+                  <input type="checkbox" name="operations" value="{{ operation.id }}"
+                    {% if operation.id in form.fields.operations.initial %}checked{% endif %}>
+                </td>
+                <td>{{ operation.name }}</td>
+                <td>{{ operation.equipment.name }}</td>
+                <td>{{ operation.preferred_completion_time }}</td>
+                <td>{{ operation.payment }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        
-        {{ form.operations_data }}
-        
-        <div class="form-actions">
-            <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
-            <div id="selectedOperations" class="selected-operations"></div>
-            <button type="submit" class="btn create-btn">{% trans "Save" %}</button>
-        </div>
+      {{ form.operations_data }}
+
+      <div class="form-actions">
+        <button type="button" onclick="prepareOperations()" class="btn create-btn">{% trans "Continue" %}</button>
+        <div id="selectedOperations" class="selected-operations"></div>
+        <button type="submit" class="btn create-btn">{% trans "Save" %}</button>
+      </div>
     </form>
-    </div>
+  </div>
 </div>
 
-
-
-
-
-
-
-
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    prepareOperations(); // Load existing sorted operations when the page loads
+document.addEventListener('DOMContentLoaded', function () {
+  prepareOperations();
+});
+
+document.getElementById('searchOperations').addEventListener('input', function (e) {
+  const searchTerm = e.target.value.toLowerCase();
+  const operations = document.querySelectorAll('#operationsContainer table tbody tr[data-operation-content]');
+
+  operations.forEach(op => {
+    const content = op.getAttribute('data-operation-content');
+    const namePart = content.split('-')[2].trim(); // Assuming the name is always the third part after two dashes.
+    if (namePart.toLowerCase().includes(searchTerm)) {
+      op.style.display = ''; // Show row if the name matches the search term
+    } else {
+      op.style.display = 'none'; // Hide row if the name doesn't match
+    }
+  });
 });
 
 function prepareOperations() {
-    let operationsOrder = JSON.parse(document.getElementById('operationsOrder').value);
-    let operationsContainer = document.getElementById('selectedOperations');
-    operationsContainer.innerHTML = '';
+  let operationsOrder = JSON.parse(document.getElementById('operationsOrder').value);
+  let operationsContainer = document.getElementById('selectedOperations');
+  operationsContainer.innerHTML = '';
 
-    let checkboxes = {};
-    document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked').forEach(function(checkbox) {
-        checkboxes[checkbox.value] = checkbox;
-    });
+  let checkboxes = {};
+  document.querySelectorAll('#operationsContainer input[type="checkbox"]:checked').forEach(function (checkbox) {
+    checkboxes[checkbox.value] = checkbox;
+  });
 
-    operationsOrder.forEach(function(operationId, index) {
-        if (checkboxes[operationId]) {
-            appendOperationToSortableList(checkboxes[operationId], index + 1);
-            delete checkboxes[operationId];
-        }
-    });
+  operationsOrder.forEach(function (operationId, index) {
+    if (checkboxes[operationId]) {
+      appendOperationToSortableList(checkboxes[operationId], index + 1);
+      delete checkboxes[operationId];
+    }
+  });
 
-    // Append any remaining checked operations that are not in the sorted list
-    let currentIndex = operationsOrder.length;
-    Object.values(checkboxes).forEach(function(checkbox) {
-        appendOperationToSortableList(checkbox, ++currentIndex);
-    });
+  let currentIndex = operationsOrder.length;
+  Object.values(checkboxes).forEach(function (checkbox) {
+    appendOperationToSortableList(checkbox, ++currentIndex);
+  });
 
-    new Sortable(operationsContainer, {
-        animation: 150,
-        ghostClass: 'sortable-ghost',
-        onUpdate: function(evt) {
-            let items = operationsContainer.getElementsByClassName('sortable-item');
-            Array.from(items).forEach((item, idx) => {
-                item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
-            });
-        }
-    });
+  new Sortable(operationsContainer, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    onUpdate: function (evt) {
+      let items = operationsContainer.getElementsByClassName('sortable-item');
+      Array.from(items).forEach((item, idx) => {
+        item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
+      });
+    }
+  });
 }
 
 function appendOperationToSortableList(checkbox, orderNumber) {
-    let label = checkbox.nextSibling.textContent.trim();
-    let div = document.createElement('div');
-    div.className = 'sortable-item';
-    div.setAttribute('data-id', checkbox.value);
+  let label = checkbox.closest('tr').getAttribute('data-operation-content');
+  let div = document.createElement('div');
+  div.className = 'sortable-item';
+  div.setAttribute('data-id', checkbox.value);
 
-    let orderSpan = document.createElement('span');
-    orderSpan.className = 'order-number';
-    orderSpan.textContent = orderNumber + '. ';
+  let orderSpan = document.createElement('span');
+  orderSpan.className = 'order-number';
+  orderSpan.textContent = orderNumber + '. ';
 
-    div.appendChild(orderSpan);
-    div.appendChild(document.createTextNode(label));
-    document.getElementById('selectedOperations').appendChild(div);
+  div.appendChild(orderSpan);
+  div.appendChild(document.createTextNode(label));
+  document.getElementById('selectedOperations').appendChild(div);
 }
 
 function submitOperations(event) {
-    event.preventDefault(); // Prevent form from submitting traditionally
+  event.preventDefault();
 
-    let operationsData = [];
-    let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
-    sortedItems.forEach(function(item, index) {
-        operationsData.push({operation_id: item.getAttribute('data-id'), order: index});
-    });
-    document.getElementById('id_operations_data').value = JSON.stringify(operationsData);
-    document.getElementById('modelForm').submit(); // Submit the form programmatically
+  let operationsData = [];
+  let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
+  sortedItems.forEach(function (item, index) {
+    operationsData.push({ operation_id: item.getAttribute('data-id'), order: index });
+  });
+  document.getElementById('id_operations_data').value = JSON.stringify(operationsData);
+  document.getElementById('modelForm').submit();
 }
 
 document.getElementById('modelForm').addEventListener('submit', submitOperations);

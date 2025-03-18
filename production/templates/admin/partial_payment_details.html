@@ -1,0 +1,49 @@
+{% load i18n %}
+<!-- Employee Data Table -->
+<table class="table rounded-table">
+  <thead>
+    <tr>
+      <th>{% trans 'ID' %}</th>
+      <th>{% trans 'ФИО' %}</th>
+      <th>{% trans 'Число Операций' %}</th>
+      <th>{% trans 'Трудоемкость (сек)' %}</th>
+      <th>{% trans 'Плата (сом)' %}</th>
+      <th>{% trans "Actions" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for employee in employee_data %}
+    <tr>
+      <td>{{ employee.employee_id }}</td>
+      <td>{{ employee.full_name }}</td>
+      <td>{{ employee.units_produced }}</td>
+      <td>{{ employee.seconds_worked }}</td>
+      <td>{{ employee.payment }}</td>
+      <td><a href="#"
+        data-toggle="modal"
+        data-target="#employeeModal"
+        class="btn btn-sm btn-primary employee-details-link"
+        data-employee-id="{{ employee.id }}">
+        {% trans "View" %}</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Modal for Employee Details -->
+<div class="modal fade" id="employeeModal" data-backdrop="false" tabindex="-1" role="dialog" aria-labelledby="employeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-content" style="max-width: 100%; width: 100%;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="employeeModalLabel">{% trans 'Employee Summary' %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Employee details will be injected here -->
+      </div>
+    </div>
+  </div>
+</div>

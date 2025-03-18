@@ -33,85 +33,51 @@
             <div class="card-body">
                 <h3>{% trans "Cut Information" %}</h3>
                 <p><strong>{% trans "Date:" %}</strong> {{ cut.date }}</p>
-                <p><strong>{% trans "Order:" %}</strong> {{ cut.order }}</p>
-
-                <h3>{% trans "Size Quantities" %}</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{% trans "Size" %}</th>
-                            <th>{% trans "Color" %}</th>
-                            <th>{% trans "Required Quantity" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for size, quantity in total_quantity_per_size.items %}
-                            <tr>
-                                <td>{{  size|split_part:0  }}</td>
-                                <td>{{  size|split_part:1  }}</td>
-                                <td>{{ quantity }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <h3>{% trans "Consumptions" %}</h3>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{% trans "Fabric" %}</th>
-                            <th>{% trans "Width" %}</th>
-                            <th>{% trans "Length" %}</th>
-                            <th>{% trans "Factual" %}</th>
-                            <th>{% trans "Commerce" %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for consumption in consumptions %}
-                            <tr>
-                                <td>{{ consumption.fabrics }}</td>
-                                <td>{{ consumption.width }}</td>
-                                <td>{{ consumption.length }}</td>
-                                <td>{{ consumption.factual }}</td>
-                                <td>{{ consumption.commerce }}</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="5">{% trans "No consumptions available." %}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <p><strong>{% trans "Order:" %}</strong> {{ cut.order.client_order }}</p>
+                <p><strong>{% trans "Model:" %}</strong> {{ cut.order.model }}</p>
+                <p>
+                    <strong>{% trans "Sizes:" %}</strong>
+                    {% for size, extra in passport_sizes_display %}
+                      {{ size }}{% if extra %}-{{ extra }}{% endif %}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>  
 
                 <h3>{% trans "Passports" %}</h3>
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>{% trans "Number" %}</th>
-                            <th>{% trans "Roll" %}</th>
-                            <th>{% trans "Meters" %}</th>
+                            <th>{% trans "Color" %}</th>
+                            <th>{% trans "Fabric" %}</th>
                             <th>{% trans "Layers" %}</th>
                             <th>{% trans "Quantity" %}</th>
-                            <th>{% trans "Completed" %}</th>
+                            <th>{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for passport in passports %}
                             <tr>
-                                <td>
-                                    <a href="{% url 'assign_operations' passport.pk %}" style="display: block; width: 100%; height: 100%;">
-                                      {{ passport.number }}
-                                    </a>
-                                </td>
-                                <td>{{ passport.roll }}</td>
-                                <td>{{ passport.meters }}</td>
+                                <td>{{ passport.number }}</td>
+                                {% if passport.passport_sizes.all %}
+                                    {% with ps=passport.passport_sizes.all.0 %}
+                                        <td>{{ ps.size_quantity.color }}</td>
+                                        <td>{{ ps.size_quantity.fabrics }}</td>
+                                    {% endwith %}
+                                {% else %}
+                                    <td>-</td>
+                                    <td>-</td>
+                                {% endif %}
                                 <td>{{ passport.layers }}</td>
                                 <td>{{ passport.quantity }}</td>
-                                <td>{{ passport.is_completed|yesno:'Yes,No' }}</td>
+                                <td>
+                                    <a href="{% url 'assign_operations' passport.pk %}" class="btn btn-sm btn-primary">
+                                      {% trans "View" %}
+                                    </a>
+                                </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="6">{% trans "No passports available." %}</td>
+                                <td colspan="5">{% trans "No passports available." %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
