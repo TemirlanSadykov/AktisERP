@@ -108,7 +108,7 @@ class UserProfile(CompanyAwareModel):
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
-        (EMPLOYEE, 'Сотрудник'),
+        (EMPLOYEE, 'Швея'),
         (CUTTER, 'Закройщик'),
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),

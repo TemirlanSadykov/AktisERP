@@ -1,5 +1,3 @@
-
-
 {% extends "base.html" %}
 {% load i18n %}
 {% block content %}
@@ -8,7 +6,7 @@
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
   </button>
-  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans 'Employees Dashboard' %}</h4>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Employees Dashboard' %}</h4>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
     <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
       <li class="nav-item dropdown" style="margin: 10px;">
@@ -17,7 +15,7 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
@@ -27,80 +25,132 @@
 <div class="container maincontr">
   <div class="row justify-content-center">
     <div class="col-md-12">
-      <!-- <div class="card"> -->
-        <div class="card-header">
-          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Employee Details" %} {{ user_profile.name }}</h2>
-        </div>
-        <div class="card-body">
-          <form method="post" onsubmit="return validateEditForm(event);" novalidate>
-            {% csrf_token %}
-            <div class="form-group">
-              <label for="id_username">{% trans "Username" %}:</label>
-              {{ user_form.username }}
-              <small id="usernameError" class="text-danger"></small>
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Edit Employee Details" %} {{ user_profile.name }}</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" onsubmit="return validateEditForm(event);" novalidate>
+          {% csrf_token %}
+          {% if user_form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in user_form.non_field_errors %}
+                {{ error }}<br>
+              {% endfor %}
             </div>
-            <div class="form-group">
-              <label for="id_first_name">{% trans "First Name" %}:</label>
-              {{ user_form.first_name }}
-            </div>
-            <div class="form-group">
-              <label for="id_last_name">{% trans "Last Name" %}:</label>
-              {{ user_form.last_name }}
-            </div>
-            <div class="form-group">
-              <label for="id_employee_id">{% trans "Employee ID" %}:</label>
-              {{ user_form.employee_id }}
-            </div>
-            <div class="form-group">
-              <label for="id_type">{% trans "Type" %}:</label>
-              {{ user_form.type }}
-            </div>
-            <div class="form-group">
-              <label for="id_status">{% trans "Status" %}:</label>
-              <div class="custom-control custom-switch custom-switch-md">
-                <input class="custom-control-input" type="checkbox" id="id_status" name="status" {% if user_form.status.value %}checked{% endif %}>
-                <label class="custom-control-label" for="id_status"></label>
+          {% endif %}
+          <div class="form-group">
+            <label for="id_employee_id">{% trans "Employee ID" %}:</label>
+            {{ user_form.employee_id }}
+            {% if user_form.employee_id.errors %}
+              <div class="text-danger">
+                {% for error in user_form.employee_id.errors %}
+                  {{ error }}<br>
+                {% endfor %}
               </div>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label for="id_first_name">{% trans "First Name" %}:</label>
+            {{ user_form.first_name }}
+            {% if user_form.first_name.errors %}
+              <div class="text-danger">
+                {% for error in user_form.first_name.errors %}
+                  {{ error }}<br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label for="id_last_name">{% trans "Last Name" %}:</label>
+            {{ user_form.last_name }}
+            {% if user_form.last_name.errors %}
+              <div class="text-danger">
+                {% for error in user_form.last_name.errors %}
+                  {{ error }}<br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label for="id_type">{% trans "Type" %}:</label>
+            {{ user_form.type }}
+            {% if user_form.type.errors %}
+              <div class="text-danger">
+                {% for error in user_form.type.errors %}
+                  {{ error }}<br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <label for="id_status">{% trans "Status" %}:</label>
+            <div class="custom-control custom-switch custom-switch-md">
+              <input class="custom-control-input" type="checkbox" id="id_status" name="status" {% if user_form.status.value %}checked{% endif %}>
+              <label class="custom-control-label" for="id_status"></label>
             </div>
-            <div class="form-group">
-              <label for="id_new_password">{% trans "New Password" %}:</label>
+            {% if user_form.status.errors %}
+              <div class="text-danger">
+                {% for error in user_form.status.errors %}
+                  {{ error }}<br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <!-- New Password Field with Toggle Icon -->
+          <div class="form-group">
+            <label for="id_new_password">{% trans "New Password" %}:</label>
+            <div class="input-group">
               {{ user_form.new_password }}
-              <small id="passwordError" class="text-danger"></small>
-            </div>
-            <div class="form-group">
-              <div class="row">
-                <div class="col text-left">
-                  <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
-                </div>
-                <div class="col text-right">
-                  <a href="{% url 'employee_detail' user_profile.pk %}" class=" btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
-                </div>
+              <div class="input-group-append">
+                <span class="input-group-text" style="cursor:pointer;" onclick="togglePassword('id_new_password', this)">
+                  <i class="fas fa-lock"></i>
+                </span>
               </div>
             </div>
-          </form>
-        </div>
-      <!-- </div> -->
+            <small id="passwordError" class="text-danger"></small>
+            {% if user_form.new_password.errors %}
+              <div class="text-danger">
+                {% for error in user_form.new_password.errors %}
+                  {{ error }}<br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="form-group">
+            <div class="row">
+              <div class="col text-left">
+                <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Update" %}</button>
+              </div>
+              <div class="col text-right">
+                <a href="{% url 'employee_detail' user_profile.pk %}" class="btn btn-back btn back-btn btnback">{% trans "Cancel" %}</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
   function validateEditForm(event) {
-      var username = document.getElementById('id_username').value;
+      var username = document.getElementById('id_username') ? document.getElementById('id_username').value : '';
       var newPassword = document.getElementById('id_new_password').value;
       var usernameError = document.getElementById('usernameError');
       var passwordError = document.getElementById('passwordError');
       var isValid = true;
-  
-      usernameError.innerText = '';
-      passwordError.innerText = '';
-  
+
+      if(usernameError) { usernameError.innerText = ''; }
+      if(passwordError) { passwordError.innerText = ''; }
+
       var usernameRegex = /^[a-zA-Z0-9@./+/-/_]{1,150}$/;
-      if (!usernameRegex.test(username)) {
-          usernameError.innerText = 'Username must be 150 characters or fewer and contain only letters, digits, and @/./+/-/_.';
+      if (username && !usernameRegex.test(username)) {
+          if (usernameError) {
+              usernameError.innerText = 'Username must be 150 characters or fewer and contain only letters, digits, and @/./+/-/_.';
+          }
           isValid = false;
       }
-  
+
       if (newPassword) {
           if (newPassword.length < 8) {
               passwordError.innerText = 'Your password must contain at least 8 characters.';
@@ -108,16 +158,38 @@
           } else if (/^[0-9]+$/.test(newPassword)) {
               passwordError.innerText = 'Your password can’t be entirely numeric.';
               isValid = false;
-          } else if (newPassword.toLowerCase().includes(username.toLowerCase()) || newPassword.toLowerCase().includes(document.getElementById('id_first_name').value.toLowerCase()) || newPassword.toLowerCase().includes(document.getElementById('id_last_name').value.toLowerCase())) {
-              passwordError.innerText = 'Your password can’t be too similar to your other personal information.';
-              isValid = false;
+          } else {
+              var firstName = document.getElementById('id_first_name').value;
+              var lastName = document.getElementById('id_last_name').value;
+              var lowerNewPassword = newPassword.toLowerCase();
+              // Only check if the field has a non-empty value.
+              if ((username.trim() !== "" && lowerNewPassword.includes(username.toLowerCase())) ||
+                  (firstName.trim() !== "" && lowerNewPassword.includes(firstName.toLowerCase())) ||
+                  (lastName.trim() !== "" && lowerNewPassword.includes(lastName.toLowerCase()))) {
+                  passwordError.innerText = 'Your password can’t be too similar to your other personal information.';
+                  isValid = false;
+              }
           }
       }
       if (!isValid) {
-                event.preventDefault();
+          event.preventDefault();
       }
-  
-      return isValid; 
+      return isValid;
   }
-  </script>
+
+  // Reuse the same togglePassword function from before.
+  function togglePassword(fieldId, iconElement) {
+      var input = document.getElementById(fieldId);
+      var icon = iconElement.querySelector('i');
+      if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-lock");
+          icon.classList.add("fa-lock-open");
+      } else {
+          input.type = "password";
+          icon.classList.remove("fa-lock-open");
+          icon.classList.add("fa-lock");
+      }
+  }
+</script>
 {% endblock %}

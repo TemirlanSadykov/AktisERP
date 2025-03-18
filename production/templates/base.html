@@ -44,10 +44,57 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/ui/1.14.0/jquery-ui.min.js" integrity="sha256-Fb0zP4jE3JHqu+IBB9YktLcSjI1Zc6J2b6gTjB0LpoM=" crossorigin="anonymous"></script>
-
+    <script>
+        let startX = null;
+        let startY = null;
+    
+        // Record initial touch coordinates.
+        document.addEventListener('touchstart', function (e) {
+          const touch = e.touches[0];
+          startX = touch.clientX;
+          startY = touch.clientY;
+        }, false);
+    
+        // Check touch movement for a downward swipe.
+        document.addEventListener('touchmove', function (e) {
+          if (!startX || !startY) {
+            return;
+          }
+          const touch = e.touches[0];
+          const diffX = touch.clientX - startX;
+          const diffY = touch.clientY - startY;
+    
+          // If the swipe is more than 50px down and less than 30px horizontal.
+          if (diffY > 100 && Math.abs(diffX) < 30) {
+            // Show the loading mask.
+            showLoading();
+            // Delay briefly to let the mask appear before reloading.
+            setTimeout(function () {
+              window.location.reload();
+            }, 100);
+            // Reset start values.
+            startX = null;
+            startY = null;
+          }
+        }, false);
+      </script>
+    
 </head>
 
 <body>
+    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.7); display: none; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">{% trans "Loading..." %}</span>
+        </div>
+    </div>
+    <script>
+        function showLoading() {
+          document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        function hideLoading() {
+          document.getElementById('loadingOverlay').style.display = 'none';
+        }
+      </script>
     <main>
         <div class="d-flex" id="wrapper">
             <div class="border-right" id="sidebar-wrapper">

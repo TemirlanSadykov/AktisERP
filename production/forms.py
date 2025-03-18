@@ -42,33 +42,61 @@ class CustomLoginForm(forms.Form):
         return self.cleaned_data.get('user')
 
 class UserWithProfileForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    employee_id = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    employee_id = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    type = forms.ChoiceField(
+        choices=UserProfile.TYPE_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['password1'].widget.attrs.update({'class': 'form-control'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control'})
 
-
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-        
+        fields = ('employee_id', 'first_name', 'last_name', 'password1', 'password2')
+
+    def clean_employee_id(self):
+        employee_id = self.cleaned_data.get('employee_id')
+        current_company = get_current_company()
+        if not current_company:
+            raise forms.ValidationError("No company found in context.")
+        if UserProfile.objects.filter(employee_id=employee_id, company=current_company).exists():
+            raise forms.ValidationError("Сотрудник с таким ID уже существует.")
+        return employee_id
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
+        # Retrieve the current company from thread-local storage.
+        current_company = get_current_company()
+        if not current_company:
+            raise ValueError("No company found in context.")
+        employee_id = self.cleaned_data['employee_id']
+        # Generate the username in the same manner as in employee_upload.
+        user.username = f"{current_company.id}-{employee_id}"
         if commit:
             user.save()
             UserProfile.objects.create(
                 user=user,
-                employee_id=self.cleaned_data['employee_id'],
+                employee_id=employee_id,
                 type=self.cleaned_data['type'],
             )
         return user
@@ -86,7 +114,10 @@ class UserEditForm(forms.ModelForm):
     )
     status = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin:7px 0px 0px 10px'})
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'style': 'margin:7px 0px 0px 10px'
+        })
     )
     new_password = forms.CharField(
         label='New Password',
@@ -97,9 +128,8 @@ class UserEditForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status']
+        fields = ['first_name', 'last_name', 'employee_id', 'type', 'status']
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
@@ -111,17 +141,36 @@ class UserEditForm(forms.ModelForm):
             self.fields['type'].initial = self.instance.userprofile.type
             self.fields['status'].initial = self.instance.userprofile.status
 
+    def clean_employee_id(self):
+        employee_id = self.cleaned_data.get('employee_id')
+        current_company = get_current_company()
+        if not current_company:
+            raise forms.ValidationError("No company found in context.")
+        qs = UserProfile.objects.filter(employee_id=employee_id, company=current_company)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(user=self.instance)
+        if qs.exists():
+            raise forms.ValidationError("Сотрудник с таким ID уже существует.")
+        return employee_id
+
     def save(self, commit=True):
         user = super().save(commit=False)
+        # Auto-generate the username using the current company and employee ID.
+        current_company = get_current_company()
+        if not current_company:
+            raise ValueError("No company found in context.")
+        employee_id = self.cleaned_data['employee_id']
+        user.username = f"{current_company.id}-{employee_id}"
         
-        # Set new password if provided
+        # Set new password if provided.
         new_password = self.cleaned_data.get('new_password')
         if new_password:
             user.set_password(new_password)
         
         if commit:
             user.save()
-            user.userprofile.employee_id = self.cleaned_data['employee_id']
+            # Update the user profile with the form data.
+            user.userprofile.employee_id = employee_id
             user.userprofile.type = self.cleaned_data['type']
             user.userprofile.status = self.cleaned_data['status']
             user.userprofile.save()
