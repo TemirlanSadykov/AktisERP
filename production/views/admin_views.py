@@ -173,10 +173,10 @@ def order_details_api(request, order_id):
       - total ordered (from SizeQuantity.quantity)
       - cut (aggregated from CutSize.quantity)
       - sew (aggregated from AssignedWork.quantity)
-      - check (count of ProductionPiece records in the CHECKED stage)
-      - packed (count of ProductionPiece records in the PACKED stage)
+      - check (fetched from SizeQuantity.checked)
+      - packed (fetched from SizeQuantity.packed)
 
-    Production aggregations are filtered using the specific SizeQuantity ID.
+    Production aggregations for "cut" and "sew" remain calculated as before.
     """
     order = get_object_or_404(Order, pk=order_id)
     
@@ -184,7 +184,6 @@ def order_details_api(request, order_id):
     size_quantities = order.size_quantities.all()
 
     # Group the SizeQuantity objects by unique (color, fabric) pair.
-    # Within each group, assume there is only one record per size.
     groups = {}  # key: (color, fabric)
     for sq in size_quantities:
         color_name = sq.color.name if sq.color else ""
@@ -195,7 +194,12 @@ def order_details_api(request, order_id):
         # Group by size; we only store one record per size.
         if sq.size:
             if sq.size not in groups[key]:
-                groups[key][sq.size] = {"id": sq.id, "total": sq.quantity or 0}
+                groups[key][sq.size] = {
+                    "id": sq.id,
+                    "total": sq.quantity or 0,
+                    "checked": sq.checked or 0,
+                    "packed": sq.packed or 0,
+                }
             # If a duplicate is encountered for the same size, it is ignored.
     
     group_list = []
@@ -212,8 +216,6 @@ def order_details_api(request, order_id):
                 cut__order=order,
                 size_quantities__id=size_id
             )
-
-            passport_qs = passport_qs.filter()
             cut_total = passport_qs.aggregate(total=Sum('layers'))['total'] or 0
 
             # Aggregate "Sew" quantity from AssignedWork using the SizeQuantity ID.
@@ -221,22 +223,12 @@ def order_details_api(request, order_id):
             for passport in passport_qs:
                 assigned = AssignedWork.objects.filter(work__passport_size__passport=passport)
                 if assigned.exists():
-                    # If there is any assigned work for this passport, add the passport's full quantity.
                     sew_total += passport.layers
             
-            # Count "Check" quantity from ProductionPiece records in the CHECKED stage.
-            check_qs = ProductionPiece.objects.filter(
-                passport_size__passport__in=passport_qs,
-                stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
-            )
-            check_total = check_qs.count()
-
-            # Count "Packed" quantity from ProductionPiece records in the PACKED stage using the same passports.
-            packed_qs = ProductionPiece.objects.filter(
-                passport_size__passport__in=passport_qs,
-                stage=ProductionPiece.StageChoices.PACKED
-            )
-            packed_total = packed_qs.count()
+            # Instead of calculating checked and packed via ProductionPiece,
+            # we fetch them directly from the SizeQuantity record.
+            check_total = data_dict["checked"]
+            packed_total = data_dict["packed"]
             
             sizes_data.append({
                 "size": size_value,
