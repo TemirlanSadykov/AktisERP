@@ -44,7 +44,14 @@
             {{ form.model }}
           </div>
       
-          <h3>{% trans "Size Quantities" %}</h3>
+        <div class="row" style="margin-bottom: 10px;">
+          <div class="col-md-6">
+            <h3>{% trans "Size Quantities" %}</h3>
+          </div>
+          <div class="col-md-6 text-center">
+            <button id="skuButton" type="button" class="btn btn-secondary btn-sm ml-2">{% trans "SKU" %}</button>
+          </div>
+        </div>
           <table id="sizeQuantityTable" class="table table-bordered">
             <thead>
               <tr>
@@ -195,9 +202,7 @@
 <!-- JavaScript Section -->
 <!-- ======================== -->
 <script>
-// ===========================
 // Global arrays for colors and fabrics.
-// These arrays are populated from the server context.
 var globalColors = [
   {% for color in colors %}
     { id: "{{ color.pk }}", name: "{{ color.name }}" },
@@ -208,6 +213,9 @@ var globalFabrics = [
     { id: "{{ fabric.pk }}", name: "{{ fabric.name }}" },
   {% endfor %}
 ];
+
+// Global flag for SKU inputs.
+var skuAdded = false;
 
 // Helper function to get CSRF token from cookies.
 function getCookie(name) {
@@ -244,7 +252,7 @@ function getFabricOptionsHTML() {
   return html;
 }
 
-// Custom modal show/hide functions (using vanilla JS).
+// Custom modal show/hide functions.
 function showModal(modalEl) {
   modalEl.classList.add('show');
   modalEl.style.display = 'block';
@@ -254,14 +262,13 @@ function hideModal(modalEl) {
   modalEl.classList.remove('show');
   modalEl.style.display = 'none';
   modalEl.setAttribute('aria-hidden', 'true');
-  // Remove any modal backdrop if present.
   const backdrop = document.querySelector('.modal-backdrop');
   if (backdrop) {
     backdrop.parentNode.removeChild(backdrop);
   }
 }
 
-// Update all color selects with a new option if not already present.
+// Update all color and fabric selects.
 function updateAllColorSelects(newOptionValue, newOptionText) {
   document.querySelectorAll('select.color-select').forEach(function(select) {
     if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
@@ -272,8 +279,6 @@ function updateAllColorSelects(newOptionValue, newOptionText) {
     }
   });
 }
-
-// Update all fabric selects with a new option if not already present.
 function updateAllFabricSelects(newOptionValue, newOptionText) {
   document.querySelectorAll('select.fabric-select').forEach(function(select) {
     if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
@@ -291,6 +296,7 @@ document.addEventListener("DOMContentLoaded", function(){
   // --------------------------
   let rowCount = 1;  // one row already exists (data-row="0")
   let colCount = 1;  // one dynamic column initially
+  
   function updateRowControlColspan() {
     const rowControlCell = document.getElementById("rowControlCell");
     rowControlCell.colSpan = 1 + colCount;
@@ -302,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const newRow = document.createElement("tr");
     newRow.setAttribute("data-row", rowCount);
     let rowHtml = "";
-    // Build the Color & Fabric cell using our helper functions.
+    // Build the Color & Fabric cell.
     rowHtml += `<td>
                   <div class="row">
                     <div class="col">
@@ -320,8 +326,12 @@ document.addEventListener("DOMContentLoaded", function(){
     // Cells for dynamic size columns.
     for (let col = 0; col < colCount; col++) {
       rowHtml += `<td>
-                    <input type="number" name="cell_${rowCount}_${col}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">
-                  </td>`;
+                    <input type="number" name="cell_${rowCount}_${col}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">`;
+      // If SKU fields are enabled, include the SKU input.
+      if (skuAdded) {
+          rowHtml += `<input type="text" name="sku_${rowCount}_${col}" class="form-control mt-1" placeholder="{% trans 'Enter SKU' %}">`;
+      }
+      rowHtml += `</td>`;
     }
     // Extra control cell.
     rowHtml += `<td class="control-col" style="width:50px;"></td>`;
@@ -351,6 +361,9 @@ document.addEventListener("DOMContentLoaded", function(){
       const newCell = document.createElement("td");
       let currentRow = row.getAttribute("data-row");
       newCell.innerHTML = `<input type="number" name="cell_${currentRow}_${colCount-1}" class="form-control" placeholder="{% trans 'Enter Quantity' %}">`;
+      if (skuAdded) {
+          newCell.innerHTML += `<input type="text" name="sku_${currentRow}_${colCount-1}" class="form-control mt-1" placeholder="{% trans 'Enter SKU' %}">`;
+      }
       row.insertBefore(newCell, row.lastElementChild);
     });
     updateRowControlColspan();
@@ -377,16 +390,14 @@ document.addEventListener("DOMContentLoaded", function(){
   document.getElementById("deleteColumnControl").addEventListener("click", deleteColumn);
 
   // ---------------------------------
-  // Delegate events for color/fabric selects
+  // Delegate events for color/fabric selects.
   // ---------------------------------
   document.addEventListener('change', function(e) {
     if(e.target.matches('select.color-select')) {
       if(e.target.value === 'add_new_color') {
-        // Open the Add Color modal.
         let addColorModalEl = document.getElementById('addColorModal');
-        // Save the name of the triggering select so we can update it later.
         addColorModalEl.dataset.triggerSelect = e.target.name;
-        e.target.value = ""; // reset selection
+        e.target.value = "";
         showModal(addColorModalEl);
       }
     }
@@ -414,11 +425,8 @@ document.addEventListener("DOMContentLoaded", function(){
     .then(response => response.json())
     .then(data => {
       if(data.success) {
-        // Add the new color to our global array.
         globalColors.push({ id: data.color_id.toString(), name: data.color_name });
-        // Update all color selects with the new color.
         updateAllColorSelects(data.color_id.toString(), data.color_name);
-        // Optionally, set the newly added color as selected in the triggering select.
         let triggerSelectName = document.getElementById('addColorModal').dataset.triggerSelect;
         if(triggerSelectName) {
           document.querySelector(`select[name="${triggerSelectName}"]`).value = data.color_id;
@@ -462,6 +470,42 @@ document.addEventListener("DOMContentLoaded", function(){
       alert("An error occurred: " + error);
     });
   });
+
+  // ------------------------------
+  // Toggle SKU Button functionality.
+  // ------------------------------
+  document.getElementById("skuButton").addEventListener("click", function() {
+    const tbodyRows = document.querySelectorAll("#sizeQuantityTable tbody tr");
+    if (!skuAdded) {
+      // Add SKU inputs to each quantity cell without touching existing inputs.
+      skuAdded = true;
+      tbodyRows.forEach(function(row) {
+        const rowIndex = row.getAttribute("data-row");
+        // Get all cells excluding the first (color/fabric) and the last (control)
+        const cells = row.querySelectorAll("td");
+        for (let i = 1; i < cells.length - 1; i++) {
+          // Only add if not already present.
+          if (!cells[i].querySelector("input.sku-input")) {
+            const skuInput = document.createElement("input");
+            skuInput.type = "text";
+            skuInput.name = `sku_${rowIndex}_${i-1}`;
+            skuInput.classList.add("form-control", "mt-1", "sku-input");
+            skuInput.placeholder = "{% trans 'Enter SKU' %}";
+            // Append the SKU input without changing the existing quantity input.
+            cells[i].appendChild(skuInput);
+          }
+        }
+      });
+    } else {
+      // Remove SKU inputs from each cell without affecting quantity inputs.
+      skuAdded = false;
+      tbodyRows.forEach(function(row) {
+        row.querySelectorAll("input.sku-input").forEach(function(input) {
+          input.remove();
+        });
+      });
+    }
+  });  
 });
 </script>
 {% endblock %}

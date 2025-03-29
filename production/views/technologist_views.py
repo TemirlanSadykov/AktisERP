@@ -720,10 +720,10 @@ class OrderCreateView(CreateView):
     def handle_size_quantities(self, order, post_data):
         """
         Process the dynamic table data:
-          - Ensures that each row's (color, fabric) combination is unique.
-          - Sums up all provided quantities per cell.
-          - Creates SizeQuantity objects and associates them with the order.
-          - Updates the order's overall quantity based on the sum.
+        - Ensures that each row's (color, fabric) combination is unique.
+        - Sums up all provided quantities per cell.
+        - Creates SizeQuantity objects (with SKU) and associates them with the order.
+        - Updates the order's overall quantity based on the sum.
         """
         used_combinations = set()  # To track (color_id, fabric_id) per row
         used_colors = set()
@@ -763,9 +763,12 @@ class OrderCreateView(CreateView):
                 if quantity and int(quantity) > 0:
                     quantity_int = int(quantity)
                     total_quantity += quantity_int
+                    # Get the SKU value; if SKU field is absent or empty, default to an empty string.
+                    sku = post_data.get(f'sku_{row}_{col_index}', '').strip()
                     size_qty = SizeQuantity.objects.create(
                         size=size,
                         quantity=quantity_int,
+                        sku=sku,  # Save SKU along with quantity.
                         color=color,
                         fabrics=fabric
                     )
@@ -850,7 +853,12 @@ class OrderUpdateView(UpdateView):
             key = (sq.color_id, sq.fabrics_id)
             if key not in rows_dict:
                 rows_dict[key] = {}
-            rows_dict[key][sq.size] = {'quantity': sq.quantity, 'id': sq.pk}
+            # Include sku in the cell data.
+            rows_dict[key][sq.size] = {
+                'quantity': sq.quantity,
+                'id': sq.pk,
+                'sku': sq.sku  # Added SKU here.
+            }
         
         table_rows = []
         for (color_id, fabric_id), cells in rows_dict.items():
@@ -864,13 +872,15 @@ class OrderUpdateView(UpdateView):
                     row_data['cells'].append({
                         'size': size,
                         'quantity': cells[size]['quantity'],
-                        'id': cells[size]['id']
+                        'id': cells[size]['id'],
+                        'sku': cells[size]['sku']  # Pass along any saved SKU.
                     })
                 else:
                     row_data['cells'].append({
                         'size': size,
                         'quantity': '',
-                        'id': ''
+                        'id': '',
+                        'sku': ''
                     })
             table_rows.append(row_data)
         
@@ -878,7 +888,7 @@ class OrderUpdateView(UpdateView):
             table_rows = [{
                 'color_id': '',
                 'fabric_id': '',
-                'cells': [{'size': sizes[0], 'quantity': '', 'id': ''}]
+                'cells': [{'size': sizes[0], 'quantity': '', 'id': '', 'sku': ''}]
             }]
         
         context['table_sizes'] = sizes
@@ -906,6 +916,7 @@ class OrderUpdateView(UpdateView):
             or deletes ones where quantity is now 0/empty.
           • Sums up all provided quantities and updates order.quantity accordingly.
           • Updates the order's many-to-many colors and fabrics.
+          • Also handles the SKU value for each cell.
         """
         used_combinations = set()  # Track (color_id, fabric_id) per row for uniqueness.
         used_colors = set()
@@ -941,6 +952,8 @@ class OrderUpdateView(UpdateView):
             for col_index, size in enumerate(sizes):
                 cell_val = post_data.get(f'cell_{row}_{col_index}', '')
                 cell_sq_id = post_data.get(f'cell_id_{row}_{col_index}', None)
+                # Retrieve SKU value (if any) and strip whitespace.
+                sku_val = post_data.get(f'sku_{row}_{col_index}', '').strip()
                 if cell_val and cell_val.isdigit() and int(cell_val) > 0:
                     quantity_val = int(cell_val)
                     total_quantity += quantity_val
@@ -951,12 +964,14 @@ class OrderUpdateView(UpdateView):
                             sq_obj.size = size  # Update header if changed.
                             sq_obj.color = color
                             sq_obj.fabrics = fabric
+                            sq_obj.sku = sku_val  # Update SKU.
                             sq_obj.save()
                             processed_sq_ids.add(sq_obj.pk)
                         except SizeQuantity.DoesNotExist:
                             sq_obj = SizeQuantity.objects.create(
                                 size=size,
                                 quantity=quantity_val,
+                                sku=sku_val,
                                 color=color,
                                 fabrics=fabric
                             )
@@ -966,6 +981,7 @@ class OrderUpdateView(UpdateView):
                         sq_obj = SizeQuantity.objects.create(
                             size=size,
                             quantity=quantity_val,
+                            sku=sku_val,
                             color=color,
                             fabrics=fabric
                         )

@@ -248,8 +248,7 @@ class SizeQuantity(CompanyAwareModel):
     packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
     fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
-
-    
+    sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
     
     def __str__(self):
         return f"{self.color} {self.fabrics} {self.size} ({self.quantity})"
