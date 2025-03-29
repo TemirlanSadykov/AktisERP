@@ -29,7 +29,6 @@ class CustomLoginForm(forms.Form):
 
         # Special branch: if company == "0", assume superuser login using username
         if company == "0":
-            print()
             user = authenticate(request=self.request, username=employee_id, password=password)
             if user is None or not user.is_superuser:
                 raise forms.ValidationError("Invalid superuser credentials")
