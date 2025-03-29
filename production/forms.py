@@ -27,15 +27,25 @@ class CustomLoginForm(forms.Form):
         employee_id = cleaned_data.get('employee_id')
         password = cleaned_data.get('password')
 
-        user = authenticate(
-            request=self.request, 
-            company=company, 
-            employee_id=employee_id, 
-            password=password
-        )
-        if user is None:
-            raise forms.ValidationError("Invalid credentials")
-        cleaned_data['user'] = user
+        # Special branch: if company == "0", assume superuser login using username
+        if company == "0":
+            print()
+            user = authenticate(request=self.request, username=employee_id, password=password)
+            if user is None or not user.is_superuser:
+                raise forms.ValidationError("Invalid superuser credentials")
+            cleaned_data['user'] = user
+        else:
+            # Your existing custom authentication that uses company and employee_id
+            user = authenticate(
+                request=self.request, 
+                company=company, 
+                employee_id=employee_id, 
+                password=password
+            )
+            if user is None:
+                raise forms.ValidationError("Invalid credentials")
+            cleaned_data['user'] = user
+
         return cleaned_data
 
     def get_user(self):

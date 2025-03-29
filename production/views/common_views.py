@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from ..models import UserProfile
@@ -9,6 +10,13 @@ from ..forms import CustomLoginForm
 class CustomLoginView(LoginView):
     authentication_form = CustomLoginForm
     template_name = 'login.html'
+    
+    def get_success_url(self):
+        # If the user is a superuser, redirect to the admin index page.
+        if self.request.user.is_superuser:
+            return reverse('admin:index')
+        # Otherwise, fall back to your default behavior.
+        return super().get_success_url()
 
 @login_required
 def user_redirect(request):
