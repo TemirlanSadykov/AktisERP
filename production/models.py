@@ -451,7 +451,7 @@ class AssignedWork(CompanyAwareModel):
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
     
-class Stock(models.Model):
+class Stock(CompanyAwareModel):
     name = models.CharField(max_length=255)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
     unit = models.CharField(max_length=50, null=True, blank=True)
@@ -462,7 +462,7 @@ class Stock(models.Model):
     
 from django.db import models
 
-class BillOfMaterials(models.Model):
+class BillOfMaterials(CompanyAwareModel):
     model = models.ForeignKey(
         'Model',  # Reference to your product model
         on_delete=models.CASCADE,
