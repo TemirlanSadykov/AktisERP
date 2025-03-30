@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Scan" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container clients-wrapper maincontr">
+  <div class="clients-header">
+    <span class="operation-text">{% trans "Scan Items" %}</span>
+    <input type="text" id="barcode-input" autofocus style="padding: 8px;" placeholder="Ручной ввод"/>
+  </div>
+  
+  <!-- Container for the dynamic order table -->
+  <div id="order-table-container"></div>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">{% trans "Ошибка" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="errorModalMessage">
+        <!-- Error message will be displayed here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Закрыть" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var barcodeInput = document.getElementById('barcode-input');
+      var lastUpdatedCell = null; // global marker for recently updated cell
+  
+      // Render the order table using the returned data.
+      function renderOrderTable(data) {
+        var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+        html += '<th>Order: ' + data.order_name + '</th>';
+        data.all_sizes.forEach(function(size) {
+          html += '<th>' + size + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        for (var combo in data.pivot_data) {
+          html += '<tr><td>' + combo + '</td>';
+          data.all_sizes.forEach(function(size) {
+            var packed = (data.packed_counts[combo] && data.packed_counts[combo][size]) || 0;
+            var required = (data.pivot_data[combo] && data.pivot_data[combo][size]) || 0;
+            if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
+              html += '<td style="border: 3px solid red;">' + packed + '/' + required + '</td>';
+            } else {
+              html += '<td>' + packed + '/' + required + '</td>';
+            }
+          });
+          html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        document.getElementById('order-table-container').innerHTML = html;
+      }
+  
+      // Process the barcode input – now treat it as a SKU.
+      function processBarcode() {
+        var barcode = barcodeInput.value.trim();
+        if (barcode) {
+          // Use the barcode (or a processed version) as the SKU.
+          fetch('/production/packer/orders/update-packed-by-sku/' + encodeURIComponent(barcode) + '/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({}) // no extra data required
+          })
+          .then(function(response) { return response.json(); })
+          .then(function(data) {
+            if (data.success) {
+              // Mark the cell that corresponds to the scanned SKU.
+              lastUpdatedCell = { combo: data.scanned_combo, size: data.scanned_size };
+              renderOrderTable(data);
+            } else {
+              document.getElementById('errorModalMessage').textContent = data.message;
+              $('#errorModal').modal('show');
+            }
+          })
+          .catch(function(error) {
+            console.error('Error updating packed count:', error);
+            document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
+            $('#errorModal').modal('show');
+          });
+        }
+        barcodeInput.value = '';
+        barcodeInput.focus();
+      }
+  
+      barcodeInput.addEventListener('change', processBarcode);
+  
+      // Utility function to get CSRF token.
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+  
+      // When error modal closes, refocus barcode input.
+      $('#errorModal').on('hidden.bs.modal', function () {
+        barcodeInput.focus();
+      });
+    });
+  </script>
+{% endblock %}

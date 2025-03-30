@@ -424,3 +424,83 @@ def update_packed_quantity(request):
     
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+
+
+
+@login_required
+@packer_required
+def shipment_page(request):
+    context = {
+            'sidebar_type': 'packer'
+            }
+    return render(request, 'packer/shipment.html', context)
+
+@require_POST
+@login_required
+@packer_required
+def update_packed_by_sku(request, sku):
+    try:
+        # Find the SizeQuantity object matching the scanned SKU.
+        sq = SizeQuantity.objects.filter(sku=sku).first()
+        if not sq:
+            return JsonResponse({'success': False, 'message': 'SKU not found.'}, status=404)
+        
+        # Increment the packed count.
+        if sq.packed is None:
+            sq.packed = 1
+        else:
+            sq.packed += 1
+        sq.save(update_fields=['packed'])
+        
+        # Get the order that contains this SizeQuantity.
+        # (Assuming each SizeQuantity is only in one order.)
+        order = Order.objects.filter(size_quantities=sq).first()
+        if not order:
+            return JsonResponse({'success': False, 'message': 'Order not found for this SKU.'}, status=404)
+        
+        # Build pivot data: group required quantities by "Color Fabrics" combination.
+        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
+        pivot_data = {}
+        all_sizes_set = set()
+        for qty in required_qs:
+            all_sizes_set.add(qty.size)
+            key = f"{qty.color} {qty.fabrics}"
+            if key not in pivot_data:
+                pivot_data[key] = {}
+            pivot_data[key][qty.size] = qty.quantity
+        
+        # Sort sizes (numeric if possible)
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
+        
+        # Build packed_counts from the SizeQuantity objects.
+        packed_counts = {}
+        for qty in required_qs:
+            key = f"{qty.color} {qty.fabrics}"
+            if key not in packed_counts:
+                packed_counts[key] = {}
+            packed_counts[key][qty.size] = qty.packed if qty.packed is not None else 0
+        
+        # Optionally, include the scanned combo and size so the front-end can mark the cell.
+        scanned_combo = f"{sq.color} {sq.fabrics}"
+        scanned_size = sq.size
+        
+        data = {
+            'success': True,
+            'message': 'Packed count updated for SKU.',
+            'order_id': order.id,
+            'order_name': order.model.name,  # or whichever display name you prefer
+            'all_sizes': all_sizes,
+            'pivot_data': pivot_data,
+            'packed_counts': packed_counts,
+            'scanned_combo': scanned_combo,
+            'scanned_size': scanned_size,
+        }
+        return JsonResponse(data)
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
