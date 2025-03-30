@@ -399,17 +399,22 @@ class ModelCustomForm(forms.ModelForm):
 
     class Meta:
         model = Model
-        fields = ['name', 'operations', 'photo']  # Ensure 'operations' is handled by the form
+        fields = ['name', 'assortment', 'operations', 'photo']  # Ensure 'operations' is handled by the form
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'assortment': forms.Select(attrs={'class': 'form-control'}),
             'operations': forms.Select(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
         
     def __init__(self, *args, **kwargs):
-        self.assortment_id = kwargs.pop('a_id', None)
         copy_id = kwargs.pop('copy_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
+        self.fields['assortment'].queryset = Assortment.objects.filter(is_archived=False).order_by('name')
+        # Prepend an "Add New Equipment" option.
+        assortment_choices = list(self.fields['assortment'].choices)
+        self.fields['assortment'].choices = [("add_new", "Add New Assortment")] + assortment_choices
+
         queryset = Operation.objects.filter(is_archived=False).select_related('node').order_by('node__name', 'name')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
             queryset=queryset,
@@ -427,9 +432,6 @@ class ModelCustomForm(forms.ModelForm):
         model_instance = super().save(commit=False)
         if 'photo' not in self.changed_data:
             model_instance.photo = self.instance.photo
-
-        if self.assortment_id:
-            model_instance.assortment = Assortment.objects.get(pk=self.assortment_id)
         
         if commit:
             model_instance.save()

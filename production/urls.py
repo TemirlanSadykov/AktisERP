@@ -94,15 +94,15 @@ urlpatterns = [
     path('technologist/assortments/<int:pk>/unarchive/', AssortmentUnArchiveView.as_view(), name='assortment_unarchive'), 
     path('technologist/assortments/<int:pk>/delete/', AssortmentDeleteView.as_view(), name='assortment_delete'),
 
-    path('technologist/assortments/<int:a_id>/models/', ModelListView.as_view(), name='model_list'),
-    path('technologist/assortments/<int:a_id>/models/create/', model_create, name='model_create'),
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/edit/', model_edit, name='model_edit'),
-    path('technologist/assortments/<int:a_id>/models/archived/', ArchivedModelListView.as_view(), name='archived_model_list'),
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/archive/', ModelArchiveView.as_view(), name='model_archive'),
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/unarchive/', ModelUnArchiveView.as_view(), name='model_unarchive'), 
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
-    path('technologist/assortments/<int:a_id>/models/<int:pk>/bom/create/', bom_create, name='bom_create'),
+    path('technologist/models/', ModelListView.as_view(), name='model_list'),
+    path('technologist/models/create/', model_create, name='model_create'),
+    path('technologist/models/<int:pk>/', ModelDetailView.as_view(), name='model_detail'),
+    path('technologist/models/<int:pk>/edit/', model_edit, name='model_edit'),
+    path('technologist/models/archived/', ArchivedModelListView.as_view(), name='archived_model_list'),
+    path('technologist/models/<int:pk>/archive/', ModelArchiveView.as_view(), name='model_archive'),
+    path('technologist/models/<int:pk>/unarchive/', ModelUnArchiveView.as_view(), name='model_unarchive'), 
+    path('technologist/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
+    path('technologist/models/<int:pk>/bom/create/', bom_create, name='bom_create'),
 
     path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
     path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),
@@ -192,6 +192,7 @@ urlpatterns = [
     path('api/add-equipment/', add_equipment_api, name='add_equipment_api'),
     path('api/add-supplier/', add_supplier_api, name='add_supplier_api'),
     path('api/add-stock/', add_stock_api, name='add_stock_api'),
+    path('api/add-assortment/', add_assortment_api, name='add_assortment_api'),
 
 
     path('api/payment_details/', payment_details_view, name='payment_details'),

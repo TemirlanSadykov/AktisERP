@@ -1570,7 +1570,7 @@ class AssortmentCreateView(CreateView):
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
     def get_success_url(self):
-        return reverse('model_list', kwargs={'a_id': self.object.id})
+        return reverse('assortment_list')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1613,7 +1613,20 @@ class AssortmentDeleteView(DeleteView):
         context['sidebar_type'] = 'technology'
         return context
 
-
+@require_POST
+@login_required
+def add_assortment_api(request):
+    form = AssortmentForm(request.POST)
+    if form.is_valid():
+        assortment = form.save()
+        data = {
+            'success': True,
+            'assortment_id': assortment.id,
+            'assortment_name': assortment.name,
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelListView(ListView):
@@ -1622,11 +1635,9 @@ class ModelListView(ListView):
     context_object_name = 'models'
     paginate_by = 10
     def get_queryset(self):
-        assortment_id = self.kwargs.get('a_id')
-        return Model.objects.filter(assortment=assortment_id, is_archived=False).order_by('name')
+        return Model.objects.filter(is_archived=False).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         context['sidebar_type'] = 'technology'
         return context
 
@@ -1637,11 +1648,9 @@ class ArchivedModelListView(ListView):
     context_object_name = 'models'
     paginate_by = 10
     def get_queryset(self):
-        assortment_id = self.kwargs.get('a_id')
-        return Model.objects.filter(assortment=assortment_id, is_archived=True).order_by('name')
+        return Model.objects.filter(is_archived=True).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         context['sidebar_type'] = 'technology'
         return context
 
@@ -1654,7 +1663,7 @@ class ModelArchiveView(UpdateView):
         model = self.get_object()
         model.is_archived = True
         model.save()
-        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+        return HttpResponseRedirect(reverse_lazy('model_list'))
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -1666,17 +1675,16 @@ class ModelUnArchiveView(UpdateView):
         model = self.get_object()
         model.is_archived = False
         model.save()
-        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+        return HttpResponseRedirect(reverse_lazy('model_list'))
         
 @login_required
 @technologist_required
-def model_create(request, a_id, pk=None):
-    assortment = get_object_or_404(Assortment, pk=a_id)
+def model_create(request, pk=None):
     copy_id = request.GET.get('copy')
     original = get_object_or_404(Model, pk=copy_id) if copy_id else None
 
     if request.method == 'POST':
-        form = ModelCustomForm(request.POST, request.FILES, instance=None, a_id=a_id, copy_id=copy_id)
+        form = ModelCustomForm(request.POST, request.FILES, instance=None, copy_id=copy_id)
         if form.is_valid():
             model_instance = form.save()  # Save the new model instance
             # If we're copying from an existing model, copy its BOM entries too.
@@ -1688,9 +1696,9 @@ def model_create(request, a_id, pk=None):
                         quantity=bom.quantity
                     )
             # Redirect to BOM creation page (which will display the copied BOM entries)
-            return redirect('bom_create', a_id=model_instance.assortment.id, pk=model_instance.id)
+            return redirect('bom_create', pk=model_instance.id)
     else:
-        form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
+        form = ModelCustomForm(instance=(original if copy_id else None), copy_id=copy_id)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
             'node__name', 'name'
         )
@@ -1705,7 +1713,6 @@ def model_create(request, a_id, pk=None):
     template_name = 'technologist/models/edit.html' if original else 'technologist/models/create.html'
     context = {
         'form': form,
-        'assortment': assortment,
         'is_copying': bool(copy_id),
         'copy_model': original if copy_id else None,
         'operations_order_json': operations_order_json,
@@ -1729,14 +1736,14 @@ class ModelDetailView(DetailView):
 
 @login_required
 @technologist_required
-def model_edit(request, a_id, pk):
+def model_edit(request, pk):
     model_instance = get_object_or_404(Model, pk=pk)
     
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
             form.save()
-            return redirect('bom_create', pk=pk, a_id=a_id)
+            return redirect('bom_create', pk=pk)
     else:
         form = ModelCustomForm(instance=model_instance)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('node__name', 'name')
@@ -1756,7 +1763,7 @@ class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
     def get_success_url(self):
-        return reverse('model_list', kwargs={'a_id': self.kwargs.get('a_id')})
+        return reverse('model_list')
 
 
 
@@ -2209,7 +2216,7 @@ class FabricsDeleteView(DeleteView):
 
 @login_required
 @technologist_required
-def bom_create(request, a_id, pk):
+def bom_create(request, pk):
     model_instance = get_object_or_404(Model, pk=pk)
     if request.method == 'POST':
         # Remove all existing BOM entries for the model.
@@ -2227,7 +2234,7 @@ def bom_create(request, a_id, pk):
                     quantity=Decimal(quantity)
                 )
             row += 1
-        return redirect('model_detail', pk=pk, a_id=a_id)
+        return redirect('model_detail', pk=pk)
     else:
         stocks = Stock.objects.filter(is_archived=False).order_by('name')
         # Load any existing BOM entries.

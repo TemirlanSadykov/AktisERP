@@ -66,14 +66,14 @@
         </p>
         <!-- Additional main details can be added here -->
         {% if not model.is_archived %}
-          <a href="{% url 'model_edit' a_id=model.assortment.pk pk=model.pk %}">
+          <a href="{% url 'model_edit' pk=model.pk %}">
             <img src="{% static 'img/compose.png' %}" alt="" class="editimg" />
           </a>
         {% endif %}
         <a href="javascript:void(0);" id="deleteBtn">
           <img src="{% static 'img/trash.png' %}" alt="" class="deleteimg" />
         </a>
-        <a href="{% url 'model_create' model.assortment.pk %}?copy={{ model.id }}" class="btn edit-btn" style="margin-top:18px;">
+        <a href="{% url 'model_create' %}?copy={{ model.id }}" class="btn edit-btn" style="margin-top:18px;">
           {% trans 'Copy' %}
         </a>
       </div>
@@ -152,14 +152,14 @@
     <!-- Hidden Forms for Archive/Unarchive -->
     <form id="archiveForm"
       action="{% if model.is_archived %}
-                {% url 'model_delete' a_id=model.assortment.pk pk=model.pk %}
+                {% url 'model_delete' pk=model.pk %}
               {% else %}
-                {% url 'model_archive' a_id=model.assortment.pk pk=model.pk %}
+                {% url 'model_archive' pk=model.pk %}
               {% endif %}"
       method="post" style="display:none;">
       {% csrf_token %}
     </form>
-    <form id="unArchiveForm" action="{% url 'model_unarchive' a_id=model.assortment.pk pk=model.pk %}" method="post" style="display:none;">
+    <form id="unArchiveForm" action="{% url 'model_unarchive' pk=model.pk %}" method="post" style="display:none;">
       {% csrf_token %}
     </form>
     
