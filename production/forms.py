@@ -7,6 +7,7 @@ from django.forms import ModelChoiceField
 from django.db import transaction
 from collections import defaultdict
 from django.contrib.auth import authenticate
+from django.forms import inlineformset_factory
 
 import json
 from .models import *
@@ -644,3 +645,11 @@ class BulkRollForm(forms.ModelForm):
 
         supplier_choices = list(self.fields['supplier'].choices)
         self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+
+class StockForm(forms.ModelForm):
+    class Meta:
+        model = Stock
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+        }

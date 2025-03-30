@@ -450,3 +450,36 @@ class AssignedWork(CompanyAwareModel):
     
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
+    
+class Stock(models.Model):
+    name = models.CharField(max_length=255)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
+    unit = models.CharField(max_length=50, null=True, blank=True)
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return f"{self.name} ({self.quantity} {self.unit})"
+    
+from django.db import models
+
+class BillOfMaterials(models.Model):
+    model = models.ForeignKey(
+        'Model',  # Reference to your product model
+        on_delete=models.CASCADE,
+        related_name='bill_of_materials',
+        verbose_name='Модель'
+    )
+    stock = models.ForeignKey(
+        'Stock',  # Reference to your stock model
+        on_delete=models.CASCADE,
+        related_name='bill_of_materials',
+        verbose_name='Сырьё/Комплектующие'
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_archived = models.BooleanField(
+        default=False,
+        verbose_name='Архивировано'
+    )
+
+    def __str__(self):
+        return f"{self.model.name} uses {self.quantity} {self.unit_of_measure} of {self.stock.name}"

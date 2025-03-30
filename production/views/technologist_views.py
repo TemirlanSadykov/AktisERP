@@ -20,6 +20,7 @@ from openpyxl.styles import  Alignment, Border, Font, Side
 from openpyxl.utils import get_column_letter
 from django.db.models import Q
 from django.db.models import IntegerField
+from decimal import Decimal
 from django.db.models.functions import Cast
 
 from ..decorators import technologist_required
@@ -1666,9 +1667,6 @@ class ModelUnArchiveView(UpdateView):
         model.is_archived = False
         model.save()
         return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
-    
-
-        
         
 @login_required
 @technologist_required
@@ -1680,18 +1678,28 @@ def model_create(request, a_id, pk=None):
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=None, a_id=a_id, copy_id=copy_id)
         if form.is_valid():
-            model_instance = form.save()  # Save the model instance
-            return redirect('model_detail', a_id = model_instance.assortment.id, pk=model_instance.id)  # Redirect to accessories view
+            model_instance = form.save()  # Save the new model instance
+            # If we're copying from an existing model, copy its BOM entries too.
+            if copy_id and original:
+                for bom in original.bill_of_materials.all():
+                    BillOfMaterials.objects.create(
+                        model=model_instance,
+                        stock=bom.stock,
+                        quantity=bom.quantity
+                    )
+            # Redirect to BOM creation page (which will display the copied BOM entries)
+            return redirect('bom_create', a_id=model_instance.assortment.id, pk=model_instance.id)
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
-        # Order the operations queryset by node number (numerically) and operation name
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
             'node__name', 'name'
         )
 
     operations_order_json = ""
     if copy_id:
-        operations_order = list(ModelOperation.objects.filter(model=original).order_by('order').values_list('operation_id', flat=True))
+        operations_order = list(
+            ModelOperation.objects.filter(model=original).order_by('order').values_list('operation_id', flat=True)
+        )
         operations_order_json = json.dumps(operations_order)
 
     template_name = 'technologist/models/edit.html' if original else 'technologist/models/create.html'
@@ -1715,6 +1723,7 @@ class ModelDetailView(DetailView):
         context = super(ModelDetailView, self).get_context_data(**kwargs)
         model = context['model']
         context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
+        context['bom_list'] = model.bill_of_materials.all()  # for the BOM tab
         context['sidebar_type'] = 'technology'
         return context
 
@@ -1727,7 +1736,7 @@ def model_edit(request, a_id, pk):
         form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
             form.save()
-            return redirect('model_list', a_id=a_id)
+            return redirect('bom_create', pk=pk, a_id=a_id)
     else:
         form = ModelCustomForm(instance=model_instance)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('node__name', 'name')
@@ -2196,3 +2205,53 @@ class FabricsDeleteView(DeleteView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
+    
+
+@login_required
+@technologist_required
+def bom_create(request, a_id, pk):
+    model_instance = get_object_or_404(Model, pk=pk)
+    if request.method == 'POST':
+        # Remove all existing BOM entries for the model.
+        model_instance.bill_of_materials.all().delete()
+        row = 0
+        # Loop over the rows that are sent in the POST data.
+        while f'row-{row}_stock' in request.POST:
+            stock_id = request.POST.get(f'row-{row}_stock')
+            quantity = request.POST.get(f'row-{row}_quantity')
+            if stock_id and quantity:
+                stock_instance = get_object_or_404(Stock, pk=stock_id)
+                BillOfMaterials.objects.create(
+                    model=model_instance,
+                    stock=stock_instance,
+                    quantity=Decimal(quantity)
+                )
+            row += 1
+        return redirect('model_detail', pk=pk, a_id=a_id)
+    else:
+        stocks = Stock.objects.filter(is_archived=False).order_by('name')
+        # Load any existing BOM entries.
+        boms = model_instance.bill_of_materials.all()
+        context = {
+            'model': model_instance,
+            'stocks': stocks,
+            'boms': boms,
+            'sidebar_type': 'technology'
+        }
+        return render(request, 'technologist/models/bom_create.html', context)
+
+@require_POST
+@login_required
+def add_stock_api(request):
+    form = StockForm(request.POST)
+    if form.is_valid():
+        stock = form.save()
+        data = {
+            'success': True,
+            'stock_id': stock.id,
+            'stock_name': stock.name,
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)

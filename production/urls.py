@@ -102,6 +102,7 @@ urlpatterns = [
     path('technologist/assortments/<int:a_id>/models/<int:pk>/archive/', ModelArchiveView.as_view(), name='model_archive'),
     path('technologist/assortments/<int:a_id>/models/<int:pk>/unarchive/', ModelUnArchiveView.as_view(), name='model_unarchive'), 
     path('technologist/assortments/<int:a_id>/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
+    path('technologist/assortments/<int:a_id>/models/<int:pk>/bom/create/', bom_create, name='bom_create'),
 
     path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
     path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),
@@ -187,9 +188,10 @@ urlpatterns = [
     path('api/add-client/', add_client_api, name='add_client_api'),
     path('api/add-color/', add_color_api, name='add_color_api'),
     path('api/add-fabric/', add_fabric_api, name='add_fabric_api'),
-    path('api/add_node/', add_node_api, name='add_node_api'),
-    path('api/add_equipment/', add_equipment_api, name='add_equipment_api'),
+    path('api/add-node/', add_node_api, name='add_node_api'),
+    path('api/add-equipment/', add_equipment_api, name='add_equipment_api'),
     path('api/add-supplier/', add_supplier_api, name='add_supplier_api'),
+    path('api/add-stock/', add_stock_api, name='add_stock_api'),
 
 
     path('api/payment_details/', payment_details_view, name='payment_details'),
