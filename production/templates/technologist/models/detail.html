@@ -130,14 +130,14 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>{% trans 'Stock' %}</th>
+                <th>{% trans 'Item' %}</th>
                 <th>{% trans 'Quantity' %}</th>
               </tr>
             </thead>
             <tbody>
               {% for bom in model.bill_of_materials.all %}
                 <tr>
-                  <td>{{ bom.stock.name }}</td>
+                  <td>{{ bom.item.name }}</td>
                   <td>{{ bom.quantity }}</td>
                 </tr>
               {% endfor %}

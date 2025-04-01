@@ -1701,7 +1701,7 @@ def model_create(request, pk=None):
                 for bom in original.bill_of_materials.all():
                     BillOfMaterials.objects.create(
                         model=model_instance,
-                        stock=bom.stock,
+                        item=bom.item,
                         quantity=bom.quantity
                     )
             # Redirect to BOM creation page (which will display the copied BOM entries)
@@ -2232,25 +2232,25 @@ def bom_create(request, pk):
         model_instance.bill_of_materials.all().delete()
         row = 0
         # Loop over the rows that are sent in the POST data.
-        while f'row-{row}_stock' in request.POST:
-            stock_id = request.POST.get(f'row-{row}_stock')
+        while f'row-{row}_item' in request.POST:
+            item_id = request.POST.get(f'row-{row}_item')
             quantity = request.POST.get(f'row-{row}_quantity')
-            if stock_id and quantity:
-                stock_instance = get_object_or_404(Stock, pk=stock_id)
+            if item_id and quantity:
+                item_instance = get_object_or_404(Item, pk=item_id)
                 BillOfMaterials.objects.create(
                     model=model_instance,
-                    stock=stock_instance,
+                    item=item_instance,
                     quantity=Decimal(quantity)
                 )
             row += 1
         return redirect('model_detail', pk=pk)
     else:
-        stocks = Stock.objects.filter(is_archived=False).order_by('name')
+        items = Item.objects.filter(is_archived=False).order_by('name')
         # Load any existing BOM entries.
         boms = model_instance.bill_of_materials.all()
         context = {
             'model': model_instance,
-            'stocks': stocks,
+            'items': items,
             'boms': boms,
             'sidebar_type': 'technology'
         }
@@ -2258,14 +2258,14 @@ def bom_create(request, pk):
 
 @require_POST
 @login_required
-def add_stock_api(request):
-    form = StockForm(request.POST)
+def add_item_api(request):
+    form = ItemForm(request.POST)
     if form.is_valid():
-        stock = form.save()
+        item = form.save()
         data = {
             'success': True,
-            'stock_id': stock.id,
-            'stock_name': stock.name,
+            'item_id': item.id,
+            'item_name': item.name,
         }
         return JsonResponse(data)
     else:

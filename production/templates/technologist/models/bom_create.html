@@ -29,7 +29,7 @@
     <table id="bomTable" class="table table-bordered">
       <thead>
         <tr>
-          <th style="width:60%;">{% trans "Stock" %}</th>
+          <th style="width:60%;">{% trans "Item" %}</th>
           <th style="width:30%;">{% trans "Quantity" %}</th>
           <th style="width:10%;">{% trans "Action" %}</th>
         </tr>
@@ -39,11 +39,11 @@
           {% for bom in boms %}
             <tr data-row="{{ forloop.counter0 }}">
               <td style="width:60%;">
-                <select name="row-{{ forloop.counter0 }}_stock" class="form-control stock-select">
+                <select name="row-{{ forloop.counter0 }}_item" class="form-control item-select">
                   <option value="">{% trans "-------" %}</option>
-                  <option value="add_new_stock">{% trans "Add New Stock" %}</option>
-                  {% for stock in stocks %}
-                    <option value="{{ stock.pk }}" {% if stock.pk == bom.stock.pk %}selected{% endif %}>{{ stock.name }}</option>
+                  <option value="add_new_item">{% trans "Add New Item" %}</option>
+                  {% for item in items %}
+                    <option value="{{ item.pk }}" {% if item.pk == bom.item.pk %}selected{% endif %}>{{ item.name }}</option>
                   {% endfor %}
                 </select>
               </td>
@@ -58,11 +58,11 @@
         {% else %}
           <tr data-row="0">
             <td style="width:60%;">
-              <select name="row-0_stock" class="form-control stock-select">
+              <select name="row-0_item" class="form-control item-select">
                 <option value="">{% trans "-------" %}</option>
-                <option value="add_new_stock">{% trans "Add New Stock" %}</option>
-                {% for stock in stocks %}
-                  <option value="{{ stock.pk }}">{{ stock.name }}</option>
+                <option value="add_new_item">{% trans "Add New Item" %}</option>
+                {% for item in items %}
+                  <option value="{{ item.pk }}">{{ item.name }}</option>
                 {% endfor %}
               </select>
             </td>
@@ -96,23 +96,23 @@
 </div>
 
 <!-- ======================== -->
-<!-- Add New Stock Modal -->
+<!-- Add New Item Modal -->
 <!-- ======================== -->
-<div class="modal" data-backdrop="false" id="addStockModal" tabindex="-1" role="dialog" aria-labelledby="addStockModalLabel" aria-hidden="true">
+<div class="modal" data-backdrop="false" id="additemModal" tabindex="-1" role="dialog" aria-labelledby="additemModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <form id="addStockForm" method="post">
+      <form id="additemForm" method="post">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title" id="addStockModalLabel">{% trans "Add New Stock" %}</h5>
+          <h5 class="modal-title" id="additemModalLabel">{% trans "Add New Item" %}</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="id_stock_name">{% trans "Stock Name" %}</label>
-            <input type="text" class="form-control" id="id_stock_name" name="name" placeholder="{% trans 'Enter stock name' %}" required>
+            <label for="id_item_name">{% trans "Item Name" %}</label>
+            <input type="text" class="form-control" id="id_item_name" name="name" placeholder="{% trans 'Enter item name' %}" required>
           </div>
         </div>
         <div class="modal-buttons">
@@ -128,18 +128,18 @@
 <!-- JavaScript Section -->
 <!-- ======================== -->
 <script>
-// Global array for stocks (populate from context)
-var globalStocks = [
-  {% for stock in stocks %}
-    { id: "{{ stock.pk }}", name: "{{ stock.name }}" },
+// Global array for items (populate from context)
+var globalitems = [
+  {% for item in items %}
+    { id: "{{ item.pk }}", name: "{{ item.name }}" },
   {% endfor %}
 ];
 
-function getStockOptionsHTML() {
+function getitemOptionsHTML() {
   let html = '<option value="">{% trans "-------" %}</option>';
-  html += '<option value="add_new_stock">{% trans "Add New Stock" %}</option>';
-  globalStocks.forEach(function(stock) {
-    html += `<option value="${stock.id}">${stock.name}</option>`;
+  html += '<option value="add_new_item">{% trans "Add New Item" %}</option>';
+  globalitems.forEach(function(item) {
+    html += `<option value="${item.id}">${item.name}</option>`;
   });
   return html;
 }
@@ -178,9 +178,9 @@ document.addEventListener("DOMContentLoaded", function(){
     const rows = document.querySelectorAll("#bomTable tbody tr");
     rows.forEach((row, index) => {
       row.setAttribute("data-row", index);
-      const stockSelect = row.querySelector("select.stock-select");
+      const itemSelect = row.querySelector("select.item-select");
       const quantityInput = row.querySelector("input[type='number']");
-      stockSelect.setAttribute("name", `row-${index}_stock`);
+      itemSelect.setAttribute("name", `row-${index}_item`);
       quantityInput.setAttribute("name", `row-${index}_quantity`);
     });
     rowCount = rows.length;
@@ -192,8 +192,8 @@ document.addEventListener("DOMContentLoaded", function(){
     newRow.setAttribute("data-row", rowCount);
     newRow.innerHTML = `
       <td style="width:60%;">
-        <select name="row-${rowCount}_stock" class="form-control stock-select">
-          ${getStockOptionsHTML()}
+        <select name="row-${rowCount}_item" class="form-control item-select">
+          ${getitemOptionsHTML()}
         </select>
       </td>
       <td style="width:30%;">
@@ -229,26 +229,26 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
   
-  // Handle trigger for "Add New Stock"
+  // Handle trigger for "Add New Item"
   document.addEventListener('change', function(e) {
-    if(e.target.matches('select.stock-select')) {
-      if(e.target.value === 'add_new_stock') {
-        let addStockModalEl = document.getElementById('addStockModal');
-        addStockModalEl.dataset.triggerSelect = e.target.name;
+    if(e.target.matches('select.item-select')) {
+      if(e.target.value === 'add_new_item') {
+        let additemModalEl = document.getElementById('additemModal');
+        additemModalEl.dataset.triggerSelect = e.target.name;
         e.target.value = "";
         // Show modal
-        addStockModalEl.classList.add('show');
-        addStockModalEl.style.display = 'block';
-        addStockModalEl.removeAttribute('aria-hidden');
+        additemModalEl.classList.add('show');
+        additemModalEl.style.display = 'block';
+        additemModalEl.removeAttribute('aria-hidden');
       }
     }
   });
   
-  // Handle Add New Stock form submission (AJAX)
-  document.getElementById('addStockForm').addEventListener('submit', function(e) {
+  // Handle Add New Item form submission (AJAX)
+  document.getElementById('additemForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    fetch("{% url 'add_stock_api' %}", {
+    fetch("{% url 'add_item_api' %}", {
       method: "POST",
       headers: { 'X-CSRFToken': getCookie('csrftoken') },
       body: formData,
@@ -256,27 +256,27 @@ document.addEventListener("DOMContentLoaded", function(){
     .then(response => response.json())
     .then(data => {
       if(data.success) {
-        // Add the new stock to the global array.
-        globalStocks.push({ id: data.stock_id.toString(), name: data.stock_name });
-        // Update all stock selects.
-        document.querySelectorAll('select.stock-select').forEach(function(select) {
-          if (!Array.from(select.options).some(opt => opt.value === data.stock_id.toString())) {
+        // Add the new item to the global array.
+        globalitems.push({ id: data.item_id.toString(), name: data.item_name });
+        // Update all item selects.
+        document.querySelectorAll('select.item-select').forEach(function(select) {
+          if (!Array.from(select.options).some(opt => opt.value === data.item_id.toString())) {
             let option = document.createElement("option");
-            option.value = data.stock_id.toString();
-            option.text = data.stock_name;
+            option.value = data.item_id.toString();
+            option.text = data.item_name;
             select.appendChild(option);
           }
         });
         // Set the value for the triggering select.
-        let triggerSelectName = document.getElementById('addStockModal').dataset.triggerSelect;
+        let triggerSelectName = document.getElementById('additemModal').dataset.triggerSelect;
         if(triggerSelectName) {
-          document.querySelector(`select[name="${triggerSelectName}"]`).value = data.stock_id;
+          document.querySelector(`select[name="${triggerSelectName}"]`).value = data.item_id;
         }
         // Hide the modal.
-        let addStockModalEl = document.getElementById('addStockModal');
-        addStockModalEl.classList.remove('show');
-        addStockModalEl.style.display = 'none';
-        addStockModalEl.setAttribute('aria-hidden', 'true');
+        let additemModalEl = document.getElementById('additemModal');
+        additemModalEl.classList.remove('show');
+        additemModalEl.style.display = 'none';
+        additemModalEl.setAttribute('aria-hidden', 'true');
       } else {
         alert("Error: " + JSON.stringify(data.errors));
       }

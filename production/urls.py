@@ -191,7 +191,7 @@ urlpatterns = [
     path('api/add-node/', add_node_api, name='add_node_api'),
     path('api/add-equipment/', add_equipment_api, name='add_equipment_api'),
     path('api/add-supplier/', add_supplier_api, name='add_supplier_api'),
-    path('api/add-stock/', add_stock_api, name='add_stock_api'),
+    path('api/add-item/', add_item_api, name='add_item_api'),
     path('api/add-assortment/', add_assortment_api, name='add_assortment_api'),
 
 

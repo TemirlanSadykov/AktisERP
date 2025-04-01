@@ -7,6 +7,8 @@ from django.utils import timezone
 from datetime import date
 from django.db import transaction
 from django.db.models import F
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 # ------------------------------------------------------------------
 # Company Model (Name field only for now)
@@ -451,26 +453,91 @@ class AssignedWork(CompanyAwareModel):
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
     
-class Stock(CompanyAwareModel):
+class Warehouse(CompanyAwareModel):
     name = models.CharField(max_length=255)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
-    unit = models.CharField(max_length=50, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return f"{self.name} ({self.quantity} {self.unit})"
     
-from django.db import models
+    def __str__(self):
+        return self.name
+
+class Item(CompanyAwareModel):
+    name = models.CharField(max_length=255)
+    sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    
+    def __str__(self):
+        return self.name
+
+class Stock(CompanyAwareModel):
+    # Generic relation fields:
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    # Inventory-specific fields:
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    unit = models.CharField(max_length=50, null=True, blank=True)
+    warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='inventory_stock'
+    )
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    
+    def __str__(self):
+        return f"{self.content_object} - {self.quantity} {self.unit}"
+    
+class StockMovement(CompanyAwareModel):
+    MOVEMENT_TYPES = (
+       ('IN', 'Incoming'),
+       ('OUT', 'Outgoing'),
+       ('ADJ', 'Adjustment'),
+       ('TRF', 'Transfer'),
+    )
+    
+    # Reference to the inventory record being moved
+    stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        related_name='stock_movements'
+    )
+    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # For transfers, you can record where the movement originates and where it goes.
+    from_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='outgoing_movements'
+    )
+    to_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='incoming_movements'
+    )
+    
+    note = models.TextField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"
 
 class BillOfMaterials(CompanyAwareModel):
     model = models.ForeignKey(
-        'Model',  # Reference to your product model
+        Model,
         on_delete=models.CASCADE,
         related_name='bill_of_materials',
         verbose_name='Модель'
     )
-    stock = models.ForeignKey(
-        'Stock',  # Reference to your stock model
+    item = models.ForeignKey(
+        Item,
         on_delete=models.CASCADE,
         related_name='bill_of_materials',
         verbose_name='Сырьё/Комплектующие'
@@ -482,4 +549,4 @@ class BillOfMaterials(CompanyAwareModel):
     )
 
     def __str__(self):
-        return f"{self.model.name} uses {self.quantity} {self.unit_of_measure} of {self.stock.name}"
+        return f"{self.model.name} uses {self.quantity} units of {self.item.name}"

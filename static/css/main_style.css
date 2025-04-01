@@ -17,8 +17,8 @@ nav a {
     font-weight: 500; /* Makes the text slightly bolder */
 }
 
-nav a:hover {
-    text-decoration: underline; /* Adds underline on hover for better accessibility */
+a:hover {
+    text-decoration: none; /* Adds underline on hover for better accessibility */
 }
 
 /* Logout button styling to look more like a link */

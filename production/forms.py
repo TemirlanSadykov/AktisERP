@@ -648,9 +648,9 @@ class BulkRollForm(forms.ModelForm):
         supplier_choices = list(self.fields['supplier'].choices)
         self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
 
-class StockForm(forms.ModelForm):
+class ItemForm(forms.ModelForm):
     class Meta:
-        model = Stock
+        model = Item
         fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
