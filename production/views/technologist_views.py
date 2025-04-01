@@ -1634,11 +1634,20 @@ class ModelListView(ListView):
     template_name = 'technologist/models/list.html'
     context_object_name = 'models'
     paginate_by = 10
+
     def get_queryset(self):
-        return Model.objects.filter(is_archived=False).order_by('name')
+        queryset = Model.objects.filter(is_archived=False).order_by('name')
+        assortment = self.request.GET.get('assortment', None)
+        if assortment:
+            queryset = queryset.filter(assortment_id=assortment)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
+        # Assuming you have an Assortment model and you want only non-archived ones
+        context['assortments'] = Assortment.objects.filter(is_archived=False).order_by('name')
+        context['selected_assortment'] = self.request.GET.get('assortment', '')
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
