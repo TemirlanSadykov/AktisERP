@@ -357,6 +357,9 @@ def payment_details_view(request):
 @login_required
 @admin_required
 def employees_payment_details(request, employee_id):
+    from datetime import timedelta
+    from django.db.models import F, Sum, ExpressionWrapper, DurationField, Value
+    from django.db.models.functions import Coalesce, TruncDate
     # 1) Get the employee
     employee = get_object_or_404(UserProfile, pk=employee_id)
 
@@ -389,72 +392,93 @@ def employees_payment_details(request, employee_id):
     ).distinct()
     orders_dict = {order_id: model_name for order_id, model_name in orders}
 
-    # 5) Group operations and calculate summary details
+    # Use select_related to optimize subsequent accesses
+    assigned_works = assigned_works.select_related(
+        'work',
+        'work__operation',
+        'work__passport_size__passport__cut__order'
+    )
+
+    # 5) Group operations and calculate summary details using DB aggregation
+    # Annotate actual_time as a duration (handling nulls)
+    assigned_works = assigned_works.annotate(
+        actual_time=Coalesce(
+            ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField()),
+            Value(timedelta(seconds=0))
+        )
+    )
+    # Group by operation fields and sum quantities and actual_time
+    ops_summary = assigned_works.values(
+        'work__operation__name',
+        'work__operation__preferred_completion_time',
+        'work__operation__payment'
+    ).annotate(
+        quantity=Sum('quantity'),
+        total_time=Sum('actual_time')
+    )
+
+    # Build operation summary from aggregated data
     operation_summary = {}
     total_units = 0
     total_weighted_efficiency = 0
+    for op in ops_summary:
+        op_name = op['work__operation__name']
+        preferred_completion_time = op['work__operation__preferred_completion_time']
+        payment = op['work__operation__payment']
+        quantity = op['quantity']
+        # total_time is a timedelta; convert it to seconds
+        total_time_seconds = op['total_time'].total_seconds() if op['total_time'] else 0
+        avg_time_per_unit = total_time_seconds / quantity if quantity else 0
+        # Calculate efficiency; if avg_time_per_unit is 0, assume perfect efficiency (100%)
+        efficiency = (preferred_completion_time / avg_time_per_unit) * 100 if avg_time_per_unit else 100
+
+        operation_summary[op_name] = {
+            'operation': op_name,
+            'quantity': quantity,
+            'total_time': total_time_seconds,
+            'preferred_completion_time': preferred_completion_time,
+            'payment': payment,
+            'efficiency': efficiency,
+        }
+        total_units += quantity
+        total_weighted_efficiency += (efficiency * quantity)
+
+    # Calculate operation distribution across orders (this part remains in Python)
     operation_distribution = {}
-
     for work in assigned_works:
-        operation_name = work.work.operation.name
+        op_name = work.work.operation.name
         order_id = work.work.passport_size.passport.cut.order.id
-        preferred_completion_time = work.work.operation.preferred_completion_time
-        payment = work.work.operation.payment
-        actual_time = 0
-        if work.start_time and work.end_time:
-            actual_time = (work.end_time - work.start_time).total_seconds()
-
-        # Initialize or update the summary for this operation
-        if operation_name not in operation_summary:
-            operation_summary[operation_name] = {
-                'operation': operation_name,
-                'quantity': work.quantity,
-                'total_time': actual_time,
-                'preferred_completion_time': preferred_completion_time,
-                'payment': payment,
-            }
-        else:
-            operation_summary[operation_name]['quantity'] += work.quantity
-            operation_summary[operation_name]['total_time'] += actual_time
-
-        # Operation distribution across orders
-        key = (operation_name, order_id)
+        key = (op_name, order_id)
         operation_distribution[key] = operation_distribution.get(key, 0) + work.quantity
 
-    # 6) Build the list of operation details
+    # 6) Build the list of operation details based on the summary
     operations_details = []
     total_time = 0
     total_payment = 0
     for op_data in operation_summary.values():
         total_time_spent = op_data['preferred_completion_time'] * op_data['quantity']
         total_payment_spent = op_data['payment'] * op_data['quantity']
-        avg_time_per_unit = (op_data['total_time'] / op_data['quantity']) if op_data['quantity'] else 0
-        efficiency = (op_data['preferred_completion_time'] / avg_time_per_unit) * 100 if avg_time_per_unit else 100
-
-        total_units += op_data['quantity']
-        total_weighted_efficiency += (efficiency * op_data['quantity'])
-        total_time += total_time_spent
-        total_payment += total_payment_spent
-
         operations_details.append({
             'operation': op_data['operation'],
             'quantity': op_data['quantity'],
             'total_time_spent': total_time_spent,
             'total_payment_spent': total_payment_spent,
-            'average_time_per_unit': avg_time_per_unit,
+            'average_time_per_unit': (op_data['total_time'] / op_data['quantity']) if op_data['quantity'] else 0,
             'preferred_completion_time': op_data['preferred_completion_time'],
             'payment': op_data['payment']
         })
+        total_time += total_time_spent
+        total_payment += total_payment_spent
 
     overall_efficiency = total_weighted_efficiency / total_units if total_units else 100
 
-    # 7) Summarize units produced by day (if needed)
-    units_by_day = {}
-    for work in assigned_works:
-        if work.start_time:
-            day = work.start_time.date()
-            units_by_day[day] = units_by_day.get(day, 0) + work.quantity
-    # units_over_time = [{'date': date, 'units': units} for date, units in sorted(units_by_day.items())]
+    # 7) Summarize units produced by day using DB aggregation
+    units_by_day_qs = assigned_works.filter(start_time__isnull=False) \
+        .annotate(day=TruncDate('start_time')) \
+        .values('day') \
+        .annotate(total_units=Sum('quantity')) \
+        .order_by('day')
+    units_by_day = {entry['day']: entry['total_units'] for entry in units_by_day_qs}
 
     # 9) Convert operation distribution to list format
     operation_distribution_list = [
@@ -475,7 +499,7 @@ def employees_payment_details(request, employee_id):
         'operation_distribution': operation_distribution_list,
         'total_time': total_time,
         'total_payment': total_payment,
-        # Optionally include other fields (e.g., total_defects) if needed
+        # Optionally include other fields if needed
     }
 
     return JsonResponse(response_data)
