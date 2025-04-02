@@ -655,3 +655,58 @@ class ItemForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
         }
+
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+        }
+
+class StockForm(forms.ModelForm):
+    # Select an Item from active (non-archived) items.
+    item = forms.ModelChoiceField(
+        queryset=Item.objects.filter(is_archived=False),
+        label="Item",
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Stock
+        # Exclude the generic fields (content_type and object_id) as we'll set them in save()
+        fields = ['item', 'quantity', 'unit', 'warehouse']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+            'warehouse': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter warehouse queryset for active warehouses.
+        self.fields['warehouse'].queryset = Warehouse.objects.filter(is_archived=False).order_by('name')
+        
+        # Prepend "Add New" option for warehouse and item.
+        warehouse_choices = list(self.fields['warehouse'].choices)
+        self.fields['warehouse'].choices = [("add_new", "Add New Warehouse")] + warehouse_choices
+        
+        item_choices = list(self.fields['item'].choices)
+        self.fields['item'].choices = [("add_new", "Add New Item")] + item_choices
+        
+        # Set initial value for 'item' if the instance exists and has a related object.
+        if self.instance.pk and hasattr(self.instance, 'content_object'):
+            self.fields['item'].initial = self.instance.content_object
+    
+    def save(self, commit=True):
+        # Get the form instance without saving yet.
+        instance = super().save(commit=False)
+        # Retrieve the selected item from the form.
+        selected_item = self.cleaned_data['item']
+        # Set the generic relation fields so Stock points to the selected Item.
+        instance.content_type = ContentType.objects.get_for_model(Item)
+        instance.object_id = selected_item.id
+        if commit:
+            instance.save()
+        return instance

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Keeper Dashboard" %}</h4>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+        <li class="nav-item dropdown" style="margin: 10px;">
+          {{ request.user.username }}
+        </li>
+        <li class="nav-item dropdown">
+          <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+              <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container maincontr" style="padding:60px;">
+    <div class="container">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        {% trans 'Stock' %}
+        {% if stock.is_archived %}
+          <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans "Un Archive" %}</a>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 details">
+            <p><strong>{% trans "Stock Details:" %}</strong> {{ stock }}</p>
+            {% if not stock.is_archived %}  
+              <a href="{% url 'stock_edit' stock.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg"></a>
+            {% endif %}
+            <a href="javascript:void(0);" id="deleteBtn"><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg"></a>
+          </div>
+          <form id="archiveForm" action="{% if stock.is_archived %}{% url 'stock_delete' stock.pk %}{% else %}{% url 'stock_archive' stock.pk %}{% endif %}" method="post" style="display:none;">
+            {% csrf_token %}
+          </form>
+          <form id="unArchiveForm" action="{% url 'stock_unarchive' stock.pk %}" method="post" style="display:none;">
+            {% csrf_token %}
+          </form>
+          <div class="col-md-5 text-center">
+            <img src="{% static 'img/client.png' %}" alt="Stock Image" class="img-fluid">
+          </div>
+        </div>
+      </div>
+      <div class="modal" id="deleteModal">
+        <div class="modal-content">
+          <span class="close" id="closeBtn">&times;</span>
+          <p>{% trans "Are you sure you want to delete this stock item?" %}</p>
+          <div class="modal-buttons">
+            <button class="btn confirm" id="confirmDeleteBtn">Confirm</button>
+            <button class="btn cancel" id="cancelBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal" id="unarchiveModal">
+        <div class="modal-content">
+          <span class="close" id="closeUnarchiveBtn">&times;</span>
+          <p>{% trans "Are you sure you want to unarchive this stock item?" %}</p>
+          <div class="modal-buttons">
+            <button class="btn confirm" id="confirmUnarchiveBtn">Confirm</button>
+            <button class="btn cancel" id="cancelUnarchiveBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('deleteBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'flex';
+    };
+
+    document.getElementById('closeBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+    };
+
+    document.getElementById('cancelBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+      document.getElementById('archiveForm').submit();
+    };
+
+    document.getElementById('unArchiveBtn').onclick = function() {
+      document.getElementById('unarchiveModal').style.display = 'flex';
+    };
+
+    document.getElementById('closeUnarchiveBtn').onclick = function() {
+      document.getElementById('unarchiveModal').style.display = 'none';
+    };
+
+    document.getElementById('cancelUnarchiveBtn').onclick = function() {
+      document.getElementById('unarchiveModal').style.display = 'none';
+    };
+
+    document.getElementById('confirmUnarchiveBtn').onclick = function() {
+      document.getElementById('unArchiveForm').submit();
+    };
+  </script>
+{% endblock %}

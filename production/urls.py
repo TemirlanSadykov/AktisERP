@@ -192,6 +192,7 @@ urlpatterns = [
     path('api/add-equipment/', add_equipment_api, name='add_equipment_api'),
     path('api/add-supplier/', add_supplier_api, name='add_supplier_api'),
     path('api/add-item/', add_item_api, name='add_item_api'),
+    path('api/add-warehouse/', add_warehouse_api, name='add_warehouse_api'),
     path('api/add-assortment/', add_assortment_api, name='add_assortment_api'),
 
 
@@ -210,6 +211,34 @@ urlpatterns = [
     path('keeper/suppliers/archived/', ArchivedSupplierListView.as_view(), name='archived_suppliers_list'),
     path('keeper/suppliers/<int:pk>/archive/', SupplierArchiveView.as_view(), name='supplier_archive'),
     path('keeper/suppliers/<int:pk>/unarchive/', SupplierUnArchiveView.as_view(), name='supplier_unarchive'),
+
+    path('keeper/stocks/', StockListView.as_view(), name='stock_list'),
+    path('keeper/stocks/create/', StockCreateView.as_view(), name='stock_create'),
+    path('keeper/stocks/<int:pk>/', StockDetailView.as_view(), name='stock_detail'),
+    path('keeper/stocks/<int:pk>/edit/', StockUpdateView.as_view(), name='stock_edit'),
+    path('keeper/stocks/<int:pk>/delete/', StockDeleteView.as_view(), name='stock_delete'),
+    path('keeper/stocks/archived/', ArchivedStockListView.as_view(), name='archived_stocks_list'),
+    path('keeper/stocks/<int:pk>/archive/', StockArchiveView.as_view(), name='stock_archive'),
+    path('keeper/stocks/<int:pk>/unarchive/', StockUnArchiveView.as_view(), name='stock_unarchive'),
+
+    path('keeper/warehouses/', WarehouseListView.as_view(), name='warehouse_list'),
+    path('keeper/warehouses/create/', WarehouseCreateView.as_view(), name='warehouse_create'),
+    path('keeper/warehouses/<int:pk>/', WarehouseDetailView.as_view(), name='warehouse_detail'),
+    path('keeper/warehouses/<int:pk>/edit/', WarehouseUpdateView.as_view(), name='warehouse_edit'),
+    path('keeper/warehouses/<int:pk>/delete/', WarehouseDeleteView.as_view(), name='warehouse_delete'),
+    path('keeper/warehouses/archived/', ArchivedWarehouseListView.as_view(), name='archived_warehouses_list'),
+    path('keeper/warehouses/<int:pk>/archive/', WarehouseArchiveView.as_view(), name='warehouse_archive'),
+    path('keeper/warehouses/<int:pk>/unarchive/', WarehouseUnArchiveView.as_view(), name='warehouse_unarchive'),
+
+    path('keeper/items/', ItemListView.as_view(), name='item_list'),
+    path('keeper/items/create/', ItemCreateView.as_view(), name='item_create'),
+    path('keeper/items/<int:pk>/', ItemDetailView.as_view(), name='item_detail'),
+    path('keeper/items/<int:pk>/edit/', ItemUpdateView.as_view(), name='item_edit'),
+    path('keeper/items/<int:pk>/delete/', ItemDeleteView.as_view(), name='item_delete'),
+    path('keeper/items/archived/', ArchivedItemListView.as_view(), name='archived_items_list'),
+    path('keeper/items/<int:pk>/archive/', ItemArchiveView.as_view(), name='item_archive'),
+    path('keeper/items/<int:pk>/unarchive/', ItemUnArchiveView.as_view(), name='item_unarchive'),
+
 
     path('keeper/rolls/', RollListView.as_view(), name='roll_list'),
     path('keeper/rolls/create/', RollCreateView.as_view(), name='roll_create'),

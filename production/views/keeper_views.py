@@ -341,3 +341,377 @@ class RollBulkCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockListView(ListView):
+    model = Stock
+    template_name = 'keeper/stocks/list.html'
+    context_object_name = 'stocks'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        # Ordering can be adjusted; here we simply order by id.
+        return Stock.objects.filter(is_archived=False).order_by('id')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedStockListView(ListView):
+    template_name = 'keeper/stocks/list.html'
+    context_object_name = 'stocks'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Stock.objects.filter(is_archived=True).order_by('id')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockCreateView(CreateView):
+    model = Stock
+    form_class = StockForm
+    template_name = 'keeper/stocks/create.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockDetailView(DetailView):
+    model = Stock
+    template_name = 'keeper/stocks/detail.html'
+    context_object_name = 'stock'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockUpdateView(UpdateView):
+    model = Stock
+    form_class = StockForm
+    template_name = 'keeper/stocks/edit.html'
+
+    def get_success_url(self):
+        return reverse('stock_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockDeleteView(DeleteView):
+    model = Stock
+    template_name = 'keeper/stocks/delete.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockArchiveView(UpdateView):
+    model = Stock
+    template_name = 'keeper/stocks/archive.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        stock = self.get_object()
+        stock.is_archived = True
+        stock.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockUnArchiveView(UpdateView):
+    model = Stock
+    template_name = 'keeper/stocks/archive.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        stock = self.get_object()
+        stock.is_archived = False
+        stock.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@require_POST
+@login_required
+def add_warehouse_api(request):
+    form = WarehouseForm(request.POST)
+    if form.is_valid():
+        warehouse = form.save()
+        data = {
+            'success': True,
+            'warehouse_id': warehouse.id,
+            'warehouse_name': warehouse.name,
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseListView(ListView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/list.html'
+    context_object_name = 'warehouses'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Warehouse.objects.filter(is_archived=False).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedWarehouseListView(ListView):
+    template_name = 'keeper/warehouses/list.html'
+    context_object_name = 'warehouses'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Warehouse.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseCreateView(CreateView):
+    model = Warehouse
+    form_class = WarehouseForm
+    template_name = 'keeper/warehouses/create.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseDetailView(DetailView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/detail.html'
+    context_object_name = 'warehouse'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseUpdateView(UpdateView):
+    model = Warehouse
+    form_class = WarehouseForm
+    template_name = 'keeper/warehouses/edit.html'
+
+    def get_success_url(self):
+        return reverse('warehouse_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseDeleteView(DeleteView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/delete.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseArchiveView(UpdateView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/delete.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        warehouse = self.get_object()
+        warehouse.is_archived = True
+        warehouse.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseUnArchiveView(UpdateView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/delete.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        warehouse = self.get_object()
+        warehouse.is_archived = False
+        warehouse.save()
+        return HttpResponseRedirect(self.success_url)
+    
+
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemListView(ListView):
+    model = Item
+    template_name = 'keeper/items/list.html'
+    context_object_name = 'items'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Item.objects.filter(is_archived=False).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedItemListView(ListView):
+    template_name = 'keeper/items/list.html'
+    context_object_name = 'items'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Item.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemCreateView(CreateView):
+    model = Item
+    form_class = ItemForm
+    template_name = 'keeper/items/create.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemDetailView(DetailView):
+    model = Item
+    template_name = 'keeper/items/detail.html'
+    context_object_name = 'item'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemUpdateView(UpdateView):
+    model = Item
+    form_class = ItemForm
+    template_name = 'keeper/items/edit.html'
+
+    def get_success_url(self):
+        return reverse('item_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemDeleteView(DeleteView):
+    model = Item
+    template_name = 'keeper/items/delete.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemArchiveView(UpdateView):
+    model = Item
+    template_name = 'keeper/items/delete.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        item = self.get_object()
+        item.is_archived = True
+        item.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemUnArchiveView(UpdateView):
+    model = Item
+    template_name = 'keeper/items/delete.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        item = self.get_object()
+        item.is_archived = False
+        item.save()
+        return HttpResponseRedirect(self.success_url)

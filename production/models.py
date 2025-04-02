@@ -119,15 +119,12 @@ class UserProfile(CompanyAwareModel):
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=True, verbose_name='Статус', null=True, blank=True)
     
-    
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"
 
 class Client(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-    
-    
     
     def __str__(self):
         return self.name
@@ -171,7 +168,7 @@ class Equipment(CompanyAwareModel):
 class Node(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-    
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['company', 'name'], name='unique_node_per_company')
@@ -216,8 +213,6 @@ class Assortment(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
-    
-    
     def __str__(self):
         return self.name
 
@@ -228,8 +223,6 @@ class Model(CompanyAwareModel):
     photo = models.ImageField(upload_to='model_photos/', null=True, blank=True, verbose_name='Фото')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
-    
-    
     def __str__(self):
         return self.name
     
@@ -238,8 +231,6 @@ class ModelOperation(CompanyAwareModel):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
     
-    
-
     class Meta:
         ordering = ['order']
 
@@ -276,7 +267,6 @@ class ClientOrder(CompanyAwareModel):
     term = models.DateField(default=default_term, verbose_name='Срок выполнения')
     info = models.TextField(blank=True, null=True, verbose_name='Additional Information')
     
-    
     def __str__(self):
         return self.order_number
 
@@ -299,7 +289,6 @@ class Order(CompanyAwareModel):
     payment = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Оплата')
     size_quantities = models.ManyToManyField(SizeQuantity, related_name='orders', verbose_name='Размеры и количества')
     
-    
     def __str__(self):
         return f"{self.model}"
     
@@ -313,8 +302,6 @@ class Cut(CompanyAwareModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
     size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')
 
-    
-    
     def __str__(self):
         return f"Cut {self.number} for Order {self.order}"
 
@@ -345,13 +332,13 @@ class CutSize(CompanyAwareModel):
     cut = models.ForeignKey(Cut, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Резка')
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='cut_sizes', verbose_name='Размер и количество')
     
-    
     def __str__(self):
         return f"{self.size_quantity.size} - {self.extra}"
 
 class Supplier(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
 
@@ -373,6 +360,7 @@ class Roll(CompanyAwareModel):
         related_name='remainders'
     )
     is_used = models.BooleanField(default=False, verbose_name='Is Used')
+
     @property
     def length_u(self):
         """
@@ -383,6 +371,7 @@ class Roll(CompanyAwareModel):
             r.length_t for r in self.remainders.all() if r.length_t is not None
         )
         return self.length_p - remainder_total
+    
     def __str__(self):
         return f"Roll: {self.color.name} - {self.fabric.name}"
 
@@ -425,7 +414,6 @@ class ProductionPiece(CompanyAwareModel):
     piece_number = models.IntegerField(verbose_name='Piece Number')
     stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
     
-    
     def __str__(self):
         return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
@@ -433,7 +421,6 @@ class Work(CompanyAwareModel):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='works', verbose_name='Операция')
     passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='works', null=True, verbose_name='Размер и количество')
-    
     
     def __str__(self):
         if self.passport_size:
@@ -448,7 +435,6 @@ class AssignedWork(CompanyAwareModel):
     start_time = models.DateTimeField(null=True, blank=True, verbose_name='Время начала')
     end_time = models.DateTimeField(null=True, blank=True, verbose_name='Время окончания')
     is_success = models.BooleanField(default=False, verbose_name='Завершено успешно')
-    
     
     def __str__(self):
         return f"{self.employee.employee_id} - {self.work.operation.name} - {self.work.passport_size.size_quantity.size} - {self.quantity}"
