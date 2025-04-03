@@ -21,6 +21,9 @@ from openpyxl.utils import get_column_letter
 from django.db.models import Q
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
+from django.db.models import Prefetch
+from django.db.models import Prefetch, Sum, Value
+from django.db.models.functions import Coalesce, Cast
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -631,71 +634,105 @@ class OrderDetailView(DetailView):
     template_name = 'technologist/orders/detail.html'
     context_object_name = 'order'
 
+    def get_queryset(self):
+        return Order.objects.prefetch_related(
+            # Prefetch order's size quantities with related color/fabrics.
+            Prefetch(
+                'size_quantities',
+                queryset=SizeQuantity.objects.select_related('color', 'fabrics').order_by('size')
+            ),
+            # Prefetch cuts, annotate total_layers from passports, and prefetch their related objects.
+            Prefetch(
+                'cuts',
+                queryset=Cut.objects.order_by('number')
+                .annotate(total_layers=Coalesce(Sum('passports__layers'), Value(0), output_field=IntegerField()))
+                .prefetch_related(
+                    'size_quantities',
+                    Prefetch(
+                        'passports',
+                        queryset=Passport.objects.prefetch_related(
+                            Prefetch(
+                                'size_quantities',
+                                queryset=SizeQuantity.objects.select_related('color', 'fabrics')
+                            )
+                        )
+                    )
+                )
+            ),
+            'client_order'  # For days_left calculation.
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- Build pivot data for "Required Quantities" table -----
-        # We'll use order.size_quantities.all() (assumed to include both color and fabric)
-        required_qs = order.size_quantities.all().order_by('size')
-        pivot_data = {}  # keys: (color, fabric), value: {size: quantity}
+        # Build pivot data for "Required Quantities" table.
+        pivot_data = {}
         all_sizes_set = set()
-        for sq in required_qs:
-            # Collect the size (header) value.
+        for sq in order.size_quantities.all():
             all_sizes_set.add(sq.size)
-            # Use a tuple (color, fabric) as the key.
-            key = (sq.color, sq.fabrics)  # Adjust field names if needed.
-            if key not in pivot_data:
-                pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
+            key = (sq.color, sq.fabrics)  # relies on __str__ of these models.
+            pivot_data.setdefault(key, {})[sq.size] = sq.quantity
 
-        # Sort sizes. (If sizes are numeric strings, convert to int for sorting.)
         try:
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
-        except ValueError:
+        except (ValueError, TypeError):
             all_sizes = sorted(all_sizes_set)
 
-        # # ----- Other context data (pass along your existing context) -----
-        associated_cuts = order.cuts.all().order_by('number')
-        # passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        # size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
-        # total_per_size = defaultdict(int)
-        # for passport in passports:
-        #     passport_number = passport.id
-        #     for passport_size in passport.passport_sizes.all():
-        #         size = passport_size.size_quantity.size
-        #         extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-        #         size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
-        #         size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-        #         size_data[extra_key][passport_number]['extra'] = passport_size.extra
-        #         total_per_size[size] += passport_size.quantity
+        # Associated cuts are already prefetched.
+        associated_cuts = order.cuts.all()
 
-        # required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-        #                     for sq in order.size_quantities.all().order_by('size')}
-        # for size in total_per_size:
-        #     if size not in required_missing:
-        #         required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+        # Calculate days left until the term.
+        today = timezone.now().date()
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
 
-        # def sort_key(x):
-        #     parts = x.split('-')
-        #     try:
-        #         return int(parts[0]), x
-        #     except ValueError:
-        #         return float('inf'), x
-        # sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        # --- Build detailed cut data ---
+        cut_details = []
+        for cut in associated_cuts:
+            # Get unique sizes used in this cut.
+            cut_sizes = list(cut.size_quantities.values_list('size', flat=True).distinct())
+            try:
+                cut_sizes_sorted = sorted(cut_sizes, key=lambda s: int(s))
+            except (ValueError, TypeError):
+                cut_sizes_sorted = sorted(cut_sizes)
+            
+            # Build passport data and aggregate colors from all passports.
+            passport_list = []
+            aggregated_colors = set()
+            for passport in cut.passports.all():
+                colors = {psq.color.name for psq in passport.size_quantities.all() if psq.color}
+                fabrics = {psq.fabrics.name for psq in passport.size_quantities.all() if psq.fabrics}
+                aggregated_colors.update(colors)
+                passport_list.append({
+                    'passport_id': passport.id,
+                    'passport_number': passport.number,
+                    'colors': ", ".join(sorted(colors)),
+                    'fabrics': ", ".join(sorted(fabrics)),
+                })
+            aggregated_colors_str = ", ".join(sorted(aggregated_colors))
+            
+            # Use the annotated total_layers.
+            total_layers = cut.total_layers
+
+            cut_details.append({
+                'cut_id': cut.id,
+                'cut_number': cut.number,
+                'cut_date': cut.date,
+                'cut_sizes': cut_sizes_sorted,
+                'aggregated_colors': aggregated_colors_str,
+                'total_layers': total_layers,
+                'passports': passport_list,
+            })
 
         context.update({
-            'pivot_data': pivot_data,  # Our new pivoted required data
-            'all_sizes': all_sizes,    # List of sizes for the header row
-            # (Include your other context items as before.)
-            # 'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            # 'total_per_size': dict(total_per_size),
-            # 'required_missing': required_missing,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'pivot_data': pivot_data,   # Pivoted required quantities.
+            'all_sizes': all_sizes,     # Sorted list of sizes for header.
+            'days_left': days_left,
             'associated_cuts': associated_cuts,
+            'cut_details': cut_details, # Detailed cut info including aggregated colors, sizes, and total layers.
             'sidebar_type': 'technology'
         })
-        return context  
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderCreateView(CreateView):
