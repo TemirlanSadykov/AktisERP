@@ -367,8 +367,6 @@ class CutEditView(UpdateView):
             # For each related passport, remove PassportSize records for those sizes.
             for passport in cut.passports.all():
                 passport.passport_sizes.filter(size_quantity__size__in=removed_sizes).delete()
-            # (If needed, also update related ProductionPiece records, 
-            # but if they depend on PassportSize, cascade deletion may handle that.)
 
         # Handle added sizes.
         if added_sizes:
@@ -396,6 +394,25 @@ class CutDeleteView(DeleteView):
     def get_success_url(self):
         return reverse('order_detail_cutter', kwargs={'pk': self.object.order.pk})
   
+import string
+
+# Helper function to convert an integer to a fixed-length base36 string.
+def to_fixed_base(n, length=4):
+    if n is None:
+        return "0" * length
+    chars = string.digits + string.ascii_uppercase
+    base = 36
+    result = ""
+    while n:
+        n, rem = divmod(n, base)
+        result = chars[rem] + result
+    return result.zfill(length)
+
+# Helper function to pad a string (for size) to a fixed length.
+def pad_string(s, length=3):
+    s = str(s).upper()
+    return s.ljust(length, '0')[:length]
+
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportCreateView(CreateView):
     model = Passport
@@ -406,7 +423,7 @@ class PassportCreateView(CreateView):
         kwargs = super().get_form_kwargs()
         cut_id = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_id)
-        kwargs['cut'] = cut  # Pass the cut to the form so it can build the combo choices.
+        kwargs['cut'] = cut  # Pass the cut to the form for building combo choices.
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -425,9 +442,8 @@ class PassportCreateView(CreateView):
         # Generate passport number starting from 1 for each cut.
         last_passport = Passport.objects.filter(cut=cut).order_by('number').last()
         passport.number = last_passport.number + 1 if last_passport else 1
-
         passport.cut = cut  # Link passport directly to the cut.
-        passport.save()     # Save first to have an instance for m2m relations.
+        passport.save()     # Save first so that passport.id is available.
 
         # Handle passport sizes based on the selected combination.
         combination = form.cleaned_data['combination']
@@ -438,33 +454,33 @@ class PassportCreateView(CreateView):
             size_quantity__fabrics_id=fabric_id
         )
         for cut_size in matching_cut_sizes:
+            # Create a PassportSize for each matching cut size.
             passport_size = PassportSize.objects.create(
                 passport=passport,
                 size_quantity=cut_size.size_quantity,
                 quantity=layers,
                 extra=cut_size.extra
             )
-            quantity = int(passport_size.quantity)
-            for i in range(1, quantity + 1):
-                ProductionPiece.objects.create(
-                    passport_size=passport_size,
-                    piece_number=i
-                )
-        
-        # New logic: assign the selected roll to the passport.
-        selected_roll = form.cleaned_data['roll']
+            # Generate SKU for PassportSize with the pattern:
+            # [size from SizeQuantity] + [passport.id] + [cut.id] + [order.id]
+            passport_size.sku = (
+                pad_string(passport_size.size_quantity.size, 3) +
+                to_fixed_base(passport.id, 4) +
+                to_fixed_base(cut.id, 4) +
+                to_fixed_base(cut.order.id, 4)
+            )
+            passport_size.save()
 
+        # Handle roll assignment (unchanged logic)
+        selected_roll = form.cleaned_data['roll']
         if selected_roll:
             passport.roll = selected_roll
             passport.save()
             
-            # Update the selected roll’s remainder.
             new_remainder = form.cleaned_data['remainder']
-
             if new_remainder:
-                selected_roll.length_p = new_remainder+layers*cut.length
-
-                remainder_roll = Roll.objects.create(
+                selected_roll.length_p = new_remainder + layers * cut.length
+                Roll.objects.create(
                     color=selected_roll.color,
                     fabric=selected_roll.fabric,
                     supplier=selected_roll.supplier,
@@ -477,7 +493,7 @@ class PassportCreateView(CreateView):
                     is_used=False
                 )
             else:
-                selected_roll.length_p = layers*cut.length
+                selected_roll.length_p = layers * cut.length
 
             selected_roll.is_used = True
             selected_roll.save()
@@ -488,11 +504,10 @@ class PassportCreateView(CreateView):
             ) / sum(
                 sum(ps.quantity for ps in p.passport_sizes.all())
                 for p in cut.passports.all()
-            )            
+            )
             cut.save()
-        
-        return redirect(self.get_success_url())
 
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('passport_create', kwargs={'pk': self.kwargs['pk']})

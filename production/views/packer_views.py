@@ -164,37 +164,22 @@ class OrderDetailPackerView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- Build pivot data for "Required Quantities" table -----
+        # Build pivot data for "Required Quantities" table using SizeQuantity records.
         required_qs = order.size_quantities.all().order_by('size')
         pivot_data = {}          # keys: (color, fabric), value: {size: required quantity}
         pivot_data_checked = {}  # keys: (color, fabric), value: {size: checked count}
         all_sizes_set = set()
 
-        # Pre-calculate the checked counts for each SizeQuantity in this order.
-        # We join ProductionPiece through passport_size -> passport -> cut -> order.
-        checked_counts_qs = ProductionPiece.objects.filter(
-            passport_size__passport__cut__order=order,
-            stage=ProductionPiece.StageChoices.PACKED
-        ).values('passport_size__size_quantity').annotate(checked_count=Count('id'))
-
-        # Create a lookup dictionary: {SizeQuantity_id: checked_count}
-        checked_counts_dict = {
-            item['passport_size__size_quantity']: item['checked_count']
-            for item in checked_counts_qs
-        }
-
-        # Build our pivot data structures.
         for sq in required_qs:
             all_sizes_set.add(sq.size)
             key = (sq.color, sq.fabrics)  # tuple key based on color and fabric
-
             if key not in pivot_data:
                 pivot_data[key] = {}
                 pivot_data_checked[key] = {}
 
             pivot_data[key][sq.size] = sq.quantity
-            # Use the pre-computed count, defaulting to 0 if none found.
-            pivot_data_checked[key][sq.size] = checked_counts_dict.get(sq.id, 0)
+            # Use the 'checked' field from SizeQuantity, defaulting to 0 if not set.
+            pivot_data_checked[key][sq.size] = sq.packed if sq.packed is not None else 0
 
         # Sort sizes (if sizes are numeric strings, sort numerically).
         try:
@@ -259,38 +244,43 @@ class PassportDetailPackerView(DetailView):
 @require_POST
 @login_required
 @packer_required
-def update_piece_packer(request, piece_id):
+def update_piece_packer(request, sku):
     try:
-        piece = ProductionPiece.objects.get(id=piece_id)
+        passport_size = PassportSize.objects.get(sku=sku)
         
-        # Check conditions for packing
-        if piece.stage == ProductionPiece.StageChoices.PACKED:
-            return JsonResponse({'success': False, 'message': 'Единица уже упакована.'}, status=409)
-        elif piece.stage == ProductionPiece.StageChoices.DEFECT:
-            return JsonResponse({'success': False, 'message': 'Единица бракована.'}, status=409)
-        elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
-            return JsonResponse({'success': False, 'message': 'Единица еще не проверена.'}, status=409)
+        # Use the current packed count (defaulting to 0 if not set)
+        current_packed = passport_size.packed or 0
 
-        # Update piece status to PACKED
-        piece.stage = ProductionPiece.StageChoices.PACKED
-        piece.save()
+        # Ensure we haven't already packed all the items for this PassportSize
+        if current_packed >= passport_size.quantity:
+            return JsonResponse({'success': False, 'message': 'Все единицы уже упакованы.'}, status=409)
 
-        # Prepare response data
-        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
-        cut = piece.passport_size.passport.cut.number
-        model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
-        fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
-        passport_id = piece.passport_size.passport.id
-        passport_number = piece.passport_size.passport.number
-        
-        # Forming the response with piece details
+        # Increment the packed count for PassportSize
+        passport_size.packed = current_packed + 1
+        passport_size.save()
+
+        # Also update the aggregated SizeQuantity packed count
+        size_quantity = passport_size.size_quantity
+        current_sq_packed = size_quantity.packed or 0
+        size_quantity.packed = current_sq_packed + 1
+        size_quantity.save()
+
+        # Prepare response data using PassportSize details
+        size = (f"{passport_size.size_quantity.size}-{passport_size.extra}"
+                if passport_size.extra else passport_size.size_quantity.size)
+        cut = passport_size.passport.cut.number
+        model = passport_size.passport.cut.order.model.name
+        color = passport_size.size_quantity.color.name if passport_size.size_quantity.color else "-"
+        fabrics = passport_size.size_quantity.fabrics.name if passport_size.size_quantity.fabrics else "-"
+        passport_id = passport_size.passport.id
+        passport_number = passport_size.passport.number
+
         data = {
             'success': True,
-            'message': 'Piece status updated to Packed.',
-            'piece_id': piece.id,
-            'order_id': piece.passport_size.passport.cut.order.id,
-            'piece_number': piece.piece_number,
+            'message': 'Единица обновлена до статуса упакована.',
+            'piece_id': passport_size.id,
+            'order_id': passport_size.passport.cut.order.id,
+            'piece_number': passport_size.packed,  # Current packed count for PassportSize
             'passport_id': passport_id,
             'passport_number': passport_number,
             'cut': cut,
@@ -298,12 +288,14 @@ def update_piece_packer(request, piece_id):
             'color': color,
             'fabrics': fabrics,
             'size': size,
-            'stage': piece.get_stage_display()
+            'packed': passport_size.packed,
+            'quantity': passport_size.quantity,
+            'size_quantity_packed': size_quantity.packed,  # Aggregated packed count for SizeQuantity
         }
         return JsonResponse(data)
 
-    except ProductionPiece.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Запись PassportSize не найдена.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
@@ -332,19 +324,7 @@ def get_order_table_data_packer(request, order_id):
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
         except ValueError:
             all_sizes = sorted(all_sizes_set)
-        
-        # For each size quantity, if the packed field is still null,
-        # count the production pieces (PACKED) and update it.
-        for sq in required_qs:
-            if sq.packed is None:
-                count = ProductionPiece.objects.filter(
-                    passport_size__size_quantity=sq,
-                    passport_size__passport__cut__order=order,
-                    stage=ProductionPiece.StageChoices.PACKED
-                ).count()
-                sq.packed = count
-                sq.save(update_fields=['packed'])
-        
+                
         # Build packed_counts from the size quantities.
         # This dictionary uses the same key ("Color Fabrics") and maps each size to its packed value.
         packed_counts = {}

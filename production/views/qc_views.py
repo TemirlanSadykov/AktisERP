@@ -169,37 +169,21 @@ class OrderDetailQcView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- Build pivot data for "Required Quantities" table -----
+        # Build pivot data for "Required Quantities" table using SizeQuantity records.
         required_qs = order.size_quantities.all().order_by('size')
         pivot_data = {}          # keys: (color, fabric), value: {size: required quantity}
         pivot_data_checked = {}  # keys: (color, fabric), value: {size: checked count}
         all_sizes_set = set()
 
-        # Pre-calculate the checked counts for each SizeQuantity in this order.
-        # We join ProductionPiece through passport_size -> passport -> cut -> order.
-        checked_counts_qs = ProductionPiece.objects.filter(
-            passport_size__passport__cut__order=order,
-            stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED]
-        ).values('passport_size__size_quantity').annotate(checked_count=Count('id'))
-
-        # Create a lookup dictionary: {SizeQuantity_id: checked_count}
-        checked_counts_dict = {
-            item['passport_size__size_quantity']: item['checked_count']
-            for item in checked_counts_qs
-        }
-
-        # Build our pivot data structures.
         for sq in required_qs:
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)  # tuple key based on color and fabric
-
+            key = (sq.color, sq.fabrics)  # group by color and fabric
             if key not in pivot_data:
                 pivot_data[key] = {}
                 pivot_data_checked[key] = {}
-
             pivot_data[key][sq.size] = sq.quantity
-            # Use the pre-computed count, defaulting to 0 if none found.
-            pivot_data_checked[key][sq.size] = checked_counts_dict.get(sq.id, 0)
+            # Use the 'checked' field from SizeQuantity; default to 0 if missing.
+            pivot_data_checked[key][sq.size] = sq.checked if sq.checked is not None else 0
 
         # Sort sizes (if sizes are numeric strings, sort numerically).
         try:
@@ -208,9 +192,9 @@ class OrderDetailQcView(DetailView):
             all_sizes = sorted(all_sizes_set)
 
         context.update({
-            'pivot_data': pivot_data,             # required quantities pivot
+            'pivot_data': pivot_data,                # required quantities pivot
             'pivot_data_checked': pivot_data_checked,  # checked counts pivot
-            'all_sizes': all_sizes,               # list of sizes for header row
+            'all_sizes': all_sizes,                    # list of sizes for header row
             'days_left': (order.client_order.term - timezone.now().date()).days
                           if order.client_order.term >= timezone.now().date() else 0,
             'sidebar_type': 'qc_page'
@@ -268,34 +252,27 @@ class PassportDetailQcView(DetailView):
 @qc_required
 def get_piece_info(request, barcode):
     try:
-        # Split the barcode and extract the piece ID.
-        parts = barcode.split('-')
-        if len(parts) != 3:
-            return JsonResponse({'error': 'Invalid barcode format'}, status=400)
-
-        piece_id = parts[2]  # Assuming the last part is the piece ID.
-        piece = ProductionPiece.objects.get(id=piece_id)
-
-        # Get details from the piece.
-        date = piece.passport_size.passport.cut.date
-        cut = piece.passport_size.passport.cut.number
-        model = piece.passport_size.passport.cut.order.model.name
-        # Use color and fabrics from size_quantity (fallback to "-" if missing)
-        color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
-        fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
-        size = piece.passport_size.size_quantity.size
-        passport_id = piece.passport_size.passport.id
-        passport_number = piece.passport_size.passport.number
-
-        # Get order info (assuming each piece’s passport -> cut -> order exists)
-        order = piece.passport_size.passport.cut.order
+        # Use the scanned barcode as the SKU for PassportSize.
+        passport_size = PassportSize.objects.get(sku=barcode)
+        
+        # Retrieve details from passport_size and its related objects.
+        date = passport_size.passport.cut.date
+        cut = passport_size.passport.cut.number
+        model = passport_size.passport.cut.order.model.name
+        color = passport_size.size_quantity.color.name if passport_size.size_quantity.color else "-"
+        fabrics = passport_size.size_quantity.fabrics.name if passport_size.size_quantity.fabrics else "-"
+        size = passport_size.size_quantity.size
+        passport_id = passport_size.passport.id
+        passport_number = passport_size.passport.number
+        order = passport_size.passport.cut.order
         order_id = order.id
-        # Display the order’s model name
         order_name = order.model.name
 
         data = {
-            'piece_id': piece.id,
-            'piece_number': piece.piece_number,
+            'piece_id': passport_size.id,
+            'quantity': passport_size.quantity,
+            'checked': passport_size.checked or 0,
+            'packed': passport_size.packed or 0,
             'passport_id': passport_id,
             'passport_number': passport_number,
             'date': date,
@@ -304,15 +281,14 @@ def get_piece_info(request, barcode):
             'color': color,
             'fabrics': fabrics,
             'size': size,
-            'stage': piece.get_stage_display(),
             'order_id': order_id,
             'order_name': order_name,
         }
         return JsonResponse(data)
-    except ProductionPiece.DoesNotExist:
-        return JsonResponse({'error': 'Piece not found'}, status=404)
-    except ValueError:
-        return JsonResponse({'error': 'Error processing barcode'}, status=500)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'error': 'PassportSize not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @require_POST
 @login_required
@@ -322,17 +298,36 @@ def update_piece_qc(request, piece_id):
     status = data.get('status')
 
     valid_statuses = {
-        'Checked': ProductionPiece.StageChoices.CHECKED,
-        'Defect': ProductionPiece.StageChoices.DEFECT
+        'Checked': 'Checked',
+        'Defect': 'Defect'
     }
     
     if status not in valid_statuses:
         return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
 
-    piece = ProductionPiece.objects.get(id=piece_id)
-    piece.stage = valid_statuses[status]
-    piece.save()
-    message = f'Piece status updated to {status}.'
+    try:
+        passport_size = PassportSize.objects.get(id=piece_id)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'PassportSize not found.'}, status=404)
+
+    if status == 'Checked':
+        # Increment PassportSize checked count if we haven't reached the planned quantity.
+        current_checked = passport_size.checked or 0
+        if current_checked >= passport_size.quantity:
+            return JsonResponse({'success': False, 'message': 'Все единицы уже проверены.'}, status=409)
+        passport_size.checked = current_checked + 1
+        passport_size.save()
+
+        # Also increment the aggregated checked count on SizeQuantity.
+        size_quantity = passport_size.size_quantity
+        current_sq_checked = size_quantity.checked or 0
+        size_quantity.checked = current_sq_checked + 1
+        size_quantity.save()
+
+        message = 'Единица обновлена до статуса Проверено.'
+    else:  # status == 'Defect'
+        # For defective items, we do not increment the checked counts.
+        message = 'Единица отмечена как брак.'
 
     return JsonResponse({'success': True, 'message': message})
 
@@ -364,22 +359,7 @@ def get_order_table_data_qc(request, order_id):
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
         except ValueError:
             all_sizes = sorted(all_sizes_set)
-        
-        # For each size quantity, if the checked field is still null,
-        # count the production pieces (CHECKED or PACKED) and update it.
-        for sq in required_qs:
-            if sq.checked is None:
-                count = ProductionPiece.objects.filter(
-                    passport_size__size_quantity=sq,
-                    passport_size__passport__cut__order=order,
-                    stage__in=[
-                        ProductionPiece.StageChoices.CHECKED,
-                        ProductionPiece.StageChoices.PACKED
-                    ]
-                ).count()
-                sq.checked = count
-                sq.save(update_fields=['checked'])
-        
+                
         # Build checked_counts from the size quantities.
         # This dictionary uses the same key ("Color Fabrics") and maps each size to its checked value.
         checked_counts = {}

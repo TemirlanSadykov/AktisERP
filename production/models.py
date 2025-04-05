@@ -237,6 +237,7 @@ class ModelOperation(CompanyAwareModel):
 class SizeQuantity(CompanyAwareModel):
     size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
     quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
+    factual = models.IntegerField(verbose_name='Факт', null=True, blank=True)
     checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
     packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
@@ -399,23 +400,12 @@ class PassportSize(CompanyAwareModel):
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
     quantity = models.IntegerField(verbose_name='Количество')
     factual = models.IntegerField(verbose_name='Факт', blank=True, null=True)
+    checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
+    packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
+    sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
     
     def __str__(self):
         return f"{self.size_quantity.size} - {self.quantity} шт"
-
-class ProductionPiece(CompanyAwareModel):
-    class StageChoices(models.TextChoices):
-        NOT_CHECKED = 'NOT_CHECKED', 'Непроверено'
-        CHECKED = 'CHECKED', 'Проверено'
-        PACKED = 'PACKED', 'Упаковано'
-        DEFECT = 'DEFECT', 'Брак'
-    
-    passport_size = models.ForeignKey(PassportSize, on_delete=models.CASCADE, related_name='pieces')
-    piece_number = models.IntegerField(verbose_name='Piece Number')
-    stage = models.CharField(max_length=20, choices=StageChoices.choices, default=StageChoices.NOT_CHECKED, verbose_name='Stage')
-    
-    def __str__(self):
-        return f"Passport ID: {self.passport_size.passport.id}, Piece: {self.piece_number}, Stage: {self.stage}"
 
 class Work(CompanyAwareModel):
     employees = models.ManyToManyField(UserProfile, through='AssignedWork', verbose_name='Сотрудники')

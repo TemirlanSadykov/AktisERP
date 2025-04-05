@@ -43,14 +43,12 @@
         </button>
       </div>
       <div class="modal-body">
-        <p><strong>{% trans "Единица" %}:</strong> <span id="modal-piece"></span></p>
         <p><strong>{% trans "Паспорт" %}:</strong> <span id="modal-passport"></span></p>
         <p><strong>{% trans "Крой" %}:</strong> <span id="modal-cut"></span></p>
         <p><strong>{% trans "Модель" %}:</strong> <span id="modal-model"></span></p>
         <p><strong>{% trans "Цвет" %}:</strong> <span id="modal-color"></span></p>
         <p><strong>{% trans "Ткань" %}:</strong> <span id="modal-fabrics"></span></p>
         <p><strong>{% trans "Размер" %}:</strong> <span id="modal-size"></span></p>
-        <p><strong>{% trans "Статус" %}:</strong> <span id="modal-stage"></span></p>
       </div>
       <div class="modal-footer form-actions" id="initialButtons">
         <button type="button" class="btn edit-btn" id="checked-button">{% trans "Checked" %}</button>
@@ -190,14 +188,12 @@
           })
           .then(function(data) {
             // Populate the modal with piece details.
-            document.getElementById('modal-piece').textContent = data.piece_number;
             document.getElementById('modal-model').textContent = data.model;
             document.getElementById('modal-cut').textContent = data.cut;
             document.getElementById('modal-passport').textContent = data.passport_number;
             document.getElementById('modal-color').textContent = data.color;
             document.getElementById('modal-fabrics').textContent = data.fabrics;
             document.getElementById('modal-size').textContent = data.size;
-            document.getElementById('modal-stage').textContent = data.stage;
             currentPieceId = data.piece_id;
             // Store this piece for later update.
             lastScannedPiece = data;

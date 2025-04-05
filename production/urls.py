@@ -152,7 +152,7 @@ urlpatterns = [
     
     path('packer/client/orders/order/', OrderListPackerView.as_view(), name='order_list_packer'),
     path('packer/client/orders/order/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
-    path('packer/orders/update-piece-status/<int:piece_id>/', update_piece_packer, name='update_piece_packer'),
+    path('packer/orders/update-piece-status/<int:sku>/', update_piece_packer, name='update_piece_packer'),
     path('packer/orders/update-packed-by-sku/<int:sku>/', update_packed_by_sku, name='update_packed_by_sku'),
     path('packer/orders/get-order-table-data/<int:order_id>/', get_order_table_data_packer, name='get_order_table_data_packer'),
     path('packer/scan/', scan_packer_page, name='scan_packer_page'),

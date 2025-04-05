@@ -181,15 +181,13 @@ def order_details_api(request, order_id):
       - total ordered (from SizeQuantity.quantity)
       - cut (aggregated from Passport.layers for passports linked to that SizeQuantity)
       - sew (aggregated from Passport.layers for passports that have any AssignedWork)
-      - check (aggregated count of ProductionPiece records in the CHECKED/PACKED stages)
-      - packed (aggregated count of ProductionPiece records in the PACKED stage)
-
-    Production aggregations for "cut" and "sew" remain calculated as before.
+      - check (from SizeQuantity.checked)
+      - packed (from SizeQuantity.packed)
     """
 
     order = get_object_or_404(Order, pk=order_id)
 
-    # Get all SizeQuantity objects for the order (prefetch color and fabrics)
+    # Get all SizeQuantity objects for the order (with related color and fabrics)
     size_quantities = order.size_quantities.select_related('color', 'fabrics').all()
 
     # Group SizeQuantity objects by unique (color, fabric) pair, and then by size.
@@ -203,7 +201,12 @@ def order_details_api(request, order_id):
         if sq.size:
             # Only keep the first record for each size.
             if sq.size not in groups[key]:
-                groups[key][sq.size] = {"id": sq.id, "total": sq.quantity or 0}
+                groups[key][sq.size] = {
+                    "id": sq.id,
+                    "total": sq.quantity or 0,
+                    "checked": sq.checked or 0,
+                    "packed": sq.packed or 0,
+                }
 
     group_list = []
     for (color_name, fabric_name), sizes_dict in groups.items():
@@ -211,6 +214,8 @@ def order_details_api(request, order_id):
         for size_value, data_dict in sizes_dict.items():
             size_id = data_dict["id"]
             total_ordered = data_dict["total"]
+            checked_total = data_dict["checked"]
+            packed_total = data_dict["packed"]
 
             # Fetch passports associated with the given SizeQuantity record.
             passport_qs = Passport.objects.filter(
@@ -219,10 +224,12 @@ def order_details_api(request, order_id):
             ).distinct()
 
             # Aggregate cut_total: sum of layers for all these passports.
-            passport_agg = passport_qs.aggregate(cut_total=Coalesce(Sum('layers'), 0, output_field=IntegerField()))
+            passport_agg = passport_qs.aggregate(
+                cut_total=Coalesce(Sum('layers'), 0, output_field=IntegerField())
+            )
             cut_total = passport_agg['cut_total']
 
-            # For sew_total, first get passport IDs that have any assigned work.
+            # For sew_total, get passport IDs that have any assigned work.
             assigned_passport_ids = AssignedWork.objects.filter(
                 work__passport_size__passport__in=passport_qs
             ).values_list('work__passport_size__passport_id', flat=True).distinct()
@@ -231,30 +238,12 @@ def order_details_api(request, order_id):
             )
             sew_total = sew_agg['sew_total']
 
-            # Aggregate ProductionPiece counts with conditional aggregation.
-            prod_agg = ProductionPiece.objects.filter(
-                passport_size__passport__in=passport_qs
-            ).aggregate(
-                check_total=Coalesce(Sum(Case(
-                    When(stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED], then=1),
-                    default=0,
-                    output_field=IntegerField()
-                )), 0),
-                packed_total=Coalesce(Sum(Case(
-                    When(stage=ProductionPiece.StageChoices.PACKED, then=1),
-                    default=0,
-                    output_field=IntegerField()
-                )), 0)
-            )
-            check_total = prod_agg['check_total']
-            packed_total = prod_agg['packed_total']
-
             sizes_data.append({
                 "size": size_value,
                 "total": total_ordered,
                 "cut": cut_total,
                 "sew": sew_total,
-                "check": check_total,
+                "check": checked_total,
                 "packed": packed_total,
             })
         group_list.append({
