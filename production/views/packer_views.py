@@ -241,64 +241,16 @@ class PassportDetailPackerView(DetailView):
         context['sidebar_type'] = 'packer'
         return context
 
-@require_POST
 @login_required
 @packer_required
-def update_piece_packer(request, sku):
-    try:
-        passport_size = PassportSize.objects.get(sku=sku)
-        
-        # Use the current packed count (defaulting to 0 if not set)
-        current_packed = passport_size.packed or 0
+def manual_pack_page(request):
+    client_orders = ClientOrder.objects.filter(is_archived=False)
+    context = {
+        'sidebar_type': 'packer',
+        'client_orders': client_orders,
+    }
+    return render(request, 'packer/scans/manual.html', context)
 
-        # Ensure we haven't already packed all the items for this PassportSize
-        if current_packed >= passport_size.quantity:
-            return JsonResponse({'success': False, 'message': 'Все единицы уже упакованы.'}, status=409)
-
-        # Increment the packed count for PassportSize
-        passport_size.packed = current_packed + 1
-        passport_size.save()
-
-        # Also update the aggregated SizeQuantity packed count
-        size_quantity = passport_size.size_quantity
-        current_sq_packed = size_quantity.packed or 0
-        size_quantity.packed = current_sq_packed + 1
-        size_quantity.save()
-
-        # Prepare response data using PassportSize details
-        size = (f"{passport_size.size_quantity.size}-{passport_size.extra}"
-                if passport_size.extra else passport_size.size_quantity.size)
-        cut = passport_size.passport.cut.number
-        model = passport_size.passport.cut.order.model.name
-        color = passport_size.size_quantity.color.name if passport_size.size_quantity.color else "-"
-        fabrics = passport_size.size_quantity.fabrics.name if passport_size.size_quantity.fabrics else "-"
-        passport_id = passport_size.passport.id
-        passport_number = passport_size.passport.number
-
-        data = {
-            'success': True,
-            'message': 'Единица обновлена до статуса упакована.',
-            'piece_id': passport_size.id,
-            'order_id': passport_size.passport.cut.order.id,
-            'piece_number': passport_size.packed,  # Current packed count for PassportSize
-            'passport_id': passport_id,
-            'passport_number': passport_number,
-            'cut': cut,
-            'model': model,
-            'color': color,
-            'fabrics': fabrics,
-            'size': size,
-            'packed': passport_size.packed,
-            'quantity': passport_size.quantity,
-            'size_quantity_packed': size_quantity.packed,  # Aggregated packed count for SizeQuantity
-        }
-        return JsonResponse(data)
-
-    except PassportSize.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Запись PassportSize не найдена.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
 @login_required
 @packer_required
 def get_order_table_data_packer(request, order_id):
@@ -344,28 +296,10 @@ def get_order_table_data_packer(request, order_id):
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Order not found'}, status=404)
 
-@login_required
-@packer_required
-def scan_packer_page(request):
-    context = {
-            'sidebar_type': 'packer'
-            }
-    return render(request, 'packer/scans/detail.html', context)
-
-@login_required
-@packer_required
-def manual_pack_page(request):
-    client_orders = ClientOrder.objects.filter(is_archived=False)
-    context = {
-        'sidebar_type': 'packer',
-        'client_orders': client_orders,
-    }
-    return render(request, 'packer/scans/manual.html', context)
-
 @require_POST
 @login_required
 @packer_required
-def update_packed_quantity(request):
+def update_packed_quantity_manually(request):
     """
     Expects JSON with:
       - order_id: ID of the order

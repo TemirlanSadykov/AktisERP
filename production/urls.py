@@ -152,10 +152,8 @@ urlpatterns = [
     
     path('packer/client/orders/order/', OrderListPackerView.as_view(), name='order_list_packer'),
     path('packer/client/orders/order/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
-    path('packer/orders/update-piece-status/<int:sku>/', update_piece_packer, name='update_piece_packer'),
     path('packer/orders/update-packed-by-sku/<int:sku>/', update_packed_by_sku, name='update_packed_by_sku'),
     path('packer/orders/get-order-table-data/<int:order_id>/', get_order_table_data_packer, name='get_order_table_data_packer'),
-    path('packer/scan/', scan_packer_page, name='scan_packer_page'),
     path('packer/shipment/', shipment_page, name='shipment_page'),
     
     path('keeper/color/', ColorListView.as_view(), name='color_list'),
@@ -180,7 +178,7 @@ urlpatterns = [
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
 
     # For barcode creation
-    path('barcode/api/passport_size_per_piece/<int:passport_size_id>/', BarcodePassportSizePerPiece.as_view(), name='barcode_passport_size_per_piece'),
+    path('barcode/api/qr_passport_size/<int:passport_size_id>/', QRPassportSize.as_view(), name='qr_passport_size'),
     #for whatsapp qr code
     path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
     path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
@@ -257,6 +255,6 @@ urlpatterns = [
 
     path('packer/manual_pack_page/', manual_pack_page, name='manual_pack_page'),
     path('packer/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
-    path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity, name='update_packed_quantity'),
+    path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity_manually, name='update_packed_quantity_manually'),
 
 ]

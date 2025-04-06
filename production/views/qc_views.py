@@ -251,16 +251,14 @@ class PassportDetailQcView(DetailView):
 def get_piece_info(request, barcode):
     try:
         # Use the scanned barcode as the SKU for PassportSize.
-        passport_size = PassportSize.objects.get(sku=barcode)
+        passport_size = PassportSize.objects.filter(sku=barcode).first()
         
         # Retrieve details from passport_size and its related objects.
-        date = passport_size.passport.cut.date
         cut = passport_size.passport.cut.number
         model = passport_size.passport.cut.order.model.name
         color = passport_size.size_quantity.color.name if passport_size.size_quantity.color else "-"
         fabrics = passport_size.size_quantity.fabrics.name if passport_size.size_quantity.fabrics else "-"
         size = passport_size.size_quantity.size
-        passport_id = passport_size.passport.id
         passport_number = passport_size.passport.number
         order = passport_size.passport.cut.order
         order_id = order.id
@@ -268,12 +266,7 @@ def get_piece_info(request, barcode):
 
         data = {
             'piece_id': passport_size.id,
-            'quantity': passport_size.quantity,
-            'checked': passport_size.checked or 0,
-            'packed': passport_size.packed or 0,
-            'passport_id': passport_id,
             'passport_number': passport_number,
-            'date': date,
             'cut': cut,
             'model': model,
             'color': color,
@@ -309,14 +302,7 @@ def update_piece_qc(request, piece_id):
         return JsonResponse({'success': False, 'message': 'PassportSize not found.'}, status=404)
 
     if status == 'Checked':
-        # Increment PassportSize checked count if we haven't reached the planned quantity.
-        current_checked = passport_size.checked or 0
-        if current_checked >= passport_size.quantity:
-            return JsonResponse({'success': False, 'message': 'Все единицы уже проверены.'}, status=409)
-        passport_size.checked = current_checked + 1
-        passport_size.save()
-
-        # Also increment the aggregated checked count on SizeQuantity.
+        # Increment the aggregated checked count on SizeQuantity.
         size_quantity = passport_size.size_quantity
         current_sq_checked = size_quantity.checked or 0
         size_quantity.checked = current_sq_checked + 1

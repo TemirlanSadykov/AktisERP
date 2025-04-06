@@ -400,8 +400,6 @@ class PassportSize(CompanyAwareModel):
     size_quantity = models.ForeignKey(SizeQuantity, on_delete=models.CASCADE, related_name='passport_sizes', verbose_name='Размер и количество')
     quantity = models.IntegerField(verbose_name='Количество')
     factual = models.IntegerField(verbose_name='Факт', blank=True, null=True)
-    checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
-    packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
     sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
     
     def __str__(self):

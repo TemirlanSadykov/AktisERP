@@ -1,28 +1,23 @@
 from django.http import HttpResponse
 from django.views import View
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import barcode
-from barcode.writer import ImageWriter
+from reportlab.pdfgen import canvas # type: ignore
 import tempfile
 import os
 from django.shortcuts import get_object_or_404
 from ..models import *
-from barcode import Code128
-from reportlab.lib.fonts import addMapping
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics # type: ignore
+from reportlab.pdfbase.ttfonts import TTFont # type: ignore
 from django.http import HttpResponse
 from django.shortcuts import render
 from io import BytesIO
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-import qrcode
+import qrcode # type: ignore
 
 pdfmetrics.registerFont(TTFont('DejaVuSans', 'static/fonts/DejaVuSans.ttf'))
     
 @method_decorator([login_required], name='dispatch')
-class BarcodePassportSizePerPiece(View):
+class QRPassportSize(View):
     def get(self, request, passport_size_id):
         passport_size = get_object_or_404(PassportSize, pk=passport_size_id)
 

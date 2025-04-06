@@ -217,15 +217,12 @@
                     <a href="{% url 'client_order_list_packer' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
-                    <a href="{% url 'scan_packer_page' %}"
+                    <a href="{% url 'shipment_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-qrcode fa-fw"></i><span class="sidetext">{% trans 'Scan' %}</span></a>
                     <a href="{% url 'manual_pack_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
                         <i class="fas fa-solid fa-keyboard fa-fw"></i><span class="sidetext">{% trans 'Manual' %}</span></a>
-                    <a href="{% url 'shipment_page' %}"
-                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Scan">
-                        <i class="fas fa-solid fa-truck fa-fw"></i><span class="sidetext">{% trans 'Shipment' %}</span></a>
                     {% if request.user.userprofile.type == 0 %}
                     <a href="{% url 'admin_page' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"

@@ -394,24 +394,6 @@ class CutDeleteView(DeleteView):
     def get_success_url(self):
         return reverse('order_detail_cutter', kwargs={'pk': self.object.order.pk})
   
-import string
-
-# Helper function to convert an integer to a fixed-length base36 string.
-def to_fixed_base(n, length=4):
-    if n is None:
-        return "0" * length
-    chars = string.digits + string.ascii_uppercase
-    base = 36
-    result = ""
-    while n:
-        n, rem = divmod(n, base)
-        result = chars[rem] + result
-    return result.zfill(length)
-
-# Helper function to pad a string (for size) to a fixed length.
-def pad_string(s, length=3):
-    s = str(s).upper()
-    return s.ljust(length, '0')[:length]
 
 @method_decorator([login_required, cutter_required], name='dispatch')
 class PassportCreateView(CreateView):
@@ -461,14 +443,8 @@ class PassportCreateView(CreateView):
                 quantity=layers,
                 extra=cut_size.extra
             )
-            # Generate SKU for PassportSize with the pattern:
-            # [size from SizeQuantity] + [passport.id] + [cut.id] + [order.id]
-            passport_size.sku = (
-                pad_string(passport_size.size_quantity.size, 3) +
-                to_fixed_base(passport.id, 4) +
-                to_fixed_base(cut.id, 4) +
-                to_fixed_base(cut.order.id, 4)
-            )
+            # Generate a 12-digit numeric SKU by zero-padding the passport_size.id.
+            passport_size.sku = str(passport_size.id).zfill(12)
             passport_size.save()
 
         # Handle roll assignment (unchanged logic)
