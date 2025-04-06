@@ -122,6 +122,8 @@ urlpatterns = [
     path('technologist/equipment<int:pk>/unarchive/', EquipmentUnArchiveView.as_view(), name='equipment_unarchive'), 
     path('technologist/equipment/<int:pk>/delete/', EquipmentDeleteView.as_view(), name='equipment_delete'),
 
+    path('technologist/calculate_consumption/<int:model_id>/', ConsumptionCalculationView.as_view(), name='calculate_consumption'),
+
     path('employee/works/<int:id>/complete/', complete_work, name='complete_work'),
 
     path('cutter/client/orders/order/', OrderListCutterView.as_view(), name='order_list_cutter'),

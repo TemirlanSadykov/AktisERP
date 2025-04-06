@@ -64,6 +64,19 @@
         <p>
           <strong>{% trans 'Assortment:' %}</strong> {{ model.assortment.name }}
         </p>
+        <p>
+          <strong>{% trans 'Consumption Theoretical:' %}</strong> {{ model.consumption_t }}
+        </p>
+        <p>
+          <strong>{% trans 'Consumption Practical:' %}</strong>
+          <span id="consumptionPractical">{{ model.consumption_p }}</span>
+          <a href="{% url 'calculate_consumption' model.pk %}" 
+             class="btn btn-sm btn-primary ml-2" 
+             id="calculateConsumptionBtn"
+             style="width: auto;">
+            {% trans 'Calculate' %}
+          </a>
+        </p>
         <!-- Additional main details can be added here -->
         {% if not model.is_archived %}
           <a href="{% url 'model_edit' pk=model.pk %}">
@@ -188,7 +201,23 @@
       </div>
     </div>
   </div>
-  
+  <script>
+    document.getElementById('calculateConsumptionBtn').addEventListener('click', function(e) {
+      e.preventDefault();  // Prevent the default link action.
+      var url = this.href;
+      fetch(url)
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          // Update the consumption value in the span.
+          document.getElementById('consumptionPractical').textContent = data.consumption;
+        })
+        .catch(function(error) {
+          console.error('Error fetching consumption:', error);
+        });
+    });
+  </script>
   <script>
     // Delete / Unarchive modal functionality remains unchanged.
     document.getElementById('deleteBtn').onclick = function () {

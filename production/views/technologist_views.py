@@ -20,7 +20,7 @@ from django.db.models import IntegerField
 from decimal import Decimal
 from django.db.models.functions import Cast
 from django.db.models import Prefetch
-from django.db.models import Prefetch, Sum, Value
+from django.db.models import Prefetch, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce, Cast
 
 from ..decorators import technologist_required
@@ -2305,3 +2305,33 @@ def add_item_api(request):
     else:
         # Return form errors as JSON (status code 400)
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+@method_decorator(login_required, name='dispatch')
+class ConsumptionCalculationView(View):
+    def get(self, request, model_id):
+        # Retrieve the Model instance.
+        model_instance = get_object_or_404(Model, pk=model_id)
+        
+        # Aggregate total roll length over all passports that belong to this model.
+        total_roll_length = Passport.objects.filter(
+            cut__order__model=model_instance,
+            roll__isnull=False
+        ).aggregate(
+            total=Coalesce(Sum('roll__length_t', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
+        )['total']
+        
+        # Aggregate total quantity from all passport sizes for passports that belong to this model.
+        total_quantity = PassportSize.objects.filter(
+            passport__cut__order__model=model_instance
+        ).aggregate(
+            total=Coalesce(Sum('quantity', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
+        )['total']
+        
+        # Calculate consumption safely (avoid division by zero).
+        consumption = total_roll_length / total_quantity if total_quantity > 0 else 0
+        
+        # Save the recalculated consumption to the model.
+        model_instance.consumption_p = consumption
+        model_instance.save(update_fields=["consumption_p"])
+        
+        return JsonResponse({'consumption': consumption})

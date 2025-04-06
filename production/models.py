@@ -221,6 +221,8 @@ class Model(CompanyAwareModel):
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
     operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
     photo = models.ImageField(upload_to='model_photos/', null=True, blank=True, verbose_name='Фото')
+    consumption_t = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход Теоретический', blank=True, null=True)
+    consumption_p = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход Практический', blank=True, null=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
@@ -298,7 +300,6 @@ class Cut(CompanyAwareModel):
     width = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Ширина', blank=True, null=True)
     length = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Длина', blank=True, null=True)
     consumption = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход', blank=True, null=True)
-    consumption_p = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход П', blank=True, null=True)
     date = models.DateField(auto_now_add=True, verbose_name='Дата')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cuts', verbose_name='Заказ')
     size_quantities = models.ManyToManyField(SizeQuantity, through='CutSize', related_name='cuts', verbose_name='Размеры и количества')

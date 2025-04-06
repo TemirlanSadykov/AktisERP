@@ -474,15 +474,6 @@ class PassportCreateView(CreateView):
             selected_roll.is_used = True
             selected_roll.save()
 
-            cut.consumption_p = sum(
-                (p.roll.length_t - sum(r.length_t for r in p.roll.remainders.all() if r.is_used))
-                for p in cut.passports.all()
-            ) / sum(
-                sum(ps.quantity for ps in p.passport_sizes.all())
-                for p in cut.passports.all()
-            )
-            cut.save()
-
         return redirect(self.get_success_url())
 
     def get_success_url(self):
