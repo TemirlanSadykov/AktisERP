@@ -10,8 +10,6 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-from barcode import Code128
-from barcode.writer import ImageWriter
 from django.http import HttpResponse
 from django.shortcuts import render
 from io import BytesIO

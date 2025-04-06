@@ -1,6 +1,6 @@
 from collections import defaultdict
 import json
-import openpyxl
+import openpyxl # type: ignore
 
 from django.conf import settings
 from django.contrib import messages
@@ -15,9 +15,6 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView 
 from django.views import View
-from openpyxl import Workbook
-from openpyxl.styles import  Alignment, Border, Font, Side
-from openpyxl.utils import get_column_letter
 from django.db.models import Q
 from django.db.models import IntegerField
 from decimal import Decimal

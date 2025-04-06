@@ -1,8 +1,6 @@
 from datetime import timedelta, datetime
 from decimal import Decimal
 import json
-import openpyxl
-import pandas as pd
 from urllib.parse import urlencode
 from collections import defaultdict
 
