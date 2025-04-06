@@ -178,7 +178,7 @@ urlpatterns = [
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
 
     # For barcode creation
-    path('barcode/api/qr_passport_size/<int:passport_size_id>/', QRPassportSize.as_view(), name='qr_passport_size'),
+    path('barcode/api/qr_passport_size/<int:passport_id>/', QRPassportSize.as_view(), name='qr_passport_size'),
     #for whatsapp qr code
     path('whatsapp-qr/', WhatsAppQRCodeView.as_view(), name='whatsapp-qr'),
     path('submit-mobile/', MobileNumberSubmitView.as_view(), name='submit_mobile_number'),
