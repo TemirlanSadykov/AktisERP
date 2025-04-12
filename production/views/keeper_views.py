@@ -11,7 +11,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from django.db.models import Q
+from django.db.models import F, Q, Count
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.views.decorators.http import require_POST
@@ -236,19 +236,32 @@ class ColorFabricListView(ListView):
     
     def get_queryset(self):
         qs = Roll.objects.filter(is_used=False)
-        # Return distinct combinations including supplier, along with names for display
+        # Filter by supplier if provided via GET parameter
+        supplier = self.request.GET.get('supplier')
+        if supplier:
+            qs = qs.filter(supplier=supplier)
+        # Group by color, fabric, and supplier and annotate quantities
         return qs.values(
             'color',
             'fabric',
             'supplier',
+            supplier_name=F('supplier__name'),
             color_name=F('color__name'),
-            fabric_name=F('fabric__name'),
-            supplier_name=F('supplier__name')
-        ).distinct()
+            fabric_name=F('fabric__name')
+        ).annotate(
+            whole_count=Count('id', filter=Q(original_roll__isnull=True)),
+            remainder_count=Count('id', filter=Q(original_roll__isnull=False))
+        ).order_by('supplier__name', 'color__name', 'fabric__name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
+        context['selected_supplier'] = self.request.GET.get('supplier', '')
+        # Build a list of distinct suppliers (for tabs)
+        context['suppliers'] = Roll.objects.filter(is_used=False).values(
+            'supplier',
+            supplier_name=F('supplier__name')
+        ).distinct().order_by('supplier__name')
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
@@ -262,11 +275,34 @@ class RollsByCombinationListView(ListView):
         color_id = self.kwargs.get('color_id')
         fabric_id = self.kwargs.get('fabric_id')
         supplier_id = self.kwargs.get('supplier_id')
-        return Roll.objects.filter(is_used=False, color_id=color_id, fabric_id=fabric_id, supplier_id=supplier_id, original_roll__isnull=True).order_by('length_t')
+        roll_type = self.request.GET.get('roll_type', 'whole')
+        # Use conditional filtering based on roll_type
+        if roll_type == 'remainders':
+            qs = Roll.objects.filter(
+                is_used=False,
+                color_id=color_id,
+                fabric_id=fabric_id,
+                supplier_id=supplier_id,
+                original_roll__isnull=False
+            )
+        else:
+            qs = Roll.objects.filter(
+                is_used=False,
+                color_id=color_id,
+                fabric_id=fabric_id,
+                supplier_id=supplier_id,
+                original_roll__isnull=True
+            )
+        return qs.order_by('length_t')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
+        context['roll_type'] = self.request.GET.get('roll_type', 'whole')
+        # Pass along the identifiers for use in URL building
+        context['color_id'] = self.kwargs.get('color_id')
+        context['fabric_id'] = self.kwargs.get('fabric_id')
+        context['supplier_id'] = self.kwargs.get('supplier_id')
         first_roll = self.get_queryset().first()
         if first_roll:
             context['color'] = first_roll.color.name

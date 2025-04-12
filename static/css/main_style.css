@@ -21,6 +21,16 @@ a:hover {
     text-decoration: none; /* Adds underline on hover for better accessibility */
 }
 
+.custom-nav-tabs-scrollable {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+}
+
+.custom-nav {
+    flex-wrap: nowrap;
+}
+
 /* Logout button styling to look more like a link */
 nav form button {
     border: none; /* Removes the button border */

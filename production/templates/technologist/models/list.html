@@ -2,68 +2,6 @@
 {% load i18n %}
 
 {% block content %}
-<style>
-  /* Custom popup styles */
-  .custom-popup {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    max-width: 600px;
-    background-color: #fff;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    border-radius: 8px;
-  }
-  .custom-popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 10px;
-  }
-  .custom-popup-header h5 {
-    margin: 0;
-  }
-  .custom-popup-body {
-    padding: 10px 0;
-  }
-  .custom-popup-footer {
-    display: flex;
-    justify-content: space-between;
-    border-top: 1px solid #ddd;
-    margin-top: 10px;
-    padding-top: 10px;
-  }
-  .custom-popup-overlay {
-    display: none;
-    position: fixed;
-    z-index: 999;
-    left: 10;
-    top: 15;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-  
-  .custom-nav-tabs-scrollable {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-  }
-  
-  .custom-nav {
-    flex-wrap: nowrap;
-  }
-  
-  /* .custom-nav .nav-item {
-      display: inline-block; 
-      white-space: nowrap; 
-  } */
-</style>
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
