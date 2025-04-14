@@ -258,5 +258,6 @@ urlpatterns = [
     path('packer/manual_pack_page/', manual_pack_page, name='manual_pack_page'),
     path('packer/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
     path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity_manually, name='update_packed_quantity_manually'),
+    path('packer/ajax/orders/complete-production/', complete_production, name='complete_production'),
 
 ]

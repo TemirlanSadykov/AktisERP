@@ -55,294 +55,343 @@
 </div>
 
 <script>
-    // Helper to get CSRF token.
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + "=")) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
+// Helper to get CSRF token.
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
       }
-      return cookieValue;
     }
-    
-    document.addEventListener("DOMContentLoaded", function() {
-      const clientOrderSelect = document.getElementById("client-order-select");
-      const orderSelect = document.getElementById("order-select");
-      const orderTableContainer = document.getElementById("order-table-container");
-    
-      let activeOrderId = null;
-      let orderTableData = null;
-      let lastUpdatedCell = null; // Optional: to highlight recently updated cells
-    
-      // When a client order is chosen, fetch its related orders.
-      clientOrderSelect.addEventListener("change", function() {
-        const clientOrderId = clientOrderSelect.value;
-        if (clientOrderId) {
-          fetch(`/production/packer/ajax/get-orders/?client_order_id=${clientOrderId}`)
-            .then(response => response.json())
-            .then(data => {
-              orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
-              orderTableContainer.innerHTML = "";
-              data.orders.forEach(function(order) {
-                const option = document.createElement("option");
-                option.value = order.id;
-                option.textContent = order.label;
-                orderSelect.appendChild(option);
-              });
-            })
-            .catch(error => console.error("Error fetching orders:", error));
-        } else {
+  }
+  return cookieValue;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const clientOrderSelect = document.getElementById("client-order-select");
+  const orderSelect = document.getElementById("order-select");
+  const orderTableContainer = document.getElementById("order-table-container");
+
+  let activeOrderId = null;
+  let orderTableData = null;
+  let lastUpdatedCell = null; // Optional: to highlight recently updated cells
+
+  // When a client order is chosen, fetch its related orders.
+  clientOrderSelect.addEventListener("change", function() {
+    const clientOrderId = clientOrderSelect.value;
+    if (clientOrderId) {
+      fetch(`/production/packer/ajax/get-orders/?client_order_id=${clientOrderId}`)
+        .then(response => response.json())
+        .then(data => {
           orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
           orderTableContainer.innerHTML = "";
-        }
-      });
-    
-      // When an order is chosen, fetch its order table data.
-      orderSelect.addEventListener("change", function() {
-        const orderId = orderSelect.value;
-        if (orderId) {
-          loadOrderTableData(orderId)
-            .then(function(orderData) {
-              initializeOrderTable(orderData);
-            })
-            .catch(function(err) {
-              console.error("Error loading order table data:", err);
-            });
-        } else {
-          orderTableContainer.innerHTML = "";
-        }
-      });
-    
-      // Function to fetch order table data from the server.
-      function loadOrderTableData(orderId) {
-        return fetch(`/production/packer/orders/get-order-table-data/${orderId}/`)
-          .then(function(response) {
-            if (!response.ok) {
-              throw new Error("Network response was not ok");
-            }
-            return response.json();
+          data.orders.forEach(function(order) {
+            const option = document.createElement("option");
+            option.value = order.id;
+            option.textContent = order.label;
+            orderSelect.appendChild(option);
           });
+        })
+        .catch(error => console.error("Error fetching orders:", error));
+    } else {
+      orderSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+      orderTableContainer.innerHTML = "";
+    }
+  });
+
+  // When an order is chosen, fetch its order table data.
+  orderSelect.addEventListener("change", function() {
+    const orderId = orderSelect.value;
+    if (orderId) {
+      loadOrderTableData(orderId)
+        .then(function(orderData) {
+          initializeOrderTable(orderData);
+        })
+        .catch(function(err) {
+          console.error("Error loading order table data:", err);
+        });
+    } else {
+      orderTableContainer.innerHTML = "";
+    }
+  });
+
+  // Function to fetch order table data from the server.
+  function loadOrderTableData(orderId) {
+    return fetch(`/production/packer/orders/get-order-table-data/${orderId}/`)
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      });
+  }
+
+  // Initialize the order table.
+  // Also, build a mapping (sqMapping) from each SizeQuantity id (sqId) to {combo, size} and store production_complete info.
+  function initializeOrderTable(orderData) {
+    activeOrderId = orderData.order_id;
+    orderTableData = {
+      orderName: orderData.order_name,
+      allSizes: orderData.all_sizes,
+      rows: {},         // e.g. { "Color Fabrics": { required: {...}, scanned: {...} } }
+      sq_ids: orderData.sq_ids,  // Mapping: orderTableData.sq_ids[combo][size] = sqId
+      sqMapping: {},    // Mapping: sqId -> {combo, size}
+      production_complete: orderData.production_complete  // Mapping: production_complete[combo][size]
+    };
+    for (var combo in orderData.pivot_data) {
+      orderTableData.rows[combo] = {
+        required: orderData.pivot_data[combo],
+        scanned: {}
+      };
+      orderData.all_sizes.forEach(function(size) {
+        var count = 0;
+        if (orderData.packed_counts &&
+            orderData.packed_counts[combo] &&
+            orderData.packed_counts[combo][size]) {
+          count = orderData.packed_counts[combo][size];
+        }
+        orderTableData.rows[combo].scanned[size] = count;
+        // Build the mapping for this SizeQuantity id.
+        var sqId = orderTableData.sq_ids[combo][size];
+        orderTableData.sqMapping[sqId] = { combo: combo, size: size };
+      });
+    }
+    renderOrderTable();
+  }
+
+  // Render the order table using the current orderTableData.
+  function renderOrderTable() {
+    if (!orderTableData) return;
+    var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+    html += '<th>{% trans "Order:" %} ' + orderTableData.orderName + '</th>';
+    orderTableData.allSizes.forEach(function(size) {
+      html += '<th>' + size + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+    
+    for (var combo in orderTableData.rows) {
+      html += '<tr><td>' + combo + '</td>';
+      orderTableData.allSizes.forEach(function(size) {
+        var scanned = orderTableData.rows[combo].scanned[size] || 0;
+        var required = orderTableData.rows[combo].required[size] || 0;
+        var sqId = orderTableData.sq_ids[combo][size];
+        var cellContent = '';
+        var tdStyle = '';
+        
+        // Retrieve the production_complete state for this cell.
+        var prodComplete = (orderTableData.production_complete &&
+                            orderTableData.production_complete[combo] &&
+                            orderTableData.production_complete[combo][size]);
+        
+        // If the scanned value meets/exceeds the required value (and is nonzero)
+        if (scanned >= required && scanned > 0) {
+          cellContent = '<span class="editable" data-sq-id="'+sqId+'">' + scanned + '</span>/' + required;
+          if (prodComplete) {
+            cellContent += ' <button class="complete-button btn btn-success" data-sq-id="'+sqId+'" disabled>Completed</button>';
+          } else {
+            cellContent += ' <button class="complete-button btn btn-success" data-sq-id="'+sqId+'">Complete</button>';
+          }
+          tdStyle = ' style="background-color: #5ced73;"';
+          if (lastUpdatedCell && lastUpdatedCell.sqId === sqId) {
+            tdStyle = ' style="background-color: #5ced73; border: 3px solid red;"';
+          }
+        } 
+        // If a nonzero scanned value exists but is less than required, show the value without green styling or button.
+        else if (scanned > 0) {
+          cellContent = '<span class="editable" data-sq-id="'+sqId+'">' + scanned + '</span>/' + required;
+        }
+        // Otherwise, display an input field.
+        else {
+          cellContent = '<input type="text" data-sq-id="'+sqId+'" style="width:50px;" placeholder="0" />/' + required;
+        }
+        
+        html += '<td' + tdStyle + '>' + cellContent + '</td>';
+      });
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    orderTableContainer.innerHTML = html;
+  }
+                
+  // Listen for changes on input fields (for new values).
+  orderTableContainer.addEventListener('change', function(event) {
+    if (event.target.tagName.toLowerCase() === 'input' &&
+        !event.target.classList.contains('edited-input')) {
+      const inputEl = event.target;
+      const qtyStr = inputEl.value.trim();
+      const qty = qtyStr !== "" ? parseInt(qtyStr, 10) : 0;
+      if (qtyStr !== "" && (isNaN(qty) || qty < 0)) {
+        return;
       }
-    
-      // Initialize the order table with data fetched from the server.
-      function initializeOrderTable(orderData) {
-        activeOrderId = orderData.order_id;
-        orderTableData = {
-          orderName: orderData.order_name,
-          allSizes: orderData.all_sizes,
-          rows: {}  // Structure: { "Color Fabrics": { required: {...}, scanned: {...} } }
-        };
-        for (var combo in orderData.pivot_data) {
-          orderTableData.rows[combo] = {
-            required: orderData.pivot_data[combo],
-            scanned: {}
-          };
-          orderData.all_sizes.forEach(function(size) {
-            var count = 0;
-            if (orderData.packed_counts &&
-                orderData.packed_counts[combo] &&
-                orderData.packed_counts[combo][size]) {
-              count = orderData.packed_counts[combo][size];
-            }
-            orderTableData.rows[combo].scanned[size] = count;
-          });
+      const sqId = inputEl.getAttribute('data-sq-id');
+      const orderId = activeOrderId;
+  
+      const payload = {
+        order_id: orderId,
+        size_quantity_id: sqId,
+        quantity: qty
+      };
+  
+      fetch('/production/packer/ajax/orders/update-packed-quantity/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          // Update the data model using the prebuilt mapping.
+          const mapping = orderTableData.sqMapping[sqId];
+          if (mapping) {
+            orderTableData.rows[mapping.combo].scanned[mapping.size] = qty;
+          }
+          renderOrderTable();
+        } else {
+          alert('Failed to update: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error updating packed quantity:', error);
+        alert('Error updating packed quantity: ' + error.message);
+      });
+    }
+  });
+          
+  // Listen for double-click/tap on editable spans.
+  orderTableContainer.addEventListener("dblclick", function(event) {
+    if (event.target.classList.contains("editable")) {
+      handleEditableAction(event.target);
+    }
+  });
+  
+  let lastTap = 0;
+  orderTableContainer.addEventListener("touchend", function(event) {
+    let currentTime = new Date().getTime();
+    let tapLength = currentTime - lastTap;
+    lastTap = currentTime;
+    if (tapLength < 500 && tapLength > 0) {
+      if (event.target.classList.contains("editable")) {
+        event.preventDefault();
+        handleEditableAction(event.target);
+      }
+    }
+  });
+  
+  // Replace a span with an input field for editing.
+  function handleEditableAction(span) {
+    const originalValue = span.textContent.trim();
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = originalValue;
+    input.className = "edit-input edited-input";
+    input.style.width = "50px";
+    input.setAttribute("data-sq-id", span.getAttribute("data-sq-id"));
+  
+    span.parentNode.replaceChild(input, span);
+    input.focus();
+  
+    let updateSubmitted = false;
+    const submitUpdate = function() {
+      if (updateSubmitted) return;
+      updateSubmitted = true;
+      updateScannedQuantity(input.getAttribute("data-sq-id"), input.value, originalValue);
+    };
+    input.addEventListener("blur", submitUpdate);
+    input.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitUpdate();
+      }
+    });
+  }
+          
+  // Send updated scanned quantity via AJAX (for edited fields).
+  function updateScannedQuantity(sqId, newValue, originalValue) {
+    const orderId = activeOrderId;
+    const qty = (newValue.trim() === "") ? 0 : parseInt(newValue, 10);
+    const payload = {
+      order_id: orderId,
+      size_quantity_id: sqId,
+      quantity: qty
+    };
+  
+    fetch('/production/packer/ajax/orders/update-packed-quantity/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        const mapping = orderTableData.sqMapping[sqId];
+        if (mapping) {
+          orderTableData.rows[mapping.combo].scanned[mapping.size] = qty;
         }
         renderOrderTable();
+      } else {
+        alert("Failed to update: " + data.message);
+        renderOrderTable();
       }
-    
-      // Render the order table.
-      function renderOrderTable() {
-        if (!orderTableData) return;
-        var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-        html += '<th>{% trans "Order:" %} ' + orderTableData.orderName + '</th>';
-        orderTableData.allSizes.forEach(function(size) {
-          html += '<th>' + size + '</th>';
-        });
-        html += '</tr></thead><tbody>';
-        for (var combo in orderTableData.rows) {
-          html += '<tr><td>' + combo + '</td>';
-          orderTableData.allSizes.forEach(function(size) {
-            var scanned = orderTableData.rows[combo].scanned[size] || 0;
-            var required = orderTableData.rows[combo].required[size] || 0;
-            var cellContent = '';
-            if (scanned === 0) {
-              // If no scanned value, display an input field (this input does NOT get the "edited-input" class).
-              cellContent = '<input type="text" data-combo="'+combo+'" data-size="'+size+'" style="width:50px;" placeholder="0" />/' + required;
-            } else {
-              // If scanned value exists, wrap it in a span for editing.
-              cellContent = '<span class="editable" data-combo="'+combo+'" data-size="'+size+'">' + scanned + '</span>/' + required;
-            }
-            if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
-              html += '<td style="border: 3px solid red;">' + cellContent + '</td>';
-            } else {
-              html += '<td>' + cellContent + '</td>';
-            }
-          });
-          html += '</tr>';
-        }
-        html += '</tbody></table></div>';
-        orderTableContainer.innerHTML = html;
-      }
-    
-      // Listen for changes on the input fields using event delegation.
-      // Only handle inputs that do not have the "edited-input" class.
-      orderTableContainer.addEventListener('change', function(event) {
-        if (event.target.tagName.toLowerCase() === 'input' &&
-            !event.target.classList.contains('edited-input')) {
-          const inputEl = event.target;
-          const qty = parseInt(inputEl.value, 10);
-          if (isNaN(qty) || qty <= 0) {
-            return; // Ignore invalid input.
-          }
-          const combo = inputEl.getAttribute('data-combo');
-          const size = inputEl.getAttribute('data-size');
-          const orderId = activeOrderId;
-    
-          const payload = {
-            order_id: orderId,
-            combo: combo,
-            size: size,
-            quantity: qty
-          };
-    
-          fetch('/production/packer/ajax/orders/update-packed-quantity/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify(payload)
-          })
-          .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-          })
-          .then(data => {
-            if (data.success) {
-              // Update the scanned count for this cell and refresh the table.
-              orderTableData.rows[combo].scanned[size] = (orderTableData.rows[combo].scanned[size] || 0) + qty;
-              renderOrderTable();
-            } else {
-              alert('Failed to update: ' + data.message);
-            }
-          })
-          .catch(error => {
-            console.error('Error updating packed quantity:', error);
-            alert('Error updating packed quantity: ' + error.message);
-          });
-        }
-      });
-    
-      // Add event listeners for double-click (desktop) and double-tap (mobile) on editable spans.
-      orderTableContainer.addEventListener("dblclick", function(event) {
-        if (event.target.classList.contains("editable")) {
-          handleEditableAction(event.target);
-        }
-      });
-    
-      let lastTap = 0;
-      orderTableContainer.addEventListener("touchend", function(event) {
-        let currentTime = new Date().getTime();
-        let tapLength = currentTime - lastTap;
-        lastTap = currentTime;
-        if (tapLength < 500 && tapLength > 0) {
-          if (event.target.classList.contains("editable")) {
-            event.preventDefault();
-            handleEditableAction(event.target);
-          }
-        }
-      });
-    
-      // Function to replace the span with an input field for editing.
-      function handleEditableAction(span) {
-        const originalValue = span.textContent.trim();
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = originalValue;
-        input.className = "edit-input edited-input"; // Mark as edited-input so change event ignores it.
-        input.style.width = "50px";
-        input.setAttribute("data-combo", span.getAttribute("data-combo"));
-        input.setAttribute("data-size", span.getAttribute("data-size"));
-    
-        span.parentNode.replaceChild(input, span);
-        input.focus();
-    
-        let updateSubmitted = false;  // Flag to ensure update is only submitted once.
-    
-        const revertToSpan = function(newValue) {
-          if (!input.parentNode) return;
-          const finalValue = (newValue && newValue.trim() !== "") ? newValue : originalValue;
-          const newSpan = document.createElement("span");
-          newSpan.className = "editable";
-          newSpan.textContent = finalValue;
-          newSpan.setAttribute("data-combo", input.getAttribute("data-combo"));
-          newSpan.setAttribute("data-size", input.getAttribute("data-size"));
-          input.parentNode.replaceChild(newSpan, input);
-        };
-    
-        const submitUpdate = function() {
-          if (updateSubmitted) return;
-          updateSubmitted = true;
-          updateScannedQuantity(input.getAttribute("data-combo"), input.getAttribute("data-size"), input.value, revertToSpan, originalValue);
-        };
-    
-        input.addEventListener("blur", function() {
-          submitUpdate();
-        });
-    
-        input.addEventListener("keydown", function(e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            submitUpdate();
-          }
-        });
-      }
-    
-      // Function to send the updated scanned quantity via AJAX.
-      function updateScannedQuantity(combo, size, newValue, callback, originalValue) {
-        const orderId = activeOrderId;
-        const payload = {
-          order_id: orderId,
-          combo: combo,
-          size: size,
-          quantity: parseInt(newValue, 10)
-        };
-    
-        fetch('/production/packer/ajax/orders/update-packed-quantity/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-          },
-          body: JSON.stringify(payload)
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success) {
-            callback(newValue);
-          } else {
-            alert("Failed to update: " + data.message);
-            callback(originalValue);
-          }
-        })
-        .catch(error => {
-          console.error("Error updating scanned quantity:", error);
-          alert("Error updating scanned quantity: " + error.message);
-          callback(originalValue);
-        });
-      }
-    
+    })
+    .catch(error => {
+      console.error("Error updating scanned quantity:", error);
+      alert("Error updating scanned quantity: " + error.message);
+      renderOrderTable();
     });
-</script>    
+  }
+  
+  // Listen for clicks on any "Complete" button.
+  orderTableContainer.addEventListener('click', function(event) {
+    if (event.target.classList.contains('complete-button')) {
+      var button = event.target;
+      var sqId = button.getAttribute('data-sq-id');
+      var payload = {
+        size_quantity_id: sqId
+      };
+  
+      fetch('/production/packer/ajax/orders/complete-production/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          // Disable the button and update its text.
+          button.disabled = true;
+          button.textContent = 'Completed';
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error completing production:', error);
+        alert('Error completing production: ' + error.message);
+      });
+    }
+  });
+});
+</script>
 {% endblock %}

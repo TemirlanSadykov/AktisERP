@@ -237,6 +237,7 @@ class ModelOperation(CompanyAwareModel):
         ordering = ['order']
 
 class SizeQuantity(CompanyAwareModel):
+    model = models.ForeignKey(Model, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Модель')
     size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
     quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
     factual = models.IntegerField(verbose_name='Факт', null=True, blank=True)
@@ -245,9 +246,10 @@ class SizeQuantity(CompanyAwareModel):
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
     fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
+    production_complete = models.BooleanField(default=False, verbose_name='Производство завершено')
     
     def __str__(self):
-        return f"{self.color} {self.fabrics} {self.size} ({self.quantity})"
+        return f"{self.model} {self.color} {self.fabrics} {self.size}"
     
 class ClientOrder(CompanyAwareModel):
     order_number = models.CharField(max_length=100, verbose_name='Название')
