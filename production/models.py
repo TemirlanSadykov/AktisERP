@@ -452,7 +452,13 @@ class Stock(CompanyAwareModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-    
+    RAW_MATERIALS = 0
+    FINSHED_GOODS = 1
+    TYPE_CHOICES = [
+        (RAW_MATERIALS, 'Сырье'),
+        (FINSHED_GOODS, 'Готовая продукция')
+    ]
+    type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
     # Inventory-specific fields:
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unit = models.CharField(max_length=50, null=True, blank=True)
