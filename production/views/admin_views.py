@@ -719,3 +719,186 @@ def employee_calculation_view(request, order_ids):
         'employee_data': employee_data_list,
     }
     return render(request, 'admin/employee_calculation.html', context)
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeListView(ListView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=False
+        ).exclude(user__username='admin').annotate(
+            employee_id_int=Cast('employee_id', IntegerField())
+        ).order_by('employee_id_int')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['upload_form'] = UploadFileForm()
+        
+        return context
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeCreateView(CreateView):
+    template_name = 'admin/employees/create.html'
+    form_class = UserWithProfileForm
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeDetailView(DetailView):
+    model = UserProfile
+    template_name = 'admin/employees/detail.html'
+    context_object_name = 'employee'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+
+@login_required
+@admin_required
+def employee_edit(request, pk):
+    user_profile = get_object_or_404(UserProfile, pk=pk)
+    user = user_profile.user
+
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=user)
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Employee details updated successfully.')
+            return redirect('employee_list')
+    else:
+        user_form = UserEditForm(instance=user)
+
+    context = {'user_form': user_form, 'user_profile': user_profile}
+    return render(request, 'admin/employees/edit.html', context)
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeDeleteView(DeleteView):
+    model = UserProfile
+    template_name = 'admin/employees/delete.html'
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = True
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+   
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeUnArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = False
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+     
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedEmployeeListView(ListView):
+    template_name = 'admin/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=True
+            ).order_by('employee_id')
+    
+
+@login_required
+@admin_required
+@require_POST
+def employee_upload(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            # Get the current company from thread-local storage.
+            current_company = get_current_company()
+            if current_company is None:
+                messages.error(request, 'No company found in context.')
+                return redirect(reverse_lazy('employee_list'))
+
+            with transaction.atomic():
+                # Iterate rows skipping the header (starting at row 2)
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    first_name, last_name, employee_id, emp_type, password = row
+                    
+                    # Generate username using current company ID and employee ID.
+                    username = f"{current_company.id}-{employee_id}"
+                    
+                    try:
+                        # Because of your custom manager, this lookup is already company-aware.
+                        profile = UserProfile.objects.get(employee_id=employee_id)
+                    except UserProfile.DoesNotExist:
+                        # Create a new user and UserProfile.
+                        user = User.objects.create(
+                            username=username,
+                            first_name=first_name,
+                            last_name=last_name
+                        )
+                        user.set_password(password)
+                        user.save()
+                        print(user)
+                        # The save method on CompanyAwareModel will assign the current company.
+                        profile = UserProfile.objects.create(
+                            user=user,
+                            employee_id=employee_id,
+                            type=int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        )
+                    else:
+                        # Update existing user and profile.
+                        user = profile.user
+                        user.first_name = first_name
+                        user.last_name = last_name
+                        user.username = username
+                        user.set_password(password)
+                        user.save()
+                        
+                        profile.type = int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        profile.save()
+
+            messages.success(request, 'Employees uploaded successfully.')
+            return redirect(reverse_lazy('employee_list'))
+        except Exception as e:
+            messages.error(request, f'Error processing the file: {e}')
+            return redirect(reverse_lazy('employee_list'))
+        finally:
+            workbook.close()
+    else:
+        messages.error(request, 'Invalid file format.')
+        return redirect(reverse_lazy('employee_list'))
