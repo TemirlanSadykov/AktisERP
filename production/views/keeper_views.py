@@ -385,15 +385,20 @@ class StockListView(ListView):
     context_object_name = 'stocks'
     paginate_by = 10
 
+    def get_queryset(self):
+        qs = Stock.objects.filter(is_archived=False)
+        # Read the type from GET parameters; default is 'all' meaning no filtering.
+        stock_type = self.request.GET.get('type', 'all')
+        if stock_type in ['0', '1']:
+            qs = qs.filter(type=int(stock_type))
+        return qs.order_by('id')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
+        # Pass the currently selected type; defaults to 'all'
+        context['selected_type'] = self.request.GET.get('type', 'all')
         return context
-
-    def get_queryset(self):
-        # Ordering can be adjusted; here we simply order by id.
-        return Stock.objects.filter(is_archived=False).order_by('id')
-
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class ArchivedStockListView(ListView):

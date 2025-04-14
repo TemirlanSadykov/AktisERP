@@ -22,67 +22,87 @@
   </nav>
   
   <div class="container clients-wrapper maincontr">
+    <!-- Navigation Tabs for Stock Type -->
+    <div class="custom-nav-tabs-scrollable">
+      <ul class="custom-nav nav nav-tabs" role="tablist">
+        <li class="nav-item">
+          <a href="{% url 'stock_list' %}?type=all" class="nav-link {% if selected_type == 'all' %}active{% endif %}" role="tab">
+            {% trans "All" %}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'stock_list' %}?type=0" class="nav-link {% if selected_type == '0' %}active{% endif %}" role="tab">
+            {% trans "Raw Materials" %}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'stock_list' %}?type=1" class="nav-link {% if selected_type == '1' %}active{% endif %}" role="tab">
+            {% trans "Finished Goods" %}
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="tab-content" id="myTabContent">
       <div class="clients-header">
         <span class="operation-text">{% trans "Stock" %}</span>
         <a href="{% url 'stock_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
         <a href="{% url 'archived_stocks_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
       </div>
-      
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{% trans "Item" %}</th>
+            <th>{% trans "Quantity" %}</th>
+            <th>{% trans "Unit" %}</th>
+            <th>{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stock in stocks %}
             <tr>
-              <th>#</th>
-              <th>{% trans "Item" %}</th>
-              <th>{% trans "Quantity" %}</th>
-              <th>{% trans "Unit" %}</th>
-              <th>{% trans "Warehouse" %}</th>
-              <th>{% trans "Actions" %}</th>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ stock.content_object }}</td>
+              <td>{{ stock.quantity }}</td>
+              <td>{{ stock.unit }}</td>
+              <td>
+                <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
+                  {% trans "View" %}
+                </a>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {% for stock in stocks %}
-              <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ stock.content_object }}</td>
-                <td>{{ stock.quantity }}</td>
-                <td>{{ stock.unit }}</td>
-                <td>{{ stock.warehouse }}</td>
-                <td>
-                  <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
-                    {% trans "View" %}
-                  </a>
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="6">{% trans "No stocks available." %}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      
-      <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
-        {% if is_paginated %}
-          <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-              <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
-              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+          {% empty %}
+            <tr>
+              <td colspan="6">{% trans "No stocks available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
+      {% if is_paginated %}
+        <ul class="pagination justify-content-center">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+          {% endif %}
+          {% for num in paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item"><a class="page-link active" href="?page={{ num }}">{{ num }}</a></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
             {% endif %}
-            {% for num in paginator.page_range %}
-              {% if page_obj.number == num %}
-                <li class="page-item"><a class="page-link active" href="?page={{ num }}">{{ num }}</a></li>
-              {% else %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-              {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
-              <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
-            {% endif %}
-          </ul>
-        {% endif %}
-      </nav>
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+          {% endif %}
+        </ul>
+      {% endif %}
+    </nav>
   </div>
 {% endblock %}
