@@ -369,16 +369,31 @@ def complete_production(request):
         sq_obj.production_complete = True
         sq_obj.save()
         
-        # Create a new Stock record for this SizeQuantity.
+        # Prepare values for Stock creation.
         content_type = ContentType.objects.get_for_model(sq_obj)
         warehouse = Warehouse.objects.filter(is_archived=False).first()  # Use the first available warehouse.
+        quantity = sq_obj.packed if sq_obj.packed is not None else 0
+        
+        # Create a new Stock record for this SizeQuantity.
+        # Here we mark the stock as finished goods.
         stock = Stock.objects.create(
             content_type=content_type,
             object_id=sq_obj.pk,
-            quantity=sq_obj.packed if sq_obj.packed is not None else 0,  # Use packed quantity
+            quantity=quantity,
             unit="ед",
             warehouse=warehouse,
-            is_archived=False
+            is_archived=False,
+            type=Stock.FINSHED_GOODS
+        )
+        
+        # Create an incoming StockMovement for the new stock record.
+        stock_movement = StockMovement.objects.create(
+            stock=stock,
+            movement_type='IN',
+            quantity=quantity,
+            from_warehouse=None,
+            to_warehouse=warehouse,
+            note="Production complete"
         )
         
         return JsonResponse({'success': True})
