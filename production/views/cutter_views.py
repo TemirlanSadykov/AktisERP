@@ -17,6 +17,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
+from django.db.models import Prefetch, Sum, Value, IntegerField
+from django.db.models.functions import Coalesce, Cast
 
 from ..decorators import cutter_required
 from ..forms import *
@@ -168,81 +170,102 @@ class OrderDetailCutterView(DetailView):
     template_name = 'cutter/orders/detail.html'
     context_object_name = 'order'
 
+    def get_queryset(self):
+        return Order.objects.prefetch_related(
+            # Prefetch order's size quantities with related color/fabrics.
+            Prefetch(
+                'size_quantities',
+                queryset=SizeQuantity.objects.select_related('color', 'fabrics').order_by('size')
+            ),
+            # Prefetch cuts, annotate total_layers from passports, and prefetch their related objects.
+            Prefetch(
+                'cuts',
+                queryset=Cut.objects.order_by('number')
+                .annotate(total_layers=Coalesce(Sum('passports__layers'), Value(0), output_field=IntegerField()))
+                .prefetch_related(
+                    'size_quantities',
+                    Prefetch(
+                        'passports',
+                        queryset=Passport.objects.prefetch_related(
+                            Prefetch(
+                                'size_quantities',
+                                queryset=SizeQuantity.objects.select_related('color', 'fabrics')
+                            )
+                        )
+                    )
+                )
+            ),
+            'client_order'  # For days_left calculation.
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- (Optional) Build pivot data for "Required Quantities" table -----
-        required_qs = order.size_quantities.all().order_by('size')
-        pivot_data = {}  # keys: (color, fabric), value: {size: quantity}
+        # Build pivot data for "Required Quantities" table.
+        pivot_data = {}
         all_sizes_set = set()
-        for sq in required_qs:
+        for sq in order.size_quantities.all():
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)
-            if key not in pivot_data:
-                pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
+            key = (sq.color, sq.fabrics)  # relies on __str__ of these models.
+            pivot_data.setdefault(key, {})[sq.size] = sq.quantity
 
         try:
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
-        except ValueError:
+        except (ValueError, TypeError):
             all_sizes = sorted(all_sizes_set)
 
-        # ----- Get associated cuts and passports -----
-        associated_cuts = order.cuts.all().order_by('number')
-        passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
+        # Associated cuts are already prefetched.
+        associated_cuts = order.cuts.all()
 
-        # ----- Build "Size Quantities by Passports" data aggregated by composite key -----
-        # We'll use a composite key: "Color|Fabric|Size"
-        size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None}))
-        total_per_combo = defaultdict(int)
-        for passport in passports:
-            passport_number = passport.id
-            for passport_size in passport.passport_sizes.all():
-                sq = passport_size.size_quantity
-                # Form the composite key
-                key = f"{sq.color}|{sq.fabrics}|{sq.size}"
-                size_data[key][passport_number]['quantity'] += passport_size.quantity
-                size_data[key][passport_number]['passport_size_id'] = passport_size.id
-                total_per_combo[key] += passport_size.quantity
+        # Calculate days left until the term.
+        today = timezone.now().date()
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
 
-        # ----- Aggregate required quantities by the same composite key from order.size_quantities -----
-        required_by_combo = defaultdict(int)
-        for sq in order.size_quantities.all().order_by('size'):
-            key = f"{sq.color}|{sq.fabrics}|{sq.size}"
-            required_by_combo[key] += sq.quantity
-
-        required_missing = {
-            key: {
-                'required': required_by_combo[key],
-                'missing': required_by_combo[key] - total_per_combo.get(key, 0)
-            }
-            for key in required_by_combo
-        }
-
-        # ----- Sort the composite keys (by color, then fabrics, then size numerically if possible) -----
-        def sort_key(combo):
-            parts = combo.split("|")
-            color = parts[0]
-            fabrics = parts[1]
+        # --- Build detailed cut data ---
+        cut_details = []
+        for cut in associated_cuts:
+            # Get unique sizes used in this cut.
+            cut_sizes = list(cut.size_quantities.values_list('size', flat=True).distinct())
             try:
-                size_val = int(parts[2])
-            except (ValueError, IndexError):
-                size_val = parts[2] if len(parts) > 2 else 0
-            return (color.lower(), fabrics.lower(), size_val)
+                cut_sizes_sorted = sorted(cut_sizes, key=lambda s: int(s))
+            except (ValueError, TypeError):
+                cut_sizes_sorted = sorted(cut_sizes)
+            
+            # Build passport data and aggregate colors from all passports.
+            passport_list = []
+            aggregated_colors = set()
+            for passport in cut.passports.all():
+                colors = {psq.color.name for psq in passport.size_quantities.all() if psq.color}
+                fabrics = {psq.fabrics.name for psq in passport.size_quantities.all() if psq.fabrics}
+                aggregated_colors.update(colors)
+                passport_list.append({
+                    'passport_id': passport.id,
+                    'passport_number': passport.number,
+                    'colors': ", ".join(sorted(colors)),
+                    'fabrics': ", ".join(sorted(fabrics)),
+                })
+            aggregated_colors_str = ", ".join(sorted(aggregated_colors))
+            
+            # Use the annotated total_layers.
+            total_layers = cut.total_layers
 
-        sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+            cut_details.append({
+                'cut_id': cut.id,
+                'cut_number': cut.number,
+                'cut_date': cut.date,
+                'cut_sizes': cut_sizes_sorted,
+                'aggregated_colors': aggregated_colors_str,
+                'total_layers': total_layers,
+                'passports': passport_list,
+            })
 
         context.update({
-            'pivot_data': pivot_data,          # (Optional) for the Required Quantities table
-            'all_sizes': all_sizes,            # (Optional) header for that table
-            'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            'total_per_size': dict(total_per_combo),
-            'required_missing': required_missing,
-            'days_left': (order.client_order.term - timezone.now().date()).days
-                         if order.client_order.term >= timezone.now().date() else 0,
-            'associated_passports': passports,
+            'pivot_data': pivot_data,   # Pivoted required quantities.
+            'all_sizes': all_sizes,     # Sorted list of sizes for header.
+            'days_left': days_left,
             'associated_cuts': associated_cuts,
+            'cut_details': cut_details, # Detailed cut info including aggregated colors, sizes, and total layers.
             'sidebar_type': 'cutter'
         })
         return context
