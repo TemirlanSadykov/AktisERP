@@ -380,11 +380,11 @@ class OperationForm(forms.ModelForm):
         self.fields['node'].queryset = Node.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         equipment_choices = list(self.fields['equipment'].choices)
-        self.fields['equipment'].choices = [("add_new", "Add New Equipment")] + equipment_choices
+        self.fields['equipment'].choices = [("add_new", "[ДОБАВИТЬ]")] + equipment_choices
 
         # Prepend an "Add New Node" option.
         node_choices = list(self.fields['node'].choices)
-        self.fields['node'].choices = [("add_new", "Add New Node")] + node_choices
+        self.fields['node'].choices = [("add_new", "[ДОБАВИТЬ]")] + node_choices
     
 class AssortmentForm(forms.ModelForm):
     class Meta:
@@ -416,7 +416,7 @@ class ModelCustomForm(forms.ModelForm):
         self.fields['assortment'].queryset = Assortment.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         assortment_choices = list(self.fields['assortment'].choices)
-        self.fields['assortment'].choices = [("add_new", "Add New Assortment")] + assortment_choices
+        self.fields['assortment'].choices = [("add_new", "[ДОБАВИТЬ]")] + assortment_choices
 
         queryset = Operation.objects.filter(is_archived=False).select_related('node').order_by('node__name', 'name')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
@@ -492,7 +492,7 @@ class ClientOrderForm(forms.ModelForm):
         # Prepend an "Add New Client" option.
         # Note: ModelChoiceField choices is a list of (value, label) tuples.
         orig_choices = list(self.fields['client'].choices)
-        self.fields['client'].choices = [("add_new", "Add New Client")] + orig_choices
+        self.fields['client'].choices = [("add_new", "[ДОБАВИТЬ]")] + orig_choices
 
     def clean_term(self):
         term = self.cleaned_data.get('term')
@@ -601,15 +601,15 @@ class RollForm(forms.ModelForm):
         self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         color_choices = list(self.fields['color'].choices)
-        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+        self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 
         # Prepend an "Add New Node" option.
         fabric_choices = list(self.fields['fabric'].choices)
-        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+        self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
 
         # Prepend an "Add New Node" option.
         supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
 
 class BulkRollForm(forms.ModelForm):
     quantity = forms.IntegerField(min_value=1, label="Quantity", widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}))
@@ -643,13 +643,13 @@ class BulkRollForm(forms.ModelForm):
         
         # Prepend an "Add New" option (same as in RollForm)
         color_choices = list(self.fields['color'].choices)
-        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+        self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 
         fabric_choices = list(self.fields['fabric'].choices)
-        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+        self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
 
         supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
 
 class ItemForm(forms.ModelForm):
     class Meta:
@@ -693,10 +693,10 @@ class StockForm(forms.ModelForm):
         
         # Prepend "Add New" option for warehouse and item.
         warehouse_choices = list(self.fields['warehouse'].choices)
-        self.fields['warehouse'].choices = [("add_new", "Add New Warehouse")] + warehouse_choices
+        self.fields['warehouse'].choices = [("add_new", "[ДОБАВИТЬ]")] + warehouse_choices
         
         item_choices = list(self.fields['item'].choices)
-        self.fields['item'].choices = [("add_new", "Add New Item")] + item_choices
+        self.fields['item'].choices = [("add_new", "[ДОБАВИТЬ]")] + item_choices
         
         # Set initial value for 'item' if the instance exists and has a related object.
         if self.instance.pk and hasattr(self.instance, 'content_object'):
