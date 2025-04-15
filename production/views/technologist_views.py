@@ -1557,7 +1557,7 @@ def model_create(request, pk=None):
                         quantity=bom.quantity
                     )
             # Redirect to BOM creation page (which will display the copied BOM entries)
-            return redirect('bom_create', pk=model_instance.id)
+            return redirect('model_detail', pk=model_instance.id)
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), copy_id=copy_id)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
@@ -1604,7 +1604,7 @@ def model_edit(request, pk):
         form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
             form.save()
-            return redirect('bom_create', pk=pk)
+            return redirect('model_detail', pk=pk)
     else:
         form = ModelCustomForm(instance=model_instance)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('node__name', 'name')
