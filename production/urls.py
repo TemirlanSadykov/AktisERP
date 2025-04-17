@@ -51,7 +51,10 @@ urlpatterns = [
     path('packer/client/orders/', ClientOrderListPackerView.as_view(), name='client_order_list_packer'),
     path('packer/client/orders/<int:pk>/', ClientOrderDetailPackerView.as_view(), name='client_order_detail_packer'),
 
-        # calendar
+    path('keeper/client/orders/', ClientOrderListKeeperView.as_view(), name='client_order_list_keeper'),
+    path('keeper/client/orders/<int:pk>/', ClientOrderDetailKeeperView.as_view(), name='client_order_detail_keeper'),
+    path('keeper/client/orders/order/<int:pk>/', OrderDetailKeeperView.as_view(), name='order_detail_keeper'),
+
     path('admin/calendar/', OrderCalendarView.as_view(), name='order_calendar'),
     path('admin/calendar/events/', OrderCalendarEventsView.as_view(), name='order_calendar_events'),
 
@@ -195,6 +198,9 @@ urlpatterns = [
     path('api/add-warehouse/', add_warehouse_api, name='add_warehouse_api'),
     path('api/add-assortment/', add_assortment_api, name='add_assortment_api'),
 
+    path('api/categories/add/', add_category_api, name='add_category_api'),
+    path('api/items/by_category/', items_by_category_api, name='items_by_category_api'),
+
 
     path('api/payment_details/', payment_details_view, name='payment_details'),
     path('api/client_orders/', production_details_view, name='production_details'),
@@ -229,6 +235,15 @@ urlpatterns = [
     path('keeper/warehouses/archived/', ArchivedWarehouseListView.as_view(), name='archived_warehouses_list'),
     path('keeper/warehouses/<int:pk>/archive/', WarehouseArchiveView.as_view(), name='warehouse_archive'),
     path('keeper/warehouses/<int:pk>/unarchive/', WarehouseUnArchiveView.as_view(), name='warehouse_unarchive'),
+
+    path('keeper/categories/', CategoryListView.as_view(), name='category_list'),
+    path('keeper/categories/create/', CategoryCreateView.as_view(), name='category_create'),
+    path('keeper/categories/<int:pk>/', CategoryDetailView.as_view(), name='category_detail'),
+    path('keeper/categories/<int:pk>/edit/', CategoryUpdateView.as_view(), name='category_edit'),
+    path('keeper/categories/<int:pk>/delete/', CategoryDeleteView.as_view(), name='category_delete'),
+    path('keeper/categories/archived/', ArchivedCategoryListView.as_view(), name='archived_categories_list'),
+    path('keeper/categories/<int:pk>/archive/', CategoryArchiveView.as_view(), name='category_archive'),
+    path('keeper/categories/<int:pk>/unarchive/', CategoryUnArchiveView.as_view(), name='category_unarchive'),
 
     path('keeper/items/', ItemListView.as_view(), name='item_list'),
     path('keeper/items/create/', ItemCreateView.as_view(), name='item_create'),

@@ -33,6 +33,105 @@ def keeper_page(request):
     return render(request, 'keeper_page.html' , context)
 
 @method_decorator([login_required, keeper_required], name='dispatch')
+class ClientOrderListKeeperView(ListView):
+    model = ClientOrder
+    template_name = 'keeper/client/orders/list.html'
+    context_object_name = 'orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=False)
+        today = timezone.localdate()
+
+        # Get the term filter from the request, defaulting to 'upcoming'
+        term_filter = self.request.GET.get('term', 'upcoming').lower()
+
+        if term_filter == 'upcoming':
+            queryset = queryset.filter(term__gte=today).order_by('term')
+        elif term_filter == 'passed':
+            queryset = queryset.filter(term__lt=today).order_by('-term')
+        else:
+            queryset = queryset.filter(term__gte=today).order_by('term')
+
+        # Apply optional date range filtering
+        form = self.form_class(self.request.GET)
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+            if start_date and end_date:
+                queryset = queryset.filter(launch__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(launch__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(launch__lte=end_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None)
+        today = timezone.localdate()
+
+        # Calculate days_left for each order
+        orders_with_days_left = []
+        for order in context['orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+        context['orders_with_days_left'] = orders_with_days_left
+
+        # Pass the current term filter to the template
+        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
+        context['ClientOrder'] = ClientOrder
+        context['sidebar_type'] = 'keeper'
+        return context
+    
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ClientOrderDetailKeeperView(DetailView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'keeper/client/orders/detail.html'
+    context_object_name = 'client_order'
+
+    def get_context_data(self, **kwargs):
+        context = super(ClientOrderDetailKeeperView, self).get_context_data(**kwargs)
+        client_order = context['client_order']
+        context['orders'] = client_order.orders.all()
+        today = timezone.localdate()
+        if client_order.term >= today:
+            days_left = (client_order.term - today).days
+        else:
+            days_left = 0
+        context['days_left'] = days_left
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class OrderDetailKeeperView(DetailView):
+    model = Order
+    template_name = 'keeper/orders/detail.html'
+    context_object_name = 'order'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = context['order']
+
+        # days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # bring in all size‐quantities + their BOM entries
+        context['size_quantities'] = (
+            order.size_quantities
+                 .prefetch_related('bill_of_materials__item__category')
+                 .all()
+        )
+
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
 class SupplierListView(ListView):
     model = Supplier
     template_name = 'keeper/suppliers/list.html'
@@ -637,6 +736,125 @@ class WarehouseUnArchiveView(UpdateView):
         return HttpResponseRedirect(self.success_url)
     
 
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryListView(ListView):
+    model = Category
+    template_name = 'keeper/categories/list.html'
+    context_object_name = 'categories'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Category.objects.filter(is_archived=False).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedCategoryListView(ListView):
+    template_name = 'keeper/categories/list.html'
+    context_object_name = 'categories'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Category.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryCreateView(CreateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'keeper/categories/create.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryDetailView(DetailView):
+    model = Category
+    template_name = 'keeper/categories/detail.html'
+    context_object_name = 'category'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryUpdateView(UpdateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'keeper/categories/edit.html'
+
+    def get_success_url(self):
+        return reverse('category_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryDeleteView(DeleteView):
+    model = Category
+    template_name = 'keeper/categories/delete.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryArchiveView(UpdateView):
+    model = Category
+    template_name = 'keeper/categories/delete.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        category = self.get_object()
+        category.is_archived = True
+        category.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryUnArchiveView(UpdateView):
+    model = Category
+    template_name = 'keeper/categories/delete.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        category = self.get_object()
+        category.is_archived = False
+        category.save()
+        return HttpResponseRedirect(self.success_url)
+
+
 
 
 @method_decorator([login_required, keeper_required], name='dispatch')
@@ -646,13 +864,27 @@ class ItemListView(ListView):
     context_object_name = 'items'
     paginate_by = 10
 
+    def get_queryset(self):
+        qs = Item.objects.filter(is_archived=False)
+        category = self.request.GET.get('category')
+        if category:
+            qs = qs.filter(category_id=category)
+        return qs.order_by('name')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
+        context['sidebar_type']     = 'keeper'
+        context['selected_category']= self.request.GET.get('category', '')
 
-    def get_queryset(self):
-        return Item.objects.filter(is_archived=False).order_by('name')
+        # build list of categories that actually have items
+        context['categories'] = (
+            Category.objects
+                    .filter(is_archived=False)
+                    .annotate(item_count=Count('items'))
+                    .distinct()
+                    .order_by('name')
+        )
+        return context
 
 
 @method_decorator([login_required, keeper_required], name='dispatch')

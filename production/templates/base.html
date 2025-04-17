@@ -228,12 +228,18 @@
                 </div>
                 {% elif sidebar_type == 'keeper' %}
                     <div id="sidebar" class="list-group list-group-flush sidenavres">
+                        <a href="{% url 'client_order_list_keeper' %}"
+                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
+                            <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
                         <a href="{% url 'roll_combinations' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Rolls' %}</span></a>
+                            <i class="fas fa-clipboard fa-fw"></i><span class="sidetext">{% trans 'Rolls' %}</span></a>
                         <a href="{% url 'stock_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Stock' %}</span></a>
+                            <i class="fas fa-layer-group fa-fw"></i><span class="sidetext">{% trans 'Stocks' %}</span></a>
+                        <a href="{% url 'item_list' %}"
+                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
+                            <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Items' %}</span></a>
                         <a href="#" 
                             class="list-group-item list-group-item-action text-black collapsesidebarset" 
                             data-toggle="collapse" 
@@ -246,8 +252,8 @@
                             <a href="{% url 'supplier_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                                 {% trans 'Suppliers' %}
                             </a>
-                            <a href="{% url 'item_list' %}" class="list-group-item list-group-item-action text-black ml-4">
-                                {% trans 'Items' %}
+                            <a href="{% url 'category_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                                {% trans 'Category' %}
                             </a>
                             <a href="{% url 'warehouse_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                                 {% trans 'Warehouses' %}
@@ -330,7 +336,7 @@
                         data-id="fixed_salaries">
                         <i class="fas fa-box  fa-fw"></i><span class="sidetext">{% trans 'Packer' %}</span>
                     </a>
-                    <a href="{% url 'roll_combinations' %}"
+                    <a href="{% url 'client_order_list_keeper' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="fixed_salaries">
                         <i class="fas fa-clipboard  fa-fw"></i><span class="sidetext">{% trans 'Keeper' %}</span>

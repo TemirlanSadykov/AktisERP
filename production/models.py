@@ -438,8 +438,18 @@ class Warehouse(CompanyAwareModel):
     def __str__(self):
         return self.name
 
+class Category(CompanyAwareModel):
+    name = models.CharField(max_length=255)
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    
+    def __str__(self):
+        return self.name
+
 class Item(CompanyAwareModel):
     name = models.CharField(max_length=255)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
+    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items', verbose_name='Категория', null=True, blank=True)
     sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
@@ -513,8 +523,8 @@ class StockMovement(CompanyAwareModel):
         return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"
 
 class BillOfMaterials(CompanyAwareModel):
-    model = models.ForeignKey(
-        Model,
+    sizequantity = models.ForeignKey(
+        SizeQuantity,
         on_delete=models.CASCADE,
         related_name='bill_of_materials',
         verbose_name='Модель'
@@ -532,4 +542,4 @@ class BillOfMaterials(CompanyAwareModel):
     )
 
     def __str__(self):
-        return f"{self.model.name} uses {self.quantity} units of {self.item.name}"
+        return f"{self.sizequantity.model.name} uses {self.quantity} units of {self.item.name}"

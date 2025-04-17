@@ -562,13 +562,20 @@ class OrderCreateView(CreateView):
         self.object.save()
         form.save_m2m()
         try:
+            # create all SizeQuantity instances
             self.handle_size_quantities(self.object, self.request.POST)
         except ValidationError as e:
-            # If a duplicate combination is found, delete the created order
             self.object.delete()
             form.add_error(None, e.message)
             return self.form_invalid(form)
-        return redirect('order_detail', pk=self.object.pk)
+
+        # grab the first SizeQuantity you just created
+        first_sq = self.object.size_quantities.first()
+        if not first_sq:
+            # fallback if somehow none were created
+            return redirect('order_detail', pk=self.object.pk)
+
+        return redirect('bom_create', pk=first_sq.pk)
 
     def handle_size_quantities(self, order, post_data):
         """
@@ -604,7 +611,7 @@ class OrderCreateView(CreateView):
             # Lookup the color and fabric objects.
             color = Color.objects.filter(pk=color_id).first() if color_id else None
             fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
-
+            model = order.model
             if color:
                 used_colors.add(color)
             if fabric:
@@ -621,6 +628,7 @@ class OrderCreateView(CreateView):
                     size_qty = SizeQuantity.objects.create(
                         size=size,
                         quantity=quantity_int,
+                        model=model,
                         sku=sku,  # Save SKU along with quantity.
                         color=color,
                         fabrics=fabric
@@ -1591,7 +1599,6 @@ class ModelDetailView(DetailView):
         context = super(ModelDetailView, self).get_context_data(**kwargs)
         model = context['model']
         context['ordered_operations'] = model.operations.all().order_by('modeloperation__order')
-        context['bom_list'] = model.bill_of_materials.all()  # for the BOM tab
         context['sidebar_type'] = 'technology'
         return context
 
@@ -2078,35 +2085,91 @@ class FabricsDeleteView(DeleteView):
 @login_required
 @technologist_required
 def bom_create(request, pk):
-    model_instance = get_object_or_404(Model, pk=pk)
+    size_qty = get_object_or_404(SizeQuantity, pk=pk)
+    order    = size_qty.orders.first()
+
+    # grab all of this order's SQs (so we know which is “next” or “previous”)
+    all_sqs = list(
+        order.size_quantities
+             .all()
+             .order_by('color__name','fabrics__name','size')
+    )
+    idx = all_sqs.index(size_qty)
+
     if request.method == 'POST':
-        # Remove all existing BOM entries for the model.
-        model_instance.bill_of_materials.all().delete()
+        # delete old
+        size_qty.bill_of_materials.all().delete()
+
+        # recreate from POST
         row = 0
-        # Loop over the rows that are sent in the POST data.
         while f'row-{row}_item' in request.POST:
-            item_id = request.POST.get(f'row-{row}_item')
-            quantity = request.POST.get(f'row-{row}_quantity')
-            if item_id and quantity:
-                item_instance = get_object_or_404(Item, pk=item_id)
+            item_id  = request.POST[f'row-{row}_item']
+            qty       = request.POST[f'row-{row}_quantity']
+            if item_id and qty:
+                item = get_object_or_404(Item, pk=item_id)
                 BillOfMaterials.objects.create(
-                    model=model_instance,
-                    item=item_instance,
-                    quantity=Decimal(quantity)
+                    sizequantity=size_qty,
+                    item=item,
+                    quantity=Decimal(qty)
                 )
             row += 1
-        return redirect('model_detail', pk=pk)
-    else:
-        items = Item.objects.filter(is_archived=False).order_by('name')
-        # Load any existing BOM entries.
-        boms = model_instance.bill_of_materials.all()
-        context = {
-            'model': model_instance,
-            'items': items,
-            'boms': boms,
-            'sidebar_type': 'technology'
-        }
-        return render(request, 'technologist/models/bom_create.html', context)
+
+        # next SQ?
+        if idx + 1 < len(all_sqs):
+            return redirect('bom_create', pk=all_sqs[idx+1].pk)
+
+        # done
+        return redirect('order_detail', pk=order.pk)
+
+    # GET: load categories & items
+    categories    = Category.objects.filter(is_archived=False).order_by('name')
+    items         = Item.objects.filter(is_archived=False).order_by('name')
+    items_by_cat  = defaultdict(list)
+    for it in items:
+        items_by_cat[it.category_id].append(it)
+
+    # primary BOM queryset
+    boms_qs = size_qty.bill_of_materials.all()
+    # if empty and there *is* a previous SQ, fall back to its BOMs
+    if not boms_qs.exists() and idx > 0:
+        boms_qs = all_sqs[idx-1].bill_of_materials.all()
+
+    return render(request, 'technologist/models/bom_create.html', {
+        'sizequantity':      size_qty,
+        'categories':        categories,
+        'items_by_category': dict(items_by_cat),
+        'boms':              boms_qs,           # <-- keep as a QuerySet!
+        'sidebar_type':      'technology',
+    })
+
+@require_POST
+@login_required
+@technologist_required
+def add_category_api(request):
+    name = request.POST.get('name', '').strip()
+    if not name:
+        return JsonResponse(
+            {'success': False, 'errors': {'name': ['This field is required.']}},
+            status=400
+        )
+    cat = Category.objects.create(name=name)
+    return JsonResponse({
+        'success': True,
+        'category_id': cat.pk,
+        'category_name': cat.name
+    })
+
+
+@login_required
+@technologist_required
+def items_by_category_api(request):
+    cat_id = request.GET.get('category')
+    if not cat_id:
+        return JsonResponse({'items': []})
+    qs = Item.objects.filter(category_id=cat_id, is_archived=False).order_by('name')
+    items = [{'id': i.pk, 'name': i.name} for i in qs]
+    return JsonResponse({'items': items})
+
 
 @require_POST
 @login_required

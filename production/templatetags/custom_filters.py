@@ -39,6 +39,12 @@ def get_item(dictionary, key):
         return None
     return dictionary.get(key, None)
 
+@register.filter
+def get_items(dictionary, key):
+    if dictionary is None:
+        return None
+    return dictionary.get(key, [])
+
 @register.filter(name='default_if_none')
 def default_if_none(value, default):
     """Return the default value if the input value is None."""

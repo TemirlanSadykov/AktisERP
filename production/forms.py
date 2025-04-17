@@ -398,7 +398,8 @@ class ModelCustomForm(forms.ModelForm):
     operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # Stores JSON order data
     consumption_t = forms.DecimalField(
         label="Consumption",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        required=False
     )
     class Meta:
         model = Model
@@ -654,7 +655,7 @@ class BulkRollForm(forms.ModelForm):
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name']
+        fields = ['name', 'category']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
         }
@@ -662,6 +663,14 @@ class ItemForm(forms.ModelForm):
 class WarehouseForm(forms.ModelForm):
     class Meta:
         model = Warehouse
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+        }
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
         fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
