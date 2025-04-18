@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 class="navfont" style="color:#232323; margin:auto;">
+    {% trans "Keeper Dashboard" %}
+  </h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display:inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin:10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">
+            {% trans "Logout" %}
+          </button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="max-width:100%; padding:60px;">
+  <h2>{% trans "Bulk Create Stock Entries" %}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <table id="stockTable" class="table table-bordered">
+      <thead>
+        <tr>
+          <th style="width:25%;">{% trans "Category" %}</th>
+          <th style="width:35%;">{% trans "Item" %}</th>
+          <th style="width:30%;">{% trans "Quantity" %}</th>
+          <th style="width:10%;">{% trans "Unit" %}</th>
+          <th style="width:10%;">{% trans "Action" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-row="0">
+          <td>
+            <select name="row-0_category" class="form-control category-select">
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new_category">{% trans "Add New Category" %}</option>
+              {% for cat in categories %}
+                <option value="{{ cat.pk }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <select name="row-0_item" class="form-control item-select" disabled>
+              <option value="">{% trans "Select category first" %}</option>
+            </select>
+          </td>
+          <td>
+            <input
+              type="number"
+              step="0.01"
+              name="row-0_quantity"
+              class="form-control"
+              placeholder="{% trans 'Quantity' %}"
+            >
+          </td>
+          <td>
+            <input
+              type="text"
+              name="row-0_unit"
+              class="form-control"
+              readonly
+              placeholder="-"
+            >
+          </td>
+          <td>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+              {% trans "Delete" %}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="control-row" style="height:50px;">
+          <td colspan="5">
+            <div style="display:flex; height:100%;">
+              <div
+                id="addRowControl"
+                style="flex:1; display:flex; align-items:center; justify-content:center; border-right:1px solid #ccc; cursor:pointer;"
+              >
+                +
+              </div>
+              <div
+                id="deleteRowControl"
+                style="flex:1; display:flex; align-items:center; justify-content:center; cursor:pointer;"
+              >
+                –
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button type="submit" class="btn btn-primary">
+      {% trans "Save" %}
+    </button>
+  </form>
+</div>
+
+<!-- Add New Category Modal -->
+<div class="modal" data-backdrop="false" id="addCategoryModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addCategoryForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Category" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_category_name">{% trans "Category Name" %}</label>
+            <input type="text" class="form-control" id="id_category_name" name="name" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Item Modal -->
+<div class="modal" data-backdrop="false" id="additemModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="additemForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Item" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_item_name">{% trans "Item Name" %}</label>
+            <input type="text" class="form-control" id="id_item_name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="id_item_unit">{% trans "Item Unit" %}</label>
+            <input type="text" class="form-control" id="id_item_unit" name="unit" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+      document.cookie.split(';').forEach(c => {
+        const [k, v] = c.trim().split('=');
+        if (k === name) cookieValue = decodeURIComponent(v);
+      });
+    }
+    return cookieValue;
+  }
+
+  const globalcategories = [
+    {% for cat in categories %}
+      { id: '{{ cat.pk }}', name: '{{ cat.name }}' }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  function getCategoryOptionsHTML() {
+    let html = `
+      <option value="">{% trans "-------" %}</option>
+      <option value="add_new_category">{% trans "Add New Category" %}</option>
+    `;
+    globalcategories.forEach(cat => {
+      html += `<option value="${cat.id}">${cat.name}</option>`;
+    });
+    return html;
+  }
+
+  function getItemPlaceholderHTML() {
+    return `<option value="">{% trans "Select category first" %}</option>`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = btn.closest('.modal');
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+      });
+    });    
+    const tbody = document.querySelector('#stockTable tbody');
+    let rowCount = tbody.children.length;
+
+    function updateRowIndices() {
+      tbody.querySelectorAll('tr').forEach((tr, idx) => {
+        tr.dataset.row = idx;
+        tr.querySelector('.category-select').name = `row-${idx}_category`;
+        const itemSel = tr.querySelector('.item-select');
+        itemSel.name = `row-${idx}_item`;
+        tr.querySelector('input[name$="_quantity"]').name = `row-${idx}_quantity`;
+        tr.querySelector('input[name$="_unit"]').name = `row-${idx}_unit`;
+      });
+      rowCount = tbody.children.length;
+    }
+
+    function addRow() {
+      const tr = document.createElement('tr');
+      tr.dataset.row = rowCount;
+      tr.innerHTML = `
+        <td>
+          <select name="row-${rowCount}_category" class="form-control category-select">
+            ${getCategoryOptionsHTML()}
+          </select>
+        </td>
+        <td>
+          <select name="row-${rowCount}_item" class="form-control item-select" disabled>
+            ${getItemPlaceholderHTML()}
+          </select>
+        </td>
+        <td>
+          <input
+            type="number"
+            step="0.01"
+            name="row-${rowCount}_quantity"
+            class="form-control"
+            placeholder="{% trans 'Quantity' %}"
+          >
+        </td>
+        <td>
+          <input
+            type="text"
+            name="row-${rowCount}_unit"
+            class="form-control"
+            readonly
+            placeholder="-"
+          >
+        </td>
+        <td>
+          <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+            {% trans "Delete" %}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      rowCount++;
+    }
+
+    document.getElementById('addRowControl').addEventListener('click', addRow);
+    document.getElementById('deleteRowControl').addEventListener('click', () => {
+      if (tbody.children.length > 1) {
+        tbody.removeChild(tbody.lastElementChild);
+        updateRowIndices();
+      } else {
+        alert(`{% trans 'At least one row must remain.' %}`);
+      }
+    });
+
+    tbody.addEventListener('click', e => {
+      if (e.target.classList.contains('delete-row-btn')) {
+        e.target.closest('tr').remove();
+        updateRowIndices();
+      }
+    });
+
+    // CATEGORY change → fetch or add new
+    document.addEventListener('change', e => {
+      if (!e.target.matches('.category-select')) return;
+      const sel = e.target;
+      const tr = sel.closest('tr');
+      const itemSel = tr.querySelector('.item-select');
+
+      if (sel.value === 'add_new_category') {
+        const modal = document.getElementById('addCategoryModal');
+        modal.dataset.triggerSelect = sel.name;
+        sel.value = '';
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        return;
+      }
+
+      if (sel.value) {
+        fetch(`{% url 'items_by_category_api' %}?category=${sel.value}`, {
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        })
+          .then(res => res.json())
+          .then(data => {
+            let html = `
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new_item">{% trans "Add New Item" %}</option>
+            `;
+            data.items.forEach(it => {
+              html += `<option value="${it.id}" data-unit="${it.unit}">${it.name}</option>`;
+            });
+            itemSel.innerHTML = html;
+            itemSel.disabled = false;
+          });
+      } else {
+        itemSel.innerHTML = getItemPlaceholderHTML();
+        itemSel.disabled = true;
+        tr.querySelector('input[name$="_unit"]').value = '-';
+      }
+    });
+
+    // ITEM change → add new or set unit
+    document.addEventListener('change', e => {
+      if (!e.target.matches('.item-select')) return;
+      const sel = e.target;
+      const tr = sel.closest('tr');
+
+      if (sel.value === 'add_new_item') {
+        const modal = document.getElementById('additemModal');
+        modal.dataset.triggerSelect = sel.name;
+        sel.value = '';
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        return;
+      }
+
+      const opt = sel.selectedOptions[0];
+      const unit = opt.dataset.unit || '-';
+      tr.querySelector('input[name$="_unit"]').value = unit;
+    });
+
+    // ADD CATEGORY AJAX
+    document.getElementById('addCategoryForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      fetch(`{% url 'add_category_api' %}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            globalcategories.push({ id: data.category_id, name: data.category_name });
+            document.querySelectorAll('.category-select').forEach(cs => {
+              if (![...cs.options].some(o => o.value == data.category_id)) {
+                cs.add(new Option(data.category_name, data.category_id));
+              }
+            });
+            const modal = document.getElementById('addCategoryModal');
+            const triggerSelect = modal.dataset.triggerSelect;
+            const sel = document.querySelector(`[name="${triggerSelect}"]`);
+            sel.value = data.category_id;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+          } else {
+            alert('Error: ' + JSON.stringify(data.errors));
+          }
+        });
+    });
+
+    // ADD ITEM AJAX
+    document.getElementById('additemForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const modal = document.getElementById('additemModal');
+      const triggerSelect = modal.dataset.triggerSelect;
+      const row = triggerSelect.match(/^row-(\d+)/)[1];
+      const catValue = document.querySelector(`[name="row-${row}_category"]`).value;
+      formData.append('category', catValue);
+
+      fetch(`{% url 'add_item_api' %}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const sel = document.querySelector(`[name="${triggerSelect}"]`);
+            const opt = new Option(data.item_name, data.item_id);
+            opt.dataset.unit = data.unit;              // <-- attach unit here
+            sel.add(opt);
+            sel.value = data.item_id;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+          } else {
+            alert('Error: ' + JSON.stringify(data.errors));
+          }
+        });
+    });
+  });
+</script>
+
+{% endblock %}

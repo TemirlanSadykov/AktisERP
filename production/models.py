@@ -452,6 +452,7 @@ class Item(CompanyAwareModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items', verbose_name='Категория', null=True, blank=True)
     sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    unit = models.CharField(max_length=50, null=True, blank=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
@@ -471,7 +472,6 @@ class Stock(CompanyAwareModel):
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
     # Inventory-specific fields:
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    unit = models.CharField(max_length=50, null=True, blank=True)
     warehouse = models.ForeignKey(
         Warehouse,
         on_delete=models.SET_NULL,
@@ -482,7 +482,7 @@ class Stock(CompanyAwareModel):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
-        return f"{self.content_object} - {self.quantity} {self.unit}"
+        return f"{self.content_object} - {self.quantity} {self.item.unit}"
     
 class StockMovement(CompanyAwareModel):
     MOVEMENT_TYPES = (

@@ -67,7 +67,7 @@
               <td>{{ forloop.counter }}</td>
               <td>{{ stock.content_object }}</td>
               <td>{{ stock.quantity }}</td>
-              <td>{{ stock.unit }}</td>
+              <td>{{ stock.content_object.unit }}</td>
               <td>
                 <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
                   {% trans "View" %}

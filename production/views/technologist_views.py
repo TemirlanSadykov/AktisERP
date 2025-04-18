@@ -2167,7 +2167,7 @@ def items_by_category_api(request):
     if not cat_id:
         return JsonResponse({'items': []})
     qs = Item.objects.filter(category_id=cat_id, is_archived=False).order_by('name')
-    items = [{'id': i.pk, 'name': i.name} for i in qs]
+    items = [{'id': i.pk, 'name': i.name, 'unit': i.unit} for i in qs]
     return JsonResponse({'items': items})
 
 
@@ -2181,6 +2181,7 @@ def add_item_api(request):
             'success': True,
             'item_id': item.id,
             'item_name': item.name,
+            'unit': item.unit
         }
         return JsonResponse(data)
     else:

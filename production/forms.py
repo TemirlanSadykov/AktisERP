@@ -652,12 +652,35 @@ class BulkRollForm(forms.ModelForm):
         supplier_choices = list(self.fields['supplier'].choices)
         self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
 
+class BulkStockForm(forms.ModelForm):
+    # how many rows you want
+    count = forms.IntegerField(
+        min_value=1,
+        label="Rows",
+        widget=forms.NumberInput(attrs={'class':'form-control'})
+    )
+
+    class Meta:
+        model = Stock
+        # we only need the warehouse here; per‐row item/unit/qty come from POST
+        fields = ['warehouse']
+        widgets = {
+            'warehouse': forms.Select(attrs={'class':'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('instance', None)
+        super().__init__(*args, **kwargs)
+        # pick the first non‑archived by default
+        self.fields['warehouse'].queryset = Warehouse.objects.filter(is_archived=False)
+
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'category']
+        fields = ['name', 'category', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
         }
 
 class WarehouseForm(forms.ModelForm):
@@ -688,10 +711,9 @@ class StockForm(forms.ModelForm):
     class Meta:
         model = Stock
         # Exclude the generic fields (content_type and object_id) as we'll set them in save()
-        fields = ['item', 'quantity', 'unit', 'warehouse']
+        fields = ['item', 'quantity', 'warehouse']
         widgets = {
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}),
-            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
             'warehouse': forms.Select(attrs={'class': 'form-control'}),
         }
     

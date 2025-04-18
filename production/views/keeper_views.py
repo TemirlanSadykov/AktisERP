@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -514,18 +514,80 @@ class ArchivedStockListView(ListView):
         return Stock.objects.filter(is_archived=True).order_by('id')
 
 
-@method_decorator([login_required, keeper_required], name='dispatch')
-class StockCreateView(CreateView):
-    model = Stock
-    form_class = StockForm
-    template_name = 'keeper/stocks/create.html'
-    success_url = reverse_lazy('stock_list')
+@login_required
+@keeper_required
+def stock_bulk_create(request):
+    # GET: render form with categories & items_by_category
+    if request.method == 'GET':
+        categories = Category.objects.filter(is_archived=False).order_by('name')
+        items = Item.objects.filter(is_archived=False).order_by('name')
+        items_by_category = defaultdict(list)
+        for it in items:
+            items_by_category[it.category_id].append(it)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
+        return render(request, 'keeper/stocks/bulk_create.html', {
+            'categories':        categories,
+            'items_by_category': dict(items_by_category),
+            'sidebar_type':      'keeper',
+        })
 
+    # POST: parse each row and update or create stock
+    warehouse = Warehouse.objects.filter(is_archived=False).first()
+    company   = get_current_company()
+    ct        = ContentType.objects.get_for_model(Item)
+
+    row = 0
+    while f'row-{row}_item' in request.POST:
+        item_id = request.POST.get(f'row-{row}_item')
+        qty_str = request.POST.get(f'row-{row}_quantity')
+        unit    = request.POST.get(f'row-{row}_unit')
+
+        if item_id and qty_str:
+            try:
+                qty = Decimal(qty_str)
+            except (InvalidOperation, TypeError):
+                qty = None
+
+            if qty is not None:
+                item = get_object_or_404(Item, pk=item_id)
+
+                # Try to find existing stock record
+                stock_qs = Stock.objects.filter(
+                    content_type=ct,
+                    object_id=item.id,
+                    type=Stock.RAW_MATERIALS,
+                    warehouse=warehouse,
+                    is_archived=False,
+                    company=company
+                )
+                if stock_qs.exists():
+                    stock = stock_qs.first()
+                    stock.quantity += qty
+                    stock.save()
+                else:
+                    stock = Stock.objects.create(
+                        content_type=ct,
+                        object_id=item.id,
+                        type=Stock.RAW_MATERIALS,
+                        quantity=qty,
+                        unit=unit,
+                        warehouse=warehouse,
+                        is_archived=False,
+                        company=company,
+                    )
+
+                # Log the movement of exactly the added quantity
+                StockMovement.objects.create(
+                    stock=stock,
+                    movement_type='IN',
+                    quantity=qty,
+                    from_warehouse=None,
+                    to_warehouse=warehouse,
+                    note='Bulk create',
+                )
+        row += 1
+
+    return redirect('stock_list')
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class StockDetailView(DetailView):
