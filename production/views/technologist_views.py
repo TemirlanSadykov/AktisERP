@@ -2092,7 +2092,7 @@ def bom_create(request, pk):
     all_sqs = list(
         order.size_quantities
              .all()
-             .order_by('color__name','fabrics__name','size')
+             .order_by('id')
     )
     idx = all_sqs.index(size_qty)
 

@@ -237,9 +237,9 @@
                         <a href="{% url 'stock_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-layer-group fa-fw"></i><span class="sidetext">{% trans 'Stocks' %}</span></a>
-                        <a href="{% url 'item_list' %}"
+                        {% comment %} <a href="{% url 'item_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Items' %}</span></a>
+                            <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Items' %}</span></a> {% endcomment %}
                         <a href="#" 
                             class="list-group-item list-group-item-action text-black collapsesidebarset" 
                             data-toggle="collapse" 
@@ -254,6 +254,9 @@
                             </a>
                             <a href="{% url 'category_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                                 {% trans 'Category' %}
+                            </a>
+                            <a href="{% url 'item_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                                {% trans 'Items' %}
                             </a>
                             <a href="{% url 'warehouse_list' %}" class="list-group-item list-group-item-action text-black ml-4">
                                 {% trans 'Warehouses' %}
