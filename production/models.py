@@ -346,7 +346,20 @@ class Supplier(CompanyAwareModel):
     def __str__(self):
         return self.name
 
+class RollBatch(CompanyAwareModel):
+    color = models.ForeignKey(Color, on_delete=models.CASCADE)
+    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    width = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ("color", "fabric", "supplier", "width")
+
+    def __str__(self):
+        return f"{self.color.name} {self.fabric.name} {self.width}м"
+
 class Roll(CompanyAwareModel):
+    roll_batch = models.ForeignKey(RollBatch, on_delete=models.CASCADE, related_name='rolls', verbose_name='Рулоны', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
     fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
@@ -447,8 +460,6 @@ class Category(CompanyAwareModel):
 
 class Item(CompanyAwareModel):
     name = models.CharField(max_length=255)
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
-    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items', verbose_name='Категория', null=True, blank=True)
     sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -465,9 +476,11 @@ class Stock(CompanyAwareModel):
     content_object = GenericForeignKey('content_type', 'object_id')
     RAW_MATERIALS = 0
     FINSHED_GOODS = 1
+    ROLLS = 2
     TYPE_CHOICES = [
         (RAW_MATERIALS, 'Сырье'),
-        (FINSHED_GOODS, 'Готовая продукция')
+        (FINSHED_GOODS, 'Готовая продукция'),
+        (ROLLS, 'Рулоны')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
     # Inventory-specific fields:

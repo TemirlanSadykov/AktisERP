@@ -21,13 +21,18 @@
     </div>
   </nav>
   
-  <div class="container clients-wrapper maincontr">
+  <div class="container clients-wrapper maincontr" style="max-width: 100%;">
     <!-- Navigation Tabs for Stock Type -->
     <div class="custom-nav-tabs-scrollable">
       <ul class="custom-nav nav nav-tabs" role="tablist">
         <li class="nav-item">
           <a href="{% url 'stock_list' %}?type=all" class="nav-link {% if selected_type == 'all' %}active{% endif %}" role="tab">
             {% trans "All" %}
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'stock_list' %}?type=2" class="nav-link {% if selected_type == '2' %}active{% endif %}" role="tab">
+            {% trans "Rolls" %}
           </a>
         </li>
         <li class="nav-item">
@@ -55,6 +60,7 @@
         <thead>
           <tr>
             <th>#</th>
+            <th>{% trans "Category" %}</th>
             <th>{% trans "Item" %}</th>
             <th>{% trans "Quantity" %}</th>
             <th>{% trans "Unit" %}</th>
@@ -65,9 +71,10 @@
           {% for stock in stocks %}
             <tr>
               <td>{{ forloop.counter }}</td>
+              <td>{{ stock.category_display }}</td>
               <td>{{ stock.content_object }}</td>
               <td>{{ stock.quantity }}</td>
-              <td>{{ stock.content_object.unit }}</td>
+              <td>{{ stock.unit_display }}</td>
               <td>
                 <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
                   {% trans "View" %}

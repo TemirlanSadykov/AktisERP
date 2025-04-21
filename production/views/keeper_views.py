@@ -417,65 +417,89 @@ class RollsByCombinationListView(ListView):
 class RollBulkCreateView(CreateView):
     model = Roll
     form_class = BulkRollForm
-    template_name = 'keeper/rolls/bulk_create.html'
-    success_url = reverse_lazy('roll_combinations')
+    template_name = "keeper/rolls/bulk_create.html"
+    success_url = reverse_lazy("roll_combinations")
 
     def form_valid(self, form):
-        color = form.cleaned_data['color']
-        fabric = form.cleaned_data['fabric']
-        supplier = form.cleaned_data['supplier']
-        width = form.cleaned_data['width']
-        quantity = form.cleaned_data['quantity']
-        
-        weights = self.request.POST.getlist('weight')
-        lengths = self.request.POST.getlist('length')
-        cleaned_weights = []
-        cleaned_lengths = []
+        color     = form.cleaned_data["color"]
+        fabric    = form.cleaned_data["fabric"]
+        supplier  = form.cleaned_data["supplier"]
+        width     = form.cleaned_data["width"]
+        quantity  = form.cleaned_data["quantity"]
 
-        for w in weights:
-            try:
-                # Convert empty string to None (or set a default like 0)
-                cleaned_weights.append(Decimal(w) if w.strip() else None)
-            except InvalidOperation:
-                cleaned_weights.append(None)  # or handle error as needed
+        weights_raw = self.request.POST.getlist("weight")
+        lengths_raw = self.request.POST.getlist("length")
 
-        for l in lengths:
-            try:
-                cleaned_lengths.append(Decimal(l) if l.strip() else None)
-            except InvalidOperation:
-                cleaned_lengths.append(None)
+        # clean lists → [Decimal|None, …]
+        parse = lambda v: (Decimal(v) if v.strip() else None)
+        weights = [parse(w) for w in weights_raw]
+        lengths = [parse(l) for l in lengths_raw]
 
-        existing_count = Roll.objects.filter(color=color, fabric=fabric, supplier=supplier).count()
-        current_company = get_current_company()  # should be valid
-        
-        new_rolls = []
+        company   = get_current_company()
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+
+        # 1. RollBatch
+        batch, _ = RollBatch.objects.get_or_create(
+            color=color, fabric=fabric, supplier=supplier,
+            width=width, company=company,
+            defaults={"quantity": 0},
+        )
+
+        # 2. bulk‑create rolls
+        start_idx   = Roll.objects.filter(color=color,
+                                          fabric=fabric,
+                                          supplier=supplier).count()
+        new_rolls   = []
+        metres_in   = Decimal("0")
+
         for i in range(quantity):
-            roll_name = str(existing_count + i + 1)
-            weight_value = cleaned_weights[i] if i < len(cleaned_weights) else None
-            length_value = cleaned_lengths[i] if i < len(cleaned_lengths) else None
-            new_rolls.append(Roll(
-                color=color,
-                fabric=fabric,
-                supplier=supplier,
-                width=width,
-                weight=weight_value,
-                length_t=length_value,
-                name=roll_name,
-                is_used=False,
-                company=current_company,
-            ))
+            length_val = lengths[i]  if i < len(lengths)  else None
+            weight_val = weights[i]  if i < len(weights)  else None
+            new_rolls.append(
+                Roll(
+                    roll_batch=batch,
+                    color=color, fabric=fabric,
+                    supplier=supplier, width=width,
+                    name=start_idx + i + 1,
+                    length_p=length_val,   # purchased length
+                    weight=weight_val,
+                    company=company,
+                )
+            )
+            if length_val:
+                metres_in += length_val
+
         Roll.objects.bulk_create(new_rolls)
-        
-        # Set self.object to one of the created rolls (if any)
-        if new_rolls:
-            self.object = new_rolls[0]
-        
+
+        # 3. update batch.quantity (number of rolls)
+        RollBatch.objects.filter(pk=batch.pk).update(
+            quantity=F("quantity") + quantity
+        )
+
+        # 4. Stock row per SKU (RollBatch)
+        ct = ContentType.objects.get_for_model(RollBatch)
+        stock, _ = Stock.objects.get_or_create(
+            content_type=ct, object_id=batch.id,
+            type=Stock.ROLLS,
+            warehouse=warehouse, company=company,
+            defaults={"quantity": Decimal("0")},
+        )
+        if metres_in:
+            Stock.objects.filter(pk=stock.pk).update(
+                quantity=F("quantity") + metres_in
+            )
+
+            # 5. movement log
+            StockMovement.objects.create(
+                stock=stock, movement_type="IN",
+                quantity=metres_in,
+                from_warehouse=None, to_warehouse=warehouse,
+                note="Bulk roll intake",
+            )
+
+        # let CBV chain finish up
+        self.object = new_rolls[0] if new_rolls else None
         return HttpResponseRedirect(self.get_success_url())
-      
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'keeper'
-        return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class StockListView(ListView):
@@ -488,7 +512,7 @@ class StockListView(ListView):
         qs = Stock.objects.filter(is_archived=False)
         # Read the type from GET parameters; default is 'all' meaning no filtering.
         stock_type = self.request.GET.get('type', 'all')
-        if stock_type in ['0', '1']:
+        if stock_type in ['0', '1', '2']:
             qs = qs.filter(type=int(stock_type))
         return qs.order_by('id')
 
@@ -497,6 +521,23 @@ class StockListView(ListView):
         context['sidebar_type'] = 'keeper'
         # Pass the currently selected type; defaults to 'all'
         context['selected_type'] = self.request.GET.get('type', 'all')
+
+        for stock in context['stocks']:
+            if stock.type == Stock.ROLLS:
+                stock.unit_display = 'м'
+            elif stock.type == Stock.FINSHED_GOODS:
+                stock.unit_display = 'шт'
+            else:
+                stock.unit_display = getattr(stock.content_object, 'unit', '')
+
+            if stock.type == Stock.ROLLS:
+                stock.category_display = "Рулон"
+            elif stock.type == Stock.FINSHED_GOODS:
+                stock.category_display = "Готовая продукция"
+            else:
+                stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
+
+
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
