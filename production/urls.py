@@ -159,7 +159,7 @@ urlpatterns = [
     path('packer/client/orders/order/<int:pk>/', OrderDetailPackerView.as_view(), name='order_detail_packer'),
     path('packer/orders/update-packed-by-sku/<int:sku>/', update_packed_by_sku, name='update_packed_by_sku'),
     path('packer/orders/get-order-table-data/<int:order_id>/', get_order_table_data_packer, name='get_order_table_data_packer'),
-    path('packer/shipment/', shipment_page, name='shipment_page'),
+    path('packer/scan/', scan_packer_page, name='scan_packer_page'),
     
     path('keeper/color/', ColorListView.as_view(), name='color_list'),
     path('keeper/color/create/', ColorCreateView.as_view(), name='color_create'),

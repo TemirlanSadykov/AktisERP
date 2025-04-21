@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function renderOrderTable() {
     if (!orderTableData) return;
     var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-    html += '<th>{% trans "Order:" %} ' + orderTableData.orderName + '</th>';
+    html += '<th>' + orderTableData.orderName + '</th>';
     orderTableData.allSizes.forEach(function(size) {
       html += '<th>' + size + '</th>';
     });
@@ -196,9 +196,6 @@ document.addEventListener("DOMContentLoaded", function() {
             cellContent += ' <button class="complete-button btn btn-success" data-sq-id="'+sqId+'">Complete</button>';
           }
           tdStyle = ' style="background-color: #5ced73;"';
-          if (lastUpdatedCell && lastUpdatedCell.sqId === sqId) {
-            tdStyle = ' style="background-color: #5ced73; border: 3px solid red;"';
-          }
         } 
         // If a nonzero scanned value exists but is less than required, show the value without green styling or button.
         else if (scanned > 0) {

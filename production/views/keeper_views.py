@@ -442,7 +442,6 @@ class RollBulkCreateView(CreateView):
         batch, _ = RollBatch.objects.get_or_create(
             color=color, fabric=fabric, supplier=supplier,
             width=width, company=company,
-            defaults={"quantity": 0},
         )
 
         # 2. bulk‑create rolls
@@ -470,11 +469,6 @@ class RollBulkCreateView(CreateView):
                 metres_in += length_val
 
         Roll.objects.bulk_create(new_rolls)
-
-        # 3. update batch.quantity (number of rolls)
-        RollBatch.objects.filter(pk=batch.pk).update(
-            quantity=F("quantity") + quantity
-        )
 
         # 4. Stock row per SKU (RollBatch)
         ct = ContentType.objects.get_for_model(RollBatch)

@@ -292,28 +292,36 @@ def update_piece_qc(request, piece_id):
         'Checked': 'Checked',
         'Defect': 'Defect'
     }
-    
+
     if status not in valid_statuses:
         return JsonResponse({'success': False, 'message': 'Invalid status provided.'}, status=400)
 
     try:
-        passport_size = PassportSize.objects.get(id=piece_id)
+        passport_size = PassportSize.objects.select_related(
+            'size_quantity__color',
+            'size_quantity__fabrics'
+        ).get(id=piece_id)
     except PassportSize.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'PassportSize not found.'}, status=404)
 
     if status == 'Checked':
-        # Increment the aggregated checked count on SizeQuantity.
         size_quantity = passport_size.size_quantity
-        current_sq_checked = size_quantity.checked or 0
-        size_quantity.checked = current_sq_checked + 1
-        size_quantity.save()
+        size_quantity.checked = (size_quantity.checked or 0) + 1
+        size_quantity.save(update_fields=['checked'])
 
-        message = 'Единица обновлена до статуса Проверено.'
-    else:  # status == 'Defect'
-        # For defective items, we do not increment the checked counts.
-        message = 'Единица отмечена как брак.'
+        combo = f"{size_quantity.color} {size_quantity.fabrics}"
+        return JsonResponse({
+            'success': True,
+            'message': 'Единица обновлена до статуса Проверено.',
+            'combo': combo,
+            'size': size_quantity.size,
+            'checked': size_quantity.checked
+        })
 
-    return JsonResponse({'success': True, 'message': message})
+    return JsonResponse({
+        'success': True,
+        'message': 'Единица отмечена как брак.'
+    })
 
 # ------------------------------
 # New API view: get_order_table_data
@@ -424,7 +432,11 @@ def update_checked_quantity(request):
         order_id = data.get('order_id')
         combo = data.get('combo')  # e.g. "Red Cotton"
         size = data.get('size')
-        quantity = int(data.get('quantity', 0))
+        quantity_value = data.get('quantity')
+        quantity = None
+        # Convert None or empty string to 0.
+        if quantity_value is not None:
+            quantity = int(quantity_value)
         
         # Split combo into color and fabric. Expects format "ColorName FabricsName".
         parts = combo.split(" ", 1)

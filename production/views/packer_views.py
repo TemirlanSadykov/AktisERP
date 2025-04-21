@@ -380,7 +380,6 @@ def complete_production(request):
             content_type=content_type,
             object_id=sq_obj.pk,
             quantity=quantity,
-            unit="ед",
             warehouse=warehouse,
             is_archived=False,
             type=Stock.FINSHED_GOODS
@@ -408,11 +407,11 @@ def complete_production(request):
 
 @login_required
 @packer_required
-def shipment_page(request):
+def scan_packer_page(request):
     context = {
             'sidebar_type': 'packer'
             }
-    return render(request, 'packer/shipment.html', context)
+    return render(request, 'packer/scans/detail.html', context)
 
 @require_POST
 @login_required
@@ -474,6 +473,8 @@ def update_packed_by_sku(request, sku):
                 'size': qty.size,
                 'quantity': qty.quantity,
                 'packed': qty.packed if qty.packed is not None else 0,
+                'id': qty.id,
+                'production_complete': qty.production_complete
             })
         
         data = {
