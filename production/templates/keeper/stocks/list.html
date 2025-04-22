@@ -26,11 +26,6 @@
     <div class="custom-nav-tabs-scrollable">
       <ul class="custom-nav nav nav-tabs" role="tablist">
         <li class="nav-item">
-          <a href="{% url 'stock_list' %}?type=all" class="nav-link {% if selected_type == 'all' %}active{% endif %}" role="tab">
-            {% trans "All" %}
-          </a>
-        </li>
-        <li class="nav-item">
           <a href="{% url 'stock_list' %}?type=2" class="nav-link {% if selected_type == '2' %}active{% endif %}" role="tab">
             {% trans "Rolls" %}
           </a>
@@ -50,8 +45,23 @@
     <div class="tab-content" id="myTabContent">
       <div class="clients-header">
         <span class="operation-text">{% trans "Stock" %}</span>
-        <a href="{% url 'stock_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
-        <a href="{% url 'archived_stocks_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+        {% if selected_type == '0' %}
+          <!-- Raw Materials -->
+          <a href="{% url 'stock_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+          <a href="{% url 'archived_stocks_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+        
+        {% elif selected_type == '2' %}
+          <!-- Rolls -->
+          <a href="{% url 'roll_bulk_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+
+        {% elif selected_type == '1' %}
+          <!-- Finished Goods -->
+          {# No create buttons for finished goods #}
+
+        {% else %}
+          <!-- Default fallback (e.g., "All") -->
+          <a href="{% url 'roll_bulk_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+        {% endif %}
       </div>
     </div>
     
@@ -76,9 +86,26 @@
               <td>{{ stock.quantity }}</td>
               <td>{{ stock.unit_display }}</td>
               <td>
-                <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
-                  {% trans "View" %}
-                </a>
+                {% if selected_type == '0' %}
+                  <!-- Raw Materials -->
+                  <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
+                    {% trans "View" %}
+                  </a>
+                {% elif selected_type == '2' %}
+                  <!-- Rolls -->
+                  <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
+                    {% trans "View" %}
+                  </a>
+                {% elif selected_type == '1' %}
+                  <!-- Finished Goods -->
+                  <a href="{% url 'bom_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
+                    {% trans "View" %}
+                  </a>
+                {% else %}
+                  <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
+                    {% trans "View" %}
+                  </a>
+                {% endif %}
               </td>
             </tr>
           {% empty %}

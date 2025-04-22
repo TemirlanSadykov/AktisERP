@@ -356,7 +356,7 @@ class RollBatch(CompanyAwareModel):
         unique_together = ("color", "fabric", "supplier", "width")
 
     def __str__(self):
-        return f"{self.color.name} {self.fabric.name} {self.width}м"
+        return f"{self.color.name} {self.fabric.name} {self.width}м от {self.supplier}"
 
 class Roll(CompanyAwareModel):
     roll_batch = models.ForeignKey(RollBatch, on_delete=models.CASCADE, related_name='rolls', verbose_name='Рулоны', null=True, blank=True)
@@ -495,7 +495,7 @@ class Stock(CompanyAwareModel):
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
-        return f"{self.content_object} - {self.quantity} {self.item.unit}"
+        return f"{self.content_object} - {self.quantity}"
     
 class StockMovement(CompanyAwareModel):
     MOVEMENT_TYPES = (

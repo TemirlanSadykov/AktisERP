@@ -3,6 +3,7 @@ from decimal import Decimal
 import json
 from urllib.parse import urlencode
 from collections import defaultdict
+import openpyxl # type: ignore
 
 from django.conf import settings
 from django.contrib import messages
@@ -873,7 +874,6 @@ def employee_upload(request):
                         )
                         user.set_password(password)
                         user.save()
-                        print(user)
                         # The save method on CompanyAwareModel will assign the current company.
                         profile = UserProfile.objects.create(
                             user=user,

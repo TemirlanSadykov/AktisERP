@@ -132,6 +132,35 @@ class OrderDetailKeeperView(DetailView):
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
+class BomDetailView(DetailView):
+    model = SizeQuantity
+    template_name = 'keeper/orders/detail.html'
+    context_object_name = 'size_quantity'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        size_quantity = self.object
+
+        # get the related order from the SizeQuantity
+        order = size_quantity.orders.first()
+        context['order'] = order
+
+        # days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # bring in all size‐quantities + their BOM entries
+        context['size_quantities'] = (
+            order.size_quantities
+                 .prefetch_related('bill_of_materials__item__category')
+                 .all()
+        )
+
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
 class SupplierListView(ListView):
     model = Supplier
     template_name = 'keeper/suppliers/list.html'
@@ -369,48 +398,39 @@ class RollsByCombinationListView(ListView):
     template_name = 'keeper/rolls/combination_detail.html'
     context_object_name = 'rolls'
     paginate_by = 10
-    
+
     def get_queryset(self):
-        color_id = self.kwargs.get('color_id')
-        fabric_id = self.kwargs.get('fabric_id')
-        supplier_id = self.kwargs.get('supplier_id')
+        rollbatch_id = self.kwargs.get('rollbatch_id')
         roll_type = self.request.GET.get('roll_type', 'whole')
-        # Use conditional filtering based on roll_type
         if roll_type == 'remainders':
-            qs = Roll.objects.filter(
+            return Roll.objects.filter(
                 is_used=False,
-                color_id=color_id,
-                fabric_id=fabric_id,
-                supplier_id=supplier_id,
+                roll_batch_id=rollbatch_id,
                 original_roll__isnull=False
-            )
+            ).order_by('length_t')
         else:
-            qs = Roll.objects.filter(
+            return Roll.objects.filter(
                 is_used=False,
-                color_id=color_id,
-                fabric_id=fabric_id,
-                supplier_id=supplier_id,
+                roll_batch_id=rollbatch_id,
                 original_roll__isnull=True
-            )
-        return qs.order_by('length_t')
-    
+            ).order_by('length_t')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         context['roll_type'] = self.request.GET.get('roll_type', 'whole')
-        # Pass along the identifiers for use in URL building
-        context['color_id'] = self.kwargs.get('color_id')
-        context['fabric_id'] = self.kwargs.get('fabric_id')
-        context['supplier_id'] = self.kwargs.get('supplier_id')
-        first_roll = self.get_queryset().first()
+        context['rollbatch_id'] = self.kwargs.get('rollbatch_id')
+
+        first_roll = context['rolls'][0] if context['rolls'] else None
         if first_roll:
+            context['rollbatch'] = first_roll.roll_batch
             context['color'] = first_roll.color.name
             context['fabric'] = first_roll.fabric.name
+            context['width'] = first_roll.width
             context['supplier'] = first_roll.supplier.name
         else:
-            context['color'] = ''
-            context['fabric'] = ''
-            context['supplier'] = ''
+            context['rollbatch'] = ''
+
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
@@ -418,8 +438,13 @@ class RollBulkCreateView(CreateView):
     model = Roll
     form_class = BulkRollForm
     template_name = "keeper/rolls/bulk_create.html"
-    success_url = reverse_lazy("roll_combinations")
+    success_url = reverse_lazy("stock_list")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+    
     def form_valid(self, form):
         color     = form.cleaned_data["color"]
         fabric    = form.cleaned_data["fabric"]
@@ -460,7 +485,7 @@ class RollBulkCreateView(CreateView):
                     color=color, fabric=fabric,
                     supplier=supplier, width=width,
                     name=start_idx + i + 1,
-                    length_p=length_val,   # purchased length
+                    length_t=length_val,   # purchased length
                     weight=weight_val,
                     company=company,
                 )
@@ -504,17 +529,24 @@ class StockListView(ListView):
 
     def get_queryset(self):
         qs = Stock.objects.filter(is_archived=False)
-        # Read the type from GET parameters; default is 'all' meaning no filtering.
-        stock_type = self.request.GET.get('type', 'all')
+        stock_type = self.request.GET.get('type')
+
+        # Only filter if a valid type is explicitly passed
         if stock_type in ['0', '1', '2']:
             qs = qs.filter(type=int(stock_type))
+        else:
+            # If invalid or missing type, default to '2' (Rolls)
+            stock_type = '2'
+            qs = qs.filter(type=2)
+
+        self.selected_type = stock_type  # store for use in context
         return qs.order_by('id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         # Pass the currently selected type; defaults to 'all'
-        context['selected_type'] = self.request.GET.get('type', 'all')
+        context['selected_type'] = self.request.GET.get('type', '2')
 
         for stock in context['stocks']:
             if stock.type == Stock.ROLLS:

@@ -227,6 +227,8 @@ urlpatterns = [
     path('keeper/stocks/<int:pk>/archive/', StockArchiveView.as_view(), name='stock_archive'),
     path('keeper/stocks/<int:pk>/unarchive/', StockUnArchiveView.as_view(), name='stock_unarchive'),
 
+    path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
+
     path('keeper/warehouses/', WarehouseListView.as_view(), name='warehouse_list'),
     path('keeper/warehouses/create/', WarehouseCreateView.as_view(), name='warehouse_create'),
     path('keeper/warehouses/<int:pk>/', WarehouseDetailView.as_view(), name='warehouse_detail'),
@@ -261,8 +263,8 @@ urlpatterns = [
     path('keeper/rolls/<int:pk>/edit/', RollUpdateView.as_view(), name='roll_edit'),
     path('keeper/rolls/<int:pk>/delete/', RollDeleteView.as_view(), name='roll_delete'),
     path('keeper/rolls/combinations/', ColorFabricListView.as_view(), name='roll_combinations'),
-    path('keeper/rolls/combinations/<int:color_id>/<int:fabric_id>/<int:supplier_id>/', RollsByCombinationListView.as_view(), name='roll_combination_detail'),
-    path('keeper/rolls/create_bulk/', RollBulkCreateView.as_view(), name='roll_bulk_create'),
+    path('keeper/stocks/rolls/combinations/<int:rollbatch_id>/', RollsByCombinationListView.as_view(), name='roll_combination_detail'),
+    path('keeper/stocks/rolls/create_bulk/', RollBulkCreateView.as_view(), name='roll_bulk_create'),
 
     path('ajax/get-rolls/', ajax_get_rolls, name='ajax_get_rolls'),
 

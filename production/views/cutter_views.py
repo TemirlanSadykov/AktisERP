@@ -444,13 +444,14 @@ class PassportCreateView(CreateView):
         cut_id = self.kwargs.get('pk')
         cut = get_object_or_404(Cut, pk=cut_id)
         passport = form.save(commit=False)
-        # Generate passport number starting from 1 for each cut.
+
+        # Generate passport number
         last_passport = Passport.objects.filter(cut=cut).order_by('number').last()
         passport.number = last_passport.number + 1 if last_passport else 1
-        passport.cut = cut  # Link passport directly to the cut.
-        passport.save()     # Save first so that passport.id is available.
+        passport.cut = cut
+        passport.save()
 
-        # Handle passport sizes based on the selected combination.
+        # Handle sizes
         combination = form.cleaned_data['combination']
         layers = form.cleaned_data['layers']
         color_id, fabric_id = combination.split("|")
@@ -458,27 +459,29 @@ class PassportCreateView(CreateView):
             size_quantity__color_id=color_id,
             size_quantity__fabrics_id=fabric_id
         )
+
         for cut_size in matching_cut_sizes:
-            # Create a PassportSize for each matching cut size.
             passport_size = PassportSize.objects.create(
                 passport=passport,
                 size_quantity=cut_size.size_quantity,
                 quantity=layers,
                 extra=cut_size.extra
             )
-            # Generate a 12-digit numeric SKU by zero-padding the passport_size.id.
             passport_size.sku = str(passport_size.id).zfill(12)
             passport_size.save()
 
-        # Handle roll assignment (unchanged logic)
+        # Handle roll assignment and stock deduction
         selected_roll = form.cleaned_data['roll']
         if selected_roll:
             passport.roll = selected_roll
             passport.save()
-            
+
+            used_meters = layers * cut.length
             new_remainder = form.cleaned_data['remainder']
+
+            # Handle remainder roll creation
             if new_remainder:
-                selected_roll.length_p = new_remainder + layers * cut.length
+                selected_roll.length_p = new_remainder + used_meters
                 Roll.objects.create(
                     color=selected_roll.color,
                     fabric=selected_roll.fabric,
@@ -492,10 +495,30 @@ class PassportCreateView(CreateView):
                     is_used=False
                 )
             else:
-                selected_roll.length_p = layers * cut.length
+                selected_roll.length_p = used_meters
 
             selected_roll.is_used = True
             selected_roll.save()
+
+            roll_batch = selected_roll.roll_batch
+            if roll_batch:
+                roll_batch_ct = ContentType.objects.get_for_model(roll_batch)
+                stock = Stock.objects.filter(
+                    content_type=roll_batch_ct,
+                    object_id=roll_batch.id,
+                    type=Stock.ROLLS
+                ).first()
+                if stock:
+                    stock.quantity = max(stock.quantity - used_meters, 0)
+                    stock.save()
+
+                    StockMovement.objects.create(
+                        stock=stock,
+                        movement_type='OUT',
+                        quantity=used_meters,
+                        from_warehouse=stock.warehouse,
+                        note=f"Used in passport {passport.number} for cut {cut.id}"
+                    )
 
         return redirect(self.get_success_url())
 

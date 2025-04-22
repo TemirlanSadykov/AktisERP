@@ -26,14 +26,14 @@
     <div class="custom-nav-tabs-scrollable">
       <ul class="custom-nav nav nav-tabs" role="tablist">
         <li class="nav-item">
-          <a href="{% url 'roll_combination_detail' color_id=color_id fabric_id=fabric_id supplier_id=supplier_id %}?roll_type=whole" 
+          <a href="{% url 'roll_combination_detail' rollbatch_id=rollbatch_id %}?roll_type=whole" 
               class="nav-link {% if roll_type == 'whole' %}active{% endif %}" 
               id="whole-tab" role="tab" aria-controls="whole" aria-selected="false">
             {% trans "Whole" %}
           </a>
         </li>
         <li class="nav-item">
-          <a href="{% url 'roll_combination_detail' color_id=color_id fabric_id=fabric_id supplier_id=supplier_id %}?roll_type=remainders" 
+          <a href="{% url 'roll_combination_detail' rollbatch_id=rollbatch_id %}?roll_type=remainders" 
               class="nav-link {% if roll_type == 'remainders' %}active{% endif %}" 
               id="remainders-tab" role="tab" aria-controls="remainders" aria-selected="false">
             {% trans "Remainders" %}
@@ -43,7 +43,7 @@
     </div>
     <div class="tab-content" id="myTabContent">
       <div class="clients-header">
-        <span class="operation-text">{{ color }} - {{ fabric }} - {{ supplier }}</span>
+        <span class="operation-text">{{ color }} {{ fabric }} {{ width }}м от {{ supplier }}</span>
       </div>
     </div>
     <div class="table-responsive">
