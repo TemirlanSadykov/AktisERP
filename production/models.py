@@ -243,10 +243,12 @@ class SizeQuantity(CompanyAwareModel):
     factual = models.IntegerField(verbose_name='Факт', null=True, blank=True)
     checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
     packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
+    shipped = models.IntegerField(verbose_name='Отправлено', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
     fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
     production_complete = models.BooleanField(default=False, verbose_name='Производство завершено')
+    shipment_complete = models.BooleanField(default=False, verbose_name='Отправка завершено')
     
     def __str__(self):
         return f"{self.model} {self.color} {self.fabrics} {self.size}"
@@ -283,10 +285,12 @@ class Order(CompanyAwareModel):
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
+    SHIPPED = 3
     TYPE_CHOICES = [
         (NEW, 'Новый'),
         (IN_PROGRESS, 'В процессе'),
         (COMPLETED, 'Завершен'),
+        (SHIPPED, 'Отправлен'),
     ]
     status = models.IntegerField(choices=TYPE_CHOICES, default=NEW, verbose_name='Статус')
     quantity = models.IntegerField(verbose_name='Количество', default=0)

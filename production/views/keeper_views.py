@@ -134,7 +134,7 @@ class OrderDetailKeeperView(DetailView):
 @method_decorator([login_required, keeper_required], name='dispatch')
 class BomDetailView(DetailView):
     model = SizeQuantity
-    template_name = 'keeper/orders/detail.html'
+    template_name = 'keeper/orders/bom.html'
     context_object_name = 'size_quantity'
 
     def get_context_data(self, **kwargs):
@@ -1117,3 +1117,60 @@ class ItemUnArchiveView(UpdateView):
         item.is_archived = False
         item.save()
         return HttpResponseRedirect(self.success_url)
+    
+@login_required
+@keeper_required
+@require_POST
+def shipment_complete(request):
+    try:
+        data = json.loads(request.body)
+        sq_id = data.get('size_quantity_id')
+        quantity = data.get('quantity')
+
+        if not sq_id or quantity is None:
+            return JsonResponse({'success': False, 'message': 'Missing required fields.'})
+
+        # Get the SizeQuantity object
+        sq_obj = SizeQuantity.objects.get(pk=sq_id)
+        ship_quantity = Decimal(str(quantity))
+
+        # Get the Stock record for this SizeQuantity (assumes 1:1 mapping)
+        content_type = ContentType.objects.get_for_model(sq_obj)
+        stock = Stock.objects.filter(
+            content_type=content_type,
+            object_id=sq_obj.pk,
+            type=Stock.FINSHED_GOODS,
+            is_archived=False
+        ).first()
+
+        if not stock:
+            return JsonResponse({'success': False, 'message': 'No stock available for this item.'})
+
+        if stock.quantity < ship_quantity:
+            return JsonResponse({'success': False, 'message': 'Not enough stock to ship.'})
+
+        # Subtract the quantity
+        stock.quantity -= ship_quantity
+        stock.save()
+
+        # Record StockMovement
+        StockMovement.objects.create(
+            stock=stock,
+            movement_type='OUT',
+            quantity=ship_quantity,
+            from_warehouse=stock.warehouse,
+            to_warehouse=None,
+            note="Shipment completed"
+        )
+
+        # Update shipment status and shipped count
+        sq_obj.shipped = ship_quantity
+        sq_obj.shipment_complete = True
+        sq_obj.save()
+
+        return JsonResponse({'success': True})
+
+    except SizeQuantity.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

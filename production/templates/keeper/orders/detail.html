@@ -63,48 +63,86 @@
       </div>
     </div>
   </div>
-  <!-- BOM per SizeQuantity -->
+  <!-- Shipment Table -->
   <div class="container maincontr mt-4">
-    <h3>{% trans "Таблица Норм Расходов" %}</h3>
-  
-    {% for sq in size_quantities %}
-      <h4>
-        {{ sq.color.name }} {{ sq.fabrics.name }} {{ sq.size }}
-      </h4>
-      <div class="table-responsive mb-4">
-        <table class="table table-bordered">
-          <thead>
+    <h3>{% trans "Shipment Table" %}</h3>
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>{% trans "Color" %}</th>
+            <th>{% trans "Fabric" %}</th>
+            <th>{% trans "Size" %}</th>
+            <th>{% trans "Packed" %}</th>
+            <th>{% trans "Shipped" %}</th>
+            <th>{% trans "Remaining" %}</th>
+            <th>{% trans "Action" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sq in size_quantities %}
+            {% with packed=sq.packed|default:0 shipped=sq.shipped|default:0 %}
             <tr>
-              <th>{% trans "Category" %}</th>
-              <th>{% trans "Item" %}</th>
-              <th>{% trans "Per‑Piece Qty" %}</th>
-              <th>{% trans "Produced" %}</th>
-              <th>{% trans "Total Used" %}</th>
+              <td>{{ sq.color.name }}</td>
+              <td>{{ sq.fabrics.name }}</td>
+              <td>{{ sq.size }}</td>
+              <td>{{ packed }}</td>
+              <td>{{ shipped }}</td>
+              <td>{{ packed|subtract:shipped }}</td>
+              <td>
+                {% if sq.shipment_complete %}
+                  <button class="btn btn-success btn-sm" style="margin-bottom: 0;" disabled>{% trans "Shipped" %}</button>
+                {% else %}
+                  <form method="post" action="{% url 'shipment_complete' %}">
+                    {% csrf_token %}
+                    <button
+                      class="btn btn-success btn-sm"
+                      style="margin-bottom: 0;"
+                      onclick="submitShipment({{ sq.id }}, {{ packed|subtract:shipped }})"
+                      type="button"
+                    >
+                      {% trans "Ship" %}
+                    </button>                  
+                  </form>
+                {% endif %}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {% for bom in sq.bill_of_materials.all %}
-              <tr>
-                <td>{{ bom.item.category.name }}</td>
-                <td>{{ bom.item.name }}</td>
-                <td>{{ bom.quantity }}</td>
-                <td>{{ sq.quantity|default:0 }}</td>
-                <td>
-                  {{ bom.quantity|multiply:sq.quantity|floatformat:2 }}
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5" class="text-center text-muted">
-                  {% trans "No materials defined." %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endfor %}
-  </div>  
+            {% endwith %}
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted">{% trans "No size quantities available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
+<script>
+  function submitShipment(sqId, quantity) {
+    fetch("{% url 'shipment_complete' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({
+        size_quantity_id: sqId,
+        quantity: quantity
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload(); // Reload to show updated status
+      } else {
+        alert(data.message || "Shipment failed.");
+      }
+    })
+    .catch(error => {
+      alert("Error: " + error);
+    });
+  }
+</script>
 
 {% endblock %}
