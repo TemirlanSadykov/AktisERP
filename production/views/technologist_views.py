@@ -767,8 +767,11 @@ class OrderUpdateView(UpdateView):
         except ValidationError as e:
             form.add_error(None, e.message)
             return self.form_invalid(form)
-        return redirect('order_detail', pk=self.object.pk)
-
+        first_sq = self.object.size_quantities.first()
+        if not first_sq:
+            # fallback if somehow none were created
+            return redirect('order_detail', pk=self.object.pk)
+        return redirect('bom_create', pk=first_sq.pk)
     def handle_size_quantities_update(self, order, post_data):
         """
         Process the dynamic table for editing:
@@ -2086,60 +2089,76 @@ class FabricsDeleteView(DeleteView):
 @technologist_required
 def bom_create(request, pk):
     size_qty = get_object_or_404(SizeQuantity, pk=pk)
-    order    = size_qty.orders.first()
+    order = size_qty.orders.first()
 
-    # grab all of this order's SQs (so we know which is “next” or “previous”)
-    all_sqs = list(
-        order.size_quantities
-             .all()
-             .order_by('id')
-    )
+    # All size quantities for navigation
+    all_sqs = list(order.size_quantities.all().order_by('id'))
     idx = all_sqs.index(size_qty)
 
     if request.method == 'POST':
-        # delete old
+        # Clear previous BOMs
         size_qty.bill_of_materials.all().delete()
 
-        # recreate from POST
         row = 0
         while f'row-{row}_item' in request.POST:
-            item_id  = request.POST[f'row-{row}_item']
-            qty       = request.POST[f'row-{row}_quantity']
+            item_id = request.POST[f'row-{row}_item']
+            qty = request.POST[f'row-{row}_quantity']
             if item_id and qty:
                 item = get_object_or_404(Item, pk=item_id)
+                quantity = Decimal(qty)
+
+                # Create BOM entry
                 BillOfMaterials.objects.create(
                     sizequantity=size_qty,
                     item=item,
-                    quantity=Decimal(qty)
+                    quantity=quantity
                 )
+
+                # Ensure stock exists for this item as RAW_MATERIALS
+                content_type = ContentType.objects.get_for_model(item)
+                exists = Stock.objects.filter(
+                    content_type=content_type,
+                    object_id=item.pk,
+                    type=Stock.RAW_MATERIALS,
+                    is_archived=False
+                ).exists()
+
+                if not exists:
+                    default_warehouse = Warehouse.objects.filter(is_archived=False).first()
+                    Stock.objects.create(
+                        content_type=content_type,
+                        object_id=item.pk,
+                        quantity=0,
+                        warehouse=default_warehouse,
+                        is_archived=False,
+                        type=Stock.RAW_MATERIALS
+                    )
+
             row += 1
 
-        # next SQ?
+        # Redirect to next SQ or back to order
         if idx + 1 < len(all_sqs):
-            return redirect('bom_create', pk=all_sqs[idx+1].pk)
+            return redirect('bom_create', pk=all_sqs[idx + 1].pk)
 
-        # done
         return redirect('order_detail', pk=order.pk)
 
-    # GET: load categories & items
-    categories    = Category.objects.filter(is_archived=False).order_by('name')
-    items         = Item.objects.filter(is_archived=False).order_by('name')
-    items_by_cat  = defaultdict(list)
+    # GET: Load categories and items
+    categories = Category.objects.filter(is_archived=False).order_by('name')
+    items = Item.objects.filter(is_archived=False).order_by('name')
+    items_by_cat = defaultdict(list)
     for it in items:
         items_by_cat[it.category_id].append(it)
 
-    # primary BOM queryset
     boms_qs = size_qty.bill_of_materials.all()
-    # if empty and there *is* a previous SQ, fall back to its BOMs
     if not boms_qs.exists() and idx > 0:
-        boms_qs = all_sqs[idx-1].bill_of_materials.all()
+        boms_qs = all_sqs[idx - 1].bill_of_materials.all()
 
     return render(request, 'technologist/models/bom_create.html', {
-        'sizequantity':      size_qty,
-        'categories':        categories,
+        'sizequantity': size_qty,
+        'categories': categories,
         'items_by_category': dict(items_by_cat),
-        'boms':              boms_qs,           # <-- keep as a QuerySet!
-        'sidebar_type':      'technology',
+        'boms': boms_qs,
+        'sidebar_type': 'technology',
     })
 
 @require_POST

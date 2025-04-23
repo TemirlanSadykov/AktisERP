@@ -13,6 +13,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.db.models import Count
+from decimal import Decimal
 
 from ..decorators import packer_required
 from ..forms import *
@@ -356,47 +357,73 @@ def update_packed_quantity_manually(request):
 @require_POST
 def complete_production(request):
     try:
-        # Load the JSON payload.
         data = json.loads(request.body)
         sq_id = data.get('size_quantity_id')
         if not sq_id:
             return JsonResponse({'success': False, 'message': 'Missing size_quantity_id.'})
         
-        # Look up the SizeQuantity record.
         sq_obj = SizeQuantity.objects.get(pk=sq_id)
-        
-        # Update the production_complete flag.
         sq_obj.production_complete = True
         sq_obj.save()
-        
-        # Prepare values for Stock creation.
+
+        packed_quantity = sq_obj.packed or 0
+        packed_quantity = Decimal(packed_quantity)
+
+        # Get warehouse
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+        if not warehouse:
+            return JsonResponse({'success': False, 'message': 'No available warehouse.'})
+
+        # Create finished goods stock
         content_type = ContentType.objects.get_for_model(sq_obj)
-        warehouse = Warehouse.objects.filter(is_archived=False).first()  # Use the first available warehouse.
-        quantity = sq_obj.packed if sq_obj.packed is not None else 0
-        
-        # Create a new Stock record for this SizeQuantity.
-        # Here we mark the stock as finished goods.
         stock = Stock.objects.create(
             content_type=content_type,
             object_id=sq_obj.pk,
-            quantity=quantity,
+            quantity=packed_quantity,
             warehouse=warehouse,
             is_archived=False,
             type=Stock.FINSHED_GOODS
         )
-        
-        # Create an incoming StockMovement for the new stock record.
-        stock_movement = StockMovement.objects.create(
+
+        StockMovement.objects.create(
             stock=stock,
             movement_type='IN',
-            quantity=quantity,
+            quantity=packed_quantity,
             from_warehouse=None,
             to_warehouse=warehouse,
             note="Production complete"
         )
-        
+
+        # Subtract raw materials used in BOM
+        for bom in sq_obj.bill_of_materials.select_related('item').all():
+            total_needed = bom.quantity * packed_quantity
+
+            # Find raw material stock
+            raw_stock = Stock.objects.filter(
+                content_type=ContentType.objects.get_for_model(bom.item),
+                object_id=bom.item.pk,
+                type=Stock.RAW_MATERIALS,
+                warehouse=warehouse,
+                is_archived=False
+            ).first()
+
+            if not raw_stock:
+                return JsonResponse({'success': False, 'message': f"No stock for raw material: {bom.item.name}"})
+
+            raw_stock.quantity -= total_needed
+            raw_stock.save()
+
+            StockMovement.objects.create(
+                stock=raw_stock,
+                movement_type='OUT',
+                quantity=total_needed,
+                from_warehouse=warehouse,
+                to_warehouse=None,
+                note=f"Used in production of {sq_obj}"
+            )
+
         return JsonResponse({'success': True})
-    
+
     except SizeQuantity.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
     except Exception as e:

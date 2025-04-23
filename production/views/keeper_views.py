@@ -1146,9 +1146,6 @@ def shipment_complete(request):
         if not stock:
             return JsonResponse({'success': False, 'message': 'No stock available for this item.'})
 
-        if stock.quantity < ship_quantity:
-            return JsonResponse({'success': False, 'message': 'Not enough stock to ship.'})
-
         # Subtract the quantity
         stock.quantity -= ship_quantity
         stock.save()
