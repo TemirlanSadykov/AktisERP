@@ -449,7 +449,6 @@ class AssignedWork(CompanyAwareModel):
     
 class Warehouse(CompanyAwareModel):
     name = models.CharField(max_length=255)
-    address = models.TextField(null=True, blank=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
