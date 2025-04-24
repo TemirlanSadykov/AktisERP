@@ -391,7 +391,7 @@ def complete_production(request):
             quantity=packed_quantity,
             from_warehouse=None,
             to_warehouse=warehouse,
-            note="Production complete"
+            note="Прием готовой продукции"
         )
 
         # Subtract raw materials used in BOM
@@ -419,7 +419,7 @@ def complete_production(request):
                 quantity=total_needed,
                 from_warehouse=warehouse,
                 to_warehouse=None,
-                note=f"Used in production of {sq_obj}"
+                note=f"Расход для производства {sq_obj}"
             )
 
         return JsonResponse({'success': True})

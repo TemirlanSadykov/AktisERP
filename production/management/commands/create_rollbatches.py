@@ -65,7 +65,7 @@ class Command(BaseCommand):
                     quantity=roll.length_t,
                     from_warehouse=None,
                     to_warehouse=default_warehouse,
-                    note=f"Initial stock for roll ID {roll.id}",
+                    note=f"Начальная загрузка рулонов {roll.id}",
                     company=roll.company
                 )
                 count_movements += 1

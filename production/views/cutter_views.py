@@ -517,7 +517,7 @@ class PassportCreateView(CreateView):
                         movement_type='OUT',
                         quantity=used_meters,
                         from_warehouse=stock.warehouse,
-                        note=f"Used in passport {passport.number} for cut {cut.id}"
+                        note=f"Использован для паспорта {passport.number} для кроя {cut.id}"
                     )
 
         return redirect(self.get_success_url())

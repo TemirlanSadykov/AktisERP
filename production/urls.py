@@ -220,6 +220,7 @@ urlpatterns = [
     path('keeper/suppliers/<int:pk>/unarchive/', SupplierUnArchiveView.as_view(), name='supplier_unarchive'),
 
     path('keeper/stocks/', StockListView.as_view(), name='stock_list'),
+    path('keeper/stocks/stock-movement', StockMovementListView.as_view(), name='stock_movement'),
     path('keeper/stocks/create/', stock_bulk_create, name='stock_create'),
     path('keeper/stocks/<int:pk>/', StockDetailView.as_view(), name='stock_detail'),
     path('keeper/stocks/<int:pk>/edit/', StockUpdateView.as_view(), name='stock_edit'),

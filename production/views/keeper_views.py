@@ -513,7 +513,7 @@ class RollBulkCreateView(CreateView):
                 stock=stock, movement_type="IN",
                 quantity=metres_in,
                 from_warehouse=None, to_warehouse=warehouse,
-                note="Bulk roll intake",
+                note="Прием рулонов",
             )
 
         # let CBV chain finish up
@@ -650,7 +650,7 @@ def stock_bulk_create(request):
                     quantity=qty,
                     from_warehouse=None,
                     to_warehouse=warehouse,
-                    note='Bulk create',
+                    note='Прием сырья',
                 )
         row += 1
 
@@ -1157,7 +1157,7 @@ def shipment_complete(request):
             quantity=ship_quantity,
             from_warehouse=stock.warehouse,
             to_warehouse=None,
-            note="Shipment completed"
+            note="Отправка"
         )
 
         # Update shipment status and shipped count
@@ -1171,3 +1171,22 @@ def shipment_complete(request):
         return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockMovementListView(ListView):
+    model = StockMovement
+    template_name = 'keeper/stocks/stock_movement.html'
+    context_object_name = 'movements'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (
+            StockMovement.objects
+            .select_related('stock__content_type', 'from_warehouse', 'to_warehouse')
+            .order_by('-created_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
