@@ -77,6 +77,7 @@ urlpatterns = [
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/update_passport_quantity/', update_passport_quantity, name='update_passport_quantity'),
+    path('technologist/client/orders/order/<int:pk>/bom/create/', bom_create, name='bom_create'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),
@@ -106,7 +107,6 @@ urlpatterns = [
     path('technologist/models/<int:pk>/archive/', ModelArchiveView.as_view(), name='model_archive'),
     path('technologist/models/<int:pk>/unarchive/', ModelUnArchiveView.as_view(), name='model_unarchive'), 
     path('technologist/models/<int:pk>/delete/', ModelDeleteView.as_view(), name='model_delete'),
-    path('technologist/models/<int:pk>/bom/create/', bom_create, name='bom_create'),
 
     path('technologist/nodes/', NodeListVIew.as_view(), name='node_list'),
     path('technologist/nodes/create/', NodeCreateView.as_view(), name='node_create'),
