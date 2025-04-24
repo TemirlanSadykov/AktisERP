@@ -163,28 +163,14 @@
     max-width: 100%;
 }
 
-@media (max-width: 600px) {
-    .btn {
-        padding: 10px;
-        font-size: 14px;
-    }
-
-    .modal-content {
-        width: 80%;
-    }
-    .maincontr{
-        padding:10px;
-    }
-    .unique-container{
-        padding:10px;
-    }
-    .salaryConta{
-        padding:10px;
-    }
+.container,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-xxl {
+    max-width: none !important;
 }
-
-
-
 
   /* Custom popup styles */
   .custom-popup {
