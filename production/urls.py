@@ -78,6 +78,7 @@ urlpatterns = [
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/update_passport_quantity/', update_passport_quantity, name='update_passport_quantity'),
     path('technologist/client/orders/order/<int:pk>/bom/create/', bom_create, name='bom_create'),
+    path('technologist/client/orders/order/<int:pk>/bom/detail/', OrderBomView.as_view(), name='order_bom'),
 
     path('technologist/operations/', OperationListView.as_view(), name='operation_list'),
     path('technologist/operations/create/', OperationCreateView.as_view(), name='operation_create'),

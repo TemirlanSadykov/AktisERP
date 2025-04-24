@@ -2236,3 +2236,28 @@ class ConsumptionCalculationView(View):
         model_instance.save(update_fields=["consumption_p"])
         
         return JsonResponse({'consumption': consumption})
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OrderBomView(DetailView):
+    model = Order  # switched from SizeQuantity to Order
+    template_name = 'technologist/orders/bom.html'
+    context_object_name = 'order'  # now the object is the order itself
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.object
+
+        # days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # bring in all size‐quantities + their BOM entries
+        context['size_quantities'] = (
+            order.size_quantities
+                 .prefetch_related('bill_of_materials__item__category')
+                 .all()
+        )
+
+        context['sidebar_type'] = 'technology'
+        return context
