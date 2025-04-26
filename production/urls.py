@@ -48,6 +48,9 @@ urlpatterns = [
     path('qc/client/orders/', ClientOrderListQcView.as_view(), name='client_order_list_qc'),
     path('qc/client/orders/<int:pk>/', ClientOrderDetailQcView.as_view(), name='client_order_detail_qc'),
 
+    path('accountant/client/orders/', ClientOrderListAccountantView.as_view(), name='client_order_list_accountant'),
+    path('accountant/client/orders/<int:pk>/', ClientOrderDetailAccountantView.as_view(), name='client_order_detail_accountant'),
+
     path('packer/client/orders/', ClientOrderListPackerView.as_view(), name='client_order_list_packer'),
     path('packer/client/orders/<int:pk>/', ClientOrderDetailPackerView.as_view(), name='client_order_detail_packer'),
 
@@ -279,5 +282,10 @@ urlpatterns = [
     path('packer/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
     path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity_manually, name='update_packed_quantity_manually'),
     path('packer/ajax/orders/complete-production/', complete_production, name='complete_production'),
+
+    path('accountant/manual_cost_page/', manual_cost_page, name='manual_cost_page'),
+    path('accountant/ajax/get-model-sizes/', ajax_get_model_sizes, name='ajax_get_model_sizes'),
+    path('accountant/ajax/get-size-cost-data/<int:size_id>/', ajax_get_size_cost_data, name='ajax_get_size_cost_data'),
+    path('accountant/ajax/save-costs/', save_costs, name='save_costs'),
 
 ]

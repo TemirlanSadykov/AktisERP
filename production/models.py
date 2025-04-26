@@ -107,6 +107,7 @@ class UserProfile(CompanyAwareModel):
     QC = 4
     PACKER = 5
     KEEPER = 6
+    ACCOUNTANT = 7
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -115,6 +116,7 @@ class UserProfile(CompanyAwareModel):
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),
         (KEEPER, 'Кладовщик'),
+        (ACCOUNTANT, 'Бухгалтер')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=True, verbose_name='Статус', null=True, blank=True)
@@ -559,3 +561,15 @@ class BillOfMaterials(CompanyAwareModel):
 
     def __str__(self):
         return f"{self.sizequantity.model.name} uses {self.quantity} units of {self.item.name}"
+    
+class CostRecord(CompanyAwareModel):
+    # Generic relation
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    note = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Cost for {self.content_object}: {self.cost}"
