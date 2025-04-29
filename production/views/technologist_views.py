@@ -2114,12 +2114,17 @@ def bom_create(request, pk):
                     quantity=quantity
                 )
 
+                # Determine stock type:
+                stock_type = Stock.RAW_MATERIALS
+                if item.category and item.category.is_fabric:
+                    stock_type = Stock.ROLLS
+
                 # Ensure stock exists for this item as RAW_MATERIALS
                 content_type = ContentType.objects.get_for_model(item)
                 exists = Stock.objects.filter(
                     content_type=content_type,
                     object_id=item.pk,
-                    type=Stock.RAW_MATERIALS,
+                    type=stock_type,
                     is_archived=False
                 ).exists()
 
@@ -2131,7 +2136,7 @@ def bom_create(request, pk):
                         quantity=0,
                         warehouse=default_warehouse,
                         is_archived=False,
-                        type=Stock.RAW_MATERIALS
+                        type=stock_type
                     )
 
             row += 1
