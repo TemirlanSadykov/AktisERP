@@ -464,9 +464,12 @@ class RollBulkCreateView(CreateView):
         warehouse = Warehouse.objects.filter(is_archived=False).first()
 
         # 1. RollBatch
-        batch, _ = RollBatch.objects.get_or_create(
+        batch, _ = Item.objects.get_or_create(
             color=color, fabric=fabric, supplier=supplier,
             width=width, company=company,
+            defaults={
+                "name": f"{color.name} {fabric.name} {width}м от {supplier.name}",
+            }
         )
 
         # 2. bulk‑create rolls
@@ -496,7 +499,7 @@ class RollBulkCreateView(CreateView):
         Roll.objects.bulk_create(new_rolls)
 
         # 4. Stock row per SKU (RollBatch)
-        ct = ContentType.objects.get_for_model(RollBatch)
+        ct = ContentType.objects.get_for_model(Item)
         stock, _ = Stock.objects.get_or_create(
             content_type=ct, object_id=batch.id,
             type=Stock.ROLLS,

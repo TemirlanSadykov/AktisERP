@@ -2153,12 +2153,19 @@ def bom_create(request, pk):
     if not boms_qs.exists() and idx > 0:
         boms_qs = all_sqs[idx - 1].bill_of_materials.all()
 
+    colors = Color.objects.filter(is_archived=False)
+    fabrics = Fabrics.objects.filter(is_archived=False)
+    suppliers = Supplier.objects.filter(is_archived=False)
+
     return render(request, 'technologist/models/bom_create.html', {
         'sizequantity': size_qty,
         'categories': categories,
         'items_by_category': dict(items_by_cat),
         'boms': boms_qs,
         'sidebar_type': 'technology',
+        'colors': colors,
+        'fabrics': fabrics,
+        'suppliers': suppliers,
     })
 
 @require_POST
@@ -2166,16 +2173,19 @@ def bom_create(request, pk):
 @technologist_required
 def add_category_api(request):
     name = request.POST.get('name', '').strip()
+    is_fabric = request.POST.get('is_fabric') == 'on'
+
     if not name:
         return JsonResponse(
             {'success': False, 'errors': {'name': ['This field is required.']}},
             status=400
         )
-    cat = Category.objects.create(name=name)
+    cat = Category.objects.create(name=name, is_fabric=is_fabric)
     return JsonResponse({
         'success': True,
         'category_id': cat.pk,
-        'category_name': cat.name
+        'category_name': cat.name,
+        'is_fabric': cat.is_fabric
     })
 
 
@@ -2205,6 +2215,34 @@ def add_item_api(request):
         return JsonResponse(data)
     else:
         # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    
+@require_POST
+@login_required
+@technologist_required
+def add_fabric_item_api(request):
+    form = FabricItemForm(request.POST)
+
+    if form.is_valid():
+        fabric_item = form.save(commit=False)  # Don't save yet
+        
+        # Auto-generate name and unit
+        color_name = fabric_item.color.name if fabric_item.color else ''
+        fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
+        supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
+        width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
+
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м от {supplier_name}".strip()
+        fabric_item.unit = "м"
+
+        fabric_item.save()  # Now save
+        
+        return JsonResponse({
+            'success': True,
+            'item_id': fabric_item.pk,
+            'item_name': fabric_item.name,
+        })
+    else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 @method_decorator(login_required, name='dispatch')

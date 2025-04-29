@@ -351,21 +351,42 @@ class Supplier(CompanyAwareModel):
 
     def __str__(self):
         return self.name
-
-class RollBatch(CompanyAwareModel):
-    color = models.ForeignKey(Color, on_delete=models.CASCADE)
-    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE)
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
-    width = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        unique_together = ("color", "fabric", "supplier", "width")
-
+    
+class Category(CompanyAwareModel):
+    name = models.CharField(max_length=255)
+    is_fabric = models.BooleanField(default=False, verbose_name='Is Fabric')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    
     def __str__(self):
-        return f"{self.color.name} {self.fabric.name} {self.width}м от {self.supplier}"
+        return self.name
 
+class Item(CompanyAwareModel):
+    name = models.CharField(max_length=255)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Категория',
+        null=True,
+        blank=True
+    )
+    sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    unit = models.CharField(max_length=50, null=True, blank=True)
+
+    # Roll-specific fields
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
+    fabric = models.ForeignKey(Fabrics, on_delete=models.SET_NULL, null=True, blank=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
+    width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+    
+    def __str__(self):
+        return self.name
+    
 class Roll(CompanyAwareModel):
-    roll_batch = models.ForeignKey(RollBatch, on_delete=models.CASCADE, related_name='rolls', verbose_name='Рулоны', null=True, blank=True)
+    roll_batch = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='rolls', verbose_name='Рулоны', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
     fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
@@ -451,24 +472,6 @@ class AssignedWork(CompanyAwareModel):
     
 class Warehouse(CompanyAwareModel):
     name = models.CharField(max_length=255)
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-    
-    def __str__(self):
-        return self.name
-
-class Category(CompanyAwareModel):
-    name = models.CharField(max_length=255)
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-    
-    def __str__(self):
-        return self.name
-
-class Item(CompanyAwareModel):
-    name = models.CharField(max_length=255)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items', verbose_name='Категория', null=True, blank=True)
-    sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    unit = models.CharField(max_length=50, null=True, blank=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):

@@ -683,6 +683,17 @@ class ItemForm(forms.ModelForm):
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
         }
 
+class FabricItemForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        fields = ['color', 'fabric', 'width', 'supplier', 'category']
+        widgets = {
+            'color': forms.Select(attrs={'class': 'form-control'}),
+            'fabric': forms.Select(attrs={'class': 'form-control'}),
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Width'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+        }
+
 class WarehouseForm(forms.ModelForm):
     class Meta:
         model = Warehouse
@@ -692,9 +703,11 @@ class WarehouseForm(forms.ModelForm):
         }
 
 class CategoryForm(forms.ModelForm):
+    is_fabric = forms.BooleanField(required=False, label='Is Fabric')
+
     class Meta:
         model = Category
-        fields = ['name']
+        fields = ['name', 'is_fabric']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
         }

@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.contenttypes.models import ContentType
 from decimal import Decimal
 
-from production.models import Roll, RollBatch, Stock, StockMovement, Warehouse
+from production.models import Roll, Item as RollBatch, Stock, StockMovement, Warehouse
 from django.db import transaction
 
 class Command(BaseCommand):

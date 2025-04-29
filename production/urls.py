@@ -200,6 +200,7 @@ urlpatterns = [
     path('api/add-equipment/', add_equipment_api, name='add_equipment_api'),
     path('api/add-supplier/', add_supplier_api, name='add_supplier_api'),
     path('api/add-item/', add_item_api, name='add_item_api'),
+    path('api/add-fabric-item/', add_fabric_item_api, name='add_fabric_item_api'),
     path('api/add-warehouse/', add_warehouse_api, name='add_warehouse_api'),
     path('api/add-assortment/', add_assortment_api, name='add_assortment_api'),
 

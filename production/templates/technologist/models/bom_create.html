@@ -156,6 +156,10 @@
             <label for="id_category_name">{% trans "Category Name" %}</label>
             <input type="text" class="form-control" id="id_category_name" name="name" required>
           </div>
+          <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="id_category_is_fabric" name="is_fabric">
+            <label class="form-check-label" for="id_category_is_fabric">{% trans "Is Fabric" %}</label>
+          </div>
         </div>
         <div class="modal-buttons">
           <button type="submit" class="btn save">{% trans "Save" %}</button>
@@ -197,6 +201,57 @@
   </div>
 </div>
 
+<!-- Add New Fabric Item Modal -->
+<div class="modal" data-backdrop="false" id="addFabricItemModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addFabricItemForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Fabric Item" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>{% trans "Color" %}</label>
+            <select class="form-control" id="fabric_color" name="color" required>
+              {% for color in colors %}
+                <option value="{{ color.pk }}">{{ color.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{% trans "Fabric" %}</label>
+            <select class="form-control" id="fabric_fabric" name="fabric" required>
+              {% for fabric in fabrics %}
+                <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{% trans "Width" %}</label>
+            <input type="number" step="0.01" class="form-control" id="fabric_width" name="width" required>
+          </div>
+          <div class="form-group">
+            <label>{% trans "Supplier" %}</label>
+            <select class="form-control" id="fabric_supplier" name="supplier" required>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.pk }}">{{ supplier.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
   // CSRF helper
   function getCookie(name) {
@@ -213,7 +268,7 @@
   // Global caches
   var globalcategories = [
     {% for cat in categories %}
-      { id: "{{ cat.pk }}", name: "{{ cat.name }}" },
+      { id: "{{ cat.pk }}", name: "{{ cat.name }}", is_fabric: {{ cat.is_fabric|yesno:"true,false" }} },
     {% endfor %}
   ];
 
@@ -338,17 +393,30 @@
     document.addEventListener('change', e => {
       if (!e.target.matches('select.item-select')) return;
       if (e.target.value === 'add_new_item') {
-        const m = document.getElementById('additemModal');
-        // remember which <select> triggered it
-        m.dataset.triggerSelect = e.target.name;
-        // clear the fake value
+        const triggerSelectName = e.target.name;
+        const rowIndex = triggerSelectName.split('_')[0].split('-')[1];
+        const categorySelect = document.querySelector(`select[name="row-${rowIndex}_category"]`);
+        const categoryId = categorySelect.value;
+        
+        const catInfo = globalcategories.find(cat => cat.id == categoryId);
+    
+        if (catInfo && catInfo.is_fabric) {
+          const fabricModal = document.getElementById('addFabricItemModal');
+          fabricModal.dataset.triggerSelect = triggerSelectName;
+          fabricModal.classList.add('show');
+          fabricModal.style.display = 'block';
+          fabricModal.removeAttribute('aria-hidden');
+        } else {
+          const normalModal = document.getElementById('additemModal');
+          normalModal.dataset.triggerSelect = triggerSelectName;
+          normalModal.classList.add('show');
+          normalModal.style.display = 'block';
+          normalModal.removeAttribute('aria-hidden');
+        }
+        
         e.target.value = '';
-        // show the bootstrap‐style modal
-        m.classList.add('show');
-        m.style.display = 'block';
-        m.removeAttribute('aria-hidden');
       }
-    });
+    });    
 
     // ADD CATEGORY AJAX
     document.getElementById('addCategoryForm').addEventListener('submit', e => {
@@ -363,7 +431,7 @@
       .then(data=>{
         if (data.success) {
           // update globalcategories & all selects
-          globalcategories.push({id: data.category_id, name: data.category_name});
+          globalcategories.push({id: data.category_id, name: data.category_name, is_fabric: data.is_fabric});
           document.querySelectorAll('select.category-select').forEach(cs=>{
             if (!Array.from(cs.options).some(o=>o.value==data.category_id)) {
               let o = new Option(data.category_name, data.category_id);
@@ -421,7 +489,38 @@
         }
       });
     });
+    // ADD FABRIC ITEM AJAX
+    document.getElementById('addFabricItemForm').addEventListener('submit', e => {
+      e.preventDefault();
+      let f = new FormData(e.target);
 
+      let triggerName = document.getElementById('addFabricItemModal').dataset.triggerSelect;
+      let row = triggerName.split('_')[0].split('-')[1];
+      let cat = document.querySelector(`select[name="row-${row}_category"]`).value;
+      f.append('category', cat);
+
+      fetch("{% url 'add_fabric_item_api' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: f
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          let sel = document.querySelector(`select[name="${triggerName}"]`);
+          let opt = new Option(data.item_name, data.item_id);
+          sel.add(opt);
+          sel.value = data.item_id;
+      
+          let m = document.getElementById('addFabricItemModal');
+          m.classList.remove('show');
+          m.style.display = 'none';
+          m.setAttribute('aria-hidden', 'true');
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });      
+    });
   });
 </script>
 {% endblock %}
