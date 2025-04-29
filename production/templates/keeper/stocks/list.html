@@ -98,9 +98,14 @@
                   </a>
                 {% elif selected_type == '1' %}
                   <!-- Finished Goods -->
-                  <a href="{% url 'bom_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
-                    {% trans "View" %}
-                  </a>
+                  <div class="d-flex" style="gap: 5px;">
+                    <a href="{% url 'bom_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
+                      {% trans "View" %}
+                    </a>
+                    <button class="btn btn-sm btn-success ship-btn" data-sq-id="{{ stock.content_object.pk }}">
+                      {% trans "Ship" %}
+                    </button>
+                  </div>
                 {% else %}
                   <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
                     {% trans "View" %}
@@ -139,4 +144,61 @@
       {% endif %}
     </nav>
   </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // CSRF helper
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + "=")) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  
+    document.querySelectorAll(".ship-btn").forEach(function(button) {
+      button.addEventListener("click", function() {
+        const sqId = this.dataset.sqId;
+        if (!sqId) {
+          alert("Invalid SizeQuantity ID.");
+          return;
+        }
+  
+        if (!confirm("Вы уверены, что хотите отправить это изделие?")) {
+          return;
+        }
+  
+        fetch("{% url 'complete_shipment' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+          },
+          body: JSON.stringify({
+            size_quantity_id: sqId
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert("Shipment completed successfully!");
+            window.location.reload();
+          } else {
+            alert("Error: " + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert("An error occurred while shipping.");
+        });
+      });
+    });
+  });
+</script>
 {% endblock %}

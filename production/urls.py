@@ -273,6 +273,8 @@ urlpatterns = [
     path('keeper/stocks/rolls/combinations/<int:rollbatch_id>/', RollsByCombinationListView.as_view(), name='roll_combination_detail'),
     path('keeper/stocks/rolls/create_bulk/', RollBulkCreateView.as_view(), name='roll_bulk_create'),
 
+    path('keeper/stocks/orders/complete-shipment/', complete_shipment, name='complete_shipment'),
+
     path('ajax/get-rolls/', ajax_get_rolls, name='ajax_get_rolls'),
 
     path('qc/manual_check_page/', manual_check_page, name='manual_check_page'),

@@ -1193,3 +1193,66 @@ class StockMovementListView(ListView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
+    
+@login_required
+@keeper_required
+@require_POST
+def complete_shipment(request):
+    try:
+        data = json.loads(request.body)
+        sq_id = data.get('size_quantity_id')
+        if not sq_id:
+            return JsonResponse({'success': False, 'message': 'Missing size_quantity_id.'})
+
+        sq_obj = SizeQuantity.objects.get(pk=sq_id)
+
+        # Get warehouse
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+        if not warehouse:
+            return JsonResponse({'success': False, 'message': 'No available warehouse.'})
+
+        content_type = ContentType.objects.get_for_model(sq_obj)
+
+        # Find the finished goods stock
+        stock = Stock.objects.filter(
+            content_type=content_type,
+            object_id=sq_obj.pk,
+            warehouse=warehouse,
+            type=Stock.FINSHED_GOODS,
+            is_archived=False
+        ).first()
+
+        if not stock:
+            return JsonResponse({'success': False, 'message': 'Finished goods stock not found.'})
+
+        stock_quantity = stock.quantity or Decimal(0)
+
+        if stock_quantity <= 0:
+            return JsonResponse({'success': False, 'message': 'Nothing to ship. Stock quantity is zero.'})
+
+        with transaction.atomic():
+            # Reduce the stock to zero
+            stock.quantity = 0
+            stock.save(update_fields=['quantity'])
+
+            # Create stock movement OUT
+            StockMovement.objects.create(
+                stock=stock,
+                movement_type='OUT',
+                quantity=stock_quantity,
+                from_warehouse=warehouse,
+                to_warehouse=None,
+                note="Отправка"
+            )
+
+            # Update SizeQuantity
+            sq_obj.shipped = stock_quantity
+            sq_obj.shipment_complete = True
+            sq_obj.save(update_fields=['shipped', 'shipment_complete'])
+
+        return JsonResponse({'success': True})
+
+    except SizeQuantity.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
