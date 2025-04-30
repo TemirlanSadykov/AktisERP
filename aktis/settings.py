@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY_PREDEV')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -97,12 +97,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('LUMA_LIGHT_PREDEV_DB_ENGINE'),
-        'NAME': config('LUMA_LIGHT_PREDEV_DB_NAME'),
-        'USER': config('LUMA_LIGHT_PREDEV_DB_USER'),
-        'PASSWORD': config('LUMA_LIGHT_PREDEV_DB_PASSWORD'),
-        'HOST': config('LUMA_LIGHT_PREDEV_DB_HOST'),
-        'PORT': config('LUMA_LIGHT_PREDEV_DB_PORT'),
+        'ENGINE': config('LUMA_LIGHT_PROD_DB_ENGINE'),
+        'NAME': config('LUMA_LIGHT_PROD_DB_NAME'),
+        'USER': config('LUMA_LIGHT_PROD_DB_USER'),
+        'PASSWORD': config('LUMA_LIGHT_PROD_DB_PASSWORD'),
+        'HOST': config('LUMA_LIGHT_PROD_DB_HOST'),
+        'PORT': config('LUMA_LIGHT_PROD_DB_PORT'),
     }
 }
 
