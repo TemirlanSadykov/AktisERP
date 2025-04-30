@@ -465,6 +465,7 @@ class PassportCreateView(CreateView):
                 passport=passport,
                 size_quantity=cut_size.size_quantity,
                 quantity=layers,
+                factual=layers,
                 extra=cut_size.extra
             )
             passport_size.sku = str(passport_size.id).zfill(12)

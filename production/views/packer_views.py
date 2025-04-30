@@ -271,7 +271,7 @@ def get_order_table_data_packer(request, order_id):
             # Build the pivot mapping: key → {size: required quantity}
             if key not in pivot_data:
                 pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
+            pivot_data[key][sq.size] = sq.factual
             
             # Build the mapping for SizeQuantity IDs
             if key not in sq_ids:

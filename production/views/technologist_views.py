@@ -628,6 +628,7 @@ class OrderCreateView(CreateView):
                     size_qty = SizeQuantity.objects.create(
                         size=size,
                         quantity=quantity_int,
+                        factual=quantity_int,
                         model=model,
                         sku=sku,  # Save SKU along with quantity.
                         color=color,
@@ -825,6 +826,7 @@ class OrderUpdateView(UpdateView):
                         try:
                             sq_obj = SizeQuantity.objects.get(pk=cell_sq_id)
                             sq_obj.quantity = quantity_val
+                            sq_obj.factual = quantity_val
                             sq_obj.size = size  # Update header if changed.
                             sq_obj.color = color
                             sq_obj.fabrics = fabric
@@ -835,6 +837,7 @@ class OrderUpdateView(UpdateView):
                             sq_obj = SizeQuantity.objects.create(
                                 size=size,
                                 quantity=quantity_val,
+                                factual=quantity_val,
                                 sku=sku_val,
                                 color=color,
                                 fabrics=fabric
@@ -1091,35 +1094,47 @@ def update_passport_quantity(request):
     """
     Updates the factual quantity for a given PassportSize and updates all 
     AssignedWork records related to that PassportSize.
+    Adjusts the corresponding SizeQuantity.factual based on the delta.
     """
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({"status": "error", "message": "Invalid JSON."}, status=400)
-    
+
     passport_size_id = data.get("passport_size_id")
     new_quantity = data.get("new_quantity")
-    
+
     if passport_size_id is None or new_quantity is None:
         return JsonResponse({"status": "error", "message": "Missing parameters."}, status=400)
-    
+
     try:
         new_quantity = int(new_quantity)
     except ValueError:
         return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
-    
+
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
     except PassportSize.DoesNotExist:
         return JsonResponse({"status": "error", "message": "PassportSize not found."}, status=404)
-    
-    # Update the factual field of PassportSize.
+
+    # Calculate the delta
+    old_factual = passport_size.factual or 0
+    delta = new_quantity - old_factual
+
+    # Update PassportSize factual
     passport_size.factual = new_quantity
     passport_size.save()
-    
-    # Update all AssignedWork records related to this PassportSize.
+
+    # Adjust SizeQuantity factual
+    size_qty = passport_size.size_quantity
+    print(size_qty.factual)
+    if size_qty:
+        size_qty.factual = (size_qty.factual or 0) + delta
+        size_qty.save()
+    print(size_qty.factual)
+    # Update all AssignedWork records
     AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
-    
+
     return JsonResponse({"status": "success"})
 
 @login_required

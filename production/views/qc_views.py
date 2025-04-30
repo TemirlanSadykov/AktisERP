@@ -344,7 +344,7 @@ def get_order_table_data_qc(request, order_id):
             key = f"{sq.color} {sq.fabrics}"
             if key not in pivot_data:
                 pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
+            pivot_data[key][sq.size] = sq.factual
         
         # Sort sizes (if numeric, sort by integer value)
         try:
