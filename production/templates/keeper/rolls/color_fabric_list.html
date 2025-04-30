@@ -14,25 +14,48 @@
         <li class="nav-item dropdown">
           <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+            <button type="submit" class="btn btn-primary">{% trans "Logout" %}</button>
           </form>
         </li>
       </ul>
     </div>
   </nav>
+
   <div class="container clients-wrapper maincontr">
-    <div class="clients-header">
-      <span class="operation-text">{% trans "Rolls" %}</span>
-      <a href="{% url 'roll_bulk_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+    <!-- Supplier Tabs -->
+    <div class="custom-nav-tabs-scrollable">
+      <ul class="custom-nav nav nav-tabs" role="tablist">
+        <li class="nav-item">
+          <a href="{% url 'roll_combinations' %}" class="nav-link {% if not selected_supplier %}active{% endif %}" id="all-tab" role="tab" aria-controls="all" aria-selected="false">
+            {% trans "All" %}
+          </a>
+        </li>
+        {% for sup in suppliers %}
+          <li class="nav-item">
+            <a href="{% url 'roll_combinations' %}?supplier={{ sup.supplier }}" class="nav-link {% if selected_supplier|stringformat:'s' == sup.supplier|stringformat:'s' %}active{% endif %}" role="tab" aria-controls="all" aria-selected="false">
+              {{ sup.supplier_name }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>    
+    <div class="tab-content" id="myTabContent">
+      <div class="clients-header">
+        <span class="operation-text">{% trans "Rolls" %}</span>
+        <a href="{% url 'roll_bulk_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+      </div>
     </div>
+
     <div class="table-responsive">
       <table class="table table-striped">
         <thead>
           <tr>
             <th>#</th>
+            <th>{% trans "Supplier" %}</th>
             <th>{% trans "Color" %}</th>
             <th>{% trans "Fabric" %}</th>
-            <th>{% trans "Supplier" %}</th>
+            <th>{% trans "Whole" %}</th>
+            <th>{% trans "Remainder" %}</th>
             <th>{% trans "Actions" %}</th>
           </tr>
         </thead>
@@ -40,9 +63,11 @@
           {% for combo in combinations %}
             <tr>
               <td>{{ forloop.counter }}</td>
+              <td>{{ combo.supplier_name }}</td>
               <td>{{ combo.color_name }}</td>
               <td>{{ combo.fabric_name }}</td>
-              <td>{{ combo.supplier_name }}</td>
+              <td>{{ combo.whole_count }}</td>
+              <td>{{ combo.remainder_count }}</td>
               <td>
                 <a href="{% url 'roll_combination_detail' color_id=combo.color fabric_id=combo.fabric supplier_id=combo.supplier %}" class="btn btn-sm btn-primary">
                   {% trans "View" %}
@@ -51,7 +76,7 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="5">{% trans "No combinations available." %}</td>
+              <td colspan="6">{% trans "No combinations available." %}</td>
             </tr>
           {% endfor %}
         </tbody>

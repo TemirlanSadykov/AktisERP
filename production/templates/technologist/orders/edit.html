@@ -35,15 +35,23 @@
             <p>{{ error }}</p>
           {% endfor %}
         </div>
-      {% endif %}
+        {% endif %}
         <form method="post">
           {% csrf_token %}
           <div class="form-group">
             <label for="id_model">{% trans "Model:" %}</label>
             {{ form.model }}
           </div>
-      
-          <h3>{% trans "Size Quantities" %}</h3>
+          
+          <div class="row" style="margin-bottom: 10px;">
+            <div class="col-md-6">
+              <h3>{% trans "Size Quantities" %}</h3>
+            </div>
+            <div class="col-md-6 text-center">
+              <button id="skuButton" type="button" class="btn btn-secondary btn-sm ml-2">{% trans "SKU" %}</button>
+            </div>
+          </div>
+          
           <table id="sizeQuantityTable" class="table table-bordered">
             <thead>
               <tr>
@@ -91,6 +99,10 @@
                       <input type="number" name="cell_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" class="form-control" placeholder="{% trans 'Enter Quantity' %}" value="{{ cell.quantity }}">
                       {% if cell.id %}
                         <input type="hidden" name="cell_id_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" value="{{ cell.id }}">
+                      {% endif %}
+                      {# If a SKU value exists, render its input initially. #}
+                      {% if cell.sku %}
+                        <input type="text" name="sku_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" class="form-control mt-1 sku-input" placeholder="{% trans 'Enter SKU' %}" value="{{ cell.sku }}">
                       {% endif %}
                     </td>
                   {% endfor %}
@@ -195,9 +207,7 @@
 <!-- ======================== -->
 <!-- JavaScript Section -->
 <script>
-// ===========================
 // Global arrays for colors and fabrics.
-// These arrays are populated from the server context.
 var globalColors = [
   {% for color in colors %}
     { id: "{{ color.pk }}", name: "{{ color.name }}" },
@@ -208,6 +218,9 @@ var globalFabrics = [
     { id: "{{ fabric.pk }}", name: "{{ fabric.name }}" },
   {% endfor %}
 ];
+
+// Global flag for SKU inputs. (For update, you may choose to default this to true if any SKU exists.)
+var skuAdded = false;
 
 // Helper function to get CSRF token from cookies.
 function getCookie(name) {
@@ -260,7 +273,7 @@ function hideModal(modalEl) {
   }
 }
 
-// Update all color/fabric selects with a new option.
+// Update all color and fabric selects.
 function updateAllColorSelects(newOptionValue, newOptionText) {
   document.querySelectorAll('select.color-select').forEach(function(select) {
     if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
@@ -271,7 +284,6 @@ function updateAllColorSelects(newOptionValue, newOptionText) {
     }
   });
 }
-
 function updateAllFabricSelects(newOptionValue, newOptionText) {
   document.querySelectorAll('select.fabric-select').forEach(function(select) {
     if (!Array.from(select.options).some(opt => opt.value === newOptionValue)) {
@@ -289,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function(){
   // --------------------------
   let rowCount = {{ row_count }};  // pre-populated rows from context
   let colCount = {{ col_count }};  // pre-populated columns from context
-
+  
   function updateRowControlColspan() {
     const rowControlCell = document.getElementById("rowControlCell");
     rowControlCell.colSpan = 1 + colCount;
@@ -372,7 +384,7 @@ document.addEventListener("DOMContentLoaded", function(){
   document.getElementById("addColumnControl").addEventListener("click", addColumn);
   document.getElementById("deleteColumnControl").addEventListener("click", deleteColumn);
 
-  // Delegate events for color/fabric selects
+  // Delegate events for color/fabric selects.
   document.addEventListener('change', function(e) {
     if(e.target.matches('select.color-select')) {
       if(e.target.value === 'add_new_color') {
@@ -446,6 +458,36 @@ document.addEventListener("DOMContentLoaded", function(){
     .catch(error => {
       alert("An error occurred: " + error);
     });
+  });
+
+  // Toggle SKU Button functionality.
+  document.getElementById("skuButton").addEventListener("click", function() {
+    const tbodyRows = document.querySelectorAll("#sizeQuantityTable tbody tr");
+    if (!skuAdded) {
+      skuAdded = true;
+      tbodyRows.forEach(function(row) {
+        const rowIndex = row.getAttribute("data-row");
+        // Get all cells excluding the first (color/fabric) and the last (controls)
+        const cells = row.querySelectorAll("td");
+        for (let i = 1; i < cells.length - 1; i++) {
+          if (!cells[i].querySelector("input.sku-input")) {
+            const skuInput = document.createElement("input");
+            skuInput.type = "text";
+            skuInput.name = `sku_${rowIndex}_${i-1}`;
+            skuInput.classList.add("form-control", "mt-1", "sku-input");
+            skuInput.placeholder = "{% trans 'Enter SKU' %}";
+            cells[i].appendChild(skuInput);
+          }
+        }
+      });
+    } else {
+      skuAdded = false;
+      tbodyRows.forEach(function(row) {
+        row.querySelectorAll("input.sku-input").forEach(function(input) {
+          input.remove();
+        });
+      });
+    }
   });
 });
 </script>

@@ -146,33 +146,49 @@
 
   <div class="container-fluid bottomContainer">
     <div class="row">
-      <div class="col-md-6" style="margin:auto;">
+      <div class="col-md-6">
         <h3>{% trans "Associated Cuts" %}</h3>
       </div>
       <div class="col-md-6 text-center">
         <a href="{% url 'cut_create' order.pk %}" class="btn btn-primary">{% trans "Create New Cut" %}</a>
       </div>
     </div><br>
-    {% if associated_cuts %}
-      <div class="list-group">
-        {% for cut in associated_cuts %}
-            <a href="{% url 'cut_detail' cut.pk %}"
-               class="list-group-item list-group-item-action cut-link" 
-               style="border: 1px solid #ced4da;"
-               data-bs-target="#collapse{{ cut.id }}"
-               aria-expanded="false" 
-               aria-controls="collapse{{ cut.id }}">
-              {% trans "Cut" %}: {{ cut.number }}, {% trans "Date:" %} {{ cut.date|date:"Y-m-d" }}
-            </a>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action" style="border: 1px solid #ced4da;">
-          {% trans "No associated cuts." %}
-        </a>
-      </div>
-    {% endif %}
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{% trans "Cut Number" %}</th>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "Colors" %}</th>
+            <th>{% trans "Sizes" %}</th>
+            <th>{% trans "Layers" %}</th>
+            <th>{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cut in cut_details %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ cut.cut_number }}</td>
+              <td>{{ cut.cut_date|date:"Y-m-d" }}</td>
+              <td>{{ cut.aggregated_colors }}</td>
+              <td>{{ cut.cut_sizes|join:", " }}</td>
+              <td>{{ cut.total_layers }}</td>
+              <td>
+                <a href="{% url 'cut_detail' cut.cut_id %}" class="btn btn-sm btn-primary">
+                  {% trans "View" %}
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7">{% trans "No associated cuts." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>    
   </div>
 </div>
 {% endblock %}

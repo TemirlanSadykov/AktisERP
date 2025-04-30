@@ -475,7 +475,6 @@
                     <option value="Order">{% trans 'Orders' %}</option>
                     <option value="Error">{% trans 'Error' %}</option>
                     <option value="Passport">{% trans 'Passports' %}</option>
-                    <option value="ProductionPiece">{% trans 'Production Pieces' %}</option>
                 </select>
                 <div id="secondarySelectorContainer" class="mb-3">
                     <!-- Secondary selector or input will be populated here -->
@@ -1225,8 +1224,7 @@
             
             if (modelName) {
                 // Check if the selected model requires direct ID input
-                if (modelName === 'Passport' || modelName === 'ProductionPiece') {
-                    // Create an input field for Passport and ProductionPiece
+                if (modelName === 'Passport') {
                     const input = document.createElement('input');
                     input.id = 'recordInput';
                     input.placeholder = 'Enter ID';

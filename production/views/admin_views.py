@@ -1,10 +1,9 @@
 from datetime import timedelta, datetime
 from decimal import Decimal
 import json
-import openpyxl
-import pandas as pd
 from urllib.parse import urlencode
 from collections import defaultdict
+import openpyxl # type: ignore
 
 from django.conf import settings
 from django.contrib import messages
@@ -181,15 +180,13 @@ def order_details_api(request, order_id):
       - total ordered (from SizeQuantity.quantity)
       - cut (aggregated from Passport.layers for passports linked to that SizeQuantity)
       - sew (aggregated from Passport.layers for passports that have any AssignedWork)
-      - check (aggregated count of ProductionPiece records in the CHECKED/PACKED stages)
-      - packed (aggregated count of ProductionPiece records in the PACKED stage)
-
-    Production aggregations are filtered using the specific SizeQuantity ID.
+      - check (from SizeQuantity.checked)
+      - packed (from SizeQuantity.packed)
     """
 
     order = get_object_or_404(Order, pk=order_id)
 
-    # Get all SizeQuantity objects for the order (prefetch color and fabrics)
+    # Get all SizeQuantity objects for the order (with related color and fabrics)
     size_quantities = order.size_quantities.select_related('color', 'fabrics').all()
 
     # Group SizeQuantity objects by unique (color, fabric) pair, and then by size.
@@ -203,7 +200,12 @@ def order_details_api(request, order_id):
         if sq.size:
             # Only keep the first record for each size.
             if sq.size not in groups[key]:
-                groups[key][sq.size] = {"id": sq.id, "total": sq.quantity or 0}
+                groups[key][sq.size] = {
+                    "id": sq.id,
+                    "total": sq.quantity or 0,
+                    "checked": sq.checked or 0,
+                    "packed": sq.packed or 0,
+                }
 
     group_list = []
     for (color_name, fabric_name), sizes_dict in groups.items():
@@ -211,6 +213,8 @@ def order_details_api(request, order_id):
         for size_value, data_dict in sizes_dict.items():
             size_id = data_dict["id"]
             total_ordered = data_dict["total"]
+            checked_total = data_dict["checked"]
+            packed_total = data_dict["packed"]
 
             # Fetch passports associated with the given SizeQuantity record.
             passport_qs = Passport.objects.filter(
@@ -219,10 +223,12 @@ def order_details_api(request, order_id):
             ).distinct()
 
             # Aggregate cut_total: sum of layers for all these passports.
-            passport_agg = passport_qs.aggregate(cut_total=Coalesce(Sum('layers'), 0, output_field=IntegerField()))
+            passport_agg = passport_qs.aggregate(
+                cut_total=Coalesce(Sum('layers'), 0, output_field=IntegerField())
+            )
             cut_total = passport_agg['cut_total']
 
-            # For sew_total, first get passport IDs that have any assigned work.
+            # For sew_total, get passport IDs that have any assigned work.
             assigned_passport_ids = AssignedWork.objects.filter(
                 work__passport_size__passport__in=passport_qs
             ).values_list('work__passport_size__passport_id', flat=True).distinct()
@@ -231,30 +237,12 @@ def order_details_api(request, order_id):
             )
             sew_total = sew_agg['sew_total']
 
-            # Aggregate ProductionPiece counts with conditional aggregation.
-            prod_agg = ProductionPiece.objects.filter(
-                passport_size__passport__in=passport_qs
-            ).aggregate(
-                check_total=Coalesce(Sum(Case(
-                    When(stage__in=[ProductionPiece.StageChoices.CHECKED, ProductionPiece.StageChoices.PACKED], then=1),
-                    default=0,
-                    output_field=IntegerField()
-                )), 0),
-                packed_total=Coalesce(Sum(Case(
-                    When(stage=ProductionPiece.StageChoices.PACKED, then=1),
-                    default=0,
-                    output_field=IntegerField()
-                )), 0)
-            )
-            check_total = prod_agg['check_total']
-            packed_total = prod_agg['packed_total']
-
             sizes_data.append({
                 "size": size_value,
                 "total": total_ordered,
                 "cut": cut_total,
                 "sew": sew_total,
-                "check": check_total,
+                "check": checked_total,
                 "packed": packed_total,
             })
         group_list.append({
@@ -732,3 +720,185 @@ def employee_calculation_view(request, order_ids):
         'employee_data': employee_data_list,
     }
     return render(request, 'admin/employee_calculation.html', context)
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeListView(ListView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=False
+        ).exclude(user__username='admin').annotate(
+            employee_id_int=Cast('employee_id', IntegerField())
+        ).order_by('employee_id_int')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['upload_form'] = UploadFileForm()
+        
+        return context
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeCreateView(CreateView):
+    template_name = 'admin/employees/create.html'
+    form_class = UserWithProfileForm
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeDetailView(DetailView):
+    model = UserProfile
+    template_name = 'admin/employees/detail.html'
+    context_object_name = 'employee'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+
+@login_required
+@admin_required
+def employee_edit(request, pk):
+    user_profile = get_object_or_404(UserProfile, pk=pk)
+    user = user_profile.user
+
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=user)
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Employee details updated successfully.')
+            return redirect('employee_list')
+    else:
+        user_form = UserEditForm(instance=user)
+
+    context = {'user_form': user_form, 'user_profile': user_profile}
+    return render(request, 'admin/employees/edit.html', context)
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeDeleteView(DeleteView):
+    model = UserProfile
+    template_name = 'admin/employees/delete.html'
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = True
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+   
+@method_decorator([login_required, admin_required], name='dispatch')
+class EmployeeUnArchiveView(UpdateView):
+    model = UserProfile
+    template_name = 'admin/employees/list.html'
+    success_url = reverse_lazy('employee_list')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = False
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+     
+@method_decorator([login_required, admin_required], name='dispatch')
+class ArchivedEmployeeListView(ListView):
+    template_name = 'admin/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        return context
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=True
+            ).order_by('employee_id')
+    
+
+@login_required
+@admin_required
+@require_POST
+def employee_upload(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            # Get the current company from thread-local storage.
+            current_company = get_current_company()
+            if current_company is None:
+                messages.error(request, 'No company found in context.')
+                return redirect(reverse_lazy('employee_list'))
+
+            with transaction.atomic():
+                # Iterate rows skipping the header (starting at row 2)
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    first_name, last_name, employee_id, emp_type, password = row
+                    
+                    # Generate username using current company ID and employee ID.
+                    username = f"{current_company.id}-{employee_id}"
+                    
+                    try:
+                        # Because of your custom manager, this lookup is already company-aware.
+                        profile = UserProfile.objects.get(employee_id=employee_id)
+                    except UserProfile.DoesNotExist:
+                        # Create a new user and UserProfile.
+                        user = User.objects.create(
+                            username=username,
+                            first_name=first_name,
+                            last_name=last_name
+                        )
+                        user.set_password(password)
+                        user.save()
+                        # The save method on CompanyAwareModel will assign the current company.
+                        profile = UserProfile.objects.create(
+                            user=user,
+                            employee_id=employee_id,
+                            type=int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        )
+                    else:
+                        # Update existing user and profile.
+                        user = profile.user
+                        user.first_name = first_name
+                        user.last_name = last_name
+                        user.username = username
+                        user.set_password(password)
+                        user.save()
+                        
+                        profile.type = int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        profile.save()
+
+            messages.success(request, 'Employees uploaded successfully.')
+            return redirect(reverse_lazy('employee_list'))
+        except Exception as e:
+            messages.error(request, f'Error processing the file: {e}')
+            return redirect(reverse_lazy('employee_list'))
+        finally:
+            workbook.close()
+    else:
+        messages.error(request, 'Invalid file format.')
+        return redirect(reverse_lazy('employee_list'))

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<style>
+  .cell-text {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Manual Cost Filling" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans "Logout" %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="margin-top: 30px;">
+  <h2 class="mb-4">{% trans "Manual Cost Filling for Models" %}</h2>
+  <form id="manual-cost-form">
+    <!-- Dropdown for Models -->
+    <div class="form-group">
+      <label for="model-select">{% trans "Select Model" %}</label>
+      <select id="model-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+        {% for model in models %}
+          <option value="{{ model.id }}">{{ model.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <!-- Dropdown for Size Quantities -->
+    <div class="form-group">
+      <label for="size-select">{% trans "Select Size" %}</label>
+      <select id="size-select" class="form-control">
+        <option value="">{% trans "------" %}</option>
+      </select>
+    </div>
+  </form>
+
+  <!-- Container for the dynamic cost table -->
+  <div id="cost-table-container" class="mt-4"></div>
+</div>
+
+<script>
+// Helper to get CSRF token.
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const modelSelect = document.getElementById("model-select");
+  const sizeSelect = document.getElementById("size-select");
+  const costTableContainer = document.getElementById("cost-table-container");
+
+  modelSelect.addEventListener("change", function() {
+    const modelId = modelSelect.value;
+    if (modelId) {
+      fetch(`/production/accountant/ajax/get-model-sizes/?model_id=${modelId}`)
+        .then(response => response.json())
+        .then(data => {
+          sizeSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+          costTableContainer.innerHTML = "";
+          data.sizes.forEach(function(size) {
+            const option = document.createElement("option");
+            option.value = size.id;
+            option.textContent = size.label;
+            sizeSelect.appendChild(option);
+          });
+        })
+        .catch(error => console.error("Error fetching sizes:", error));
+    } else {
+      sizeSelect.innerHTML = '<option value="">{% trans "------" %}</option>';
+      costTableContainer.innerHTML = "";
+    }
+  });
+
+  sizeSelect.addEventListener("change", function() {
+    const sizeId = sizeSelect.value;
+    if (sizeId) {
+      fetch(`/production/accountant/ajax/get-size-cost-data/${sizeId}/`)
+        .then(response => response.json())
+        .then(data => {
+          initializeCostTable(data);
+        })
+        .catch(error => console.error("Error loading cost data:", error));
+    } else {
+      costTableContainer.innerHTML = "";
+    }
+  });
+
+  function initializeCostTable(data) {
+    let html = '<div class="table-responsive"><table class="table table-bordered">';
+    html += '<thead><tr>';
+    html += '<th>{% trans "Item" %}</th>';
+    html += '<th>{% trans "Required Quantity" %}</th>';
+    html += '<th>{% trans "Last Unit Cost" %}</th>';
+    html += '<th>{% trans "New Unit Cost" %}</th>';
+    html += '</tr></thead><tbody>';
+    
+    let previousTotal = 0;
+  
+    data.materials.forEach(function(material) {
+      html += '<tr>';
+      html += `<td>${material.name}</td>`;
+      html += `<td>${material.required_quantity}</td>`;
+      html += `<td>${material.unit_cost.toFixed(2)}</td>`;
+      html += `<td><input type="number" class="cost-input" data-id="${material.id}" data-quantity="${material.required_quantity}" value="" style="width:100px;"></td>`;
+      html += '</tr>';
+  
+      // Accumulate total correctly: quantity × last unit cost
+      previousTotal += material.required_quantity * material.unit_cost;
+    });
+  
+    // Final total row
+    html += '<tr>';
+    html += `<td><strong>{% trans "Total" %}</strong></td>`;
+    html += `<td></td>`;
+    html += `<td><strong>${previousTotal.toFixed(2)}</strong></td>`;
+    html += `<td><strong><span id="total-cost">0.00</span></strong></td>`;
+    html += '</tr>';
+  
+    html += '</tbody></table></div>';
+  
+    html += '<div class="mt-3">';
+    html += '<button type="button" id="save-cost-button" class="btn btn-success">{% trans "Save Costs" %}</button>';
+    html += '</div>';
+  
+    costTableContainer.innerHTML = html;
+    addCostInputListeners();
+  }
+  
+  
+    
+  
+
+  function addCostInputListeners() {
+    document.querySelectorAll(".cost-input").forEach(function(input) {
+      input.addEventListener("input", function() {
+        recalculateTotal();
+      });
+    });
+  
+    document.getElementById("save-cost-button").addEventListener("click", function() {
+        const payload = [];
+        document.querySelectorAll(".cost-input").forEach(function(input) {
+          payload.push({
+            id: input.dataset.id,
+            unit_cost: parseFloat(input.value) || 0
+          });
+        });
+      
+        fetch('/production/accountant/ajax/save-costs/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+            costs: payload,
+            sizequantity_id: document.getElementById("size-select").value // <-- ADD THIS!
+          })
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            alert('{% trans "Costs saved successfully!" %}');
+          } else {
+            alert('{% trans "Failed to save costs:" %} ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error saving costs:', error);
+          alert('{% trans "Error saving costs:" %} ' + error.message);
+        });
+      });      
+  }
+  
+  function recalculateTotal() {
+    let total = 0;
+    document.querySelectorAll(".cost-input").forEach(function(input) {
+      const quantity = parseFloat(input.dataset.quantity) || 0;
+      const unitCost = parseFloat(input.value) || 0;
+      total += quantity * unitCost;
+    });
+    document.getElementById("total-cost").textContent = total.toFixed(2);
+  }    
+  
+
+});
+</script>
+
+{% endblock %}

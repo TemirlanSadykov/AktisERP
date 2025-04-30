@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Keeper Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card-header">
+        <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Stock" %}</h2>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            {{ form.as_p }}
+          </div>
+          <div class="form-group">
+            <div class="row">
+              <div class="col text-left">
+                <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
+              </div>
+              <div class="col text-right">
+                <a href="{% url 'stock_list' %}" class="btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Item Modal -->
+<div class="modal" data-backdrop="false" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addItemForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addItemModalLabel">{% trans "Add New Item" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Item Form Field -->
+          <div class="form-group">
+            <label for="id_item_name">{% trans "Item Name" %}</label>
+            <input type="text" class="form-control" id="id_item_name" name="name" placeholder="{% trans 'Enter item name' %}" required>
+          </div>
+          <!-- You can add more item fields here if needed -->
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Warehouse Modal -->
+<div class="modal" data-backdrop="false" id="addWarehouseModal" tabindex="-1" role="dialog" aria-labelledby="addWarehouseModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addWarehouseForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addWarehouseModalLabel">{% trans "Add New Warehouse" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Warehouse Form Fields -->
+          <div class="form-group">
+            <label for="id_warehouse_name">{% trans "Warehouse Name" %}</label>
+            <input type="text" class="form-control" id="id_warehouse_name" name="name" placeholder="{% trans 'Enter warehouse name' %}" required>
+          </div>
+          <!-- Add any additional warehouse fields if necessary -->
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+// Function to retrieve a cookie value by name (for CSRF token)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  // ----- Item Select Handling -----
+  const itemSelect = document.getElementById('id_item');
+  const addItemModalEl = document.getElementById('addItemModal');
+  const addItemModal = new bootstrap.Modal(addItemModalEl, { backdrop: false });
+  const addItemForm = document.getElementById('addItemForm');
+
+  if (itemSelect) {
+    itemSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addItemForm.reset();
+        addItemModal.show();
+        // Reset selection so "Add New" is not left selected.
+        this.value = "";
+      }
+    });
+  }
+
+  addItemForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addItemForm);
+    fetch("{% url 'add_item_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new item info.
+        const newOption = new Option(data.item_name, data.item_id, false, true);
+        itemSelect.appendChild(newOption);
+        addItemModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+
+  // ----- Warehouse Select Handling -----
+  const warehouseSelect = document.getElementById('id_warehouse');
+  const addWarehouseModalEl = document.getElementById('addWarehouseModal');
+  const addWarehouseModal = new bootstrap.Modal(addWarehouseModalEl, { backdrop: false });
+  const addWarehouseForm = document.getElementById('addWarehouseForm');
+
+  if (warehouseSelect) {
+    warehouseSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addWarehouseForm.reset();
+        addWarehouseModal.show();
+        // Reset selection so "Add New" is not left selected.
+        this.value = "";
+      }
+    });
+  }
+
+  addWarehouseForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addWarehouseForm);
+    fetch("{% url 'add_warehouse_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Create a new option element with the new warehouse info.
+        const newOption = new Option(data.warehouse_name, data.warehouse_id, false, true);
+        warehouseSelect.appendChild(newOption);
+        addWarehouseModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+});
+</script>
+{% endblock %}

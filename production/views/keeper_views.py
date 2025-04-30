@@ -5,13 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from django.db.models import Q
+from django.db.models import F, Q, Count
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.views.decorators.http import require_POST
@@ -31,6 +31,134 @@ def keeper_page(request):
         'sidebar_type': 'keeper'
         }
     return render(request, 'keeper_page.html' , context)
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ClientOrderListKeeperView(ListView):
+    model = ClientOrder
+    template_name = 'keeper/client/orders/list.html'
+    context_object_name = 'orders'
+    paginate_by = 10
+    form_class = DateRangeForm 
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(is_archived=False)
+        today = timezone.localdate()
+
+        # Get the term filter from the request, defaulting to 'upcoming'
+        term_filter = self.request.GET.get('term', 'upcoming').lower()
+
+        if term_filter == 'upcoming':
+            queryset = queryset.filter(term__gte=today).order_by('term')
+        elif term_filter == 'passed':
+            queryset = queryset.filter(term__lt=today).order_by('-term')
+        else:
+            queryset = queryset.filter(term__gte=today).order_by('term')
+
+        # Apply optional date range filtering
+        form = self.form_class(self.request.GET)
+        if form.is_valid():
+            start_date = form.cleaned_data.get('start_date')
+            end_date = form.cleaned_data.get('end_date')
+            if start_date and end_date:
+                queryset = queryset.filter(launch__range=[start_date, end_date])
+            elif start_date:
+                queryset = queryset.filter(launch__gte=start_date)
+            elif end_date:
+                queryset = queryset.filter(launch__lte=end_date)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form_class(self.request.GET or None)
+        today = timezone.localdate()
+
+        # Calculate days_left for each order
+        orders_with_days_left = []
+        for order in context['orders']:
+            days_left = (order.term - today).days
+            orders_with_days_left.append({'order': order, 'days_left': days_left})
+        context['orders_with_days_left'] = orders_with_days_left
+
+        # Pass the current term filter to the template
+        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
+        context['ClientOrder'] = ClientOrder
+        context['sidebar_type'] = 'keeper'
+        return context
+    
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ClientOrderDetailKeeperView(DetailView):
+    model = ClientOrder
+    form_class = ClientOrderForm
+    template_name = 'keeper/client/orders/detail.html'
+    context_object_name = 'client_order'
+
+    def get_context_data(self, **kwargs):
+        context = super(ClientOrderDetailKeeperView, self).get_context_data(**kwargs)
+        client_order = context['client_order']
+        context['orders'] = client_order.orders.all()
+        today = timezone.localdate()
+        if client_order.term >= today:
+            days_left = (client_order.term - today).days
+        else:
+            days_left = 0
+        context['days_left'] = days_left
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class OrderDetailKeeperView(DetailView):
+    model = Order
+    template_name = 'keeper/orders/detail.html'
+    context_object_name = 'order'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = context['order']
+
+        # days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # bring in all size‐quantities + their BOM entries
+        context['size_quantities'] = (
+            order.size_quantities
+                 .prefetch_related('bill_of_materials__item__category')
+                 .all()
+        )
+
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class BomDetailView(DetailView):
+    model = SizeQuantity
+    template_name = 'keeper/orders/bom.html'
+    context_object_name = 'size_quantity'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        size_quantity = self.object
+
+        # get the related order from the SizeQuantity
+        order = size_quantity.orders.first()
+        context['order'] = order
+
+        # days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # bring in all size‐quantities + their BOM entries
+        context['size_quantities'] = (
+            order.size_quantities
+                 .prefetch_related('bill_of_materials__item__category')
+                 .all()
+        )
+
+        context['sidebar_type'] = 'keeper'
+        return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class SupplierListView(ListView):
@@ -236,19 +364,32 @@ class ColorFabricListView(ListView):
     
     def get_queryset(self):
         qs = Roll.objects.filter(is_used=False)
-        # Return distinct combinations including supplier, along with names for display
+        # Filter by supplier if provided via GET parameter
+        supplier = self.request.GET.get('supplier')
+        if supplier:
+            qs = qs.filter(supplier=supplier)
+        # Group by color, fabric, and supplier and annotate quantities
         return qs.values(
             'color',
             'fabric',
             'supplier',
+            supplier_name=F('supplier__name'),
             color_name=F('color__name'),
-            fabric_name=F('fabric__name'),
-            supplier_name=F('supplier__name')
-        ).distinct()
+            fabric_name=F('fabric__name')
+        ).annotate(
+            whole_count=Count('id', filter=Q(original_roll__isnull=True)),
+            remainder_count=Count('id', filter=Q(original_roll__isnull=False))
+        ).order_by('supplier__name', 'color__name', 'fabric__name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
+        context['selected_supplier'] = self.request.GET.get('supplier', '')
+        # Build a list of distinct suppliers (for tabs)
+        context['suppliers'] = Roll.objects.filter(is_used=False).values(
+            'supplier',
+            supplier_name=F('supplier__name')
+        ).distinct().order_by('supplier__name')
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
@@ -257,87 +398,861 @@ class RollsByCombinationListView(ListView):
     template_name = 'keeper/rolls/combination_detail.html'
     context_object_name = 'rolls'
     paginate_by = 10
-    
+
     def get_queryset(self):
-        color_id = self.kwargs.get('color_id')
-        fabric_id = self.kwargs.get('fabric_id')
-        supplier_id = self.kwargs.get('supplier_id')
-        return Roll.objects.filter(is_used=False, color_id=color_id, fabric_id=fabric_id, supplier_id=supplier_id, original_roll__isnull=True).order_by('length_t')
-    
+        rollbatch_id = self.kwargs.get('rollbatch_id')
+        roll_type = self.request.GET.get('roll_type', 'whole')
+        if roll_type == 'remainders':
+            return Roll.objects.filter(
+                is_used=False,
+                roll_batch_id=rollbatch_id,
+                original_roll__isnull=False
+            ).order_by('length_t')
+        else:
+            return Roll.objects.filter(
+                is_used=False,
+                roll_batch_id=rollbatch_id,
+                original_roll__isnull=True
+            ).order_by('length_t')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
-        first_roll = self.get_queryset().first()
+        context['roll_type'] = self.request.GET.get('roll_type', 'whole')
+        context['rollbatch_id'] = self.kwargs.get('rollbatch_id')
+
+        first_roll = context['rolls'][0] if context['rolls'] else None
         if first_roll:
+            context['rollbatch'] = first_roll.roll_batch
             context['color'] = first_roll.color.name
             context['fabric'] = first_roll.fabric.name
+            context['width'] = first_roll.width
             context['supplier'] = first_roll.supplier.name
         else:
-            context['color'] = ''
-            context['fabric'] = ''
-            context['supplier'] = ''
+            context['rollbatch'] = ''
+
         return context
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class RollBulkCreateView(CreateView):
     model = Roll
     form_class = BulkRollForm
-    template_name = 'keeper/rolls/bulk_create.html'
-    success_url = reverse_lazy('roll_combinations')
+    template_name = "keeper/rolls/bulk_create.html"
+    success_url = reverse_lazy("stock_list")
 
-    def form_valid(self, form):
-        color = form.cleaned_data['color']
-        fabric = form.cleaned_data['fabric']
-        supplier = form.cleaned_data['supplier']
-        width = form.cleaned_data['width']
-        quantity = form.cleaned_data['quantity']
-        
-        weights = self.request.POST.getlist('weight')
-        lengths = self.request.POST.getlist('length')
-        cleaned_weights = []
-        cleaned_lengths = []
-
-        for w in weights:
-            try:
-                # Convert empty string to None (or set a default like 0)
-                cleaned_weights.append(Decimal(w) if w.strip() else None)
-            except InvalidOperation:
-                cleaned_weights.append(None)  # or handle error as needed
-
-        for l in lengths:
-            try:
-                cleaned_lengths.append(Decimal(l) if l.strip() else None)
-            except InvalidOperation:
-                cleaned_lengths.append(None)
-
-        existing_count = Roll.objects.filter(color=color, fabric=fabric, supplier=supplier).count()
-        current_company = get_current_company()  # should be valid
-        
-        new_rolls = []
-        for i in range(quantity):
-            roll_name = str(existing_count + i + 1)
-            weight_value = cleaned_weights[i] if i < len(cleaned_weights) else None
-            length_value = cleaned_lengths[i] if i < len(cleaned_lengths) else None
-            new_rolls.append(Roll(
-                color=color,
-                fabric=fabric,
-                supplier=supplier,
-                width=width,
-                weight=weight_value,
-                length_t=length_value,
-                name=roll_name,
-                is_used=False,
-                company=current_company,
-            ))
-        Roll.objects.bulk_create(new_rolls)
-        
-        # Set self.object to one of the created rolls (if any)
-        if new_rolls:
-            self.object = new_rolls[0]
-        
-        return HttpResponseRedirect(self.get_success_url())
-      
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
+    
+    def form_valid(self, form):
+        color     = form.cleaned_data["color"]
+        fabric    = form.cleaned_data["fabric"]
+        supplier  = form.cleaned_data["supplier"]
+        width     = form.cleaned_data["width"]
+        quantity  = form.cleaned_data["quantity"]
+
+        weights_raw = self.request.POST.getlist("weight")
+        lengths_raw = self.request.POST.getlist("length")
+
+        # clean lists → [Decimal|None, …]
+        parse = lambda v: (Decimal(v) if v.strip() else None)
+        weights = [parse(w) for w in weights_raw]
+        lengths = [parse(l) for l in lengths_raw]
+
+        company   = get_current_company()
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+
+        # 1. RollBatch
+        batch, _ = Item.objects.get_or_create(
+            color=color, fabric=fabric, supplier=supplier,
+            width=width, company=company,
+            defaults={
+                "name": f"{color.name} {fabric.name} {width}м от {supplier.name}",
+            }
+        )
+
+        # 2. bulk‑create rolls
+        start_idx   = Roll.objects.filter(color=color,
+                                          fabric=fabric,
+                                          supplier=supplier).count()
+        new_rolls   = []
+        metres_in   = Decimal("0")
+
+        for i in range(quantity):
+            length_val = lengths[i]  if i < len(lengths)  else None
+            weight_val = weights[i]  if i < len(weights)  else None
+            new_rolls.append(
+                Roll(
+                    roll_batch=batch,
+                    color=color, fabric=fabric,
+                    supplier=supplier, width=width,
+                    name=start_idx + i + 1,
+                    length_t=length_val,   # purchased length
+                    weight=weight_val,
+                    company=company,
+                )
+            )
+            if length_val:
+                metres_in += length_val
+
+        Roll.objects.bulk_create(new_rolls)
+
+        # 4. Stock row per SKU (RollBatch)
+        ct = ContentType.objects.get_for_model(Item)
+        stock, _ = Stock.objects.get_or_create(
+            content_type=ct, object_id=batch.id,
+            type=Stock.ROLLS,
+            warehouse=warehouse, company=company,
+            defaults={"quantity": Decimal("0")},
+        )
+        if metres_in:
+            Stock.objects.filter(pk=stock.pk).update(
+                quantity=F("quantity") + metres_in
+            )
+
+            # 5. movement log
+            StockMovement.objects.create(
+                stock=stock, movement_type="IN",
+                quantity=metres_in,
+                from_warehouse=None, to_warehouse=warehouse,
+                note="Прием рулонов",
+            )
+
+        # let CBV chain finish up
+        self.object = new_rolls[0] if new_rolls else None
+        return HttpResponseRedirect(self.get_success_url())
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockListView(ListView):
+    model = Stock
+    template_name = 'keeper/stocks/list.html'
+    context_object_name = 'stocks'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = Stock.objects.filter(is_archived=False)
+        stock_type = self.request.GET.get('type')
+
+        # Only filter if a valid type is explicitly passed
+        if stock_type in ['0', '1', '2']:
+            qs = qs.filter(type=int(stock_type))
+        else:
+            # If invalid or missing type, default to '2' (Rolls)
+            stock_type = '2'
+            qs = qs.filter(type=2)
+
+        self.selected_type = stock_type  # store for use in context
+        return qs.order_by('id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        # Pass the currently selected type; defaults to 'all'
+        context['selected_type'] = self.request.GET.get('type', '2')
+
+        for stock in context['stocks']:
+            if stock.type == Stock.ROLLS:
+                stock.unit_display = 'м'
+            elif stock.type == Stock.FINSHED_GOODS:
+                stock.unit_display = 'шт'
+            else:
+                stock.unit_display = getattr(stock.content_object, 'unit', '')
+
+            if stock.type == Stock.ROLLS:
+                stock.category_display = "Рулон"
+            elif stock.type == Stock.FINSHED_GOODS:
+                stock.category_display = "Готовая продукция"
+            else:
+                stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
+
+
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedStockListView(ListView):
+    template_name = 'keeper/stocks/list.html'
+    context_object_name = 'stocks'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Stock.objects.filter(is_archived=True).order_by('id')
+
+
+@login_required
+@keeper_required
+def stock_bulk_create(request):
+    # GET: render form with categories & items_by_category
+    if request.method == 'GET':
+        categories = Category.objects.filter(is_archived=False).order_by('name')
+        items = Item.objects.filter(is_archived=False).order_by('name')
+        items_by_category = defaultdict(list)
+        for it in items:
+            items_by_category[it.category_id].append(it)
+
+        return render(request, 'keeper/stocks/bulk_create.html', {
+            'categories':        categories,
+            'items_by_category': dict(items_by_category),
+            'sidebar_type':      'keeper',
+        })
+
+    # POST: parse each row and update or create stock
+    warehouse = Warehouse.objects.filter(is_archived=False).first()
+    company   = get_current_company()
+    ct        = ContentType.objects.get_for_model(Item)
+
+    row = 0
+    while f'row-{row}_item' in request.POST:
+        item_id = request.POST.get(f'row-{row}_item')
+        qty_str = request.POST.get(f'row-{row}_quantity')
+        unit    = request.POST.get(f'row-{row}_unit')
+
+        if item_id and qty_str:
+            try:
+                qty = Decimal(qty_str)
+            except (InvalidOperation, TypeError):
+                qty = None
+
+            if qty is not None:
+                item = get_object_or_404(Item, pk=item_id)
+
+                # Try to find existing stock record
+                stock_qs = Stock.objects.filter(
+                    content_type=ct,
+                    object_id=item.id,
+                    type=Stock.RAW_MATERIALS,
+                    warehouse=warehouse,
+                    is_archived=False,
+                    company=company
+                )
+                if stock_qs.exists():
+                    stock = stock_qs.first()
+                    stock.quantity += qty
+                    stock.save()
+                else:
+                    stock = Stock.objects.create(
+                        content_type=ct,
+                        object_id=item.id,
+                        type=Stock.RAW_MATERIALS,
+                        quantity=qty,
+                        unit=unit,
+                        warehouse=warehouse,
+                        is_archived=False,
+                        company=company,
+                    )
+
+                # Log the movement of exactly the added quantity
+                StockMovement.objects.create(
+                    stock=stock,
+                    movement_type='IN',
+                    quantity=qty,
+                    from_warehouse=None,
+                    to_warehouse=warehouse,
+                    note='Прием сырья',
+                )
+        row += 1
+
+    return redirect('stock_list')
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockDetailView(DetailView):
+    model = Stock
+    template_name = 'keeper/stocks/detail.html'
+    context_object_name = 'stock'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockUpdateView(UpdateView):
+    model = Stock
+    form_class = StockForm
+    template_name = 'keeper/stocks/edit.html'
+
+    def get_success_url(self):
+        return reverse('stock_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockDeleteView(DeleteView):
+    model = Stock
+    template_name = 'keeper/stocks/delete.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockArchiveView(UpdateView):
+    model = Stock
+    template_name = 'keeper/stocks/archive.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        stock = self.get_object()
+        stock.is_archived = True
+        stock.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockUnArchiveView(UpdateView):
+    model = Stock
+    template_name = 'keeper/stocks/archive.html'
+    success_url = reverse_lazy('stock_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        stock = self.get_object()
+        stock.is_archived = False
+        stock.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@require_POST
+@login_required
+def add_warehouse_api(request):
+    form = WarehouseForm(request.POST)
+    if form.is_valid():
+        warehouse = form.save()
+        data = {
+            'success': True,
+            'warehouse_id': warehouse.id,
+            'warehouse_name': warehouse.name,
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseListView(ListView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/list.html'
+    context_object_name = 'warehouses'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Warehouse.objects.filter(is_archived=False).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedWarehouseListView(ListView):
+    template_name = 'keeper/warehouses/list.html'
+    context_object_name = 'warehouses'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Warehouse.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseCreateView(CreateView):
+    model = Warehouse
+    form_class = WarehouseForm
+    template_name = 'keeper/warehouses/create.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseDetailView(DetailView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/detail.html'
+    context_object_name = 'warehouse'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseUpdateView(UpdateView):
+    model = Warehouse
+    form_class = WarehouseForm
+    template_name = 'keeper/warehouses/edit.html'
+
+    def get_success_url(self):
+        return reverse('warehouse_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseDeleteView(DeleteView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/delete.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseArchiveView(UpdateView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/delete.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        warehouse = self.get_object()
+        warehouse.is_archived = True
+        warehouse.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class WarehouseUnArchiveView(UpdateView):
+    model = Warehouse
+    template_name = 'keeper/warehouses/delete.html'
+    success_url = reverse_lazy('warehouse_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        warehouse = self.get_object()
+        warehouse.is_archived = False
+        warehouse.save()
+        return HttpResponseRedirect(self.success_url)
+    
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryListView(ListView):
+    model = Category
+    template_name = 'keeper/categories/list.html'
+    context_object_name = 'categories'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Category.objects.filter(is_archived=False).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedCategoryListView(ListView):
+    template_name = 'keeper/categories/list.html'
+    context_object_name = 'categories'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Category.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryCreateView(CreateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'keeper/categories/create.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryDetailView(DetailView):
+    model = Category
+    template_name = 'keeper/categories/detail.html'
+    context_object_name = 'category'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryUpdateView(UpdateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'keeper/categories/edit.html'
+
+    def get_success_url(self):
+        return reverse('category_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryDeleteView(DeleteView):
+    model = Category
+    template_name = 'keeper/categories/delete.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryArchiveView(UpdateView):
+    model = Category
+    template_name = 'keeper/categories/delete.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        category = self.get_object()
+        category.is_archived = True
+        category.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class CategoryUnArchiveView(UpdateView):
+    model = Category
+    template_name = 'keeper/categories/delete.html'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        category = self.get_object()
+        category.is_archived = False
+        category.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemListView(ListView):
+    model = Item
+    template_name = 'keeper/items/list.html'
+    context_object_name = 'items'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = Item.objects.filter(is_archived=False)
+        category = self.request.GET.get('category')
+        if category:
+            qs = qs.filter(category_id=category)
+        return qs.order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type']     = 'keeper'
+        context['selected_category']= self.request.GET.get('category', '')
+
+        # build list of categories that actually have items
+        context['categories'] = (
+            Category.objects
+                    .filter(is_archived=False)
+                    .annotate(item_count=Count('items'))
+                    .distinct()
+                    .order_by('name')
+        )
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ArchivedItemListView(ListView):
+    template_name = 'keeper/items/list.html'
+    context_object_name = 'items'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def get_queryset(self):
+        return Item.objects.filter(is_archived=True).order_by('name')
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemCreateView(CreateView):
+    model = Item
+    form_class = ItemForm
+    template_name = 'keeper/items/create.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemDetailView(DetailView):
+    model = Item
+    template_name = 'keeper/items/detail.html'
+    context_object_name = 'item'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemUpdateView(UpdateView):
+    model = Item
+    form_class = ItemForm
+    template_name = 'keeper/items/edit.html'
+
+    def get_success_url(self):
+        return reverse('item_detail', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemDeleteView(DeleteView):
+    model = Item
+    template_name = 'keeper/items/delete.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemArchiveView(UpdateView):
+    model = Item
+    template_name = 'keeper/items/delete.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        item = self.get_object()
+        item.is_archived = True
+        item.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ItemUnArchiveView(UpdateView):
+    model = Item
+    template_name = 'keeper/items/delete.html'
+    success_url = reverse_lazy('item_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+    def post(self, request, *args, **kwargs):
+        item = self.get_object()
+        item.is_archived = False
+        item.save()
+        return HttpResponseRedirect(self.success_url)
+    
+@login_required
+@keeper_required
+@require_POST
+def shipment_complete(request):
+    try:
+        data = json.loads(request.body)
+        sq_id = data.get('size_quantity_id')
+        quantity = data.get('quantity')
+
+        if not sq_id or quantity is None:
+            return JsonResponse({'success': False, 'message': 'Missing required fields.'})
+
+        # Get the SizeQuantity object
+        sq_obj = SizeQuantity.objects.get(pk=sq_id)
+        ship_quantity = Decimal(str(quantity))
+
+        # Get the Stock record for this SizeQuantity (assumes 1:1 mapping)
+        content_type = ContentType.objects.get_for_model(sq_obj)
+        stock = Stock.objects.filter(
+            content_type=content_type,
+            object_id=sq_obj.pk,
+            type=Stock.FINSHED_GOODS,
+            is_archived=False
+        ).first()
+
+        if not stock:
+            return JsonResponse({'success': False, 'message': 'No stock available for this item.'})
+
+        # Subtract the quantity
+        stock.quantity -= ship_quantity
+        stock.save()
+
+        # Record StockMovement
+        StockMovement.objects.create(
+            stock=stock,
+            movement_type='OUT',
+            quantity=ship_quantity,
+            from_warehouse=stock.warehouse,
+            to_warehouse=None,
+            note="Отправка"
+        )
+
+        # Update shipment status and shipped count
+        sq_obj.shipped = ship_quantity
+        sq_obj.shipment_complete = True
+        sq_obj.save()
+
+        return JsonResponse({'success': True})
+
+    except SizeQuantity.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class StockMovementListView(ListView):
+    model = StockMovement
+    template_name = 'keeper/stocks/stock_movement.html'
+    context_object_name = 'movements'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (
+            StockMovement.objects
+            .select_related('stock__content_type', 'from_warehouse', 'to_warehouse')
+            .order_by('-created_at')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+    
+@login_required
+@keeper_required
+@require_POST
+def complete_shipment(request):
+    try:
+        data = json.loads(request.body)
+        sq_id = data.get('size_quantity_id')
+        if not sq_id:
+            return JsonResponse({'success': False, 'message': 'Missing size_quantity_id.'})
+
+        sq_obj = SizeQuantity.objects.get(pk=sq_id)
+
+        # Get warehouse
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+        if not warehouse:
+            return JsonResponse({'success': False, 'message': 'No available warehouse.'})
+
+        content_type = ContentType.objects.get_for_model(sq_obj)
+
+        # Find the finished goods stock
+        stock = Stock.objects.filter(
+            content_type=content_type,
+            object_id=sq_obj.pk,
+            warehouse=warehouse,
+            type=Stock.FINSHED_GOODS,
+            is_archived=False
+        ).first()
+
+        if not stock:
+            return JsonResponse({'success': False, 'message': 'Finished goods stock not found.'})
+
+        stock_quantity = stock.quantity or Decimal(0)
+
+        if stock_quantity <= 0:
+            return JsonResponse({'success': False, 'message': 'Nothing to ship. Stock quantity is zero.'})
+
+        with transaction.atomic():
+            # Reduce the stock to zero
+            stock.quantity = 0
+            stock.save(update_fields=['quantity'])
+
+            # Create stock movement OUT
+            StockMovement.objects.create(
+                stock=stock,
+                movement_type='OUT',
+                quantity=stock_quantity,
+                from_warehouse=warehouse,
+                to_warehouse=None,
+                note="Отправка"
+            )
+
+            # Update SizeQuantity
+            sq_obj.shipped = stock_quantity
+            sq_obj.shipment_complete = True
+            sq_obj.save(update_fields=['shipped', 'shipment_complete'])
+
+        return JsonResponse({'success': True})
+
+    except SizeQuantity.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

@@ -78,7 +78,7 @@
       <li class="nav-item dropdown">
         <form action="{% url 'logout' %}" method="post">
           {% csrf_token %}
-            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
         </form>
       </li>
     </ul>
@@ -97,11 +97,26 @@
         {% if form.name.errors %}
             <div class="error">{{ form.name.errors }}</div>
         {% endif %}
+
         <label for="{{ form.photo.id_for_label }}">{{ form.photo.label }}</label>
         {{ form.photo }}
         {% if form.photo.errors %}
             <div class="error">{{ form.photo.errors }}</div>
         {% endif %}
+
+        <!-- Assortment field added -->
+        <label for="{{ form.assortment.id_for_label }}">{{ form.assortment.label }}</label>
+        {{ form.assortment }}
+        {% if form.assortment.errors %}
+            <div class="error">{{ form.assortment.errors }}</div>
+        {% endif %}
+
+        <label for="{{ form.consumption_t.id_for_label }}">{{ form.consumption_t.label }}</label>
+        {{ form.consumption_t }}
+        {% if form.consumption_t.errors %}
+        <div class="error">{{ form.consumption_t.errors }}</div>
+        {% endif %}
+
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by name...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
@@ -140,7 +155,35 @@
             <button type="submit" class="btn create-btn">{% trans "Create" %}</button>
         </div>
     </form>
+  </div>
+</div>
+
+<!-- Add Assortment Modal -->
+<div class="modal" data-backdrop="false" id="addAssortmentModal" tabindex="-1" role="dialog" aria-labelledby="addAssortmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addAssortmentForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addAssortmentModalLabel">{% trans "Add New Assortment" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- New Assortment Form Field -->
+          <div class="form-group">
+            <label for="id_assortment_name">{% trans "Assortment Name" %}</label>
+            <input type="text" class="form-control" id="id_assortment_name" name="name" placeholder="{% trans 'Enter assortment name' %}" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 <script>
@@ -149,14 +192,13 @@ let selectedOperations = [];
 document.getElementById('searchOperations').addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const operations = document.querySelectorAll('#operationsContainer table tbody tr[data-operation-content]');
-
     operations.forEach(op => {
         const content = op.getAttribute('data-operation-content');
-        const namePart = content.split('-')[2].trim(); // Assuming the name is always the third part after two dashes.
+        const namePart = content.split('-')[2].trim();
         if (namePart.toLowerCase().includes(searchTerm)) {
-            op.style.display = ''; // Show row if the name matches the search term
+            op.style.display = '';
         } else {
-            op.style.display = 'none'; // Hide row if the name doesn't match
+            op.style.display = 'none';
         }
     });
 });
@@ -165,7 +207,6 @@ function prepareOperations() {
   let checkedBoxes = document.querySelectorAll('#operationsContainer table tbody input[type="checkbox"]:checked');
   let operationsContainer = document.getElementById('selectedOperations');
   operationsContainer.innerHTML = '';
-
   checkedBoxes.forEach(function(checkbox, index) {
       let parentRow = checkbox.closest('tr');
       let label = parentRow.getAttribute('data-operation-content');
@@ -173,13 +214,12 @@ function prepareOperations() {
       div.className = 'sortable-item';
       div.setAttribute('data-id', checkbox.value);
       
-      // Adding an order number span next to the label
       let orderSpan = document.createElement('span');
       orderSpan.className = 'order-number';
-      orderSpan.textContent = (index + 1) + '. '; // Displaying index + 1 because index is zero-based
-
+      orderSpan.textContent = (index + 1) + '. ';
+      
       div.appendChild(orderSpan);
-      div.appendChild(document.createTextNode(label)); // Append the label text after the order number
+      div.appendChild(document.createTextNode(label));
       
       operationsContainer.appendChild(div);
   });
@@ -188,7 +228,6 @@ function prepareOperations() {
       animation: 150,
       ghostClass: 'sortable-ghost',
       onUpdate: function(evt) {
-          // This function runs each time an item is moved. It updates the displayed order numbers.
           let items = operationsContainer.getElementsByClassName('sortable-item');
           Array.from(items).forEach((item, idx) => {
               item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
@@ -198,17 +237,74 @@ function prepareOperations() {
 }
 
 function submitOperations(event) {
-    event.preventDefault(); // Prevent form from submitting traditionally
-
-    selectedOperations = []; // Clear the array before pushing new data
+    event.preventDefault();
+    selectedOperations = [];
     let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
     sortedItems.forEach(function(item, index) {
         selectedOperations.push({operation_id: item.getAttribute('data-id'), order: index});
     });
     document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
-    document.getElementById('modelForm').submit(); // Submit the form programmatically
+    document.getElementById('modelForm').submit();
 }
 
 document.getElementById('modelForm').addEventListener('submit', submitOperations);
+
+// Function to retrieve a cookie value by name (for CSRF token)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ===== Assortment Modal =====
+  const assortmentSelect = document.getElementById('id_assortment');
+  const addAssortmentModalEl = document.getElementById('addAssortmentModal');
+  const addAssortmentModal = new bootstrap.Modal(addAssortmentModalEl, { backdrop: false });
+  const addAssortmentForm = document.getElementById('addAssortmentForm');
+  if (assortmentSelect) {
+    assortmentSelect.addEventListener('change', function () {
+      if (this.value === "add_new") {
+        addAssortmentForm.reset();
+        addAssortmentModal.show();
+        this.value = "";
+      }
+    });
+  }
+
+  addAssortmentForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(addAssortmentForm);
+    fetch("{% url 'add_assortment_api' %}", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const newOption = new Option(data.assortment_name, data.assortment_id, false, true);
+        assortmentSelect.appendChild(newOption);
+        addAssortmentModal.hide();
+      } else {
+        alert("Error: " + JSON.stringify(data.errors));
+      }
+    })
+    .catch(error => {
+      alert("An error occurred: " + error);
+    });
+  });
+})
 </script>
 {% endblock %}

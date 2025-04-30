@@ -59,3 +59,19 @@ def keeper_required(view_func):
             return redirect('login')
         return view_func(request, *args, **kwargs)
     return _wrapped_view
+
+def accountant_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not hasattr(request.user, 'userprofile') or request.user.userprofile.type != UserProfile.ACCOUNTANT and request.user.userprofile.type != UserProfile.ADMIN:
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+def sub_tech_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not hasattr(request.user, 'userprofile') or (request.user.userprofile.type != UserProfile.SUB_TECH and request.user.userprofile.type != UserProfile.ADMIN):
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
