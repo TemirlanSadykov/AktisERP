@@ -32,6 +32,13 @@ urlpatterns = [
     path('admin/employees/archived/', ArchivedEmployeeListView.as_view(), name='archived_employee_list'),
     path('admin/employees/upload_employees/', employee_upload, name='employee_upload'),
 
+    path('sub_tech/client/orders/', ClientOrderListSubView.as_view(), name='client_order_list_sub'),
+    path('sub_tech/client/orders/<int:pk>/', ClientOrderDetailSubView.as_view(), name='client_order_detail_sub'),
+    path('sub_tech/client/orders/order/<int:pk>/', OrderDetailSubView.as_view(), name='order_detail_sub'),
+    path('sub_tech/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut_sub, name='assign_operations_by_cut_sub'),
+    path('sub_tech/passports/update_work/', update_work_sub, name='update_work_sub'),
+    path('sub_tech/passports/update_passport_quantity/', update_passport_quantity_sub, name='update_passport_quantity_sub'),
+
     path('technologist/client/orders/', ClientOrderListView.as_view(), name='client_order_list'),
     path('technologist/client/orders/create/', ClientOrderCreateView.as_view(), name='client_order_create'),
     path('technologist/client/orders/<int:pk>/', ClientOrderDetailView.as_view(), name='client_order_detail'),

@@ -168,7 +168,21 @@
                         <span class="sidetext">{% trans 'Return' %}</span>
                     </a>
                     {% endif %}
-                </div>              
+                </div>           
+                {% elif sidebar_type == 'sub_tech' %}
+                <div id="sidebar" class="list-group list-group-flush sidenavres">
+                    <a href="{% url 'client_order_list_sub' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
+                        <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                    {% if request.user.userprofile.type == 0 %}
+                    <a href="{% url 'admin_page' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
+                        data-id="Return">
+                        <i class="fas fa-backward fa-fw"></i>
+                        <span class="sidetext">{% trans 'Return' %}</span>
+                    </a>
+                    {% endif %}
+                </div>   
                 {% elif sidebar_type == 'cutter' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">
                     <a href="{% url 'client_order_list_cutter' %}"
@@ -336,15 +350,20 @@
                         data-id="user_redirect">
                         <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span>
                     </a>
+                    <a href="{% url 'client_order_list' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="fixed_salaries">
+                        <i class="fas fa-clipboard-list  fa-fw"></i><span class="sidetext">{% trans 'Technologist' %}</span>
+                    </a>
                     <a href="{% url 'client_order_list_cutter' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="fixed_salaries">
                         <i class="fas fa-cut  fa-fw"></i><span class="sidetext">{% trans 'Cutter' %}</span>
                     </a>
-                    <a href="{% url 'client_order_list' %}"
+                    <a href="{% url 'client_order_list_sub' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"
                         data-id="fixed_salaries">
-                        <i class="fas fa-clipboard-list  fa-fw"></i><span class="sidetext">{% trans 'Technologist' %}</span>
+                        <i class="fas fa-pen  fa-fw"></i><span class="sidetext">{% trans 'Sub Tech' %}</span>
                     </a>
                     <a href="{% url 'client_order_list_qc' %}"
                         class="list-group-item list-group-item-action text-black collapsesidebarset"

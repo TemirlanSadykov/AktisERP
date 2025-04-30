@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Technologist Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="card-header">
+    {{ order.model.name }}          
+  </div>
+  <div class="container">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Client:" %}</strong> {{ order.client_order.client }}</p>
+          <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+          <p><strong>{% trans "Color:" %}</strong> 
+            {% for color in order.colors.all %}
+                {{ color }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                {% trans "No colors selected" %}
+            {% endfor %}
+          </p>
+          <p><strong>{% trans "Fabrics:" %}</strong> 
+            {% for fabric in order.fabrics.all %}
+                {{ fabric }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                {% trans "No fabrics selected" %}
+            {% endfor %}
+          </p>
+          <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+          <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+          <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+        </div>
+        <div class="col-md-5 text-center">
+          {% if order.model.photo %}
+            <div class="operation-photo">
+              <img src="{{ order.model.photo.url }}" alt="{% trans 'Model Photo' %}">
+            </div>
+          {% else %}
+            <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Required Quantities Table -->
+    <div class="row">
+      <div class="col-md-6">
+        <h3>{% trans "Required Quantities" %}</h3>
+      </div>
+    </div><br>
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>{% trans "Color & Fabric" %}</th>
+            {% for size in all_sizes %}
+              <th>{{ size }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, row in pivot_data.items %}
+            <tr>
+              <td>
+                {{ key.0 }} &amp; {{ key.1 }}
+              </td>
+              {% for size in all_sizes %}
+                <td>{{ row|get_item:size|default:"" }}</td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="{{ all_sizes|length|add:'1' }}">{% trans "No required quantities available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div><br>
+
+  <div class="container-fluid bottomContainer">
+    <div class="row">
+      <div class="col-md-6">
+        <h3>{% trans "Associated Cuts" %}</h3>
+      </div>
+    </div><br>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{% trans "Cut Number" %}</th>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "Colors" %}</th>
+            <th>{% trans "Sizes" %}</th>
+            <th>{% trans "Layers" %}</th>
+            <th>{% trans "Actions" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cut in cut_details %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ cut.cut_number }}</td>
+              <td>{{ cut.cut_date|date:"Y-m-d" }}</td>
+              <td>{{ cut.aggregated_colors }}</td>
+              <td>{{ cut.cut_sizes|join:", " }}</td>
+              <td>{{ cut.total_layers }}</td>
+              <td>
+                <a href="{% url 'assign_operations_by_cut_sub' cut.cut_id %}" class="btn btn-sm btn-primary">
+                  {% trans "View" %}
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7">{% trans "No associated cuts." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>    
+  </div>
+</div>
+{% endblock %}

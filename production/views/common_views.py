@@ -37,5 +37,7 @@ def user_redirect(request):
         return redirect('keeper_page')
     elif user_profile.type == UserProfile.ACCOUNTANT:
         return redirect('client_order_list_packer')
+    elif user_profile.type == UserProfile.SUB_TECH:
+        return redirect('client_order_list_sub')
     else:
         return redirect('index')

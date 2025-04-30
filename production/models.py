@@ -108,6 +108,7 @@ class UserProfile(CompanyAwareModel):
     PACKER = 5
     KEEPER = 6
     ACCOUNTANT = 7
+    SUB_TECH = 8
     TYPE_CHOICES = [
         (ADMIN, 'Администратор'),
         (TECHNOLOGIST, 'Технолог'),
@@ -116,7 +117,8 @@ class UserProfile(CompanyAwareModel):
         (QC, 'ОТК'),
         (PACKER, 'Упаковщик'),
         (KEEPER, 'Кладовщик'),
-        (ACCOUNTANT, 'Бухгалтер')
+        (ACCOUNTANT, 'Бухгалтер'),
+        (SUB_TECH, 'Младший Технолог'),
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=EMPLOYEE, verbose_name='Тип')
     status = models.BooleanField(default=True, verbose_name='Статус', null=True, blank=True)
