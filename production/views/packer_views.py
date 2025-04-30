@@ -402,7 +402,7 @@ def complete_production(request):
             raw_stock = Stock.objects.filter(
                 content_type=ContentType.objects.get_for_model(bom.item),
                 object_id=bom.item.pk,
-                type=Stock.RAW_MATERIALS,
+                type__in=[Stock.RAW_MATERIALS, Stock.ROLLS],
                 warehouse=warehouse,
                 is_archived=False
             ).first()

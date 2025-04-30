@@ -375,12 +375,12 @@ document.addEventListener("DOMContentLoaded", function() {
         return response.json();
       })
       .then(data => {
-        if (data.success) {
-          // Disable the button and update its text.
-          button.disabled = true;
-          button.textContent = 'Completed';
-        } else {
-          alert('Error: ' + data.message);
+        // Disable the button and update its text regardless of success
+        button.disabled = true;
+        button.textContent = 'Completed';
+      
+        if (!data.success) {
+          alert('Warning: ' + data.message);
         }
       })
       .catch(error => {
