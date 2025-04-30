@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.contenttypes.models import ContentType
 from decimal import Decimal
 
-from production.models import Roll, Item as RollBatch, Stock, StockMovement, Warehouse
+from production.models import Roll, Item, Stock, StockMovement, Warehouse
 from django.db import transaction
 
 class Command(BaseCommand):
@@ -14,7 +14,11 @@ class Command(BaseCommand):
         # Try to get the first warehouse, create if none exists
         default_warehouse = Warehouse.objects.filter(is_archived=False).first()
         if not default_warehouse:
-            default_warehouse = Warehouse.objects.create(name="Default", location="Auto-generated")
+            first_roll = Roll.objects.filter(company__isnull=False).first()
+            if not first_roll:
+                self.stdout.write(self.style.ERROR("No rolls found with a company. Cannot proceed."))
+                return
+            default_warehouse = Warehouse.objects.create(name="Default", company=first_roll.company)
 
         count_batches = 0
         count_stocks = 0
@@ -25,7 +29,7 @@ class Command(BaseCommand):
                 if not all([roll.color, roll.fabric, roll.supplier, roll.width, roll.length_t]):
                     continue
 
-                roll_batch, created = RollBatch.objects.get_or_create(
+                roll_batch, created = Item.objects.get_or_create(
                     color=roll.color,
                     fabric=roll.fabric,
                     supplier=roll.supplier,
@@ -40,7 +44,7 @@ class Command(BaseCommand):
                     roll.roll_batch = roll_batch
                     roll.save()
 
-                content_type = ContentType.objects.get_for_model(RollBatch)
+                content_type = ContentType.objects.get_for_model(Item)
 
                 stock, created_stock = Stock.objects.get_or_create(
                     content_type=content_type,
