@@ -1127,11 +1127,9 @@ def update_passport_quantity(request):
 
     # Adjust SizeQuantity factual
     size_qty = passport_size.size_quantity
-    print(size_qty.factual)
     if size_qty:
         size_qty.factual = (size_qty.factual or 0) + delta
         size_qty.save()
-    print(size_qty.factual)
     # Update all AssignedWork records
     AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
 
