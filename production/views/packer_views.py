@@ -372,7 +372,10 @@ def complete_production(request):
         # Get warehouse
         warehouse = Warehouse.objects.filter(is_archived=False).first()
         if not warehouse:
-            return JsonResponse({'success': False, 'message': 'No available warehouse.'})
+            warehouse = Warehouse.objects.create(
+                name="Default",
+                is_archived=False
+            )
 
         # Create finished goods stock
         content_type = ContentType.objects.get_for_model(sq_obj)
