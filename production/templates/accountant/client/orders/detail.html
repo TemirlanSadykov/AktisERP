@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont" >{% trans "Accountant Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+  <div class="container maincontr">
+  <div class="container">
+    <!-- <div class="card"> -->
+          <div class="card-header">
+            <div class="row">
+              <div class="col-md-9">
+                {{ client_order.order_number }}
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-md-6 details">
+                    <p><strong>{% trans "Client:" %}</strong> {{ client_order.client.name }}</p>
+                    <p><strong>{% trans "Launch:" %}</strong> {{ client_order.launch|date:"Y-m-d" }}</p>
+                    <p><strong>{% trans "Term:" %}</strong> {{ client_order.term|date:"Y-m-d" }}</p>
+                    <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+                    <p><strong>{% trans "Status:" %}</strong> {{ client_order.get_status_display }}</p>
+                    <p><strong>{% trans "Info:" %}</strong> {% if client_order.info %} {{ client_order.info }} {% endif %} </p>
+                  </div>
+                  <div class="col-md-5 text-center">
+                      <img src="{% static 'img/client.png' %}" alt="Model Image" class="img-fluid">
+                  </div>
+              </div>
+          </div>
+          <div class="container-fluid bottomContainer">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>{% trans "Associated Models" %}</h3>
+                </div>
+            </div><br>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{% trans "Model" %}</th>
+                    <th>{% trans "Colors" %}</th>
+                    <th>{% trans "Fabrics" %}</th>
+                    <th>{% trans "Quantity" %}</th>
+                    <th>{% trans "Sizes" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Actions" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for order in orders %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ order.model.name }}</td>
+                      <td>
+                        {% for color in order.colors.all %}
+                          {{ color }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                          {% trans "No colors selected" %}
+                        {% endfor %}
+                      </td>
+                      <td>
+                        {% for fabric in order.fabrics.all %}
+                          {{ fabric }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                          {% trans "No fabrics selected" %}
+                        {% endfor %}
+                      </td>
+                      <td>{{ order.quantity }}</td>
+                      <td>
+                        {% for sq in order.size_quantities.all %}
+                          {{ sq.size }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                          {% trans "No sq selected" %}
+                        {% endfor %}
+                      </td>
+                      <td>
+                        {% if order.status == 2 %}
+                          <span class="badge bg-success">{% trans "Complete" %}</span>
+                        {% else %}
+                          <span class="badge bg-danger">{% trans "In Progress" %}</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <a href="{% url 'order_detail_accountant' order.pk %}" class="btn btn-sm btn-primary">{% trans "View" %}</a>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="8" class="text-center">{% trans "No associated models." %}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>  
+          </div>
+        
+<!-- </div> -->
+      </div>
+</div>
+{% endblock %}

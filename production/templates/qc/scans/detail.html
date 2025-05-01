@@ -43,14 +43,12 @@
         </button>
       </div>
       <div class="modal-body">
-        <p><strong>{% trans "Единица" %}:</strong> <span id="modal-piece"></span></p>
         <p><strong>{% trans "Паспорт" %}:</strong> <span id="modal-passport"></span></p>
         <p><strong>{% trans "Крой" %}:</strong> <span id="modal-cut"></span></p>
         <p><strong>{% trans "Модель" %}:</strong> <span id="modal-model"></span></p>
         <p><strong>{% trans "Цвет" %}:</strong> <span id="modal-color"></span></p>
         <p><strong>{% trans "Ткань" %}:</strong> <span id="modal-fabrics"></span></p>
         <p><strong>{% trans "Размер" %}:</strong> <span id="modal-size"></span></p>
-        <p><strong>{% trans "Статус" %}:</strong> <span id="modal-stage"></span></p>
       </div>
       <div class="modal-footer form-actions" id="initialButtons">
         <button type="button" class="btn edit-btn" id="checked-button">{% trans "Checked" %}</button>
@@ -62,175 +60,132 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var barcodeInput = document.getElementById('barcode-input');
-    var currentPieceId = null;
-    // Store the most recent scanned piece for later table update.
-    var lastScannedPiece = null;
-    // Global variable to mark the cell that was just updated.
-    var lastUpdatedCell = null;
-  
-    // Global variables for order table management.
-    var activeOrderId = null;
-    var orderTableData = null; 
-    // orderTableData structure:
-    // {
-    //   orderName: "Order Model Name",
-    //   allSizes: ["40", "42", "44"],
-    //   rows: {
-    //     "Red Cotton": { 
-    //         required: { "40": 10, "42": 10, "44": 10 },
-    //         scanned: { "40": <current count>, "42": <current count>, "44": <current count> }
-    //     },
-    //     ...
-    //   }
-    // }
-  
-    // Render the order table into #order-table-container.
+    const barcodeInput = document.getElementById('barcode-input');
+
+    let currentPieceId = null;
+    let lastScannedPiece = null;
+    let lastUpdatedCell = null;
+
+    let activeOrderId = null;
+    let orderTableData = null;
+
+    // Render the order table
     function renderOrderTable() {
       if (!orderTableData) return;
-      var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-      html += '<th>Order: ' + orderTableData.orderName + '</th>';
-      orderTableData.allSizes.forEach(function(size) {
+
+      let html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+      html += '<th>' + orderTableData.orderName + '</th>';
+      orderTableData.allSizes.forEach(size => {
         html += '<th>' + size + '</th>';
       });
       html += '</tr></thead><tbody>';
-      for (var combo in orderTableData.rows) {
+
+      for (const combo in orderTableData.rows) {
         html += '<tr><td>' + combo + '</td>';
-        orderTableData.allSizes.forEach(function(size) {
-          var scanned = orderTableData.rows[combo].scanned[size] || 0;
-          var required = orderTableData.rows[combo].required[size] || 0;
-          // If this cell was just updated, add a red border.
-          if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
-            html += '<td style="border-top: 3px solid red; border-right: 3px solid red; border-bottom: 3px solid red; border-left: 3px solid red;">' + scanned + '/' + required + '</td>';
-          } else {
-            html += '<td>' + scanned + '/' + required + '</td>';
+        orderTableData.allSizes.forEach(size => {
+          const scanned = orderTableData.rows[combo].scanned[size] || 0;
+          const required = orderTableData.rows[combo].required[size] || 0;
+          let tdStyle = '';
+
+          if (scanned >= required && scanned > 0) {
+            tdStyle = 'background-color: #5ced73;';
           }
+          if (lastUpdatedCell &&
+              lastUpdatedCell.combo === combo &&
+              lastUpdatedCell.size === size) {
+            tdStyle += 'border: 3px solid red;';
+          }
+          html += `<td style="${tdStyle}">${scanned}/${required}</td>`;
         });
         html += '</tr>';
       }
+
       html += '</tbody></table></div>';
       document.getElementById('order-table-container').innerHTML = html;
     }
-  
-    // Initialize the order table with data fetched from the server,
-    // using the checked_counts to pre-populate the scanned counts.
+
     function initializeOrderTable(orderData) {
       activeOrderId = orderData.order_id;
       orderTableData = {
         orderName: orderData.order_name,
         allSizes: orderData.all_sizes,
-        rows: {}  // e.g. { "Red Cotton": { required: {...}, scanned: {...} }, ... }
+        rows: {}
       };
-      for (var combo in orderData.pivot_data) {
+      for (const combo in orderData.pivot_data) {
         orderTableData.rows[combo] = {
           required: orderData.pivot_data[combo],
           scanned: {}
         };
-        orderData.all_sizes.forEach(function(size) {
-          var count = 0;
-          if (orderData.checked_counts &&
-              orderData.checked_counts[combo] &&
-              orderData.checked_counts[combo][size]) {
-            count = orderData.checked_counts[combo][size];
-          }
+        orderData.all_sizes.forEach(size => {
+          const count = orderData.checked_counts?.[combo]?.[size] || 0;
           orderTableData.rows[combo].scanned[size] = count;
         });
       }
       renderOrderTable();
     }
-  
-    // Fetch order table data from API for a given order_id.
+
     function loadOrderTableData(orderId) {
       return fetch('/production/qc/orders/get-order-table-data/' + orderId + '/')
-        .then(function(response) {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load table');
           return response.json();
         });
     }
-  
-    // Update (or initialize) the order table with the scanned piece.
-    // The parameter addCount should be true only when status is "Checked".
+
     function updateOrderTableWithScan(scannedPiece, addCount) {
+      const combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
+
       if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
-        // A different order was scanned – load new order data and initialize table.
         loadOrderTableData(scannedPiece.order_id)
-          .then(function(orderData) {
+          .then(orderData => {
             initializeOrderTable(orderData);
-            renderOrderTable();
-          })
-          .catch(function(err) {
-            console.error('Error loading order table data:', err);
+            if (addCount) {
+              const size = scannedPiece.size;
+              orderTableData.rows[combo].scanned[size] =
+                (orderTableData.rows[combo].scanned[size] || 0) + 1;
+              lastUpdatedCell = { combo, size };
+              renderOrderTable();
+            }
           });
-      } else {
-        // Same order – update the scanned count manually if addCount is true.
-        if (addCount) {
-          var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
-          if (orderTableData.rows[combo]) {
-            orderTableData.rows[combo].scanned[scannedPiece.size] =
-              (orderTableData.rows[combo].scanned[scannedPiece.size] || 0) + 1;
-            // Mark this cell as updated so it will have a red border.
-            lastUpdatedCell = { combo: combo, size: scannedPiece.size };
-            renderOrderTable();
-          }
-        } else {
-          renderOrderTable();
-        }
+      } else if (addCount) {
+        const size = scannedPiece.size;
+        orderTableData.rows[combo].scanned[size] =
+          (orderTableData.rows[combo].scanned[size] || 0) + 1;
+        lastUpdatedCell = { combo, size };
+        renderOrderTable();
       }
     }
-    
-    // Process the barcode input: fetch piece info and show modal.
+
     function processBarcode() {
-      var barcode = barcodeInput.value.trim();
-      if (barcode) {
-        fetch('/production/qc/orders/api/get-piece-info/' + barcode + '/')
-          .then(function(response) {
-            return response.json();
-          })
-          .then(function(data) {
-            // Populate the modal with piece details.
-            document.getElementById('modal-piece').textContent = data.piece_number;
-            document.getElementById('modal-model').textContent = data.model;
-            document.getElementById('modal-cut').textContent = data.cut;
-            document.getElementById('modal-passport').textContent = data.passport_number;
-            document.getElementById('modal-color').textContent = data.color;
-            document.getElementById('modal-fabrics').textContent = data.fabrics;
-            document.getElementById('modal-size').textContent = data.size;
-            document.getElementById('modal-stage').textContent = data.stage;
-            currentPieceId = data.piece_id;
-            // Store this piece for later update.
-            lastScannedPiece = data;
-  
-            $('#scanModal').modal('show');
-          })
-          .catch(function(error) {
-            console.error('Error fetching item details:', error);
-          })
-          .finally(function() {
-            barcodeInput.value = '';
-            barcodeInput.focus();
-          });
-      }
+      const barcode = barcodeInput.value.trim();
+      if (!barcode) return;
+
+      fetch('/production/qc/orders/api/get-piece-info/' + barcode + '/')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('modal-model').textContent = data.model;
+          document.getElementById('modal-cut').textContent = data.cut;
+          document.getElementById('modal-passport').textContent = data.passport_number;
+          document.getElementById('modal-color').textContent = data.color;
+          document.getElementById('modal-fabrics').textContent = data.fabrics;
+          document.getElementById('modal-size').textContent = data.size;
+
+          currentPieceId = data.piece_id;
+          lastScannedPiece = data;
+
+          $('#scanModal').modal('show');
+        })
+        .catch(err => {
+          console.error('Error fetching piece:', err);
+        })
+        .finally(() => {
+          barcodeInput.value = '';
+          barcodeInput.focus();
+        });
     }
-  
-    barcodeInput.addEventListener('change', processBarcode);
-  
-    $('#scanModal').on('hidden.bs.modal', function (e) {
-      barcodeInput.focus();
-    });
-  
-    // When a status button is clicked, update the piece and (if appropriate) update the table.
-    document.getElementById('defect-button').addEventListener('click', function() {
-      updatePieceStatus('Defect');
-    });
-  
-    document.getElementById('checked-button').addEventListener('click', function() {
-      updatePieceStatus('Checked');
-    });
-  
+
     function updatePieceStatus(status) {
-      var updateData = { status: status };
+      const updateData = { status };
       fetch('/production/qc/orders/update-piece-status/' + currentPieceId + '/', {
         method: 'POST',
         headers: {
@@ -239,40 +194,50 @@
         },
         body: JSON.stringify(updateData)
       })
-      .then(function(response) { return response.json(); })
-      .then(function(data) {
+      .then(res => res.json())
+      .then(data => {
         if (data.success) {
           $('#scanModal').modal('hide');
-          // If the piece was marked as "Checked", update the table with an increment.
-          // If it's "Defect" and no table exists yet, initialize the table (without incrementing).
           if (status === 'Checked') {
-            updateOrderTableWithScan(lastScannedPiece, true);
-          } else if (!activeOrderId) {
-            updateOrderTableWithScan(lastScannedPiece, false);
+            const { combo, size, checked } = data;
+            if (orderTableData?.rows?.[combo]) {
+              orderTableData.rows[combo].scanned[size] = checked;
+              lastUpdatedCell = { combo, size };
+              renderOrderTable();
+            } else {
+              loadOrderTableData(lastScannedPiece.order_id).then(orderData => {
+                initializeOrderTable(orderData);
+                lastUpdatedCell = { combo, size };
+              });
+            }
           }
         } else {
-          alert('Failed to update status to ' + status + ': ' + data.message);
+          alert('Failed: ' + data.message);
         }
       })
-      .catch(function(error) {
-        console.error('Error updating status:', error);
+      .catch(err => {
+        console.error('Error updating status:', err);
       });
     }
-  
+
     function getCookie(name) {
-      var cookieValue = null;
+      let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-          var cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
+        document.cookie.split(';').forEach(cookie => {
+          const cookieTrimmed = cookie.trim();
+          if (cookieTrimmed.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookieTrimmed.substring(name.length + 1));
           }
-        }
+        });
       }
       return cookieValue;
     }
+
+    // Events
+    barcodeInput.addEventListener('change', processBarcode);
+    $('#scanModal').on('hidden.bs.modal', () => barcodeInput.focus());
+    document.getElementById('checked-button').addEventListener('click', () => updatePieceStatus('Checked'));
+    document.getElementById('defect-button').addEventListener('click', () => updatePieceStatus('Defect'));
   });
-</script>  
+</script>
 {% endblock %}

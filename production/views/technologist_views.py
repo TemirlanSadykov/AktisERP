@@ -1,6 +1,6 @@
 from collections import defaultdict
 import json
-import openpyxl
+import openpyxl # type: ignore
 
 from django.conf import settings
 from django.contrib import messages
@@ -15,12 +15,13 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView 
 from django.views import View
-from openpyxl import Workbook
-from openpyxl.styles import  Alignment, Border, Font, Side
-from openpyxl.utils import get_column_letter
 from django.db.models import Q
 from django.db.models import IntegerField
+from decimal import Decimal
 from django.db.models.functions import Cast
+from django.db.models import Prefetch
+from django.db.models import Prefetch, Sum, Value, DecimalField
+from django.db.models.functions import Coalesce, Cast
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -37,188 +38,6 @@ def technologist_page(request):
                'sidebar_type': 'technology'
                }
     return render(request, 'technologist_page.html', context)
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeListView(ListView):
-    model = UserProfile
-    template_name = 'technologist/employees/list.html'
-    context_object_name = 'employees'
-    paginate_by = 10
-
-    def get_queryset(self):
-        return UserProfile.objects.filter(
-            is_archived=False
-        ).exclude(user__username='admin').annotate(
-            employee_id_int=Cast('employee_id', IntegerField())
-        ).order_by('employee_id_int')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['upload_form'] = UploadFileForm()
-        context['sidebar_type'] = 'technology'
-        return context
-    
-@method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeCreateView(CreateView):
-    template_name = 'technologist/employees/create.html'
-    form_class = UserWithProfileForm
-    success_url = reverse_lazy('employee_list')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeDetailView(DetailView):
-    model = UserProfile
-    template_name = 'technologist/employees/detail.html'
-    context_object_name = 'employee'
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-@login_required
-@technologist_required
-def employee_edit(request, pk):
-    user_profile = get_object_or_404(UserProfile, pk=pk)
-    user = user_profile.user
-
-    if request.method == 'POST':
-        user_form = UserEditForm(request.POST, instance=user)
-        if user_form.is_valid():
-            user_form.save()
-            messages.success(request, 'Employee details updated successfully.')
-            return redirect('employee_list')
-    else:
-        user_form = UserEditForm(instance=user)
-
-    context = {'user_form': user_form, 'user_profile': user_profile, 'sidebar_type': 'technology'}
-    return render(request, 'technologist/employees/edit.html', context)
-
-@method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeDeleteView(DeleteView):
-    model = UserProfile
-    template_name = 'technologist/employees/delete.html'
-    success_url = reverse_lazy('employee_list')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-    
-@method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeArchiveView(UpdateView):
-    model = UserProfile
-    template_name = 'technologist/employees/list.html'
-    success_url = reverse_lazy('employee_list')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-    
-    def post(self, request, *args, **kwargs):
-        employee = self.get_object()
-        employee.is_archived = True
-        employee.save()
-        return HttpResponseRedirect(self.success_url)
-   
-@method_decorator([login_required, technologist_required], name='dispatch')
-class EmployeeUnArchiveView(UpdateView):
-    model = UserProfile
-    template_name = 'technologist/employees/list.html'
-    success_url = reverse_lazy('employee_list')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-    
-    def post(self, request, *args, **kwargs):
-        employee = self.get_object()
-        employee.is_archived = False
-        employee.save()
-        return HttpResponseRedirect(self.success_url)
-     
-@method_decorator([login_required, technologist_required], name='dispatch')
-class ArchivedEmployeeListView(ListView):
-    template_name = 'technologist/employees/list.html'
-    context_object_name = 'employees'
-    paginate_by = 10
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
-
-    def get_queryset(self):
-        return UserProfile.objects.filter(
-            is_archived=True
-            ).order_by('employee_id')
-    
-
-@login_required
-@technologist_required
-@require_POST
-def employee_upload(request):
-    form = UploadFileForm(request.POST, request.FILES)
-    if form.is_valid():
-        excel_file = request.FILES['excel_file']
-        try:
-            workbook = openpyxl.load_workbook(excel_file)
-            sheet = workbook.active
-            # Get the current company from thread-local storage.
-            current_company = get_current_company()
-            if current_company is None:
-                messages.error(request, 'No company found in context.')
-                return redirect(reverse_lazy('employee_list'))
-
-            with transaction.atomic():
-                # Iterate rows skipping the header (starting at row 2)
-                for row in sheet.iter_rows(min_row=2, values_only=True):
-                    first_name, last_name, employee_id, emp_type, password = row
-                    
-                    # Generate username using current company ID and employee ID.
-                    username = f"{current_company.id}-{employee_id}"
-                    
-                    try:
-                        # Because of your custom manager, this lookup is already company-aware.
-                        profile = UserProfile.objects.get(employee_id=employee_id)
-                    except UserProfile.DoesNotExist:
-                        # Create a new user and UserProfile.
-                        user = User.objects.create(
-                            username=username,
-                            first_name=first_name,
-                            last_name=last_name
-                        )
-                        user.set_password(password)
-                        user.save()
-                        print(user)
-                        # The save method on CompanyAwareModel will assign the current company.
-                        profile = UserProfile.objects.create(
-                            user=user,
-                            employee_id=employee_id,
-                            type=int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
-                        )
-                    else:
-                        # Update existing user and profile.
-                        user = profile.user
-                        user.first_name = first_name
-                        user.last_name = last_name
-                        user.username = username
-                        user.set_password(password)
-                        user.save()
-                        
-                        profile.type = int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
-                        profile.save()
-
-            messages.success(request, 'Employees uploaded successfully.')
-            return redirect(reverse_lazy('employee_list'))
-        except Exception as e:
-            messages.error(request, f'Error processing the file: {e}')
-            return redirect(reverse_lazy('employee_list'))
-        finally:
-            workbook.close()
-    else:
-        messages.error(request, 'Invalid file format.')
-        return redirect(reverse_lazy('employee_list'))
     
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ClientListView(ListView):
@@ -631,71 +450,105 @@ class OrderDetailView(DetailView):
     template_name = 'technologist/orders/detail.html'
     context_object_name = 'order'
 
+    def get_queryset(self):
+        return Order.objects.prefetch_related(
+            # Prefetch order's size quantities with related color/fabrics.
+            Prefetch(
+                'size_quantities',
+                queryset=SizeQuantity.objects.select_related('color', 'fabrics').order_by('size')
+            ),
+            # Prefetch cuts, annotate total_layers from passports, and prefetch their related objects.
+            Prefetch(
+                'cuts',
+                queryset=Cut.objects.order_by('number')
+                .annotate(total_layers=Coalesce(Sum('passports__layers'), Value(0), output_field=IntegerField()))
+                .prefetch_related(
+                    'size_quantities',
+                    Prefetch(
+                        'passports',
+                        queryset=Passport.objects.prefetch_related(
+                            Prefetch(
+                                'size_quantities',
+                                queryset=SizeQuantity.objects.select_related('color', 'fabrics')
+                            )
+                        )
+                    )
+                )
+            ),
+            'client_order'  # For days_left calculation.
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- Build pivot data for "Required Quantities" table -----
-        # We'll use order.size_quantities.all() (assumed to include both color and fabric)
-        required_qs = order.size_quantities.all().order_by('size')
-        pivot_data = {}  # keys: (color, fabric), value: {size: quantity}
+        # Build pivot data for "Required Quantities" table.
+        pivot_data = {}
         all_sizes_set = set()
-        for sq in required_qs:
-            # Collect the size (header) value.
+        for sq in order.size_quantities.all():
             all_sizes_set.add(sq.size)
-            # Use a tuple (color, fabric) as the key.
-            key = (sq.color, sq.fabrics)  # Adjust field names if needed.
-            if key not in pivot_data:
-                pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
+            key = (sq.color, sq.fabrics)  # relies on __str__ of these models.
+            pivot_data.setdefault(key, {})[sq.size] = sq.quantity
 
-        # Sort sizes. (If sizes are numeric strings, convert to int for sorting.)
         try:
             all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
-        except ValueError:
+        except (ValueError, TypeError):
             all_sizes = sorted(all_sizes_set)
 
-        # # ----- Other context data (pass along your existing context) -----
-        associated_cuts = order.cuts.all().order_by('number')
-        # passports = Passport.objects.filter(cut__in=associated_cuts).order_by('cut__number', 'number')
-        # size_data = defaultdict(lambda: defaultdict(lambda: {'quantity': 0, 'passport_size_id': None, 'extra': None}))
-        # total_per_size = defaultdict(int)
-        # for passport in passports:
-        #     passport_number = passport.id
-        #     for passport_size in passport.passport_sizes.all():
-        #         size = passport_size.size_quantity.size
-        #         extra_key = f"{size}-{passport_size.extra}" if passport_size.extra else size
-        #         size_data[extra_key][passport_number]['quantity'] += passport_size.quantity
-        #         size_data[extra_key][passport_number]['passport_size_id'] = passport_size.id
-        #         size_data[extra_key][passport_number]['extra'] = passport_size.extra
-        #         total_per_size[size] += passport_size.quantity
+        # Associated cuts are already prefetched.
+        associated_cuts = order.cuts.all()
 
-        # required_missing = {sq.size: {'required': sq.quantity, 'missing': sq.quantity - total_per_size.get(sq.size, 0)}
-        #                     for sq in order.size_quantities.all().order_by('size')}
-        # for size in total_per_size:
-        #     if size not in required_missing:
-        #         required_missing[size] = {'required': 0, 'missing': -total_per_size[size]}
+        # Calculate days left until the term.
+        today = timezone.now().date()
+        days_left = (order.client_order.term - today).days if order.client_order.term >= today else 0
 
-        # def sort_key(x):
-        #     parts = x.split('-')
-        #     try:
-        #         return int(parts[0]), x
-        #     except ValueError:
-        #         return float('inf'), x
-        # sorted_size_data_keys = sorted(size_data.keys(), key=sort_key)
+        # --- Build detailed cut data ---
+        cut_details = []
+        for cut in associated_cuts:
+            # Get unique sizes used in this cut.
+            cut_sizes = list(cut.size_quantities.values_list('size', flat=True).distinct())
+            try:
+                cut_sizes_sorted = sorted(cut_sizes, key=lambda s: int(s))
+            except (ValueError, TypeError):
+                cut_sizes_sorted = sorted(cut_sizes)
+            
+            # Build passport data and aggregate colors from all passports.
+            passport_list = []
+            aggregated_colors = set()
+            for passport in cut.passports.all():
+                colors = {psq.color.name for psq in passport.size_quantities.all() if psq.color}
+                fabrics = {psq.fabrics.name for psq in passport.size_quantities.all() if psq.fabrics}
+                aggregated_colors.update(colors)
+                passport_list.append({
+                    'passport_id': passport.id,
+                    'passport_number': passport.number,
+                    'colors': ", ".join(sorted(colors)),
+                    'fabrics': ", ".join(sorted(fabrics)),
+                })
+            aggregated_colors_str = ", ".join(sorted(aggregated_colors))
+            
+            # Use the annotated total_layers.
+            total_layers = cut.total_layers
+
+            cut_details.append({
+                'cut_id': cut.id,
+                'cut_number': cut.number,
+                'cut_date': cut.date,
+                'cut_sizes': cut_sizes_sorted,
+                'aggregated_colors': aggregated_colors_str,
+                'total_layers': total_layers,
+                'passports': passport_list,
+            })
 
         context.update({
-            'pivot_data': pivot_data,  # Our new pivoted required data
-            'all_sizes': all_sizes,    # List of sizes for the header row
-            # (Include your other context items as before.)
-            # 'size_data': {k: dict(size_data[k]) for k in sorted_size_data_keys},
-            # 'total_per_size': dict(total_per_size),
-            # 'required_missing': required_missing,
-            'days_left': (order.client_order.term - timezone.now().date()).days if order.client_order.term >= timezone.now().date() else 0,
+            'pivot_data': pivot_data,   # Pivoted required quantities.
+            'all_sizes': all_sizes,     # Sorted list of sizes for header.
+            'days_left': days_left,
             'associated_cuts': associated_cuts,
+            'cut_details': cut_details, # Detailed cut info including aggregated colors, sizes, and total layers.
             'sidebar_type': 'technology'
         })
-        return context  
+        return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderCreateView(CreateView):
@@ -709,21 +562,28 @@ class OrderCreateView(CreateView):
         self.object.save()
         form.save_m2m()
         try:
+            # create all SizeQuantity instances
             self.handle_size_quantities(self.object, self.request.POST)
         except ValidationError as e:
-            # If a duplicate combination is found, delete the created order
             self.object.delete()
             form.add_error(None, e.message)
             return self.form_invalid(form)
-        return redirect('order_detail', pk=self.object.pk)
+
+        # grab the first SizeQuantity you just created
+        first_sq = self.object.size_quantities.first()
+        if not first_sq:
+            # fallback if somehow none were created
+            return redirect('order_detail', pk=self.object.pk)
+
+        return redirect('bom_create', pk=first_sq.pk)
 
     def handle_size_quantities(self, order, post_data):
         """
         Process the dynamic table data:
-          - Ensures that each row's (color, fabric) combination is unique.
-          - Sums up all provided quantities per cell.
-          - Creates SizeQuantity objects and associates them with the order.
-          - Updates the order's overall quantity based on the sum.
+        - Ensures that each row's (color, fabric) combination is unique.
+        - Sums up all provided quantities per cell.
+        - Creates SizeQuantity objects (with SKU) and associates them with the order.
+        - Updates the order's overall quantity based on the sum.
         """
         used_combinations = set()  # To track (color_id, fabric_id) per row
         used_colors = set()
@@ -751,7 +611,7 @@ class OrderCreateView(CreateView):
             # Lookup the color and fabric objects.
             color = Color.objects.filter(pk=color_id).first() if color_id else None
             fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
-
+            model = order.model
             if color:
                 used_colors.add(color)
             if fabric:
@@ -763,9 +623,14 @@ class OrderCreateView(CreateView):
                 if quantity and int(quantity) > 0:
                     quantity_int = int(quantity)
                     total_quantity += quantity_int
+                    # Get the SKU value; if SKU field is absent or empty, default to an empty string.
+                    sku = post_data.get(f'sku_{row}_{col_index}', '').strip()
                     size_qty = SizeQuantity.objects.create(
                         size=size,
                         quantity=quantity_int,
+                        factual=quantity_int,
+                        model=model,
+                        sku=sku,  # Save SKU along with quantity.
                         color=color,
                         fabrics=fabric
                     )
@@ -850,7 +715,12 @@ class OrderUpdateView(UpdateView):
             key = (sq.color_id, sq.fabrics_id)
             if key not in rows_dict:
                 rows_dict[key] = {}
-            rows_dict[key][sq.size] = {'quantity': sq.quantity, 'id': sq.pk}
+            # Include sku in the cell data.
+            rows_dict[key][sq.size] = {
+                'quantity': sq.quantity,
+                'id': sq.pk,
+                'sku': sq.sku  # Added SKU here.
+            }
         
         table_rows = []
         for (color_id, fabric_id), cells in rows_dict.items():
@@ -864,13 +734,15 @@ class OrderUpdateView(UpdateView):
                     row_data['cells'].append({
                         'size': size,
                         'quantity': cells[size]['quantity'],
-                        'id': cells[size]['id']
+                        'id': cells[size]['id'],
+                        'sku': cells[size]['sku']  # Pass along any saved SKU.
                     })
                 else:
                     row_data['cells'].append({
                         'size': size,
                         'quantity': '',
-                        'id': ''
+                        'id': '',
+                        'sku': ''
                     })
             table_rows.append(row_data)
         
@@ -878,7 +750,7 @@ class OrderUpdateView(UpdateView):
             table_rows = [{
                 'color_id': '',
                 'fabric_id': '',
-                'cells': [{'size': sizes[0], 'quantity': '', 'id': ''}]
+                'cells': [{'size': sizes[0], 'quantity': '', 'id': '', 'sku': ''}]
             }]
         
         context['table_sizes'] = sizes
@@ -896,8 +768,11 @@ class OrderUpdateView(UpdateView):
         except ValidationError as e:
             form.add_error(None, e.message)
             return self.form_invalid(form)
-        return redirect('order_detail', pk=self.object.pk)
-
+        first_sq = self.object.size_quantities.first()
+        if not first_sq:
+            # fallback if somehow none were created
+            return redirect('order_detail', pk=self.object.pk)
+        return redirect('bom_create', pk=first_sq.pk)
     def handle_size_quantities_update(self, order, post_data):
         """
         Process the dynamic table for editing:
@@ -906,6 +781,7 @@ class OrderUpdateView(UpdateView):
             or deletes ones where quantity is now 0/empty.
           • Sums up all provided quantities and updates order.quantity accordingly.
           • Updates the order's many-to-many colors and fabrics.
+          • Also handles the SKU value for each cell.
         """
         used_combinations = set()  # Track (color_id, fabric_id) per row for uniqueness.
         used_colors = set()
@@ -941,6 +817,8 @@ class OrderUpdateView(UpdateView):
             for col_index, size in enumerate(sizes):
                 cell_val = post_data.get(f'cell_{row}_{col_index}', '')
                 cell_sq_id = post_data.get(f'cell_id_{row}_{col_index}', None)
+                # Retrieve SKU value (if any) and strip whitespace.
+                sku_val = post_data.get(f'sku_{row}_{col_index}', '').strip()
                 if cell_val and cell_val.isdigit() and int(cell_val) > 0:
                     quantity_val = int(cell_val)
                     total_quantity += quantity_val
@@ -948,15 +826,19 @@ class OrderUpdateView(UpdateView):
                         try:
                             sq_obj = SizeQuantity.objects.get(pk=cell_sq_id)
                             sq_obj.quantity = quantity_val
+                            sq_obj.factual = quantity_val
                             sq_obj.size = size  # Update header if changed.
                             sq_obj.color = color
                             sq_obj.fabrics = fabric
+                            sq_obj.sku = sku_val  # Update SKU.
                             sq_obj.save()
                             processed_sq_ids.add(sq_obj.pk)
                         except SizeQuantity.DoesNotExist:
                             sq_obj = SizeQuantity.objects.create(
                                 size=size,
                                 quantity=quantity_val,
+                                factual=quantity_val,
+                                sku=sku_val,
                                 color=color,
                                 fabrics=fabric
                             )
@@ -966,6 +848,7 @@ class OrderUpdateView(UpdateView):
                         sq_obj = SizeQuantity.objects.create(
                             size=size,
                             quantity=quantity_val,
+                            sku=sku_val,
                             color=color,
                             fabrics=fabric
                         )
@@ -1211,35 +1094,47 @@ def update_passport_quantity(request):
     """
     Updates the factual quantity for a given PassportSize and updates all 
     AssignedWork records related to that PassportSize.
+    Adjusts the corresponding SizeQuantity.factual based on the delta.
     """
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({"status": "error", "message": "Invalid JSON."}, status=400)
-    
+
     passport_size_id = data.get("passport_size_id")
     new_quantity = data.get("new_quantity")
-    
+
     if passport_size_id is None or new_quantity is None:
         return JsonResponse({"status": "error", "message": "Missing parameters."}, status=400)
-    
+
     try:
         new_quantity = int(new_quantity)
     except ValueError:
         return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
-    
+
     try:
         passport_size = PassportSize.objects.get(id=passport_size_id)
     except PassportSize.DoesNotExist:
         return JsonResponse({"status": "error", "message": "PassportSize not found."}, status=404)
-    
-    # Update the factual field of PassportSize.
+
+    # Calculate the delta
+    old_factual = passport_size.factual or 0
+    delta = new_quantity - old_factual
+
+    # Update PassportSize factual
     passport_size.factual = new_quantity
     passport_size.save()
-    
-    # Update all AssignedWork records related to this PassportSize.
+
+    # Adjust SizeQuantity factual
+    size_qty = passport_size.size_quantity
+    print(size_qty.factual)
+    if size_qty:
+        size_qty.factual = (size_qty.factual or 0) + delta
+        size_qty.save()
+    print(size_qty.factual)
+    # Update all AssignedWork records
     AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
-    
+
     return JsonResponse({"status": "success"})
 
 @login_required
@@ -1553,7 +1448,7 @@ class AssortmentCreateView(CreateView):
     form_class = AssortmentForm
     template_name = 'technologist/assortments/create.html'
     def get_success_url(self):
-        return reverse('model_list', kwargs={'a_id': self.object.id})
+        return reverse('assortment_list')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1596,7 +1491,20 @@ class AssortmentDeleteView(DeleteView):
         context['sidebar_type'] = 'technology'
         return context
 
-
+@require_POST
+@login_required
+def add_assortment_api(request):
+    form = AssortmentForm(request.POST)
+    if form.is_valid():
+        assortment = form.save()
+        data = {
+            'success': True,
+            'assortment_id': assortment.id,
+            'assortment_name': assortment.name,
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class ModelListView(ListView):
@@ -1604,13 +1512,20 @@ class ModelListView(ListView):
     template_name = 'technologist/models/list.html'
     context_object_name = 'models'
     paginate_by = 10
+
     def get_queryset(self):
-        assortment_id = self.kwargs.get('a_id')
-        return Model.objects.filter(assortment=assortment_id, is_archived=False).order_by('name')
+        queryset = Model.objects.filter(is_archived=False).order_by('name')
+        assortment = self.request.GET.get('assortment', None)
+        if assortment:
+            queryset = queryset.filter(assortment_id=assortment)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         context['sidebar_type'] = 'technology'
+        # Assuming you have an Assortment model and you want only non-archived ones
+        context['assortments'] = Assortment.objects.filter(is_archived=False).order_by('name')
+        context['selected_assortment'] = self.request.GET.get('assortment', '')
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -1620,11 +1535,9 @@ class ArchivedModelListView(ListView):
     context_object_name = 'models'
     paginate_by = 10
     def get_queryset(self):
-        assortment_id = self.kwargs.get('a_id')
-        return Model.objects.filter(assortment=assortment_id, is_archived=True).order_by('name')
+        return Model.objects.filter(is_archived=True).order_by('name')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['assortment'] = get_object_or_404(Assortment, pk=self.kwargs.get('a_id'))
         context['sidebar_type'] = 'technology'
         return context
 
@@ -1637,7 +1550,7 @@ class ModelArchiveView(UpdateView):
         model = self.get_object()
         model.is_archived = True
         model.save()
-        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
+        return HttpResponseRedirect(reverse_lazy('model_list'))
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -1649,39 +1562,44 @@ class ModelUnArchiveView(UpdateView):
         model = self.get_object()
         model.is_archived = False
         model.save()
-        return HttpResponseRedirect(reverse_lazy('model_list', kwargs={'a_id': model.assortment.pk}))
-    
-
-        
+        return HttpResponseRedirect(reverse_lazy('model_list'))
         
 @login_required
 @technologist_required
-def model_create(request, a_id, pk=None):
-    assortment = get_object_or_404(Assortment, pk=a_id)
+def model_create(request, pk=None):
     copy_id = request.GET.get('copy')
     original = get_object_or_404(Model, pk=copy_id) if copy_id else None
 
     if request.method == 'POST':
-        form = ModelCustomForm(request.POST, request.FILES, instance=None, a_id=a_id, copy_id=copy_id)
+        form = ModelCustomForm(request.POST, request.FILES, instance=None, copy_id=copy_id)
         if form.is_valid():
-            model_instance = form.save()  # Save the model instance
-            return redirect('model_detail', a_id = model_instance.assortment.id, pk=model_instance.id)  # Redirect to accessories view
+            model_instance = form.save()  # Save the new model instance
+            # If we're copying from an existing model, copy its BOM entries too.
+            if copy_id and original:
+                for bom in original.bill_of_materials.all():
+                    BillOfMaterials.objects.create(
+                        model=model_instance,
+                        item=bom.item,
+                        quantity=bom.quantity
+                    )
+            # Redirect to BOM creation page (which will display the copied BOM entries)
+            return redirect('model_detail', pk=model_instance.id)
     else:
-        form = ModelCustomForm(instance=(original if copy_id else None), a_id=a_id, copy_id=copy_id)
-        # Order the operations queryset by node number (numerically) and operation name
+        form = ModelCustomForm(instance=(original if copy_id else None), copy_id=copy_id)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
             'node__name', 'name'
         )
 
     operations_order_json = ""
     if copy_id:
-        operations_order = list(ModelOperation.objects.filter(model=original).order_by('order').values_list('operation_id', flat=True))
+        operations_order = list(
+            ModelOperation.objects.filter(model=original).order_by('order').values_list('operation_id', flat=True)
+        )
         operations_order_json = json.dumps(operations_order)
 
     template_name = 'technologist/models/edit.html' if original else 'technologist/models/create.html'
     context = {
         'form': form,
-        'assortment': assortment,
         'is_copying': bool(copy_id),
         'copy_model': original if copy_id else None,
         'operations_order_json': operations_order_json,
@@ -1704,14 +1622,14 @@ class ModelDetailView(DetailView):
 
 @login_required
 @technologist_required
-def model_edit(request, a_id, pk):
+def model_edit(request, pk):
     model_instance = get_object_or_404(Model, pk=pk)
     
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=model_instance)
         if form.is_valid():
             form.save()
-            return redirect('model_list', a_id=a_id)
+            return redirect('model_detail', pk=pk)
     else:
         form = ModelCustomForm(instance=model_instance)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by('node__name', 'name')
@@ -1731,7 +1649,7 @@ class ModelDeleteView(DeleteView):
     model = Model
     template_name = 'technologist/models/delete.html'
     def get_success_url(self):
-        return reverse('model_list', kwargs={'a_id': self.kwargs.get('a_id')})
+        return reverse('model_list')
 
 
 
@@ -2178,5 +2096,226 @@ class FabricsDeleteView(DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+
+@login_required
+@technologist_required
+def bom_create(request, pk):
+    size_qty = get_object_or_404(SizeQuantity, pk=pk)
+    order = size_qty.orders.first()
+
+    # All size quantities for navigation
+    all_sqs = list(order.size_quantities.all().order_by('id'))
+    idx = all_sqs.index(size_qty)
+
+    if request.method == 'POST':
+        # Clear previous BOMs
+        size_qty.bill_of_materials.all().delete()
+
+        row = 0
+        while f'row-{row}_item' in request.POST:
+            item_id = request.POST[f'row-{row}_item']
+            qty = request.POST[f'row-{row}_quantity']
+            if item_id and qty:
+                item = get_object_or_404(Item, pk=item_id)
+                quantity = Decimal(qty)
+
+                # Create BOM entry
+                BillOfMaterials.objects.create(
+                    sizequantity=size_qty,
+                    item=item,
+                    quantity=quantity
+                )
+
+                # Determine stock type:
+                stock_type = Stock.RAW_MATERIALS
+                if item.category and item.category.is_fabric:
+                    stock_type = Stock.ROLLS
+
+                # Ensure stock exists for this item as RAW_MATERIALS
+                content_type = ContentType.objects.get_for_model(item)
+                exists = Stock.objects.filter(
+                    content_type=content_type,
+                    object_id=item.pk,
+                    type=stock_type,
+                    is_archived=False
+                ).exists()
+
+                if not exists:
+                    default_warehouse = Warehouse.objects.filter(is_archived=False).first()
+                    Stock.objects.create(
+                        content_type=content_type,
+                        object_id=item.pk,
+                        quantity=0,
+                        warehouse=default_warehouse,
+                        is_archived=False,
+                        type=stock_type
+                    )
+
+            row += 1
+
+        # Redirect to next SQ or back to order
+        if idx + 1 < len(all_sqs):
+            return redirect('bom_create', pk=all_sqs[idx + 1].pk)
+
+        return redirect('order_detail', pk=order.pk)
+
+    # GET: Load categories and items
+    categories = Category.objects.filter(is_archived=False).order_by('name')
+    items = Item.objects.filter(is_archived=False).order_by('name')
+    items_by_cat = defaultdict(list)
+    for it in items:
+        items_by_cat[it.category_id].append(it)
+
+    boms_qs = size_qty.bill_of_materials.all()
+    if not boms_qs.exists() and idx > 0:
+        boms_qs = all_sqs[idx - 1].bill_of_materials.all()
+
+    colors = Color.objects.filter(is_archived=False)
+    fabrics = Fabrics.objects.filter(is_archived=False)
+    suppliers = Supplier.objects.filter(is_archived=False)
+
+    return render(request, 'technologist/models/bom_create.html', {
+        'sizequantity': size_qty,
+        'categories': categories,
+        'items_by_category': dict(items_by_cat),
+        'boms': boms_qs,
+        'sidebar_type': 'technology',
+        'colors': colors,
+        'fabrics': fabrics,
+        'suppliers': suppliers,
+    })
+
+@require_POST
+@login_required
+@technologist_required
+def add_category_api(request):
+    name = request.POST.get('name', '').strip()
+    is_fabric = request.POST.get('is_fabric') == 'on'
+
+    if not name:
+        return JsonResponse(
+            {'success': False, 'errors': {'name': ['This field is required.']}},
+            status=400
+        )
+    cat = Category.objects.create(name=name, is_fabric=is_fabric)
+    return JsonResponse({
+        'success': True,
+        'category_id': cat.pk,
+        'category_name': cat.name,
+        'is_fabric': cat.is_fabric
+    })
+
+
+@login_required
+@technologist_required
+def items_by_category_api(request):
+    cat_id = request.GET.get('category')
+    if not cat_id:
+        return JsonResponse({'items': []})
+    qs = Item.objects.filter(category_id=cat_id, is_archived=False).order_by('name')
+    items = [{'id': i.pk, 'name': i.name, 'unit': i.unit} for i in qs]
+    return JsonResponse({'items': items})
+
+
+@require_POST
+@login_required
+def add_item_api(request):
+    form = ItemForm(request.POST)
+    if form.is_valid():
+        item = form.save()
+        data = {
+            'success': True,
+            'item_id': item.id,
+            'item_name': item.name,
+            'unit': item.unit
+        }
+        return JsonResponse(data)
+    else:
+        # Return form errors as JSON (status code 400)
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    
+@require_POST
+@login_required
+@technologist_required
+def add_fabric_item_api(request):
+    form = FabricItemForm(request.POST)
+
+    if form.is_valid():
+        fabric_item = form.save(commit=False)  # Don't save yet
+        
+        # Auto-generate name and unit
+        color_name = fabric_item.color.name if fabric_item.color else ''
+        fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
+        supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
+        width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
+
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м от {supplier_name}".strip()
+        fabric_item.unit = "м"
+
+        fabric_item.save()  # Now save
+        
+        return JsonResponse({
+            'success': True,
+            'item_id': fabric_item.pk,
+            'item_name': fabric_item.name,
+        })
+    else:
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+@method_decorator(login_required, name='dispatch')
+class ConsumptionCalculationView(View):
+    def get(self, request, model_id):
+        # Retrieve the Model instance.
+        model_instance = get_object_or_404(Model, pk=model_id)
+        
+        # Aggregate total roll length over all passports that belong to this model.
+        total_roll_length = Passport.objects.filter(
+            cut__order__model=model_instance,
+            roll__isnull=False
+        ).aggregate(
+            total=Coalesce(Sum('roll__length_t', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
+        )['total']
+        
+        # Aggregate total quantity from all passport sizes for passports that belong to this model.
+        total_quantity = PassportSize.objects.filter(
+            passport__cut__order__model=model_instance
+        ).aggregate(
+            total=Coalesce(Sum('quantity', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
+        )['total']
+        
+        # Calculate consumption safely (avoid division by zero).
+        consumption = total_roll_length / total_quantity if total_quantity > 0 else 0
+        
+        # Save the recalculated consumption to the model.
+        model_instance.consumption_p = consumption
+        model_instance.save(update_fields=["consumption_p"])
+        
+        return JsonResponse({'consumption': consumption})
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class OrderBomView(DetailView):
+    model = Order  # switched from SizeQuantity to Order
+    template_name = 'technologist/orders/bom.html'
+    context_object_name = 'order'  # now the object is the order itself
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.object
+
+        # days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # bring in all size‐quantities + their BOM entries
+        context['size_quantities'] = (
+            order.size_quantities
+                 .prefetch_related('bill_of_materials__item__category')
+                 .all()
+        )
+
         context['sidebar_type'] = 'technology'
         return context

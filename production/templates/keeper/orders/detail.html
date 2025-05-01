@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Keeper Dashboard" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr">
+  <div class="card-header">
+    {{ order.model.name }}
+  </div>
+  <div class="container">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 details">
+          <p><strong>{% trans "Model:" %}</strong> {{ order.model.name }}</p>
+          <p><strong>{% trans "Color:" %}</strong>
+            {% for color in order.colors.all %}
+              {{ color }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              {% trans "No colors selected" %}
+            {% endfor %}
+          </p>
+          <p><strong>{% trans "Fabrics:" %}</strong>
+            {% for fabric in order.fabrics.all %}
+              {{ fabric }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              {% trans "No fabrics selected" %}
+            {% endfor %}
+          </p>
+          <p><strong>{% trans "Quantity:" %}</strong> {{ order.quantity }}</p>
+          <p><strong>{% trans "Term:" %}</strong> {{ order.client_order.term|date:"Y-m-d" }}</p>
+          <p><strong>{% trans "Days Left:" %}</strong> {{ days_left }}</p>
+        </div>
+        <div class="col-md-5 text-center">
+          {% if order.model.photo %}
+            <div class="operation-photo">
+              <img src="{{ order.model.photo.url }}" alt="{% trans 'Model Photo' %}">
+            </div>
+          {% else %}
+            <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Shipment Table -->
+  <div class="container maincontr mt-4">
+    <h3>{% trans "Shipment Table" %}</h3>
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>{% trans "Color" %}</th>
+            <th>{% trans "Fabric" %}</th>
+            <th>{% trans "Size" %}</th>
+            <th>{% trans "Packed" %}</th>
+            <th>{% trans "Shipped" %}</th>
+            <th>{% trans "Remaining" %}</th>
+            <th>{% trans "Action" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sq in size_quantities %}
+            {% with packed=sq.packed|default:0 shipped=sq.shipped|default:0 %}
+            <tr>
+              <td>{{ sq.color.name }}</td>
+              <td>{{ sq.fabrics.name }}</td>
+              <td>{{ sq.size }}</td>
+              <td>{{ packed }}</td>
+              <td>{{ shipped }}</td>
+              <td>{{ packed|subtract:shipped }}</td>
+              <td>
+                {% if sq.shipment_complete %}
+                  <button class="btn btn-success btn-sm" style="margin-bottom: 0;" disabled>{% trans "Shipped" %}</button>
+                {% else %}
+                  <form method="post" action="{% url 'shipment_complete' %}">
+                    {% csrf_token %}
+                    <button
+                      class="btn btn-success btn-sm"
+                      style="margin-bottom: 0;"
+                      onclick="submitShipment({{ sq.id }}, {{ packed|subtract:shipped }})"
+                      type="button"
+                    >
+                      {% trans "Ship" %}
+                    </button>                  
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endwith %}
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted">{% trans "No size quantities available." %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  function submitShipment(sqId, quantity) {
+    fetch("{% url 'shipment_complete' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({
+        size_quantity_id: sqId,
+        quantity: quantity
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload(); // Reload to show updated status
+      } else {
+        alert(data.message || "Shipment failed.");
+      }
+    })
+    .catch(error => {
+      alert("Error: " + error);
+    });
+  }
+</script>
+
+{% endblock %}

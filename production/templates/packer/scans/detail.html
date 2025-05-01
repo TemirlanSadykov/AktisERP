@@ -52,183 +52,247 @@
   </div>
 </div>
 
+<!-- Confirmation Modal for switching orders -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Confirmation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="confirmModalMessage">
+        <!-- Confirmation message will be inserted here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="confirmNoBtn" data-dismiss="modal">No</button>
+        <button type="button" class="btn btn-primary" id="confirmYesBtn">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for required quantity reached -->
+<div class="modal fade" id="reachedModal" tabindex="-1" role="dialog" aria-labelledby="reachedModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reachedModalLabel">Notice</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="reachedModalMessage">
+        Required quantity reached for this SKU.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var barcodeInput = document.getElementById('barcode-input');
-    var currentPieceId = null;
-    // Store the most recent scanned piece for later table update.
-    var lastScannedPiece = null;
-    // Global variable to mark the cell that was just updated.
-    var lastUpdatedCell = null;
-    
-    // Global variables for order table management.
-    var activeOrderId = null;
-    var orderTableData = null; 
-    // orderTableData structure:
-    // {
-    //   orderName: "Order Model Name",
-    //   allSizes: ["40", "42", "44"],
-    //   rows: {
-    //     "Red Cotton": { 
-    //         required: { "40": 10, "42": 10, "44": 10 },
-    //         packed: { "40": currentCount, "42": currentCount, "44": currentCount }
-    //     },
-    //     ...
-    //   }
-    // }
-  
-    // Render the order table into #order-table-container.
-    function renderOrderTable() {
-      if (!orderTableData) return;
-      var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-      html += '<th>Order: ' + orderTableData.orderName + '</th>';
-      orderTableData.allSizes.forEach(function(size) {
-        html += '<th>' + size + '</th>';
-      });
-      html += '</tr></thead><tbody>';
-      for (var combo in orderTableData.rows) {
-        html += '<tr><td>' + combo + '</td>';
-        orderTableData.allSizes.forEach(function(size) {
-          var packed = orderTableData.rows[combo].packed[size] || 0;
-          var required = orderTableData.rows[combo].required[size] || 0;
-          // If this cell was just updated, add a red border.
-          if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
-            html += '<td style="border-top: 3px solid red; border-right: 3px solid red; border-bottom: 3px solid red; border-left: 3px solid red;">' + packed + '/' + required + '</td>';
-          } else {
-            html += '<td>' + packed + '/' + required + '</td>';
-          }
-        });
-        html += '</tr>';
+document.addEventListener('DOMContentLoaded', function () {
+  const barcodeInput = document.getElementById('barcode-input');
+
+  let pivotSizes = [];
+  let pivotRequired = {};
+  let pivotPacked = {};
+  let productionComplete = {};
+  let sqIdMapping = {};
+  let orderModel = null;
+  let currentOrderId = null;
+  let lastUpdatedCell = null;
+  let currentPendingSKU = null;
+
+  function buildPivotState(sizeQuantities) {
+    pivotRequired = {};
+    pivotPacked = {};
+    productionComplete = {};
+    sqIdMapping = {};
+    const sizeSet = new Set();
+
+    sizeQuantities.forEach(q => {
+      const combo = q.color + ' ' + q.fabrics;
+      sizeSet.add(q.size);
+
+      if (!pivotRequired[combo]) {
+        pivotRequired[combo] = {};
+        pivotPacked[combo] = {};
+        productionComplete[combo] = {};
+        sqIdMapping[combo] = {};
       }
-      html += '</tbody></table></div>';
-      document.getElementById('order-table-container').innerHTML = html;
+
+      pivotRequired[combo][q.size] = q.quantity;
+      pivotPacked[combo][q.size] = q.packed || 0;
+      productionComplete[combo][q.size] = q.production_complete || false;
+      sqIdMapping[combo][q.size] = q.id;
+    });
+
+    try {
+      pivotSizes = Array.from(sizeSet).sort((a, b) => parseInt(a) - parseInt(b));
+    } catch {
+      pivotSizes = Array.from(sizeSet).sort();
     }
-  
-    // Initialize the order table with data fetched from the server.
-    function initializeOrderTable(orderData) {
-      activeOrderId = orderData.order_id;
-      orderTableData = {
-        orderName: orderData.order_name,
-        allSizes: orderData.all_sizes,
-        rows: {} // e.g. { "Red Cotton": { required: {...}, packed: {...} }, ... }
-      };
-      for (var combo in orderData.pivot_data) {
-        orderTableData.rows[combo] = {
-          required: orderData.pivot_data[combo],
-          packed: {}
-        };
-        orderData.all_sizes.forEach(function(size) {
-          var count = 0;
-          if (orderData.packed_counts &&
-              orderData.packed_counts[combo] &&
-              orderData.packed_counts[combo][size]) {
-            count = orderData.packed_counts[combo][size];
-          }
-          orderTableData.rows[combo].packed[size] = count;
-        });
-      }
-      renderOrderTable();
-    }
-  
-    // Fetch order table data from API for a given order_id.
-    function loadOrderTableData(orderId) {
-      return fetch('/production/packer/orders/get-order-table-data/' + orderId + '/')
-        .then(function(response) {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        });
-    }
-  
-    // Update (or initialize) the order table with the scanned piece.
-    // The parameter addCount should be true when a piece is successfully packed.
-    function updateOrderTableWithScan(scannedPiece, addCount) {
-      if (!activeOrderId || scannedPiece.order_id !== activeOrderId) {
-        // A different order was scanned – load new order data and initialize table.
-        loadOrderTableData(scannedPiece.order_id)
-          .then(function(orderData) {
-            initializeOrderTable(orderData);
-            renderOrderTable();
-          })
-          .catch(function(err) {
-            console.error('Error loading order table data:', err);
-          });
-      } else {
-        // Same order – update the packed count for the corresponding cell if addCount is true.
-        if (addCount) {
-          var combo = scannedPiece.color + ' ' + scannedPiece.fabrics;
-          if (orderTableData.rows[combo]) {
-            orderTableData.rows[combo].packed[scannedPiece.size] =
-              (orderTableData.rows[combo].packed[scannedPiece.size] || 0) + 1;
-            // Mark this cell as updated so it will have a red border.
-            lastUpdatedCell = { combo: combo, size: scannedPiece.size };
-            renderOrderTable();
-          }
-        } else {
-          renderOrderTable();
+  }
+
+  function renderPivotTable() {
+    if (!orderModel) return;
+
+    let html = `<div class="table-responsive"><table class="table table-bordered"><thead><tr>`;
+    html += `<th>${orderModel}</th>`;
+    pivotSizes.forEach(size => { html += `<th>${size}</th>`; });
+    html += `</tr></thead><tbody>`;
+
+    Object.keys(pivotRequired).forEach(combo => {
+      const rowComplete = pivotSizes.every(sz => (pivotPacked[combo][sz] || 0) >= (pivotRequired[combo][sz] || 0));
+      html += `<tr${rowComplete ? ' style="background-color:#5ced73;"' : ''}><td>${combo}</td>`;
+
+      pivotSizes.forEach(size => {
+        const req = pivotRequired[combo][size] || 0;
+        const pak = pivotPacked[combo][size] || 0;
+        const isRed = lastUpdatedCell &&
+                      lastUpdatedCell.combo === combo &&
+                      lastUpdatedCell.size === size;
+        const isComplete = productionComplete[combo][size];
+        const sqId = sqIdMapping[combo][size];
+
+        let tdStyle = '';
+        if (pak >= req && pak > 0) tdStyle = 'background-color: #5ced73;';
+        if (isRed) tdStyle += 'border: 3px solid red;';
+
+        let content = `${pak}/${req}`;
+        if (pak >= req && pak > 0) {
+          content += isComplete
+            ? ` <button class="complete-button btn btn-success btn-sm" data-sq-id="${sqId}" disabled>Completed</button>`
+            : ` <button class="complete-button btn btn-success btn-sm" data-sq-id="${sqId}">Complete</button>`;
         }
+
+        html += `<td style="${tdStyle}">${content}</td>`;
+      });
+
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    document.getElementById('order-table-container').innerHTML = html;
+  }
+
+  function processBarcode(confirmSwitch = false) {
+    const sku = barcodeInput.value.trim();
+    if (!sku) return barcodeInput.focus();
+
+    const payload = confirmSwitch ? { confirm_switch: true } : {};
+    fetch(`/production/packer/orders/update-packed-by-sku/${encodeURIComponent(sku)}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (!currentOrderId || currentOrderId !== data.order_id) {
+          currentOrderId = data.order_id;
+          orderModel = data.model_name;
+          lastUpdatedCell = null;
+          buildPivotState(data.size_quantities);
+        } else {
+          const scanned = data.size_quantities.find(q => q.sku === data.scanned_sku);
+          const combo = scanned.color + ' ' + scanned.fabrics;
+          const size = scanned.size;
+          pivotPacked[combo][size] = (pivotPacked[combo][size] || 0) + 1;
+          lastUpdatedCell = { combo, size };
+        }
+        renderPivotTable();
+
+        if (data.reached_required) {
+          $('#reachedModal').modal('show');
+        }
+      } else if (data.switch_order) {
+        currentPendingSKU = sku;
+        document.getElementById('confirmModalMessage').textContent = data.message;
+        $('#confirmModal').modal('show');
+      } else {
+        document.getElementById('errorModalMessage').textContent = data.message;
+        $('#errorModal').modal('show');
       }
-    }
-  
-    // Process the barcode input.
-    function processBarcode() {
-      var barcode = barcodeInput.value.trim();
-      if (barcode) {
-        let ids = barcode.split('-');
-        let pieceId = ids[ids.length - 1]; // Assume the last part is the piece ID.
-        
-        fetch(`/production/packer/orders/update-piece-status/${pieceId}/`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ stage: 'Packed' })
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-          if (data.success) {
-            currentPieceId = data.piece_id;
-            data.order_id = data.order_id || (activeOrderId ? activeOrderId : data.order_id);
-            lastScannedPiece = data;
-            updateOrderTableWithScan(lastScannedPiece, true);
-          } else {
-            document.getElementById('errorModalMessage').textContent = data.message;
-            $('#errorModal').modal('show');
-          }
-        })
-        .catch(function(error) {
-          console.error('Error updating piece:', error);
-          document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
-          $('#errorModal').modal('show');
-        });
-      }
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('errorModalMessage').textContent = 'An unexpected error occurred.';
+      $('#errorModal').modal('show');
+    })
+    .finally(() => {
       barcodeInput.value = '';
       barcodeInput.focus();
-    }
-  
-    barcodeInput.addEventListener('change', processBarcode);
-  
-    $('#errorModal').on('hidden.bs.modal', function () {
-      barcodeInput.focus();
     });
-  
-    // Utility function to get CSRF token.
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
         }
-      }
-      return cookieValue;
+      });
+    }
+    return cookieValue;
+  }
+
+  // Confirm order switch
+  document.getElementById('confirmYesBtn').addEventListener('click', () => {
+    if (currentPendingSKU) {
+      barcodeInput.value = currentPendingSKU;
+      processBarcode(true);
+      currentPendingSKU = null;
+    }
+    $('#confirmModal').modal('hide');
+  });
+
+  document.getElementById('confirmNoBtn').addEventListener('click', () => {
+    currentPendingSKU = null;
+    $('#confirmModal').modal('hide');
+    barcodeInput.focus();
+  });
+
+  barcodeInput.addEventListener('change', () => processBarcode(false));
+
+  // Completion button logic
+  document.getElementById('order-table-container').addEventListener('click', function (event) {
+    if (event.target.classList.contains('complete-button')) {
+      const sqId = event.target.getAttribute('data-sq-id');
+      fetch('/production/packer/ajax/orders/complete-production/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ size_quantity_id: sqId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          event.target.disabled = true;
+          event.target.textContent = 'Completed';
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Completion error:', error);
+        alert('Error completing production');
+      });
     }
   });
+
+  $('#errorModal').on('hidden.bs.modal', () => barcodeInput.focus());
+});
 </script>
 {% endblock %}

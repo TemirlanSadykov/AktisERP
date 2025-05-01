@@ -47,8 +47,7 @@
                         </p>
                         <p><strong>{% trans "Length:" %}</strong> {{ cut.length }}</p>
                         <p><strong>{% trans "Width:" %}</strong> {{ cut.width }}</p>
-                        <p><strong>{% trans "Consumption Theoretical:" %}</strong> {{ cut.consumption }}</p>
-                        <p><strong>{% trans "Consumption Practical:" %}</strong> {{ cut.consumption_p }}</p>
+                        <p><strong>{% trans "Consumption:" %}</strong> {{ cut.consumption }}</p>
                         <a href="{% url 'cut_edit' cut.pk %}">
                           <img src="{% static 'img/compose.png' %}" alt="" class="editimg" />
                         </a>
@@ -168,14 +167,14 @@
                                 <td>{{ passport.layers }}</td>
                                 <td>{{ passport.quantity }}</td>
                                 <td>
-                                    <a href="{% url 'passport_detail' passport.pk %}" class="btn btn-sm btn-primary">
-                                      {% trans "View" %}
+                                    <a href="{% url 'qr_passport_size' passport.pk %}" class="btn btn-sm btn-primary">
+                                      {% trans "Download QR" %}
                                     </a>
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="5">{% trans "No passports available." %}</td>
+                                <td colspan="6">{% trans "No passports available." %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

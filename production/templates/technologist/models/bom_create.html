@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+{% load i18n l10n %}
+{% block content %}
+{% load custom_filters %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container maincontr" style="max-width: 100%;">
+  <h2>{% trans "Create Bill of Materials for" %} {{ sizequantity.color.name }} {{ sizequantity.fabrics.name }} {{ sizequantity.size }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <table id="bomTable" class="table table-bordered">
+      <thead>
+        <tr>
+          <th style="width:25%;">{% trans "Category" %}</th>
+          <th style="width:35%;">{% trans "Item" %}</th>
+          <th style="width:30%;">{% trans "Quantity" %}</th>
+          <th style="width:10%;">{% trans "Action" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if boms %}
+          {% for bom in boms %}
+            <tr data-row="{{ forloop.counter0 }}">
+              <td>
+                <select name="row-{{ forloop.counter0 }}_category" class="form-control category-select">
+                  <option value="">{% trans "-------" %}</option>
+                  <option value="add_new_category">{% trans "Add New Category" %}</option>
+                  {% for cat in categories %}
+                    <option value="{{ cat.pk }}" {% if cat.pk == bom.item.category.pk %}selected{% endif %}>
+                      {{ cat.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <select name="row-{{ forloop.counter0 }}_item"
+                        class="form-control item-select">
+                  <option value="">{% trans "-------" %}</option>
+                  <option value="add_new_item">{% trans "Add New Item" %}</option>
+            
+                  {# use get_item to pull the right list out of items_by_category #}
+                  {% with items_by_category|get_items:bom.item.category.pk as cat_items %}
+                    {% for item in cat_items %}
+                      <option value="{{ item.pk }}"
+                        {% if item.pk == bom.item.pk %}selected{% endif %}>
+                        {{ item.name }}
+                      </option>
+                    {% endfor %}
+                  {% endwith %}
+                </select>
+              </td>
+              <td>
+                {% localize off %}
+                <input
+                  type="number"
+                  step="0.01"
+                  name="row-{{ forloop.counter0 }}_quantity"
+                  class="form-control"
+                  placeholder="{% trans 'Enter Quantity' %}"
+                  value="{{ bom.quantity }}"
+                >
+                {% endlocalize %}
+              </td>
+              <td>
+                <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+                  {% trans "Delete" %}
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr data-row="0">
+            <td>
+              <select name="row-0_category" class="form-control category-select">
+                <option value="">{% trans "-------" %}</option>
+                <option value="add_new_category">{% trans "Add New Category" %}</option>
+                {% for cat in categories %}
+                  <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>
+              <select name="row-0_item"
+                      class="form-control item-select"
+                      disabled>
+                <option value="">{% trans "Select category first" %}</option>
+              </select>
+            </td>          
+            <td>
+              <input type="number" step="0.01"
+                     name="row-0_quantity"
+                     class="form-control"
+                     placeholder="{% trans 'Enter Quantity' %}">
+            </td>
+            <td>
+              <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+                {% trans "Delete" %}
+              </button>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+      <tfoot>
+        <tr class="control-row" style="height:50px;">
+          <td colspan="4">
+            <div style="display:flex; height:100%;">
+              <div id="addRowControl" style="flex:1;display:flex;align-items:center;justify-content:center;border-right:1px solid #ccc;cursor:pointer;">
+                +
+              </div>
+              <div id="deleteRowControl" style="flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                –
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+  </form>
+</div>
+
+<!-- Add New Category Modal -->
+<div class="modal" data-backdrop="false" id="addCategoryModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addCategoryForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Category" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_category_name">{% trans "Category Name" %}</label>
+            <input type="text" class="form-control" id="id_category_name" name="name" required>
+          </div>
+          <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="id_category_is_fabric" name="is_fabric">
+            <label class="form-check-label" for="id_category_is_fabric">{% trans "Is Fabric" %}</label>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Item Modal (unchanged) -->
+<div class="modal" data-backdrop="false" id="additemModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="additemForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Item" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_item_name">{% trans "Item Name" %}</label>
+            <input type="text" class="form-control" id="id_item_name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="id_item_unit">{% trans "Item Unit" %}</label>
+            <input type="text" class="form-control" id="id_item_unit" name="unit" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Fabric Item Modal -->
+<div class="modal" data-backdrop="false" id="addFabricItemModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addFabricItemForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Fabric Item" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>{% trans "Color" %}</label>
+            <select class="form-control" id="fabric_color" name="color" required>
+              {% for color in colors %}
+                <option value="{{ color.pk }}">{{ color.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{% trans "Fabric" %}</label>
+            <select class="form-control" id="fabric_fabric" name="fabric" required>
+              {% for fabric in fabrics %}
+                <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{% trans "Width" %}</label>
+            <input type="number" step="0.01" class="form-control" id="fabric_width" name="width" required>
+          </div>
+          <div class="form-group">
+            <label>{% trans "Supplier" %}</label>
+            <select class="form-control" id="fabric_supplier" name="supplier" required>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.pk }}">{{ supplier.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // CSRF helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+      document.cookie.split(';').forEach(c => {
+        let [k, v] = c.trim().split('=');
+        if (k === name) cookieValue = decodeURIComponent(v);
+      });
+    }
+    return cookieValue;
+  }
+
+  // Global caches
+  var globalcategories = [
+    {% for cat in categories %}
+      { id: "{{ cat.pk }}", name: "{{ cat.name }}", is_fabric: {{ cat.is_fabric|yesno:"true,false" }} },
+    {% endfor %}
+  ];
+
+  function getCategoryOptionsHTML() {
+    let html = '<option value="">{% trans "-------" %}</option>';
+    html += '<option value="add_new_category">{% trans "Add New Category" %}</option>';
+    globalcategories.forEach(cat => {
+      html += `<option value="${cat.id}">${cat.name}</option>`;
+    });
+    return html;
+  }
+
+  function getItemPlaceholderHTML() {
+    return '<option value="">{% trans "Select category first" %}</option>';
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // hide modals
+    document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let m = btn.closest('.modal');
+        m.classList.remove('show'); m.style.display='none'; m.setAttribute('aria-hidden','true');
+      });
+    });
+
+    let rowCount = {% if boms %}{{ boms|length }}{% else %}1{% endif %};
+
+    function updateRowIndices() {
+      document.querySelectorAll("#bomTable tbody tr").forEach((tr, idx) => {
+        tr.dataset.row = idx;
+        tr.querySelector('.category-select').name = `row-${idx}_category`;
+        tr.querySelector('.item-select').name     = `row-${idx}_item`;
+        tr.querySelector('input[type=number]').name = `row-${idx}_quantity`;
+      });
+      rowCount = document.querySelectorAll("#bomTable tbody tr").length;
+    }
+
+    function addRow() {
+      let tbody = document.querySelector("#bomTable tbody");
+      let tr = document.createElement("tr");
+      tr.dataset.row = rowCount;
+      tr.innerHTML = `
+        <td>
+          <select name="row-${rowCount}_category" class="form-control category-select">
+            ${getCategoryOptionsHTML()}
+          </select>
+        </td>
+        <td>
+          <select name="row-${rowCount}_item" class="form-control item-select" disabled>
+            ${getItemPlaceholderHTML()}
+          </select>
+        </td>
+        <td>
+          <input type="number" step="0.01" name="row-${rowCount}_quantity"
+                 class="form-control" placeholder="{% trans 'Enter Quantity' %}">
+        </td>
+        <td>
+          <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+            {% trans "Delete" %}
+          </button>
+        </td>`;
+      tbody.appendChild(tr);
+      rowCount++;
+    }
+
+    document.getElementById("addRowControl").addEventListener("click", addRow);
+    document.getElementById("deleteRowControl").addEventListener("click", () => {
+      let tbody = document.querySelector("#bomTable tbody");
+      if (tbody.children.length > 1) {
+        tbody.removeChild(tbody.lastElementChild);
+        updateRowIndices();
+      } else {
+        alert("{% trans 'At least one row must remain.' %}");
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('delete-row-btn')) {
+        e.target.closest('tr').remove();
+        updateRowIndices();
+      }
+    });
+
+    // CATEGORY change → maybe new or fetch items
+    document.addEventListener('change', e => {
+      if (!e.target.matches('select.category-select')) return;
+      let sel = e.target;
+      let row = sel.closest('tr');
+      let itemSel = row.querySelector('select.item-select');
+
+      if (sel.value === 'add_new_category') {
+        // open category modal
+        let m = document.getElementById('addCategoryModal');
+        m.dataset.triggerSelect = sel.name;
+        sel.value = "";
+        m.classList.add('show'); m.style.display='block'; m.removeAttribute('aria-hidden');
+        return;
+      }
+
+      // normal category: fetch items
+      if (sel.value) {
+        fetch(`{% url 'items_by_category_api' %}?category=${sel.value}`, {
+          headers:{ 'X-CSRFToken': getCookie('csrftoken') }
+        })
+        .then(r=>r.json())
+        .then(data=>{
+          let html = '<option value="">{% trans "-------" %}</option>';
+          html += '<option value="add_new_item">{% trans "Add New Item" %}</option>';
+          data.items.forEach(it=>{
+            html += `<option value="${it.id}">${it.name}</option>`;
+          });
+          itemSel.innerHTML = html;
+          itemSel.disabled = false;
+        });
+      } else {
+        itemSel.innerHTML = getItemPlaceholderHTML();
+        itemSel.disabled = true;
+      }
+    });
+
+    // ITEM change → maybe “Add New Item”
+    document.addEventListener('change', e => {
+      if (!e.target.matches('select.item-select')) return;
+      if (e.target.value === 'add_new_item') {
+        const triggerSelectName = e.target.name;
+        const rowIndex = triggerSelectName.split('_')[0].split('-')[1];
+        const categorySelect = document.querySelector(`select[name="row-${rowIndex}_category"]`);
+        const categoryId = categorySelect.value;
+        
+        const catInfo = globalcategories.find(cat => cat.id == categoryId);
+    
+        if (catInfo && catInfo.is_fabric) {
+          const fabricModal = document.getElementById('addFabricItemModal');
+          fabricModal.dataset.triggerSelect = triggerSelectName;
+          fabricModal.classList.add('show');
+          fabricModal.style.display = 'block';
+          fabricModal.removeAttribute('aria-hidden');
+        } else {
+          const normalModal = document.getElementById('additemModal');
+          normalModal.dataset.triggerSelect = triggerSelectName;
+          normalModal.classList.add('show');
+          normalModal.style.display = 'block';
+          normalModal.removeAttribute('aria-hidden');
+        }
+        
+        e.target.value = '';
+      }
+    });    
+
+    // ADD CATEGORY AJAX
+    document.getElementById('addCategoryForm').addEventListener('submit', e => {
+      e.preventDefault();
+      let f = new FormData(e.target);
+      fetch("{% url 'add_category_api' %}", {
+        method:'POST',
+        headers:{ 'X-CSRFToken': getCookie('csrftoken') },
+        body: f
+      })
+      .then(r=>r.json())
+      .then(data=>{
+        if (data.success) {
+          // update globalcategories & all selects
+          globalcategories.push({id: data.category_id, name: data.category_name, is_fabric: data.is_fabric});
+          document.querySelectorAll('select.category-select').forEach(cs=>{
+            if (!Array.from(cs.options).some(o=>o.value==data.category_id)) {
+              let o = new Option(data.category_name, data.category_id);
+              cs.add(o);
+            }
+          });
+
+          // **THIS PART**: set the triggering select AND fire its change event
+          let modal = document.getElementById('addCategoryModal');
+          let triggerName = modal.dataset.triggerSelect;
+          let catSelect = document.querySelector(`select[name="${triggerName}"]`);
+          catSelect.value = data.category_id;
+
+          // *** ADD THIS LINE ***
+          catSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // hide modal
+          modal.classList.remove('show');
+          modal.style.display='none';
+          modal.setAttribute('aria-hidden','true');
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });
+    });    
+
+    // ADD ITEM AJAX (attach category)
+    document.getElementById('additemForm').addEventListener('submit', e => {
+      e.preventDefault();
+      let f = new FormData(e.target);
+      // grab category from same row
+      let triggerName = document.getElementById('additemModal').dataset.triggerSelect;
+      let row = triggerName.split('_')[0].split('-')[1];
+      let cat = document.querySelector(`select[name="row-${row}_category"]`).value;
+      f.append('category', cat);
+
+      fetch("{% url 'add_item_api' %}", {
+        method:'POST',
+        headers:{ 'X-CSRFToken': getCookie('csrftoken') },
+        body: f
+      })
+      .then(r=>r.json())
+      .then(data=>{
+        if (data.success) {
+          // update item-selects in this row
+          let sel = document.querySelector(`select[name="${triggerName}"]`);
+          let opt = new Option(data.item_name, data.item_id);
+          sel.add(opt);
+          sel.value = data.item_id;
+          // hide modal
+          let m = document.getElementById('additemModal');
+          m.classList.remove('show'); m.style.display='none'; m.setAttribute('aria-hidden','true');
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });
+    });
+    // ADD FABRIC ITEM AJAX
+    document.getElementById('addFabricItemForm').addEventListener('submit', e => {
+      e.preventDefault();
+      let f = new FormData(e.target);
+
+      let triggerName = document.getElementById('addFabricItemModal').dataset.triggerSelect;
+      let row = triggerName.split('_')[0].split('-')[1];
+      let cat = document.querySelector(`select[name="row-${row}_category"]`).value;
+      f.append('category', cat);
+
+      fetch("{% url 'add_fabric_item_api' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: f
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          let sel = document.querySelector(`select[name="${triggerName}"]`);
+          let opt = new Option(data.item_name, data.item_id);
+          sel.add(opt);
+          sel.value = data.item_id;
+      
+          let m = document.getElementById('addFabricItemModal');
+          m.classList.remove('show');
+          m.style.display = 'none';
+          m.setAttribute('aria-hidden', 'true');
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });      
+    });
+  });
+</script>
+{% endblock %}

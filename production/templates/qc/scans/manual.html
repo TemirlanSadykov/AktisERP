@@ -160,7 +160,7 @@
       function renderOrderTable() {
         if (!orderTableData) return;
         var html = '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
-        html += '<th>{% trans "Order:" %} ' + orderTableData.orderName + '</th>';
+        html += '<th>' + orderTableData.orderName + '</th>';
         orderTableData.allSizes.forEach(function(size) {
           html += '<th>' + size + '</th>';
         });
@@ -178,11 +178,11 @@
               // If scanned value exists, wrap it in a span for editing.
               cellContent = '<span class="editable" data-combo="'+combo+'" data-size="'+size+'">' + scanned + '</span>/' + required;
             }
-            if (lastUpdatedCell && lastUpdatedCell.combo === combo && lastUpdatedCell.size === size) {
-              html += '<td style="border: 3px solid red;">' + cellContent + '</td>';
-            } else {
-              html += '<td>' + cellContent + '</td>';
+            let tdStyle = '';
+            if (scanned >= required && scanned > 0) {
+              tdStyle = ' style="background-color: #5ced73;"';
             }
+            html += '<td' + tdStyle + '>' + cellContent + '</td>';
           });
           html += '</tr>';
         }
@@ -277,7 +277,7 @@
     
         const revertToSpan = function(newValue) {
           if (!input.parentNode) return;
-          const finalValue = (newValue && newValue.trim() !== "") ? newValue : originalValue;
+          const finalValue = (!isNaN(newValue)) ? newValue : originalValue;
           const newSpan = document.createElement("span");
           newSpan.className = "editable";
           newSpan.textContent = finalValue;
@@ -330,7 +330,11 @@
         })
         .then(data => {
           if (data.success) {
-            callback(newValue);
+            const scannedQty = parseInt(newValue, 10) || 0;
+            orderTableData.rows[combo].scanned[size] = scannedQty;
+            lastUpdatedCell = { combo: combo, size: size };
+            callback(scannedQty);
+            renderOrderTable();
           } else {
             alert("Failed to update: " + data.message);
             callback(originalValue);

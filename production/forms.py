@@ -7,6 +7,7 @@ from django.forms import ModelChoiceField
 from django.db import transaction
 from collections import defaultdict
 from django.contrib.auth import authenticate
+from django.forms import inlineformset_factory
 
 import json
 from .models import *
@@ -27,48 +28,85 @@ class CustomLoginForm(forms.Form):
         employee_id = cleaned_data.get('employee_id')
         password = cleaned_data.get('password')
 
-        user = authenticate(
-            request=self.request, 
-            company=company, 
-            employee_id=employee_id, 
-            password=password
-        )
-        if user is None:
-            raise forms.ValidationError("Invalid credentials")
-        cleaned_data['user'] = user
+        # Special branch: if company == "0", assume superuser login using username
+        if company == "0":
+            user = authenticate(request=self.request, username=employee_id, password=password)
+            if user is None or not user.is_superuser:
+                raise forms.ValidationError("Invalid superuser credentials")
+            cleaned_data['user'] = user
+        else:
+            # Your existing custom authentication that uses company and employee_id
+            user = authenticate(
+                request=self.request, 
+                company=company, 
+                employee_id=employee_id, 
+                password=password
+            )
+            if user is None:
+                raise forms.ValidationError("Invalid credentials")
+            cleaned_data['user'] = user
+
         return cleaned_data
 
     def get_user(self):
         return self.cleaned_data.get('user')
 
 class UserWithProfileForm(UserCreationForm):
-    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    employee_id = forms.CharField(max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    type = forms.ChoiceField(choices=UserProfile.TYPE_CHOICES, required=True, widget=forms.Select(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    employee_id = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    type = forms.ChoiceField(
+        choices=UserProfile.TYPE_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['password1'].widget.attrs.update({'class': 'form-control'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control'})
 
-
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'password1', 'password2')
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-        
+        fields = ('employee_id', 'first_name', 'last_name', 'password1', 'password2')
+
+    def clean_employee_id(self):
+        employee_id = self.cleaned_data.get('employee_id')
+        current_company = get_current_company()
+        if not current_company:
+            raise forms.ValidationError("No company found in context.")
+        if UserProfile.objects.filter(employee_id=employee_id, company=current_company).exists():
+            raise forms.ValidationError("Сотрудник с таким ID уже существует.")
+        return employee_id
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
+        # Retrieve the current company from thread-local storage.
+        current_company = get_current_company()
+        if not current_company:
+            raise ValueError("No company found in context.")
+        employee_id = self.cleaned_data['employee_id']
+        # Generate the username in the same manner as in employee_upload.
+        user.username = f"{current_company.id}-{employee_id}"
         if commit:
             user.save()
             UserProfile.objects.create(
                 user=user,
-                employee_id=self.cleaned_data['employee_id'],
+                employee_id=employee_id,
                 type=self.cleaned_data['type'],
             )
         return user
@@ -86,7 +124,10 @@ class UserEditForm(forms.ModelForm):
     )
     status = forms.BooleanField(
         required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'margin:7px 0px 0px 10px'})
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'style': 'margin:7px 0px 0px 10px'
+        })
     )
     new_password = forms.CharField(
         label='New Password',
@@ -97,9 +138,8 @@ class UserEditForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'employee_id', 'type', 'status']
+        fields = ['first_name', 'last_name', 'employee_id', 'type', 'status']
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
@@ -111,17 +151,36 @@ class UserEditForm(forms.ModelForm):
             self.fields['type'].initial = self.instance.userprofile.type
             self.fields['status'].initial = self.instance.userprofile.status
 
+    def clean_employee_id(self):
+        employee_id = self.cleaned_data.get('employee_id')
+        current_company = get_current_company()
+        if not current_company:
+            raise forms.ValidationError("No company found in context.")
+        qs = UserProfile.objects.filter(employee_id=employee_id, company=current_company)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(user=self.instance)
+        if qs.exists():
+            raise forms.ValidationError("Сотрудник с таким ID уже существует.")
+        return employee_id
+
     def save(self, commit=True):
         user = super().save(commit=False)
+        # Auto-generate the username using the current company and employee ID.
+        current_company = get_current_company()
+        if not current_company:
+            raise ValueError("No company found in context.")
+        employee_id = self.cleaned_data['employee_id']
+        user.username = f"{current_company.id}-{employee_id}"
         
-        # Set new password if provided
+        # Set new password if provided.
         new_password = self.cleaned_data.get('new_password')
         if new_password:
             user.set_password(new_password)
         
         if commit:
             user.save()
-            user.userprofile.employee_id = self.cleaned_data['employee_id']
+            # Update the user profile with the form data.
+            user.userprofile.employee_id = employee_id
             user.userprofile.type = self.cleaned_data['type']
             user.userprofile.status = self.cleaned_data['status']
             user.userprofile.save()
@@ -321,11 +380,11 @@ class OperationForm(forms.ModelForm):
         self.fields['node'].queryset = Node.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         equipment_choices = list(self.fields['equipment'].choices)
-        self.fields['equipment'].choices = [("add_new", "Add New Equipment")] + equipment_choices
+        self.fields['equipment'].choices = [("add_new", "[ДОБАВИТЬ]")] + equipment_choices
 
         # Prepend an "Add New Node" option.
         node_choices = list(self.fields['node'].choices)
-        self.fields['node'].choices = [("add_new", "Add New Node")] + node_choices
+        self.fields['node'].choices = [("add_new", "[ДОБАВИТЬ]")] + node_choices
     
 class AssortmentForm(forms.ModelForm):
     class Meta:
@@ -337,20 +396,29 @@ class AssortmentForm(forms.ModelForm):
 
 class ModelCustomForm(forms.ModelForm):
     operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # Stores JSON order data
-
+    consumption_t = forms.DecimalField(
+        label="Consumption",
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        required=False
+    )
     class Meta:
         model = Model
-        fields = ['name', 'operations', 'photo']  # Ensure 'operations' is handled by the form
+        fields = ['name', 'assortment', 'operations', 'photo', 'consumption_t']  # Ensure 'operations' is handled by the form
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'assortment': forms.Select(attrs={'class': 'form-control'}),
             'operations': forms.Select(attrs={'class': 'form-control'}),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
         
     def __init__(self, *args, **kwargs):
-        self.assortment_id = kwargs.pop('a_id', None)
         copy_id = kwargs.pop('copy_id', None)
         super(ModelCustomForm, self).__init__(*args, **kwargs)
+        self.fields['assortment'].queryset = Assortment.objects.filter(is_archived=False).order_by('name')
+        # Prepend an "Add New Equipment" option.
+        assortment_choices = list(self.fields['assortment'].choices)
+        self.fields['assortment'].choices = [("add_new", "[ДОБАВИТЬ]")] + assortment_choices
+
         queryset = Operation.objects.filter(is_archived=False).select_related('node').order_by('node__name', 'name')
         self.fields['operations'] = forms.ModelMultipleChoiceField(
             queryset=queryset,
@@ -368,9 +436,6 @@ class ModelCustomForm(forms.ModelForm):
         model_instance = super().save(commit=False)
         if 'photo' not in self.changed_data:
             model_instance.photo = self.instance.photo
-
-        if self.assortment_id:
-            model_instance.assortment = Assortment.objects.get(pk=self.assortment_id)
         
         if commit:
             model_instance.save()
@@ -428,7 +493,7 @@ class ClientOrderForm(forms.ModelForm):
         # Prepend an "Add New Client" option.
         # Note: ModelChoiceField choices is a list of (value, label) tuples.
         orig_choices = list(self.fields['client'].choices)
-        self.fields['client'].choices = [("add_new", "Add New Client")] + orig_choices
+        self.fields['client'].choices = [("add_new", "[ДОБАВИТЬ]")] + orig_choices
 
     def clean_term(self):
         term = self.cleaned_data.get('term')
@@ -537,15 +602,15 @@ class RollForm(forms.ModelForm):
         self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         color_choices = list(self.fields['color'].choices)
-        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+        self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 
         # Prepend an "Add New Node" option.
         fabric_choices = list(self.fields['fabric'].choices)
-        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+        self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
 
         # Prepend an "Add New Node" option.
         supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
 
 class BulkRollForm(forms.ModelForm):
     quantity = forms.IntegerField(min_value=1, label="Quantity", widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}))
@@ -579,10 +644,116 @@ class BulkRollForm(forms.ModelForm):
         
         # Prepend an "Add New" option (same as in RollForm)
         color_choices = list(self.fields['color'].choices)
-        self.fields['color'].choices = [("add_new", "Add New Color")] + color_choices
+        self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 
         fabric_choices = list(self.fields['fabric'].choices)
-        self.fields['fabric'].choices = [("add_new", "Add New Fabric")] + fabric_choices
+        self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
 
         supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "Add New Supplier")] + supplier_choices
+        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
+
+class BulkStockForm(forms.ModelForm):
+    # how many rows you want
+    count = forms.IntegerField(
+        min_value=1,
+        label="Rows",
+        widget=forms.NumberInput(attrs={'class':'form-control'})
+    )
+
+    class Meta:
+        model = Stock
+        # we only need the warehouse here; per‐row item/unit/qty come from POST
+        fields = ['warehouse']
+        widgets = {
+            'warehouse': forms.Select(attrs={'class':'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('instance', None)
+        super().__init__(*args, **kwargs)
+        # pick the first non‑archived by default
+        self.fields['warehouse'].queryset = Warehouse.objects.filter(is_archived=False)
+
+class ItemForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        fields = ['name', 'category', 'unit']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+        }
+
+class FabricItemForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        fields = ['color', 'fabric', 'width', 'supplier', 'category']
+        widgets = {
+            'color': forms.Select(attrs={'class': 'form-control'}),
+            'fabric': forms.Select(attrs={'class': 'form-control'}),
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Width'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+        }
+
+class CategoryForm(forms.ModelForm):
+    is_fabric = forms.BooleanField(required=False, label='Is Fabric')
+
+    class Meta:
+        model = Category
+        fields = ['name', 'is_fabric']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+        }
+
+class StockForm(forms.ModelForm):
+    # Select an Item from active (non-archived) items.
+    item = forms.ModelChoiceField(
+        queryset=Item.objects.filter(is_archived=False),
+        label="Item",
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Stock
+        # Exclude the generic fields (content_type and object_id) as we'll set them in save()
+        fields = ['item', 'quantity', 'warehouse']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}),
+            'warehouse': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter warehouse queryset for active warehouses.
+        self.fields['warehouse'].queryset = Warehouse.objects.filter(is_archived=False).order_by('name')
+        
+        # Prepend "Add New" option for warehouse and item.
+        warehouse_choices = list(self.fields['warehouse'].choices)
+        self.fields['warehouse'].choices = [("add_new", "[ДОБАВИТЬ]")] + warehouse_choices
+        
+        item_choices = list(self.fields['item'].choices)
+        self.fields['item'].choices = [("add_new", "[ДОБАВИТЬ]")] + item_choices
+        
+        # Set initial value for 'item' if the instance exists and has a related object.
+        if self.instance.pk and hasattr(self.instance, 'content_object'):
+            self.fields['item'].initial = self.instance.content_object
+    
+    def save(self, commit=True):
+        # Get the form instance without saving yet.
+        instance = super().save(commit=False)
+        # Retrieve the selected item from the form.
+        selected_item = self.cleaned_data['item']
+        # Set the generic relation fields so Stock points to the selected Item.
+        instance.content_type = ContentType.objects.get_for_model(Item)
+        instance.object_id = selected_item.id
+        if commit:
+            instance.save()
+        return instance

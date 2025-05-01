@@ -13,6 +13,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.db.models import Count
+from decimal import Decimal
 
 from ..decorators import packer_required
 from ..forms import *
@@ -164,37 +165,22 @@ class OrderDetailPackerView(DetailView):
         context = super().get_context_data(**kwargs)
         order = context['order']
 
-        # ----- Build pivot data for "Required Quantities" table -----
+        # Build pivot data for "Required Quantities" table using SizeQuantity records.
         required_qs = order.size_quantities.all().order_by('size')
         pivot_data = {}          # keys: (color, fabric), value: {size: required quantity}
         pivot_data_checked = {}  # keys: (color, fabric), value: {size: checked count}
         all_sizes_set = set()
 
-        # Pre-calculate the checked counts for each SizeQuantity in this order.
-        # We join ProductionPiece through passport_size -> passport -> cut -> order.
-        checked_counts_qs = ProductionPiece.objects.filter(
-            passport_size__passport__cut__order=order,
-            stage=ProductionPiece.StageChoices.PACKED
-        ).values('passport_size__size_quantity').annotate(checked_count=Count('id'))
-
-        # Create a lookup dictionary: {SizeQuantity_id: checked_count}
-        checked_counts_dict = {
-            item['passport_size__size_quantity']: item['checked_count']
-            for item in checked_counts_qs
-        }
-
-        # Build our pivot data structures.
         for sq in required_qs:
             all_sizes_set.add(sq.size)
             key = (sq.color, sq.fabrics)  # tuple key based on color and fabric
-
             if key not in pivot_data:
                 pivot_data[key] = {}
                 pivot_data_checked[key] = {}
 
             pivot_data[key][sq.size] = sq.quantity
-            # Use the pre-computed count, defaulting to 0 if none found.
-            pivot_data_checked[key][sq.size] = checked_counts_dict.get(sq.id, 0)
+            # Use the 'checked' field from SizeQuantity, defaulting to 0 if not set.
+            pivot_data_checked[key][sq.size] = sq.packed if sq.packed is not None else 0
 
         # Sort sizes (if sizes are numeric strings, sort numerically).
         try:
@@ -256,122 +242,6 @@ class PassportDetailPackerView(DetailView):
         context['sidebar_type'] = 'packer'
         return context
 
-@require_POST
-@login_required
-@packer_required
-def update_piece_packer(request, piece_id):
-    try:
-        piece = ProductionPiece.objects.get(id=piece_id)
-        
-        # Check conditions for packing
-        if piece.stage == ProductionPiece.StageChoices.PACKED:
-            return JsonResponse({'success': False, 'message': 'Единица уже упакована.'}, status=409)
-        elif piece.stage == ProductionPiece.StageChoices.DEFECT:
-            return JsonResponse({'success': False, 'message': 'Единица бракована.'}, status=409)
-        elif piece.stage == ProductionPiece.StageChoices.NOT_CHECKED:
-            return JsonResponse({'success': False, 'message': 'Единица еще не проверена.'}, status=409)
-
-        # Update piece status to PACKED
-        piece.stage = ProductionPiece.StageChoices.PACKED
-        piece.save()
-
-        # Prepare response data
-        size = f"{piece.passport_size.size_quantity.size}-{piece.passport_size.extra}" if piece.passport_size.extra else piece.passport_size.size_quantity.size
-        cut = piece.passport_size.passport.cut.number
-        model = piece.passport_size.passport.cut.order.model.name
-        color = piece.passport_size.size_quantity.color.name if piece.passport_size.size_quantity.color else "-"
-        fabrics = piece.passport_size.size_quantity.fabrics.name if piece.passport_size.size_quantity.fabrics else "-"
-        passport_id = piece.passport_size.passport.id
-        passport_number = piece.passport_size.passport.number
-        
-        # Forming the response with piece details
-        data = {
-            'success': True,
-            'message': 'Piece status updated to Packed.',
-            'piece_id': piece.id,
-            'order_id': piece.passport_size.passport.cut.order.id,
-            'piece_number': piece.piece_number,
-            'passport_id': passport_id,
-            'passport_number': passport_number,
-            'cut': cut,
-            'model': model,
-            'color': color,
-            'fabrics': fabrics,
-            'size': size,
-            'stage': piece.get_stage_display()
-        }
-        return JsonResponse(data)
-
-    except ProductionPiece.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Piece not found.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-@login_required
-@packer_required
-def get_order_table_data_packer(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id)
-        # Get the size quantities for the order.
-        # Each size quantity is assumed to have attributes:
-        # size, color, fabrics, quantity, packed, and packed.
-        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
-        
-        # Build pivot data: key is "Color Fabrics" and value is a dict mapping size to required quantity.
-        pivot_data = {}
-        all_sizes_set = set()
-        for sq in required_qs:
-            all_sizes_set.add(sq.size)
-            key = f"{sq.color} {sq.fabrics}"
-            if key not in pivot_data:
-                pivot_data[key] = {}
-            pivot_data[key][sq.size] = sq.quantity
-        
-        # Sort sizes (if numeric, sort by integer value)
-        try:
-            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
-        except ValueError:
-            all_sizes = sorted(all_sizes_set)
-        
-        # For each size quantity, if the packed field is still null,
-        # count the production pieces (PACKED) and update it.
-        for sq in required_qs:
-            if sq.packed is None:
-                count = ProductionPiece.objects.filter(
-                    passport_size__size_quantity=sq,
-                    passport_size__passport__cut__order=order,
-                    stage=ProductionPiece.StageChoices.PACKED
-                ).count()
-                sq.packed = count
-                sq.save(update_fields=['packed'])
-        
-        # Build packed_counts from the size quantities.
-        # This dictionary uses the same key ("Color Fabrics") and maps each size to its packed value.
-        packed_counts = {}
-        for sq in required_qs:
-            key = f"{sq.color} {sq.fabrics}"
-            if key not in packed_counts:
-                packed_counts[key] = {}
-            packed_counts[key][sq.size] = sq.packed if sq.packed is not None else 0
-        data = {
-            'order_id': order.id,
-            'order_name': order.model.name,  # Using model name for display.
-            'all_sizes': all_sizes,
-            'pivot_data': pivot_data,
-            'packed_counts': packed_counts,
-        }
-        return JsonResponse(data)
-    except Order.DoesNotExist:
-        return JsonResponse({'error': 'Order not found'}, status=404)
-
-@login_required
-@packer_required
-def scan_packer_page(request):
-    context = {
-            'sidebar_type': 'packer'
-            }
-    return render(request, 'packer/scans/detail.html', context)
-
 @login_required
 @packer_required
 def manual_pack_page(request):
@@ -382,15 +252,72 @@ def manual_pack_page(request):
     }
     return render(request, 'packer/scans/manual.html', context)
 
+@login_required
+@packer_required
+def get_order_table_data_packer(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
+        
+        pivot_data = {}
+        all_sizes_set = set()
+        sq_ids = {}
+        production_complete_map = {}
+        
+        for sq in required_qs:
+            all_sizes_set.add(sq.size)
+            key = f"{sq.color} {sq.fabrics}"
+            
+            # Build the pivot mapping: key → {size: required quantity}
+            if key not in pivot_data:
+                pivot_data[key] = {}
+            pivot_data[key][sq.size] = sq.factual
+            
+            # Build the mapping for SizeQuantity IDs
+            if key not in sq_ids:
+                sq_ids[key] = {}
+            sq_ids[key][sq.size] = sq.id
+            
+            # Build the mapping for production_complete status.
+            if key not in production_complete_map:
+                production_complete_map[key] = {}
+            production_complete_map[key][sq.size] = sq.production_complete
+        
+        # Sort sizes (if numeric, sort by integer value)
+        try:
+            all_sizes = sorted(all_sizes_set, key=lambda s: int(s))
+        except ValueError:
+            all_sizes = sorted(all_sizes_set)
+        
+        # Build packed_counts mapping: key → {size: packed value}
+        packed_counts = {}
+        for sq in required_qs:
+            key = f"{sq.color} {sq.fabrics}"
+            if key not in packed_counts:
+                packed_counts[key] = {}
+            packed_counts[key][sq.size] = sq.packed if sq.packed is not None else 0
+
+        data = {
+            'order_id': order.id,
+            'order_name': order.model.name,  # Using model name for display.
+            'all_sizes': all_sizes,
+            'pivot_data': pivot_data,
+            'packed_counts': packed_counts,
+            'sq_ids': sq_ids,  # Mapping of each size quantity's id.
+            'production_complete': production_complete_map,  # New: mapping for prod complete.
+        }
+        return JsonResponse(data)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
 @require_POST
 @login_required
 @packer_required
-def update_packed_quantity(request):
+def update_packed_quantity_manually(request):
     """
     Expects JSON with:
       - order_id: ID of the order
-      - combo: a string in the format "ColorName FabricsName"
-      - size: the size to update (as stored in SizeQuantity.size)
+      - size_quantity_id: ID of the SizeQuantity record to update
       - quantity: the desired number of production pieces to mark as packed.
       
     This view directly assigns the provided quantity to the SizeQuantity.packed field.
@@ -398,23 +325,21 @@ def update_packed_quantity(request):
     try:
         data = json.loads(request.body)
         order_id = data.get('order_id')
-        combo = data.get('combo')  # e.g. "Red Cotton"
-        size = data.get('size')
-        quantity = int(data.get('quantity', 0))
+        size_quantity_id = data.get('size_quantity_id')
+        quantity_value = data.get('quantity')
+        quantity = None
+        # Convert None or empty string to 0.
+        if quantity_value is not None:
+            quantity = int(quantity_value)
         
-        # Split combo into color and fabric. Expects format "ColorName FabricsName".
-        parts = combo.split(" ", 1)
-        color_name, fabric_name = parts[0].strip(), parts[1].strip()
+        if not order_id or not size_quantity_id:
+            return JsonResponse({'success': False, 'message': 'Missing required parameters.'}, status=400)
         
         # Retrieve the order.
         order = Order.objects.get(id=order_id)
         
-        # Get the SizeQuantity record associated with the order.
-        sq = order.size_quantities.get(
-            size=size.strip(),
-            color__name=color_name,
-            fabrics__name=fabric_name
-        )
+        # Ensure the SizeQuantity record is among those associated with the order.
+        sq = order.size_quantities.get(id=size_quantity_id)
         
         # Directly assign the provided quantity to the packed field.
         sq.packed = quantity
@@ -422,5 +347,173 @@ def update_packed_quantity(request):
         
         return JsonResponse({'success': True, 'updated_packed': quantity})
     
+    except Order.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Order not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required
+@packer_required
+@require_POST
+def complete_production(request):
+    try:
+        data = json.loads(request.body)
+        sq_id = data.get('size_quantity_id')
+        if not sq_id:
+            return JsonResponse({'success': False, 'message': 'Missing size_quantity_id.'})
+        
+        sq_obj = SizeQuantity.objects.get(pk=sq_id)
+        sq_obj.production_complete = True
+        sq_obj.save()
+
+        packed_quantity = sq_obj.packed or 0
+        packed_quantity = Decimal(packed_quantity)
+
+        # Get warehouse
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+        if not warehouse:
+            return JsonResponse({'success': False, 'message': 'No available warehouse.'})
+
+        # Create finished goods stock
+        content_type = ContentType.objects.get_for_model(sq_obj)
+        stock = Stock.objects.create(
+            content_type=content_type,
+            object_id=sq_obj.pk,
+            quantity=packed_quantity,
+            warehouse=warehouse,
+            is_archived=False,
+            type=Stock.FINSHED_GOODS
+        )
+
+        StockMovement.objects.create(
+            stock=stock,
+            movement_type='IN',
+            quantity=packed_quantity,
+            from_warehouse=None,
+            to_warehouse=warehouse,
+            note="Прием готовой продукции"
+        )
+
+        # Subtract raw materials used in BOM
+        for bom in sq_obj.bill_of_materials.select_related('item').all():
+            total_needed = bom.quantity * packed_quantity
+
+            # Find raw material stock
+            raw_stock = Stock.objects.filter(
+                content_type=ContentType.objects.get_for_model(bom.item),
+                object_id=bom.item.pk,
+                type__in=[Stock.RAW_MATERIALS, Stock.ROLLS],
+                warehouse=warehouse,
+                is_archived=False
+            ).first()
+
+            if not raw_stock:
+                return JsonResponse({'success': False, 'message': f"No stock for raw material: {bom.item.name}"})
+
+            raw_stock.quantity -= total_needed
+            raw_stock.save()
+
+            StockMovement.objects.create(
+                stock=raw_stock,
+                movement_type='OUT',
+                quantity=total_needed,
+                from_warehouse=warehouse,
+                to_warehouse=None,
+                note=f"Расход для производства {sq_obj}"
+            )
+
+        return JsonResponse({'success': True})
+
+    except SizeQuantity.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+
+
+@login_required
+@packer_required
+def scan_packer_page(request):
+    context = {
+            'sidebar_type': 'packer'
+            }
+    return render(request, 'packer/scans/detail.html', context)
+
+@require_POST
+@login_required
+@packer_required
+def update_packed_by_sku(request, sku):
+    try:
+        import json
+        body = json.loads(request.body.decode('utf-8')) if request.body else {}
+        confirm_switch = body.get('confirm_switch', False)
+
+        # Find the SizeQuantity object matching the scanned SKU.
+        sq = SizeQuantity.objects.filter(sku=sku).first()
+        if not sq:
+            return JsonResponse({'success': False, 'message': 'SKU not found.'}, status=404)
+        
+        # Get the order that contains this SizeQuantity.
+        order = Order.objects.filter(size_quantities=sq).first()
+        if not order:
+            return JsonResponse({'success': False, 'message': 'Order not found for this SKU.'}, status=404)
+
+        # Check for current order in the session.
+        current_order_id = request.session.get('current_order_id')
+        if current_order_id is None:
+            # No order set yet, so initialize it.
+            request.session['current_order_id'] = order.id
+        elif current_order_id != order.id and not confirm_switch:
+            # The scanned SKU belongs to a different order and the user has not confirmed a switch.
+            data = {
+                'success': False,
+                'switch_order': True,
+                'message': f"Are you sure you want to start packaging {order.model.name} order?",
+                'order_id': order.id,
+                'model_name': order.model.name,
+            }
+            return JsonResponse(data, status=200)
+        elif current_order_id != order.id and confirm_switch:
+            # User confirmed switching orders.
+            request.session['current_order_id'] = order.id
+
+        # Now process the update: increment the packed count.
+        if sq.packed is None:
+            sq.packed = 1
+        else:
+            sq.packed += 1
+        sq.save(update_fields=['packed'])
+        
+        # Determine if the required quantity is now reached.
+        reached_required = False
+        if sq.quantity is not None and sq.packed == sq.quantity:
+            reached_required = True
+
+        # Build the list of size quantities for this order.
+        size_qty_data = []
+        for qty in order.size_quantities.all():
+            size_qty_data.append({
+                'sku': qty.sku,
+                'color': str(qty.color),
+                'fabrics': str(qty.fabrics),
+                'size': qty.size,
+                'quantity': qty.quantity,
+                'packed': qty.packed if qty.packed is not None else 0,
+                'id': qty.id,
+                'production_complete': qty.production_complete
+            })
+        
+        data = {
+            'success': True,
+            'message': 'Packed count updated for SKU.',
+            'order_id': order.id,
+            'model_name': order.model.name,
+            'size_quantities': size_qty_data,
+            'scanned_sku': sq.sku,
+            'reached_required': reached_required,  # New flag
+        }
+        return JsonResponse(data)
+        
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

@@ -38,19 +38,24 @@
         <label for="id_width">{% trans "Width" %}</label>
         {{ form.width }}
       </div>
+      <!-- New Converter Field -->
+      <div class="form-group">
+        <label for="id_converter">{% trans "Converter" %}</label>
+        <input type="number" name="converter" id="id_converter" step="any" class="form-control">
+      </div>
       <div class="form-group">
         <label for="id_quantity">{% trans "Quantity" %}</label>
         {{ form.quantity }}
       </div>
       
       <div id="weights-table" style="display: none;">
-        <h3>{% trans "Enter Weights for Each Roll" %}</h3>
+        <h3>{% trans "Enter Weights and Lengths for Each Roll" %}</h3>
         <table class="table table-bordered">
           <thead>
             <tr>
               <th>{% trans "Color" %}</th>
               <th>{% trans "Fabric" %}</th>
-              <th>{% trans "Weight" %}</th>
+              <th id="weight-header" style="display: none;">{% trans "Weight" %}</th>
               <th>{% trans "Length" %}</th>
             </tr>
           </thead>
@@ -63,8 +68,9 @@
       <button type="submit" class="btn btn-primary">{% trans "Submit" %}</button>
     </form>
   </div>
+  
   <!-- Add Color Modal -->
-<div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-labelledby="addColorModalLabel" aria-hidden="true">
+  <div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-labelledby="addColorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <form id="addColorForm" method="post">
@@ -147,205 +153,310 @@
     </div>
   </div>
   
-  
-  <!-- JavaScript -->
+  <!-- JavaScript for modals and AJAX calls -->
   <script>
-  // Function to retrieve a cookie value by name (for CSRF token)
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+    // Function to retrieve a cookie value by name (for CSRF token)
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + "=")) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
+      return cookieValue;
     }
-    return cookieValue;
-  }
-  
-  document.addEventListener('DOMContentLoaded', function () {
-  
-    // Append "Add New" option to color and fabric select fields if not present.
-    const colorSelect = document.getElementById('id_color');
-    const fabricSelect = document.getElementById('id_fabric');
-    const supplierSelect = document.getElementById('id_supplier');
-  
-    // ===== Color Modal =====
-    const addColorModalEl = document.getElementById('addColorModal');
-    const addColorModal = new bootstrap.Modal(addColorModalEl, { backdrop: false });
-    const addColorForm = document.getElementById('addColorForm');
-    if (colorSelect) {
-      colorSelect.addEventListener('change', function () {
-        if (this.value === "add_new") {
-          addColorForm.reset();
-          addColorModal.show();
-          // Reset selection so the "Add New" option is not left selected
-          this.value = "";
-        }
-      });
-    }
-  
-    addColorForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const formData = new FormData(addColorForm);
-      fetch("{% url 'add_color_api' %}", {
-        method: "POST",
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Create a new option element with the new color info
-          const newOption = new Option(data.color_name, data.color_id, false, true);
-          colorSelect.appendChild(newOption);
-          addColorModal.hide();
-        } else {
-          alert("Error: " + JSON.stringify(data.errors));
-        }
-      })
-      .catch(error => {
-        alert("An error occurred: " + error);
-      });
-    });
-  
-    // ===== Fabric Modal =====
-    const addFabricModalEl = document.getElementById('addFabricModal');
-    const addFabricModal = new bootstrap.Modal(addFabricModalEl, { backdrop: false });
-    const addFabricForm = document.getElementById('addFabricForm');
-    if (fabricSelect) {
-      fabricSelect.addEventListener('change', function () {
-        if (this.value === "add_new") {
-          addFabricForm.reset();
-          addFabricModal.show();
-          // Reset selection so the "Add New" option is not left selected
-          this.value = "";
-        }
-      });
-    }
-  
-    addFabricForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const formData = new FormData(addFabricForm);
-      fetch("{% url 'add_fabric_api' %}", {
-        method: "POST",
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Create a new option element with the new fabric info
-          const newOption = new Option(data.fabric_name, data.fabric_id, false, true);
-          fabricSelect.appendChild(newOption);
-          addFabricModal.hide();
-        } else {
-          alert("Error: " + JSON.stringify(data.errors));
-        }
-      })
-      .catch(error => {
-        alert("An error occurred: " + error);
-      });
-    });
-  
-    // ===== Supplier Modal =====
-    const addSupplierModalEl = document.getElementById('addSupplierModal');
-    const addSupplierModal = new bootstrap.Modal(addSupplierModalEl, { backdrop: false });
-    const addSupplierForm = document.getElementById('addSupplierForm');
-    if (supplierSelect) {
-      supplierSelect.addEventListener('change', function () {
-        if (this.value === "add_new") {
-          addSupplierForm.reset();
-          addSupplierModal.show();
-          // Reset selection so the "Add New" option is not left selected
-          this.value = "";
-        }
-      });
-    }
-  
-    addSupplierForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const formData = new FormData(addSupplierForm);
-      fetch("{% url 'add_supplier_api' %}", {
-        method: "POST",
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Create a new option element with the new supplier info
-          const newOption = new Option(data.supplier_name, data.supplier_id, false, true);
-          supplierSelect.appendChild(newOption);
-          addSupplierModal.hide();
-        } else {
-          alert("Error: " + JSON.stringify(data.errors));
-        }
-      })
-      .catch(error => {
-        alert("An error occurred: " + error);
-      });
-    });
     
-  });
-  </script>  
-
-  <script>
-    // When the quantity field changes, dynamically generate table rows.
-    document.getElementById("id_quantity").addEventListener("input", function() {
-      var qty = parseInt(this.value);
-      var tableDiv = document.getElementById("weights-table");
-      var tableBody = document.getElementById("weights-table-body");
-      tableBody.innerHTML = "";  // Clear existing rows
-      if(qty > 0){
-        tableDiv.style.display = "block";
-        // Get the selected text for color and fabric
-        var colorSelect = document.getElementById("id_color");
-        var fabricSelect = document.getElementById("id_fabric");
-        var colorText = colorSelect.options[colorSelect.selectedIndex].text;
-        var fabricText = fabricSelect.options[fabricSelect.selectedIndex].text;
-        for(var i = 0; i < qty; i++){
-          var row = document.createElement("tr");
-          // Color cell
-          var colorCell = document.createElement("td");
-          colorCell.textContent = colorText;
-          row.appendChild(colorCell);
-          // Fabric cell
-          var fabricCell = document.createElement("td");
-          fabricCell.textContent = fabricText;
-          row.appendChild(fabricCell);
-          // Weight cell with input
-          var weightCell = document.createElement("td");
-          var weightInput = document.createElement("input");
-          weightInput.type = "number";
-          weightInput.step = "any";
-          weightInput.name = "weight";
-          weightInput.className = "form-control";
-          weightCell.appendChild(weightInput);
-          row.appendChild(weightCell);
-          // Length cell with input
-          var lengthCell = document.createElement("td");
-          var lengthInput = document.createElement("input");
-          lengthInput.type = "number";
-          lengthInput.step = "any";
-          lengthInput.name = "length";
-          lengthInput.className = "form-control";
-          lengthCell.appendChild(lengthInput);
-          row.appendChild(lengthCell);
-          tableBody.appendChild(row);
-        }
-      } else {
-        tableDiv.style.display = "none";
+    document.addEventListener("DOMContentLoaded", function () {
+  
+      const colorSelect = document.getElementById("id_color");
+      const fabricSelect = document.getElementById("id_fabric");
+      const supplierSelect = document.getElementById("id_supplier");
+  
+      // ===== Color Modal =====
+      const addColorModalEl = document.getElementById("addColorModal");
+      const addColorModal = new bootstrap.Modal(addColorModalEl, { backdrop: false });
+      const addColorForm = document.getElementById("addColorForm");
+      if (colorSelect) {
+        colorSelect.addEventListener("change", function () {
+          if (this.value === "add_new") {
+            addColorForm.reset();
+            addColorModal.show();
+            this.value = "";
+          }
+        });
       }
+  
+      addColorForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(addColorForm);
+        fetch("{% url 'add_color_api' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const newOption = new Option(data.color_name, data.color_id, false, true);
+              colorSelect.appendChild(newOption);
+              addColorModal.hide();
+            } else {
+              alert("Error: " + JSON.stringify(data.errors));
+            }
+          })
+          .catch(error => alert("An error occurred: " + error));
+      });
+  
+      // ===== Fabric Modal =====
+      const addFabricModalEl = document.getElementById("addFabricModal");
+      const addFabricModal = new bootstrap.Modal(addFabricModalEl, { backdrop: false });
+      const addFabricForm = document.getElementById("addFabricForm");
+      if (fabricSelect) {
+        fabricSelect.addEventListener("change", function () {
+          if (this.value === "add_new") {
+            addFabricForm.reset();
+            addFabricModal.show();
+            this.value = "";
+          }
+        });
+      }
+  
+      addFabricForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(addFabricForm);
+        fetch("{% url 'add_fabric_api' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const newOption = new Option(data.fabric_name, data.fabric_id, false, true);
+              fabricSelect.appendChild(newOption);
+              addFabricModal.hide();
+            } else {
+              alert("Error: " + JSON.stringify(data.errors));
+            }
+          })
+          .catch(error => alert("An error occurred: " + error));
+      });
+  
+      // ===== Supplier Modal =====
+      const addSupplierModalEl = document.getElementById("addSupplierModal");
+      const addSupplierModal = new bootstrap.Modal(addSupplierModalEl, { backdrop: false });
+      const addSupplierForm = document.getElementById("addSupplierForm");
+      if (supplierSelect) {
+        supplierSelect.addEventListener("change", function () {
+          if (this.value === "add_new") {
+            addSupplierForm.reset();
+            addSupplierModal.show();
+            this.value = "";
+          }
+        });
+      }
+  
+      addSupplierForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(addSupplierForm);
+        fetch("{% url 'add_supplier_api' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const newOption = new Option(data.supplier_name, data.supplier_id, false, true);
+              supplierSelect.appendChild(newOption);
+              addSupplierModal.hide();
+            } else {
+              alert("Error: " + JSON.stringify(data.errors));
+            }
+          })
+          .catch(error => alert("An error occurred: " + error));
+      });
+      
+      // When quantity changes, dynamically generate table rows.
+      document.getElementById("id_quantity").addEventListener("input", function () {
+        let qty = parseInt(this.value);
+        let tableDiv = document.getElementById("weights-table");
+        let tableBody = document.getElementById("weights-table-body");
+        tableBody.innerHTML = ""; // Clear existing rows
+        
+        // Get current converter value.
+        let converterInputValue = document.getElementById("id_converter").value;
+        let conv = parseFloat(converterInputValue);
+        let isConverterPresent = !isNaN(conv) && conv !== 0;
+        
+        // Toggle weight header based on converter.
+        document.getElementById("weight-header").style.display = isConverterPresent ? "" : "none";
+  
+        if (qty > 0) {
+          tableDiv.style.display = "block";
+          let colorText = colorSelect.options[colorSelect.selectedIndex].text;
+          let fabricText = fabricSelect.options[fabricSelect.selectedIndex].text;
+          for (let i = 0; i < qty; i++) {
+            let row = document.createElement("tr");
+            
+            // Color cell.
+            let colorCell = document.createElement("td");
+            colorCell.textContent = colorText;
+            row.appendChild(colorCell);
+            
+            // Fabric cell.
+            let fabricCell = document.createElement("td");
+            fabricCell.textContent = fabricText;
+            row.appendChild(fabricCell);
+  
+            if (isConverterPresent) {
+              // Create weight cell.
+              let weightCell = document.createElement("td");
+              let weightInput = document.createElement("input");
+              weightInput.type = "number";
+              weightInput.step = "any";
+              weightInput.name = "weight";
+              weightInput.className = "form-control";
+              weightCell.appendChild(weightInput);
+              row.appendChild(weightCell);
+  
+              // Create length cell.
+              let lengthCell = document.createElement("td");
+              let lengthInput = document.createElement("input");
+              lengthInput.type = "number";
+              lengthInput.step = "any";
+              lengthInput.name = "length";
+              lengthInput.className = "form-control";
+              lengthCell.appendChild(lengthInput);
+              row.appendChild(lengthCell);
+  
+              // When weight changes, update length.
+              weightInput.addEventListener("input", function () {
+                if (this.updating) return;
+                let currentConv = parseFloat(document.getElementById("id_converter").value);
+                let weightVal = parseFloat(this.value);
+                if (!isNaN(weightVal) && !isNaN(currentConv)) {
+                  lengthInput.updating = true;
+                  lengthInput.value = (weightVal * currentConv).toFixed(2);
+                  lengthInput.updating = false;
+                } else {
+                  lengthInput.value = "";
+                }
+              });
+  
+              // When length changes, update weight.
+              lengthInput.addEventListener("input", function () {
+                if (this.updating) return;
+                let currentConv = parseFloat(document.getElementById("id_converter").value);
+                let lengthVal = parseFloat(this.value);
+                if (!isNaN(lengthVal) && currentConv !== 0 && !isNaN(currentConv)) {
+                  weightInput.updating = true;
+                  weightInput.value = (lengthVal / currentConv).toFixed(2);
+                  weightInput.updating = false;
+                } else {
+                  weightInput.value = "";
+                }
+              });
+            } else {
+              // If no converter, only add a length cell.
+              let lengthCell = document.createElement("td");
+              let lengthInput = document.createElement("input");
+              lengthInput.type = "number";
+              lengthInput.step = "any";
+              lengthInput.name = "length";
+              lengthInput.className = "form-control";
+              lengthCell.appendChild(lengthInput);
+              row.appendChild(lengthCell);
+            }
+  
+            tableBody.appendChild(row);
+          }
+        } else {
+          tableDiv.style.display = "none";
+        }
+      });
+  
+      // Listen for converter changes.
+      document.getElementById("id_converter").addEventListener("input", function () {
+        let newConv = parseFloat(this.value);
+        let rows = document.querySelectorAll("#weights-table-body tr");
+  
+        if (!isNaN(newConv) && newConv !== 0) {
+          // Show the weight header.
+          document.getElementById("weight-header").style.display = "";
+          
+          rows.forEach((row) => {
+            let weightInput = row.querySelector("input[name='weight']");
+            let lengthInput = row.querySelector("input[name='length']");
+            // If the row was created without a weight cell, add it.
+            if (!weightInput) {
+              let weightCell = document.createElement("td");
+              weightInput = document.createElement("input");
+              weightInput.type = "number";
+              weightInput.step = "any";
+              weightInput.name = "weight";
+              weightInput.className = "form-control";
+              weightCell.appendChild(weightInput);
+              // Insert the weight cell before the length cell.
+              row.insertBefore(weightCell, row.children[2]);
+  
+              // Attach event listeners for the new weight field.
+              weightInput.addEventListener("input", function () {
+                if (this.updating) return;
+                let currConv = parseFloat(document.getElementById("id_converter").value);
+                let wVal = parseFloat(this.value);
+                if (!isNaN(wVal) && !isNaN(currConv)) {
+                  lengthInput.updating = true;
+                  lengthInput.value = (wVal * currConv).toFixed(2);
+                  lengthInput.updating = false;
+                } else {
+                  lengthInput.value = "";
+                }
+              });
+              lengthInput.addEventListener("input", function () {
+                if (this.updating) return;
+                let currConv = parseFloat(document.getElementById("id_converter").value);
+                let lVal = parseFloat(this.value);
+                if (!isNaN(lVal) && currConv !== 0 && !isNaN(currConv)) {
+                  weightInput.updating = true;
+                  weightInput.value = (lVal / currConv).toFixed(2);
+                  weightInput.updating = false;
+                } else {
+                  weightInput.value = "";
+                }
+              });
+            } else {
+              // If the weight field already exists, update the values.
+              if (weightInput.value !== "") {
+                let w = parseFloat(weightInput.value);
+                if (!isNaN(w)) {
+                  lengthInput.value = (w * newConv).toFixed(2);
+                }
+              } else if (lengthInput.value !== "") {
+                let l = parseFloat(lengthInput.value);
+                if (!isNaN(l)) {
+                  weightInput.value = (l / newConv).toFixed(2);
+                }
+              }
+            }
+          });
+        } else {
+          // If the converter is invalid, hide weight header and remove any weight cells.
+          document.getElementById("weight-header").style.display = "none";
+          rows.forEach((row) => {
+            let weightCell = row.querySelector("td input[name='weight']")?.parentElement;
+            if (weightCell) {
+              weightCell.remove();
+            }
+          });
+        }
+      });
+  
     });
   </script>
 {% endblock %}

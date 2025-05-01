@@ -3,7 +3,9 @@
 {% load static %}
 {% block content %}
   <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+    <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
     <h4 style="color: #232323; margin:auto;" class="navfont">{% trans 'Technologist Dashboard' %}</h4>
     <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: inline;">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
@@ -20,145 +22,227 @@
 
   <div class="container maincontr">
     <div class="container">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        {{ model.name }}
-        {% if model.is_archived %}
-          <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans 'Un Archive' %}</a>
+    <div class="card-header d-flex justify-content-between align-items-center">
+      {{ model.name }}
+      {% if model.is_archived %}
+        <a href="javascript:void(0);" id="unArchiveBtn" class="btn create-btn">{% trans 'Un Archive' %}</a>
+      {% endif %}
+    </div>
+    
+    <!-- Model Image -->
+    <div class="operation-photo" style="margin-bottom:20px;">
+      {% if model.photo %}
+        <img src="{{ model.photo.url }}" alt="{% trans 'Model Photo' %}" class="img-fluid">
+      {% else %}
+        <img src="{% static 'img/noimg1.png' %}" alt="{% trans 'Model Photo' %}" class="img-fluid">
+      {% endif %}
+    </div>
+    
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="main-tab" data-toggle="tab" href="#main" role="tab" aria-controls="main" aria-selected="true">
+          {% trans "Main" %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tech-tab" data-toggle="tab" href="#technical" role="tab" aria-controls="technical" aria-selected="false">
+          {% trans "Technical Process" %}
+        </a>
+      </li>
+      {% comment %} <li class="nav-item">
+        <a class="nav-link" id="bom-tab" data-toggle="tab" href="#bom" role="tab" aria-controls="bom" aria-selected="false">
+          {% trans "Bill of Materials" %}
+        </a>
+      </li> {% endcomment %}
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Main Tab Content -->
+      <div class="tab-pane fade show active" id="main" role="tabpanel" aria-labelledby="main-tab">
+        <p>
+          <strong>{% trans 'Assortment:' %}</strong> {{ model.assortment.name }}
+        </p>
+        <p>
+          <strong>{% trans 'Consumption Theoretical:' %}</strong> {{ model.consumption_t }}
+        </p>
+        <p>
+          <strong>{% trans 'Consumption Practical:' %}</strong>
+          <span id="consumptionPractical">{{ model.consumption_p }}</span>
+          <a href="{% url 'calculate_consumption' model.pk %}" 
+             class="btn btn-sm btn-primary ml-2" 
+             id="calculateConsumptionBtn"
+             style="width: auto;">
+            {% trans 'Calculate' %}
+          </a>
+        </p>
+        <!-- Additional main details can be added here -->
+        {% if not model.is_archived %}
+          <a href="{% url 'model_edit' pk=model.pk %}">
+            <img src="{% static 'img/compose.png' %}" alt="" class="editimg" />
+          </a>
+        {% endif %}
+        <a href="javascript:void(0);" id="deleteBtn">
+          <img src="{% static 'img/trash.png' %}" alt="" class="deleteimg" />
+        </a>
+        <a href="{% url 'model_create' %}?copy={{ model.id }}" class="btn edit-btn" style="margin-top:18px;">
+          {% trans 'Copy' %}
+        </a>
+      </div>
+      
+      <!-- Technical Process Tab Content -->
+      <div class="tab-pane fade" id="technical" role="tabpanel" aria-labelledby="tech-tab">
+        {% if ordered_operations %}
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>{% trans 'Name' %}</th>
+                <th>{% trans 'Node' %}</th>
+                <th>{% trans 'Equipment' %}</th>
+                <th>{% trans 'Time' %}</th>
+                <th>{% trans 'Payment' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for operation in ordered_operations %}
+                <tr>
+                  <td>
+                    <a href="{% url 'operation_detail' operation.pk %}" style="color:#007bff;">
+                      {{ operation.name }}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'node_detail' operation.node.pk %}" style="color:#007bff;">
+                      {{ operation.node.name }}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'equipment_detail' operation.equipment.pk %}" style="color:#007bff;">
+                      {{ operation.equipment.name }}
+                    </a>
+                  </td>
+                  <td>
+                    {{ operation.preferred_completion_time }}
+                  </td>
+                  <td>
+                    {{ operation.payment }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>{% trans 'No operations associated with this model.' %}</p>
         {% endif %}
       </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-12">
-            <div class="operation-photo">
-              {% if model.photo %}
-                <img src="{{ model.photo.url }}" alt="{% trans 'Model Photo' %}">
+      
+      <!-- Bill of Materials Tab Content -->
+      <div class="tab-pane fade" id="bom" role="tabpanel" aria-labelledby="bom-tab">
+        {% if model.bill_of_materials.all %}
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>{% trans 'Item' %}</th>
+                <th>{% trans 'Quantity' %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for bom in model.bill_of_materials.all %}
+                <tr>
+                  <td>{{ bom.item.name }}</td>
+                  <td>{{ bom.quantity }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>{% trans 'No Bill of Materials available.' %}</p>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Hidden Forms for Archive/Unarchive -->
+    <form id="archiveForm"
+      action="{% if model.is_archived %}
+                {% url 'model_delete' pk=model.pk %}
               {% else %}
-                <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
-              {% endif %}
-            </div>
-            <p>
-              <strong>{% trans 'Assortment:' %}</strong> {{ model.assortment.name }}
-            </p>
-            <p>
-              <strong>{% trans 'Operations:' %}</strong>
-            </p>
-            {% if ordered_operations %}
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>{% trans 'Name' %}</th>
-                    <th>{% trans 'Node' %}</th>
-                    <th>{% trans 'Equipment' %}</th>
-                    <th>{% trans 'Time' %}</th>
-                    <th>{% trans 'Payment' %}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for operation in ordered_operations %}
-                    <tr>
-                      <td>
-                        <a href="{% url 'operation_detail' operation.pk %}" style="color:#007bff;">{{ operation.name }}</a>
-                      </td>
-                      <td>
-                        <a href="{% url 'node_detail' operation.node.pk %}" style="color:#007bff;">{{ operation.node.name }}</a>
-                      </td>
-                      <td>
-                        <a href="{% url 'equipment_detail' operation.equipment.pk %}" style="color:#007bff;">{{ operation.equipment.name }}</a>
-                      </td>
-                      <td>
-                        {{ operation.preferred_completion_time }}
-                      </td>
-                      <td>
-                        {{ operation.payment }}
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            {% else %}
-              <p>
-                {% trans 'No operations associated with this model.' %}
-              </p>
-            {% endif %}            
-            {% if not model.is_archived %}
-              <a href="{% url 'model_edit' a_id=model.assortment.pk pk=model.pk %}"><img src="{% static 'img/compose.png' %}" alt="" class="editimg" /></a>
-            {% endif %}
-            <a href="javascript:void(0);" id="deleteBtn"><img src="{% static 'img/trash.png' %}" alt="" class="deleteimg" /></a>
-            <a href="{% url 'model_create' model.assortment.pk %}?copy={{ model.id }}" class="btn edit-btn" style="margin-top:18px;">{% trans 'Copy' %}</a>
-          </div>
-          <form id="archiveForm"
-            action="{% if model.is_archived %}
-              {% url 'model_delete' a_id=model.assortment.pk pk=model.pk %}
-            {% else %}
-              {% url 'model_archive' a_id=model.assortment.pk pk=model.pk %}
-            {% endif %}"
-            method="post"
-            style="display:none;">
-            {% csrf_token %}
-          </form>
-          <form id="unArchiveForm" action="{% url 'model_unarchive' a_id=model.assortment.pk pk=model.pk %}" method="post" style="display:none;">
-            {% csrf_token %}
-          </form>
+                {% url 'model_archive' pk=model.pk %}
+              {% endif %}"
+      method="post" style="display:none;">
+      {% csrf_token %}
+    </form>
+    <form id="unArchiveForm" action="{% url 'model_unarchive' pk=model.pk %}" method="post" style="display:none;">
+      {% csrf_token %}
+    </form>
+    
+    <!-- Delete Modal -->
+    <div class="modal" id="deleteModal">
+      <div class="modal-content">
+        <span class="close" id="closeBtn">&times;</span>
+        <p>{% trans 'Are you sure you want to delete this model?' %}</p>
+        <div class="modal-buttons">
+          <button class="btn confirm" id="confirmDeleteBtn">{% trans 'Confirm' %}</button>
+          <button class="btn cancel" id="cancelBtn">{% trans 'Cancel' %}</button>
         </div>
       </div>
-      <div class="modal" id="deleteModal">
-        <div class="modal-content">
-          <span class="close" id="closeBtn">&times;</span>
-          <p>
-            {% trans 'Are you sure you want to delete this model?' %}
-          </p>
-          <div class="modal-buttons">
-            <button class="btn confirm" id="confirmDeleteBtn">{% trans 'Confirm' %}</button>
-            <button class="btn cancel" id="cancelBtn">{% trans 'Cancel' %}</button>
-          </div>
+    </div>
+    
+    <!-- Unarchive Modal -->
+    <div class="modal" id="unarchiveModal">
+      <div class="modal-content">
+        <span class="close" id="closeUnarchiveBtn">&times;</span>
+        <p>{% trans 'Are you sure you want to unarchive this model?' %}</p>
+        <div class="modal-buttons">
+          <button class="btn confirm" id="confirmUnarchiveBtn">{% trans 'Confirm' %}</button>
+          <button class="btn cancel" id="cancelUnarchiveBtn">{% trans 'Cancel' %}</button>
         </div>
-      </div>
-      <div class="modal" id="unarchiveModal">
-        <div class="modal-content">
-          <span class="close" id="closeUnarchiveBtn">&times;</span>
-          <p>
-            {% trans 'Are you sure you want to unarchive this model?' %}
-          </p>
-          <div class="modal-buttons">
-            <button class="btn confirm" id="confirmUnarchiveBtn">{% trans 'Confirm' %}</button>
-            <button class="btn cancel" id="cancelUnarchiveBtn">{% trans 'Cancel' %}</button>
-          </div>
         </div>
       </div>
     </div>
   </div>
-
   <script>
+    document.getElementById('calculateConsumptionBtn').addEventListener('click', function(e) {
+      e.preventDefault();  // Prevent the default link action.
+      var url = this.href;
+      fetch(url)
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          // Update the consumption value in the span.
+          document.getElementById('consumptionPractical').textContent = data.consumption;
+        })
+        .catch(function(error) {
+          console.error('Error fetching consumption:', error);
+        });
+    });
+  </script>
+  <script>
+    // Delete / Unarchive modal functionality remains unchanged.
     document.getElementById('deleteBtn').onclick = function () {
-      document.getElementById('deleteModal').style.display = 'flex'
+      document.getElementById('deleteModal').style.display = 'flex';
     }
-    
     document.getElementById('closeBtn').onclick = function () {
-      document.getElementById('deleteModal').style.display = 'none'
+      document.getElementById('deleteModal').style.display = 'none';
     }
-    
     document.getElementById('cancelBtn').onclick = function () {
-      document.getElementById('deleteModal').style.display = 'none'
+      document.getElementById('deleteModal').style.display = 'none';
     }
-    
     document.getElementById('confirmDeleteBtn').onclick = function () {
-      document.getElementById('archiveForm').submit()
+      document.getElementById('archiveForm').submit();
     }
-    
-    document.getElementById('unArchiveBtn').onclick = function () {
-      document.getElementById('unarchiveModal').style.display = 'flex'
-    }
-    
+    document.getElementById('unArchiveBtn') && (document.getElementById('unArchiveBtn').onclick = function () {
+      document.getElementById('unarchiveModal').style.display = 'flex';
+    });
     document.getElementById('closeUnarchiveBtn').onclick = function () {
-      document.getElementById('unarchiveModal').style.display = 'none'
+      document.getElementById('unarchiveModal').style.display = 'none';
     }
-    
     document.getElementById('cancelUnarchiveBtn').onclick = function () {
-      document.getElementById('unarchiveModal').style.display = 'none'
+      document.getElementById('unarchiveModal').style.display = 'none';
     }
-    
     document.getElementById('confirmUnarchiveBtn').onclick = function () {
-      document.getElementById('unArchiveForm').submit()
+      document.getElementById('unArchiveForm').submit();
     }
   </script>
 {% endblock %}
