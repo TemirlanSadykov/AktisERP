@@ -2176,6 +2176,7 @@ def bom_create(request, pk):
     suppliers = Supplier.objects.filter(is_archived=False)
 
     return render(request, 'technologist/models/bom_create.html', {
+        'order': order,
         'sizequantity': size_qty,
         'categories': categories,
         'items_by_category': dict(items_by_cat),

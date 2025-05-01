@@ -135,7 +135,16 @@
       </tfoot>
     </table>
 
-    <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+    <div class="form-group">
+      <div class="row">
+        <div class="col text-left">
+          <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
+        </div>
+        <div class="col text-right">
+          <a href="{% url 'order_detail' order.pk %}" class="btn btn-back btn back-btn btnback">{% trans "Skip" %}</a>
+        </div>
+      </div>
+    </div>
   </form>
 </div>
 
