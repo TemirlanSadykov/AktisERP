@@ -135,7 +135,16 @@
       </tfoot>
     </table>
 
-    <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+    <div class="form-group">
+      <div class="row">
+        <div class="col text-left">
+          <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
+        </div>
+        <div class="col text-right">
+          <a href="{% url 'order_detail' order.pk %}" class="btn btn-back btn back-btn btnback">{% trans "Skip" %}</a>
+        </div>
+      </div>
+    </div>
   </form>
 </div>
 
@@ -217,6 +226,8 @@
           <div class="form-group">
             <label>{% trans "Color" %}</label>
             <select class="form-control" id="fabric_color" name="color" required>
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new">{% trans "Add New Color" %}</option>
               {% for color in colors %}
                 <option value="{{ color.pk }}">{{ color.name }}</option>
               {% endfor %}
@@ -225,6 +236,8 @@
           <div class="form-group">
             <label>{% trans "Fabric" %}</label>
             <select class="form-control" id="fabric_fabric" name="fabric" required>
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new">{% trans "Add New Fabric" %}</option>
               {% for fabric in fabrics %}
                 <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
               {% endfor %}
@@ -237,6 +250,8 @@
           <div class="form-group">
             <label>{% trans "Supplier" %}</label>
             <select class="form-control" id="fabric_supplier" name="supplier" required>
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new">{% trans "Add New Supplier" %}</option>
               {% for supplier in suppliers %}
                 <option value="{{ supplier.pk }}">{{ supplier.name }}</option>
               {% endfor %}
@@ -251,6 +266,196 @@
     </div>
   </div>
 </div>
+<div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addColorForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Color" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_color_name">{% trans "Color Name" %}</label>
+            <input type="text" class="form-control" id="id_color_name" name="name" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Nested: Add Fabric Modal -->
+<div class="modal" data-backdrop="false" id="addFabricModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addFabricForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Fabric" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_fabric_name">{% trans "Fabric Name" %}</label>
+            <input type="text" class="form-control" id="id_fabric_name" name="name" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Nested: Add Supplier Modal -->
+<div class="modal" data-backdrop="false" id="addSupplierModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addSupplierForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Supplier" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_supplier_name">{% trans "Supplier Name" %}</label>
+            <input type="text" class="form-control" id="id_supplier_name" name="name" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+      document.cookie.split(';').forEach(c => {
+        let [k, v] = c.trim().split('=');
+        if (k === name) cookieValue = decodeURIComponent(v);
+      });
+    }
+    return cookieValue;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const fabricColor = document.getElementById("fabric_color");
+    const fabricFabric = document.getElementById("fabric_fabric");
+    const fabricSupplier = document.getElementById("fabric_supplier");
+
+    // Open nested modals
+    fabricColor?.addEventListener("change", () => {
+      if (fabricColor.value === "add_new") {
+        document.getElementById("addColorForm").reset();
+        document.getElementById("addColorModal").style.display = "block";
+        document.getElementById("addColorModal").classList.add("show");
+        fabricColor.value = "";
+      }
+    });
+
+    fabricFabric?.addEventListener("change", () => {
+      if (fabricFabric.value === "add_new") {
+        document.getElementById("addFabricForm").reset();
+        document.getElementById("addFabricModal").style.display = "block";
+        document.getElementById("addFabricModal").classList.add("show");
+        fabricFabric.value = "";
+      }
+    });
+
+    fabricSupplier?.addEventListener("change", () => {
+      if (fabricSupplier.value === "add_new") {
+        document.getElementById("addSupplierForm").reset();
+        document.getElementById("addSupplierModal").style.display = "block";
+        document.getElementById("addSupplierModal").classList.add("show");
+        fabricSupplier.value = "";
+      }
+    });
+
+    // AJAX submits for nested modals
+    document.getElementById("addColorForm").addEventListener("submit", e => {
+      e.preventDefault();
+      fetch("{% url 'add_color_api' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        body: new FormData(e.target)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          let opt = new Option(data.color_name, data.color_id, false, true);
+          fabricColor.appendChild(opt);
+          fabricColor.value = data.color_id;
+          document.getElementById("addColorModal").classList.remove("show");
+          document.getElementById("addColorModal").style.display = "none";
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });
+    });
+
+    document.getElementById("addFabricForm").addEventListener("submit", e => {
+      e.preventDefault();
+      fetch("{% url 'add_fabric_api' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        body: new FormData(e.target)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          let opt = new Option(data.fabric_name, data.fabric_id, false, true);
+          fabricFabric.appendChild(opt);
+          fabricFabric.value = data.fabric_id;
+          document.getElementById("addFabricModal").classList.remove("show");
+          document.getElementById("addFabricModal").style.display = "none";
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });
+    });
+
+    document.getElementById("addSupplierForm").addEventListener("submit", e => {
+      e.preventDefault();
+      fetch("{% url 'add_supplier_api' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        body: new FormData(e.target)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          let opt = new Option(data.supplier_name, data.supplier_id, false, true);
+          fabricSupplier.appendChild(opt);
+          fabricSupplier.value = data.supplier_id;
+          document.getElementById("addSupplierModal").classList.remove("show");
+          document.getElementById("addSupplierModal").style.display = "none";
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });
+    });
+  });
+</script>
 
 <script>
   // CSRF helper

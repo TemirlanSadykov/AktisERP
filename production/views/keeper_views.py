@@ -610,7 +610,6 @@ def stock_bulk_create(request):
     while f'row-{row}_item' in request.POST:
         item_id = request.POST.get(f'row-{row}_item')
         qty_str = request.POST.get(f'row-{row}_quantity')
-        unit    = request.POST.get(f'row-{row}_unit')
 
         if item_id and qty_str:
             try:
@@ -640,7 +639,6 @@ def stock_bulk_create(request):
                         object_id=item.id,
                         type=Stock.RAW_MATERIALS,
                         quantity=qty,
-                        unit=unit,
                         warehouse=warehouse,
                         is_archived=False,
                         company=company,
