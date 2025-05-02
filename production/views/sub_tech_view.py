@@ -300,3 +300,106 @@ def assign_operations_by_cut_sub(request, cut_id):
         'work_by_op_and_size': work_by_op_and_size,
         'sidebar_type': 'sub_tech'
     })
+
+@require_POST
+@sub_tech_required
+@login_required
+def update_passport_quantity_sub(request):
+    """
+    Updates the factual quantity for a given PassportSize and updates all 
+    AssignedWork records related to that PassportSize.
+    Adjusts the corresponding SizeQuantity.factual based on the delta.
+    """
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON."}, status=400)
+
+    passport_size_id = data.get("passport_size_id")
+    new_quantity = data.get("new_quantity")
+
+    if passport_size_id is None or new_quantity is None:
+        return JsonResponse({"status": "error", "message": "Missing parameters."}, status=400)
+
+    try:
+        new_quantity = int(new_quantity)
+    except ValueError:
+        return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
+
+    try:
+        passport_size = PassportSize.objects.get(id=passport_size_id)
+    except PassportSize.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "PassportSize not found."}, status=404)
+
+    # Calculate the delta
+    old_factual = passport_size.factual or 0
+    delta = new_quantity - old_factual
+
+    # Update PassportSize factual
+    passport_size.factual = new_quantity
+    passport_size.save()
+
+    # Adjust SizeQuantity factual
+    size_qty = passport_size.size_quantity
+    if size_qty:
+        size_qty.factual = (size_qty.factual or 0) + delta
+        size_qty.save()
+    # Update all AssignedWork records
+    AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
+
+    return JsonResponse({"status": "success"})
+
+@login_required
+@sub_tech_required
+@require_POST
+def update_work_sub(request):
+    data = json.loads(request.body)
+    assigned_work_id = data.get('work_id')
+    value = data.get('value')
+
+    try:
+        current_assignment = AssignedWork.objects.get(id=assigned_work_id)
+        work = Work.objects.get(id=current_assignment.work.id)
+
+        if not value.strip():
+            current_assignment.delete()
+            remaining_assignments = AssignedWork.objects.filter(work=work).exists()
+            if not remaining_assignments:
+                work.delete()
+            return JsonResponse({'status': 'success'})
+
+        new_assignments_data = value.split(',')
+        first = True  # Flag to track the first item
+
+        for item in new_assignments_data:
+            employee_id, quantity = item.split('(')
+            employee_id = employee_id.strip()
+            quantity = int(quantity.strip(' )'))
+
+            employee_profile = UserProfile.objects.filter(
+                employee_id=employee_id, type=UserProfile.EMPLOYEE,
+                ).first()
+
+            if not employee_profile:
+                raise Exception(f"Employee not found.")
+
+            # Handle the first item by updating existing assigned work
+            if first:
+                current_assignment.employee = employee_profile
+                current_assignment.quantity = quantity
+                current_assignment.save()
+                first = False  # Update the flag after handling the first item
+            else:
+                # Create new assigned works for subsequent items
+                AssignedWork.objects.create(
+                    work=work,
+                    employee=employee_profile,
+                    quantity=quantity
+                )
+
+        return JsonResponse({'status': 'success'})
+
+    except Work.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Work not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

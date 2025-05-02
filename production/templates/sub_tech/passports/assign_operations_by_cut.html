@@ -209,7 +209,7 @@
       showLoading();
     }
     
-    fetch(`/production/technologist/passports/${cutId}/assign_operations_by_cut/`, {
+    fetch(`/production/sub_tech/passports/${cutId}/assign_operations_by_cut/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -297,7 +297,7 @@
 
       // Show a loading indicator if desired
       showLoading();
-      fetch('/production/technologist/passports/update_passport_quantity/', {
+      fetch('/production/sub_tech/passports/update_passport_quantity/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -440,7 +440,7 @@
       showLoading();
     }
     
-    fetch(`/production/technologist/passports/update_work/`, {
+    fetch(`/production/sub_tech/passports/update_work/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
