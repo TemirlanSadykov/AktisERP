@@ -34,7 +34,7 @@ def user_redirect(request):
     elif user_profile.type == UserProfile.PACKER:
         return redirect('client_order_list_packer')
     elif user_profile.type == UserProfile.KEEPER:
-        return redirect('keeper_page')
+        return redirect('client_order_list_keeper')
     elif user_profile.type == UserProfile.ACCOUNTANT:
         return redirect('client_order_list_packer')
     elif user_profile.type == UserProfile.SUB_TECH:
