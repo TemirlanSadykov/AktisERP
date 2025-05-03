@@ -2189,7 +2189,6 @@ def bom_create(request, pk):
 
 @require_POST
 @login_required
-@technologist_required
 def add_category_api(request):
     name = request.POST.get('name', '').strip()
     is_fabric = request.POST.get('is_fabric') == 'on'
@@ -2209,7 +2208,6 @@ def add_category_api(request):
 
 
 @login_required
-@technologist_required
 def items_by_category_api(request):
     cat_id = request.GET.get('category')
     if not cat_id:
@@ -2238,7 +2236,6 @@ def add_item_api(request):
     
 @require_POST
 @login_required
-@technologist_required
 def add_fabric_item_api(request):
     form = FabricItemForm(request.POST)
 
