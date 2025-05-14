@@ -64,19 +64,6 @@
         <p>
           <strong>{% trans 'Assortment:' %}</strong> {{ model.assortment.name }}
         </p>
-        <p>
-          <strong>{% trans 'Consumption Theoretical:' %}</strong> {{ model.consumption_t }}
-        </p>
-        <p>
-          <strong>{% trans 'Consumption Practical:' %}</strong>
-          <span id="consumptionPractical">{{ model.consumption_p }}</span>
-          <a href="{% url 'calculate_consumption' model.pk %}" 
-             class="btn btn-sm btn-primary ml-2" 
-             id="calculateConsumptionBtn"
-             style="width: auto;">
-            {% trans 'Calculate' %}
-          </a>
-        </p>
         <!-- Additional main details can be added here -->
         {% if not model.is_archived %}
           <a href="{% url 'model_edit' pk=model.pk %}">

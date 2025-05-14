@@ -2281,14 +2281,7 @@ class ConsumptionCalculationView(View):
         ).aggregate(
             total=Coalesce(Sum('quantity', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
         )['total']
-        
-        # Calculate consumption safely (avoid division by zero).
-        consumption = total_roll_length / total_quantity if total_quantity > 0 else 0
-        
-        # Save the recalculated consumption to the model.
-        model_instance.consumption_p = consumption
-        model_instance.save(update_fields=["consumption_p"])
-        
+                
         return JsonResponse({'consumption': consumption})
 
 @method_decorator([login_required, technologist_required], name='dispatch')

@@ -396,14 +396,9 @@ class AssortmentForm(forms.ModelForm):
 
 class ModelCustomForm(forms.ModelForm):
     operations_data = forms.CharField(widget=forms.HiddenInput(), required=False)  # Stores JSON order data
-    consumption_t = forms.DecimalField(
-        label="Consumption",
-        widget=forms.NumberInput(attrs={'class': 'form-control'}),
-        required=False
-    )
     class Meta:
         model = Model
-        fields = ['name', 'assortment', 'operations', 'photo', 'consumption_t']  # Ensure 'operations' is handled by the form
+        fields = ['name', 'assortment', 'operations', 'photo']  # Ensure 'operations' is handled by the form
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'assortment': forms.Select(attrs={'class': 'form-control'}),

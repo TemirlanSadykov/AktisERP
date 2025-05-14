@@ -111,12 +111,6 @@
             <div class="error">{{ form.assortment.errors }}</div>
         {% endif %}
 
-        <label for="{{ form.consumption_t.id_for_label }}">{{ form.consumption_t.label }}</label>
-        {{ form.consumption_t }}
-        {% if form.consumption_t.errors %}
-        <div class="error">{{ form.consumption_t.errors }}</div>
-        {% endif %}
-
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
         <input type="text" id="searchOperations" placeholder="{% trans 'Search operations by name...' %}" aria-label="Search" style="margin-bottom: 20px; padding: 8px; width: 100%;">
         <div id="operationsContainer">
