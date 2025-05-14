@@ -2261,29 +2261,6 @@ def add_fabric_item_api(request):
     else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
-@method_decorator(login_required, name='dispatch')
-class ConsumptionCalculationView(View):
-    def get(self, request, model_id):
-        # Retrieve the Model instance.
-        model_instance = get_object_or_404(Model, pk=model_id)
-        
-        # Aggregate total roll length over all passports that belong to this model.
-        total_roll_length = Passport.objects.filter(
-            cut__order__model=model_instance,
-            roll__isnull=False
-        ).aggregate(
-            total=Coalesce(Sum('roll__length_t', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
-        )['total']
-        
-        # Aggregate total quantity from all passport sizes for passports that belong to this model.
-        total_quantity = PassportSize.objects.filter(
-            passport__cut__order__model=model_instance
-        ).aggregate(
-            total=Coalesce(Sum('quantity', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
-        )['total']
-                
-        return JsonResponse({'consumption': consumption})
-
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderBomView(DetailView):
     model = Order  # switched from SizeQuantity to Order
