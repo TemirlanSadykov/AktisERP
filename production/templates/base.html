@@ -262,12 +262,15 @@
                         <a href="{% url 'client_order_list_keeper' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                        <a href="{% url 'receipt_list' %}"
+                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
+                            <i class="fas fa-sign-in-alt fa-fw"></i><span class="sidetext">{% trans 'Logs' %}</span></a>
                         <a href="{% url 'stock_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-layer-group fa-fw"></i><span class="sidetext">{% trans 'Stocks' %}</span></a>
                         <a href="{% url 'stock_movement' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-sign-in-alt fa-fw"></i><span class="sidetext">{% trans 'Stock Movement' %}</span></a>
+                            <i class="fas fa-truck-moving fa-fw"></i><span class="sidetext">{% trans 'Stock Movement' %}</span></a>
                         {% comment %} <a href="{% url 'item_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Items' %}</span></a> {% endcomment %}

@@ -1254,3 +1254,84 @@ def complete_shipment(request):
         return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class ReceiptListView(ListView):
+    model = ProductionReceipt
+    template_name = 'keeper/receipts/list.html'
+    context_object_name = 'receipts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return (
+            ProductionReceipt.objects
+            .filter(status=ProductionReceipt.DRAFT)
+            .select_related('size_quantity__model', 'size_quantity__color', 'size_quantity__fabrics')
+            .order_by('id')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+    
+@login_required
+@require_POST
+@keeper_required
+def post_receipt(request, receipt_id):
+    try:
+        with transaction.atomic():
+            data = json.loads(request.body)
+            confirmed_qty = Decimal(data.get("confirmed_qty", 0))
+
+            if confirmed_qty <= 0:
+                return JsonResponse({'success': False, 'message': 'Invalid quantity'}, status=400)
+
+            receipt = ProductionReceipt.objects.select_for_update().get(pk=receipt_id)
+
+            if receipt.status == ProductionReceipt.CONFIRMED:
+                return JsonResponse({'success': False, 'message': 'Already posted.'})
+
+            # Update receipt
+            receipt.confirmed_qty = confirmed_qty
+            receipt.status = ProductionReceipt.CONFIRMED
+            receipt.posted_at = timezone.now()
+            receipt.save(update_fields=["confirmed_qty", "status", "posted_at"])
+
+            # Create or fetch warehouse
+            warehouse = Warehouse.objects.filter(is_archived=False).first()
+            if not warehouse:
+                warehouse = Warehouse.objects.create(name="Default", is_archived=False)
+
+            # Create stock
+            sq = receipt.size_quantity
+            content_type = ContentType.objects.get_for_model(sq)
+
+            stock = Stock.objects.create(
+                content_type=content_type,
+                object_id=sq.pk,
+                quantity=confirmed_qty,
+                warehouse=warehouse,
+                type=Stock.FINSHED_GOODS,
+                is_archived=False,
+                company=sq.company
+            )
+
+            StockMovement.objects.create(
+                stock=stock,
+                movement_type="IN",
+                quantity=confirmed_qty,
+                to_warehouse=warehouse,
+                note=f"Прием готовой продукции: {sq}"
+            )
+
+            # Optional: mark SizeQuantity complete
+            sq.production_complete = True
+            sq.save(update_fields=["production_complete"])
+
+        return JsonResponse({'success': True})
+
+    except ProductionReceipt.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

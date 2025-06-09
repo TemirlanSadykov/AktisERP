@@ -239,6 +239,9 @@ urlpatterns = [
     path('keeper/stocks/<int:pk>/archive/', StockArchiveView.as_view(), name='stock_archive'),
     path('keeper/stocks/<int:pk>/unarchive/', StockUnArchiveView.as_view(), name='stock_unarchive'),
 
+    path('keeper/receipts/', ReceiptListView.as_view(), name='receipt_list'),
+    path('keeper/receipts/<int:receipt_id>/post/', post_receipt, name='post_receipt'),
+
     path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
 
     path('keeper/warehouses/', WarehouseListView.as_view(), name='warehouse_list'),

@@ -576,3 +576,51 @@ class CostRecord(CompanyAwareModel):
 
     def __str__(self):
         return f"Cost for {self.content_object}: {self.cost}"
+    
+class ProductionReceipt(CompanyAwareModel):
+    """
+    Records the hand-over of finished goods from production to the keeper.
+    Inventory is updated only after a receipt reaches POSTED.
+    """
+
+    # Workflow
+    DRAFT     = "draft"      # created by packer, waiting for keeper review
+    CONFIRMED = "confirmed"  # keeper checked / edited quantity, ready to post
+    STATUS_CHOICES = [
+        (DRAFT,     "Draft"),
+        (CONFIRMED, "Confirmed")
+    ]
+
+    # Links
+    size_quantity = models.ForeignKey(
+        SizeQuantity,
+        related_name="receipts",
+        on_delete=models.CASCADE,
+        verbose_name="Размер-кол-во"
+    )
+
+    # Quantities
+    reported_qty  = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        verbose_name="Сообщённое кол-во"
+    )
+    confirmed_qty = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True,
+        verbose_name="Подтверждённое кол-во"
+    )
+
+    # Workflow status
+    status    = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=DRAFT,
+        verbose_name="Статус"
+    )
+    posted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Дата проведения в склад"
+    )
+
+    def __str__(self):
+        return f"Receipt #{self.pk} – {self.size_quantity} ({self.status})"
