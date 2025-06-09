@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY_PREDEV')
+SECRET_KEY = config('SECRET_KEY_DEV')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -97,12 +97,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('LUMA_LIGHT_PREDEV_DB_ENGINE'),
-        'NAME': config('LUMA_LIGHT_PREDEV_DB_NAME'),
-        'USER': config('LUMA_LIGHT_PREDEV_DB_USER'),
-        'PASSWORD': config('LUMA_LIGHT_PREDEV_DB_PASSWORD'),
-        'HOST': config('LUMA_LIGHT_PREDEV_DB_HOST'),
-        'PORT': config('LUMA_LIGHT_PREDEV_DB_PORT'),
+        'ENGINE': config('LUMA_LIGHT_DEV_DB_ENGINE'),
+        'NAME': config('LUMA_LIGHT_DEV_DB_NAME'),
+        'USER': config('LUMA_LIGHT_DEV_DB_USER'),
+        'PASSWORD': config('LUMA_LIGHT_DEV_DB_PASSWORD'),
+        'HOST': config('LUMA_LIGHT_DEV_DB_HOST'),
+        'PORT': config('LUMA_LIGHT_DEV_DB_PORT'),
     }
 }
 
@@ -197,7 +197,7 @@ LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://main.lumaerp.com', 'https://dev.lumaerp.com', 'https://aktiserp-pre-dev.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://main.lumaerp.com', 'https://dev.lumaerp.com']
 
 CRONJOBS = [
     ('0 8 * * *', 'production.tasks.call_api','>> '+ os.path.join(BASE_DIR,'cron_job.log'+' 2>&1')),
