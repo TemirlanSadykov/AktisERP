@@ -35,7 +35,7 @@ urlpatterns = [
     path('sub_tech/client/orders/', ClientOrderListSubView.as_view(), name='client_order_list_sub'),
     path('sub_tech/client/orders/<int:pk>/', ClientOrderDetailSubView.as_view(), name='client_order_detail_sub'),
     path('sub_tech/client/orders/order/<int:pk>/', OrderDetailSubView.as_view(), name='order_detail_sub'),
-    path('sub_tech/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut_sub, name='assign_operations_by_cut_sub'),
+    path('sub_tech/client/orders/order/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut_sub, name='assign_operations_by_cut_sub'),
     path('sub_tech/passports/update_work/', update_work_sub, name='update_work_sub'),
     path('sub_tech/passports/update_passport_quantity/', update_passport_quantity_sub, name='update_passport_quantity_sub'),
 
@@ -83,7 +83,7 @@ urlpatterns = [
     path('technologist/client/orders/order/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
     path('technologist/client/orders/order/<int:pk>/delete/', OrderDeleteView.as_view(), name='order_delete'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
-    path('technologist/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
+    path('technologist/client/orders/order/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/update_passport_quantity/', update_passport_quantity, name='update_passport_quantity'),
