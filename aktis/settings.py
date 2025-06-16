@@ -22,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY_DEV')
+SECRET_KEY = config('SECRET_KEY_PROD')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -97,12 +97,12 @@ WSGI_APPLICATION = 'aktis.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('LUMA_LIGHT_DEV_DB_ENGINE'),
-        'NAME': config('LUMA_LIGHT_DEV_DB_NAME'),
-        'USER': config('LUMA_LIGHT_DEV_DB_USER'),
-        'PASSWORD': config('LUMA_LIGHT_DEV_DB_PASSWORD'),
-        'HOST': config('LUMA_LIGHT_DEV_DB_HOST'),
-        'PORT': config('LUMA_LIGHT_DEV_DB_PORT'),
+        'ENGINE': config('LUMA_LIGHT_PROD_DB_ENGINE'),
+        'NAME': config('LUMA_LIGHT_PROD_DB_NAME'),
+        'USER': config('LUMA_LIGHT_PROD_DB_USER'),
+        'PASSWORD': config('LUMA_LIGHT_PROD_DB_PASSWORD'),
+        'HOST': config('LUMA_LIGHT_PROD_DB_HOST'),
+        'PORT': config('LUMA_LIGHT_PROD_DB_PORT'),
     }
 }
 
