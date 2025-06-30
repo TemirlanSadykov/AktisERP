@@ -1307,15 +1307,22 @@ def post_receipt(request, receipt_id):
             sq = receipt.size_quantity
             content_type = ContentType.objects.get_for_model(sq)
 
-            stock = Stock.objects.create(
+            stock, created = Stock.objects.get_or_create(
                 content_type=content_type,
                 object_id=sq.pk,
-                quantity=confirmed_qty,
                 warehouse=warehouse,
                 type=Stock.FINSHED_GOODS,
-                is_archived=False,
-                company=sq.company
+                defaults={
+                    'quantity': confirmed_qty,
+                    'is_archived': False,
+                    'company': sq.company
+                }
             )
+
+            if not created:
+                # If it already existed, increment its quantity
+                stock.quantity += confirmed_qty
+                stock.save(update_fields=['quantity'])
 
             StockMovement.objects.create(
                 stock=stock,
@@ -1325,13 +1332,20 @@ def post_receipt(request, receipt_id):
                 note=f"Прием готовой продукции: {sq}"
             )
 
-            # Optional: mark SizeQuantity complete
-            sq.production_complete = True
-            sq.save(update_fields=["production_complete"])
-
         return JsonResponse({'success': True})
 
     except ProductionReceipt.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+@require_POST
+@login_required
+@keeper_required
+def delete_receipt(request, receipt_id):
+    try:
+        receipt = ProductionReceipt.objects.get(pk=receipt_id)
+        receipt.delete()
+        return JsonResponse({'success': True})
+    except ProductionReceipt.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)

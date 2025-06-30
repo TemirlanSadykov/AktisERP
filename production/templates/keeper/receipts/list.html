@@ -49,12 +49,16 @@
           <td>{{ receipt.size_quantity.size }}</td>
           <td>{{ receipt.reported_qty }}</td>
           <td>
-            <button class="btn btn-sm btn-primary review-btn"
+            <button class="btn btn-sm btn-primary review-btn" style="margin-bottom: 0; width: auto;"
                     data-toggle="modal"
                     data-target="#fixModal"
                     data-receipt-id="{{ receipt.id }}"
                     data-reported-qty="{{ receipt.reported_qty }}">
-            {% trans "Review" %}
+              {% trans "Review" %}
+            </button>
+            <button class="btn btn-sm btn-danger delete-btn"
+                    data-receipt-id="{{ receipt.id }}">
+              {% trans "Delete" %}
             </button>
           </td>
         </tr>
@@ -142,6 +146,35 @@
         }
       });
     });
+
+    document.querySelectorAll(".delete-btn").forEach(button => {
+      button.addEventListener("click", function () {
+        if (!confirm("Вы уверены, что хотите удалить?")) {
+          return;
+        }
+        const receiptId = this.dataset.receiptId;
+    
+        fetch(`/production/keeper/receipts/${receiptId}/delete/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || "Error deleting receipt");
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error deleting receipt: ' + error.message);
+        });
+      });
+    });    
   });
 </script>
 {% endblock %}

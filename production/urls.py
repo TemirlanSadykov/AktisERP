@@ -241,6 +241,7 @@ urlpatterns = [
 
     path('keeper/receipts/', ReceiptListView.as_view(), name='receipt_list'),
     path('keeper/receipts/<int:receipt_id>/post/', post_receipt, name='post_receipt'),
+    path('keeper/receipts/<int:receipt_id>/delete/', delete_receipt, name='delete_receipt'),
 
     path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
 
