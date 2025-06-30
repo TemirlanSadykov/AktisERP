@@ -53,8 +53,27 @@
   <!-- Container for the dynamic order table -->
   <div id="order-table-container" class="mt-4"></div>
 </div>
+<div id="loadingOverlay" style="
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">{% trans "Loading..." %}</span>
+  </div>
+</div>
 
 <script>
+function showLoading() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+  
 // Helper to get CSRF token.
 function getCookie(name) {
   let cookieValue = null;
@@ -188,24 +207,36 @@ document.addEventListener("DOMContentLoaded", function() {
                             orderTableData.production_complete[combo][size]);
         
         // If the scanned value meets/exceeds the required value (and is nonzero)
-        if (scanned >= required && scanned > 0) {
+        if (scanned > 0) {
           cellContent = '<span class="editable" data-sq-id="'+sqId+'">' + scanned + '</span>/' + required;
-          if (prodComplete) {
-            cellContent += ' <button class="complete-button btn btn-success" data-sq-id="'+sqId+'" disabled>Completed</button>';
-          } else {
-            cellContent += ' <button class="complete-button btn btn-success" data-sq-id="'+sqId+'">Complete</button>';
-          }
-          tdStyle = ' style="background-color: #5ced73;"';
-        } 
-        // If a nonzero scanned value exists but is less than required, show the value without green styling or button.
-        else if (scanned > 0) {
-          cellContent = '<span class="editable" data-sq-id="'+sqId+'">' + scanned + '</span>/' + required;
-        }
-        // Otherwise, display an input field.
-        else {
+        } else {
           cellContent = '<input type="text" data-sq-id="'+sqId+'" style="width:50px;" placeholder="0" />/' + required;
         }
         
+        // Always show the Complete button
+        var buttonClass = 'btn';
+        var buttonText = 'Завершить';
+        var buttonDisabled = '';
+        var extraStyle = '';
+        
+        if (prodComplete) {
+          buttonClass += ' btn-success';
+          buttonDisabled = 'disabled';
+          buttonText = 'Завершен';
+        } else if (scanned >= required && scanned > 0) {
+          buttonClass += ' btn-success';
+          extraStyle = 'style="margin-left:5px;"';
+        } else {
+          buttonClass += ' btn-secondary';  // Grey for partial/incomplete
+          extraStyle = 'style="margin-left:5px;"';
+        }
+        
+        cellContent += ` <button class="complete-button ${buttonClass}" data-sq-id="${sqId}" ${buttonDisabled} ${extraStyle}>${buttonText}</button>`;
+        
+        if (scanned >= required && scanned > 0) {
+          tdStyle = ' style="background-color: #5ced73;"';
+        }
+                
         html += '<td' + tdStyle + '>' + cellContent + '</td>';
       });
       html += '</tr>';
@@ -358,10 +389,24 @@ document.addEventListener("DOMContentLoaded", function() {
     if (event.target.classList.contains('complete-button')) {
       var button = event.target;
       var sqId = button.getAttribute('data-sq-id');
+  
+      // Determine if packed < required
+      const mapping = orderTableData.sqMapping[sqId];
+      const combo = mapping.combo;
+      const size = mapping.size;
+      const scanned = orderTableData.rows[combo].scanned[size] || 0;
+      const required = orderTableData.rows[combo].required[size] || 0;
+  
+      if (scanned < required) {
+        if (!confirm("Упакованое количество меньше требуемого. Вы уверены, что хотите завершить?")) {
+          return;
+        }
+      }
+  
       var payload = {
         size_quantity_id: sqId
       };
-  
+      showLoading();
       fetch('/production/packer/ajax/orders/complete-production/', {
         method: 'POST',
         headers: {
@@ -375,10 +420,9 @@ document.addEventListener("DOMContentLoaded", function() {
         return response.json();
       })
       .then(data => {
-        // Disable the button and update its text regardless of success
         button.disabled = true;
-        button.textContent = 'Completed';
-      
+        button.textContent = 'Завершен';
+        hideLoading();
         if (!data.success) {
           alert('Warning: ' + data.message);
         }
@@ -388,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function() {
         alert('Error completing production: ' + error.message);
       });
     }
-  });
+  });  
 });
 </script>
 {% endblock %}
