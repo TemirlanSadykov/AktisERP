@@ -451,11 +451,11 @@ class RollBulkCreateView(CreateView):
         supplier  = form.cleaned_data["supplier"]
         width     = form.cleaned_data["width"]
         quantity  = form.cleaned_data["quantity"]
+        price     = form.cleaned_data["price"]
 
         weights_raw = self.request.POST.getlist("weight")
         lengths_raw = self.request.POST.getlist("length")
 
-        # clean lists → [Decimal|None, …]
         parse = lambda v: (Decimal(v) if v.strip() else None)
         weights = [parse(w) for w in weights_raw]
         lengths = [parse(l) for l in lengths_raw]
@@ -472,23 +472,25 @@ class RollBulkCreateView(CreateView):
             }
         )
 
-        # 2. bulk‑create rolls
-        start_idx   = Roll.objects.filter(color=color,
-                                          fabric=fabric,
-                                          supplier=supplier).count()
-        new_rolls   = []
-        metres_in   = Decimal("0")
+        # 2. bulk-create rolls
+        start_idx = Roll.objects.filter(
+            color=color,
+            fabric=fabric,
+            supplier=supplier
+        ).count()
+        new_rolls = []
+        metres_in = Decimal("0")
 
         for i in range(quantity):
-            length_val = lengths[i]  if i < len(lengths)  else None
-            weight_val = weights[i]  if i < len(weights)  else None
+            length_val = lengths[i] if i < len(lengths) else None
+            weight_val = weights[i] if i < len(weights) else None
             new_rolls.append(
                 Roll(
                     roll_batch=batch,
                     color=color, fabric=fabric,
                     supplier=supplier, width=width,
                     name=start_idx + i + 1,
-                    length_t=length_val,   # purchased length
+                    length_t=length_val,
                     weight=weight_val,
                     company=company,
                 )
@@ -497,7 +499,13 @@ class RollBulkCreateView(CreateView):
                 metres_in += length_val
 
         Roll.objects.bulk_create(new_rolls)
-
+        if price is not None:
+            CostRecord.objects.create(
+                company=company,
+                content_type=ContentType.objects.get_for_model(Item),
+                object_id=batch.id,
+                cost=price
+            )
         # 4. Stock row per SKU (RollBatch)
         ct = ContentType.objects.get_for_model(Item)
         stock, _ = Stock.objects.get_or_create(
@@ -511,7 +519,6 @@ class RollBulkCreateView(CreateView):
                 quantity=F("quantity") + metres_in
             )
 
-            # 5. movement log
             StockMovement.objects.create(
                 stock=stock, movement_type="IN",
                 quantity=metres_in,
@@ -519,7 +526,6 @@ class RollBulkCreateView(CreateView):
                 note="Прием рулонов",
             )
 
-        # let CBV chain finish up
         self.object = new_rolls[0] if new_rolls else None
         return HttpResponseRedirect(self.get_success_url())
 

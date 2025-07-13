@@ -608,7 +608,16 @@ class RollForm(forms.ModelForm):
         self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
 
 class BulkRollForm(forms.ModelForm):
-    quantity = forms.IntegerField(min_value=1, label="Quantity", widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'}))
+    quantity = forms.IntegerField(
+        min_value=1, 
+        label="Quantity", 
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'})
+    )
+    price = forms.DecimalField(
+        max_digits=12, decimal_places=2, required=False,
+        label="Price",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'})
+    )
     
     class Meta:
         model = Roll
@@ -619,7 +628,8 @@ class BulkRollForm(forms.ModelForm):
             'color',
             'fabric',
             'supplier',
-            'width'
+            'width',
+            'price'
         ]
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
