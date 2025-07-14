@@ -373,6 +373,10 @@
             <label for="id_client_name">{% trans "Client Name" %}</label>
             <input type="text" class="form-control" id="id_client_name" name="name" required>
           </div>
+          <div class="form-group">
+            <label for="id_client_description">{% trans "Client Description" %}</label>
+            <input type="text" class="form-control" id="id_client_description" name="description" placeholder="{% trans 'Enter client description' %}">
+          </div>
         </div>
         <div class="modal-buttons">
           <button type="submit" class="btn save">{% trans "Save" %}</button>

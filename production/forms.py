@@ -463,9 +463,10 @@ class ModelCustomForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['name']
+        fields = ['name', 'description']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
         }
 
 class ClientOrderForm(forms.ModelForm):
@@ -566,9 +567,10 @@ class UploadFileForm(forms.Form):
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['name']
+        fields = ['name', 'description']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
         }
 
 class RollForm(forms.ModelForm):

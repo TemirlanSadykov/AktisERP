@@ -128,6 +128,7 @@ class UserProfile(CompanyAwareModel):
 
 class Client(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
@@ -347,6 +348,7 @@ class CutSize(CompanyAwareModel):
 
 class Supplier(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):

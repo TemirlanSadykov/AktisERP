@@ -384,6 +384,7 @@ def add_client_api(request):
             'success': True,
             'client_id': client.id,
             'client_name': client.name,
+            'client_description': client.description,
         }
         return JsonResponse(data)
     else:

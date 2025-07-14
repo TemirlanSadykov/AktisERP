@@ -351,6 +351,7 @@ def add_supplier_api(request):
             'success': True,
             'supplier_id': supplier.id,
             'supplier_name': supplier.name,
+            'supplier_description': supplier.description
         }
         return JsonResponse(data)
     else:
