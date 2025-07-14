@@ -515,9 +515,14 @@ class RollBulkCreateView(CreateView):
             defaults={"quantity": Decimal("0")},
         )
         if metres_in:
-            Stock.objects.filter(pk=stock.pk).update(
-                quantity=F("quantity") + metres_in
-            )
+            updates = {
+                "quantity": F("quantity") + metres_in,
+                "last_supplied_date": timezone.now(),
+            }
+            if price is not None:
+                updates["last_cost"] = price
+
+            Stock.objects.filter(pk=stock.pk).update(**updates)
 
             StockMovement.objects.create(
                 stock=stock, movement_type="IN",

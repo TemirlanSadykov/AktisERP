@@ -70,10 +70,12 @@
         <thead>
           <tr>
             <th>#</th>
+            <th>{% trans "Last Supplied" %}</th>
             <th>{% trans "Category" %}</th>
             <th>{% trans "Item" %}</th>
             <th>{% trans "Quantity" %}</th>
             <th>{% trans "Unit" %}</th>
+            <th>{% trans "Last Price" %}</th>
             <th>{% trans "Actions" %}</th>
           </tr>
         </thead>
@@ -81,10 +83,24 @@
           {% for stock in stocks %}
             <tr>
               <td>{{ forloop.counter }}</td>
+              <td>
+                {% if stock.last_supplied_date %}
+                  {{ stock.last_supplied_date|date:"Y-m-d H:i" }}
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </td>
               <td>{{ stock.category_display }}</td>
               <td>{{ stock.content_object }}</td>
               <td>{{ stock.quantity }}</td>
               <td>{{ stock.unit_display }}</td>
+              <td>
+                {% if stock.last_cost %}
+                  {{ stock.last_cost }}
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </td>
               <td>
                 {% if selected_type == '0' %}
                   <!-- Raw Materials -->
