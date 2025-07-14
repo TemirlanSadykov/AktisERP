@@ -2174,6 +2174,7 @@ def bom_create(request, pk):
     colors = Color.objects.filter(is_archived=False)
     fabrics = Fabrics.objects.filter(is_archived=False)
     suppliers = Supplier.objects.filter(is_archived=False)
+    clients = Client.objects.filter(is_archived=False)
 
     return render(request, 'technologist/models/bom_create.html', {
         'order': order,
@@ -2185,6 +2186,7 @@ def bom_create(request, pk):
         'colors': colors,
         'fabrics': fabrics,
         'suppliers': suppliers,
+        'clients': clients
     })
 
 @require_POST
@@ -2246,9 +2248,10 @@ def add_fabric_item_api(request):
         color_name = fabric_item.color.name if fabric_item.color else ''
         fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
         supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
+        client_name = fabric_item.client.name if fabric_item.client else ''
         width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
 
-        fabric_item.name = f"{color_name} {fabric_name} {width_value}м от {supplier_name}".strip()
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м для {client_name} от {supplier_name}".strip()
         fabric_item.unit = "м"
 
         fabric_item.save()  # Now save

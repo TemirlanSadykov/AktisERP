@@ -35,6 +35,10 @@
         {{ form.supplier }}
       </div>
       <div class="form-group">
+        <label for="id_client">{% trans "Client" %}</label>
+        {{ form.client }}
+      </div>      
+      <div class="form-group">
         <label for="id_width">{% trans "Width" %}</label>
         {{ form.width }}
       </div>
@@ -146,6 +150,32 @@
             <div class="form-group">
               <label for="id_supplier_name">{% trans "Supplier Name" %}</label>
               <input type="text" class="form-control" id="id_supplier_name" name="name" placeholder="{% trans 'Enter supplier name' %}" required>
+            </div>
+          </div>
+          <div class="modal-buttons">
+            <button type="submit" class="btn save">{% trans "Save" %}</button>
+            <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Add Client Modal -->
+  <div class="modal" data-backdrop="false" id="addClientModal" tabindex="-1" role="dialog" aria-labelledby="addClientModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form id="addClientForm" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="addClientModalLabel">{% trans "Add New Client" %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="id_client_name">{% trans "Client Name" %}</label>
+              <input type="text" class="form-control" id="id_client_name" name="name" placeholder="{% trans 'Enter client name' %}" required>
             </div>
           </div>
           <div class="modal-buttons">
@@ -279,6 +309,43 @@
               const newOption = new Option(data.supplier_name, data.supplier_id, false, true);
               supplierSelect.appendChild(newOption);
               addSupplierModal.hide();
+            } else {
+              alert("Error: " + JSON.stringify(data.errors));
+            }
+          })
+          .catch(error => alert("An error occurred: " + error));
+      });
+
+      // ===== Client Modal =====
+      const addClientModalEl = document.getElementById("addClientModal");
+      const addClientModal = new bootstrap.Modal(addClientModalEl, { backdrop: false });
+      const addClientForm = document.getElementById("addClientForm");
+      const clientSelect = document.getElementById("id_client");
+
+      if (clientSelect) {
+        clientSelect.addEventListener("change", function () {
+          if (this.value === "add_new") {
+            addClientForm.reset();
+            addClientModal.show();
+            this.value = "";
+          }
+        });
+      }
+
+      addClientForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(addClientForm);
+        fetch("{% url 'add_client_api' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const newOption = new Option(data.client_name, data.client_id, false, true);
+              clientSelect.appendChild(newOption);
+              addClientModal.hide();
             } else {
               alert("Error: " + JSON.stringify(data.errors));
             }

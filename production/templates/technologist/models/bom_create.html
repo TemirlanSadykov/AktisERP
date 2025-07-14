@@ -257,6 +257,16 @@
               {% endfor %}
             </select>
           </div>
+          <div class="form-group">
+            <label>{% trans "Client" %}</label>
+            <select class="form-control" id="fabric_client" name="client" required>
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new">{% trans "Add New Client" %}</option>
+              {% for client in clients %}
+                <option value="{{ client.pk }}">{{ client.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
         <div class="modal-buttons">
           <button type="submit" class="btn save">{% trans "Save" %}</button>
@@ -346,6 +356,33 @@
   </div>
 </div>
 
+<!-- Nested: Add Client Modal -->
+<div class="modal" data-backdrop="false" id="addClientModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addClientForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Client" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_client_name">{% trans "Client Name" %}</label>
+            <input type="text" class="form-control" id="id_client_name" name="name" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
   function getCookie(name) {
     let cookieValue = null;
@@ -362,6 +399,7 @@
     const fabricColor = document.getElementById("fabric_color");
     const fabricFabric = document.getElementById("fabric_fabric");
     const fabricSupplier = document.getElementById("fabric_supplier");
+    const fabricClient = document.getElementById("fabric_client");
 
     // Open nested modals
     fabricColor?.addEventListener("change", () => {
@@ -388,6 +426,15 @@
         document.getElementById("addSupplierModal").style.display = "block";
         document.getElementById("addSupplierModal").classList.add("show");
         fabricSupplier.value = "";
+      }
+    });
+
+    fabricClient?.addEventListener("change", () => {
+      if (fabricClient.value === "add_new") {
+        document.getElementById("addClientForm").reset();
+        document.getElementById("addClientModal").style.display = "block";
+        document.getElementById("addClientModal").classList.add("show");
+        fabricClient.value = "";
       }
     });
 
@@ -449,6 +496,27 @@
           fabricSupplier.value = data.supplier_id;
           document.getElementById("addSupplierModal").classList.remove("show");
           document.getElementById("addSupplierModal").style.display = "none";
+        } else {
+          alert("Error: " + JSON.stringify(data.errors));
+        }
+      });
+    });
+
+    document.getElementById("addClientForm").addEventListener("submit", e => {
+      e.preventDefault();
+      fetch("{% url 'add_client_api' %}", {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        body: new FormData(e.target)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          let opt = new Option(data.client_name, data.client_id, false, true);
+          fabricClient.appendChild(opt);
+          fabricClient.value = data.client_id;
+          document.getElementById("addClientModal").classList.remove("show");
+          document.getElementById("addClientModal").style.display = "none";
         } else {
           alert("Error: " + JSON.stringify(data.errors));
         }

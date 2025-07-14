@@ -428,6 +428,7 @@ class RollsByCombinationListView(ListView):
             context['fabric'] = first_roll.fabric.name
             context['width'] = first_roll.width
             context['supplier'] = first_roll.supplier.name
+            context['client'] = first_roll.client.name if first_roll.client else "-"
         else:
             context['rollbatch'] = ''
 
@@ -449,6 +450,7 @@ class RollBulkCreateView(CreateView):
         color     = form.cleaned_data["color"]
         fabric    = form.cleaned_data["fabric"]
         supplier  = form.cleaned_data["supplier"]
+        client    = form.cleaned_data["client"]
         width     = form.cleaned_data["width"]
         quantity  = form.cleaned_data["quantity"]
         price     = form.cleaned_data["price"]
@@ -466,9 +468,9 @@ class RollBulkCreateView(CreateView):
         # 1. RollBatch
         batch, _ = Item.objects.get_or_create(
             color=color, fabric=fabric, supplier=supplier,
-            width=width, company=company,
+            client=client, width=width, company=company,
             defaults={
-                "name": f"{color.name} {fabric.name} {width}м от {supplier.name}",
+                "name": f"{color.name} {fabric.name} {width}м для {client.name} от {supplier.name}",
             }
         )
 
@@ -476,7 +478,8 @@ class RollBulkCreateView(CreateView):
         start_idx = Roll.objects.filter(
             color=color,
             fabric=fabric,
-            supplier=supplier
+            supplier=supplier,
+            client=client
         ).count()
         new_rolls = []
         metres_in = Decimal("0")
@@ -488,7 +491,8 @@ class RollBulkCreateView(CreateView):
                 Roll(
                     roll_batch=batch,
                     color=color, fabric=fabric,
-                    supplier=supplier, width=width,
+                    supplier=supplier, client=client,
+                    width=width,
                     name=start_idx + i + 1,
                     length_t=length_val,
                     weight=weight_val,
