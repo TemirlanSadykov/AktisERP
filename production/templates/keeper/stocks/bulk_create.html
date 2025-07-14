@@ -33,10 +33,11 @@
     <table id="stockTable" class="table table-bordered">
       <thead>
         <tr>
-          <th style="width:25%;">{% trans "Category" %}</th>
-          <th style="width:35%;">{% trans "Item" %}</th>
-          <th style="width:30%;">{% trans "Quantity" %}</th>
+          <th style="width:20%;">{% trans "Category" %}</th>
+          <th style="width:30%;">{% trans "Item" %}</th>
+          <th style="width:15%;">{% trans "Quantity" %}</th>
           <th style="width:10%;">{% trans "Unit" %}</th>
+          <th style="width:15%;">{% trans "Price" %}</th>
           <th style="width:10%;">{% trans "Action" %}</th>
         </tr>
       </thead>
@@ -75,10 +76,19 @@
             >
           </td>
           <td>
+            <input
+              type="number"
+              step="0.01"
+              name="row-0_price"
+              class="form-control"
+              placeholder="{% trans 'Price' %}"
+            >
+          </td>
+          <td>
             <button type="button" class="btn btn-danger btn-sm delete-row-btn">
               {% trans "Delete" %}
             </button>
-          </td>
+          </td>          
         </tr>
       </tbody>
       <tfoot>
@@ -254,6 +264,15 @@
             class="form-control"
             readonly
             placeholder="-"
+          >
+        </td>
+        <td>
+          <input
+            type="number"
+            step="0.01"
+            name="row-${rowCount}_price"
+            class="form-control"
+            placeholder="{% trans 'Price' %}"
           >
         </td>
         <td>

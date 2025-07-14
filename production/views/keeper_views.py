@@ -621,8 +621,15 @@ def stock_bulk_create(request):
     while f'row-{row}_item' in request.POST:
         item_id = request.POST.get(f'row-{row}_item')
         qty_str = request.POST.get(f'row-{row}_quantity')
+        price_str = request.POST.get(f'row-{row}_price')
 
         if item_id and qty_str:
+            price = None
+            if price_str:
+                try:
+                    price = Decimal(price_str)
+                except (InvalidOperation, TypeError):
+                    price = None
             try:
                 qty = Decimal(qty_str)
             except (InvalidOperation, TypeError):
@@ -643,6 +650,9 @@ def stock_bulk_create(request):
                 if stock_qs.exists():
                     stock = stock_qs.first()
                     stock.quantity += qty
+                    stock.last_supplied_date = timezone.now()
+                    if price is not None:
+                        stock.last_cost = price
                     stock.save()
                 else:
                     stock = Stock.objects.create(
@@ -653,6 +663,8 @@ def stock_bulk_create(request):
                         warehouse=warehouse,
                         is_archived=False,
                         company=company,
+                        last_supplied_date=timezone.now(),
+                        last_cost=price if price is not None else None,
                     )
 
                 # Log the movement of exactly the added quantity
@@ -664,6 +676,13 @@ def stock_bulk_create(request):
                     to_warehouse=warehouse,
                     note='Прием сырья',
                 )
+                if price is not None:
+                    CostRecord.objects.create(
+                        company=company,
+                        content_type=ct,
+                        object_id=item.id,
+                        cost=price,
+                    )
         row += 1
 
     return redirect('stock_list')
@@ -1326,13 +1345,15 @@ def post_receipt(request, receipt_id):
                 defaults={
                     'quantity': confirmed_qty,
                     'is_archived': False,
-                    'company': sq.company
+                    'company': sq.company,
+                    'last_supplied_date': timezone.now()
                 }
             )
 
             if not created:
                 # If it already existed, increment its quantity
                 stock.quantity += confirmed_qty
+                stock.last_supplied_date = timezone.now()
                 stock.save(update_fields=['quantity'])
 
             StockMovement.objects.create(
