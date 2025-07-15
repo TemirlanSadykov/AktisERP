@@ -351,6 +351,7 @@ def add_supplier_api(request):
             'success': True,
             'supplier_id': supplier.id,
             'supplier_name': supplier.name,
+            'supplier_description': supplier.description
         }
         return JsonResponse(data)
     else:
@@ -428,6 +429,7 @@ class RollsByCombinationListView(ListView):
             context['fabric'] = first_roll.fabric.name
             context['width'] = first_roll.width
             context['supplier'] = first_roll.supplier.name
+            context['client'] = first_roll.client.name if first_roll.client else "-"
         else:
             context['rollbatch'] = ''
 
@@ -449,13 +451,14 @@ class RollBulkCreateView(CreateView):
         color     = form.cleaned_data["color"]
         fabric    = form.cleaned_data["fabric"]
         supplier  = form.cleaned_data["supplier"]
+        client    = form.cleaned_data["client"]
         width     = form.cleaned_data["width"]
         quantity  = form.cleaned_data["quantity"]
+        price     = form.cleaned_data["price"]
 
         weights_raw = self.request.POST.getlist("weight")
         lengths_raw = self.request.POST.getlist("length")
 
-        # clean lists → [Decimal|None, …]
         parse = lambda v: (Decimal(v) if v.strip() else None)
         weights = [parse(w) for w in weights_raw]
         lengths = [parse(l) for l in lengths_raw]
@@ -466,29 +469,33 @@ class RollBulkCreateView(CreateView):
         # 1. RollBatch
         batch, _ = Item.objects.get_or_create(
             color=color, fabric=fabric, supplier=supplier,
-            width=width, company=company,
+            client=client, width=width, company=company,
             defaults={
-                "name": f"{color.name} {fabric.name} {width}м от {supplier.name}",
+                "name": f"{color.name} {fabric.name} {width}м для {client.name} от {supplier.name}",
             }
         )
 
-        # 2. bulk‑create rolls
-        start_idx   = Roll.objects.filter(color=color,
-                                          fabric=fabric,
-                                          supplier=supplier).count()
-        new_rolls   = []
-        metres_in   = Decimal("0")
+        # 2. bulk-create rolls
+        start_idx = Roll.objects.filter(
+            color=color,
+            fabric=fabric,
+            supplier=supplier,
+            client=client
+        ).count()
+        new_rolls = []
+        metres_in = Decimal("0")
 
         for i in range(quantity):
-            length_val = lengths[i]  if i < len(lengths)  else None
-            weight_val = weights[i]  if i < len(weights)  else None
+            length_val = lengths[i] if i < len(lengths) else None
+            weight_val = weights[i] if i < len(weights) else None
             new_rolls.append(
                 Roll(
                     roll_batch=batch,
                     color=color, fabric=fabric,
-                    supplier=supplier, width=width,
+                    supplier=supplier, client=client,
+                    width=width,
                     name=start_idx + i + 1,
-                    length_t=length_val,   # purchased length
+                    length_t=length_val,
                     weight=weight_val,
                     company=company,
                 )
@@ -497,7 +504,13 @@ class RollBulkCreateView(CreateView):
                 metres_in += length_val
 
         Roll.objects.bulk_create(new_rolls)
-
+        if price is not None:
+            CostRecord.objects.create(
+                company=company,
+                content_type=ContentType.objects.get_for_model(Item),
+                object_id=batch.id,
+                cost=price
+            )
         # 4. Stock row per SKU (RollBatch)
         ct = ContentType.objects.get_for_model(Item)
         stock, _ = Stock.objects.get_or_create(
@@ -507,11 +520,15 @@ class RollBulkCreateView(CreateView):
             defaults={"quantity": Decimal("0")},
         )
         if metres_in:
-            Stock.objects.filter(pk=stock.pk).update(
-                quantity=F("quantity") + metres_in
-            )
+            updates = {
+                "quantity": F("quantity") + metres_in,
+                "last_supplied_date": timezone.now(),
+            }
+            if price is not None:
+                updates["last_cost"] = price
 
-            # 5. movement log
+            Stock.objects.filter(pk=stock.pk).update(**updates)
+
             StockMovement.objects.create(
                 stock=stock, movement_type="IN",
                 quantity=metres_in,
@@ -519,7 +536,6 @@ class RollBulkCreateView(CreateView):
                 note="Прием рулонов",
             )
 
-        # let CBV chain finish up
         self.object = new_rolls[0] if new_rolls else None
         return HttpResponseRedirect(self.get_success_url())
 
@@ -610,8 +626,15 @@ def stock_bulk_create(request):
     while f'row-{row}_item' in request.POST:
         item_id = request.POST.get(f'row-{row}_item')
         qty_str = request.POST.get(f'row-{row}_quantity')
+        price_str = request.POST.get(f'row-{row}_price')
 
         if item_id and qty_str:
+            price = None
+            if price_str:
+                try:
+                    price = Decimal(price_str)
+                except (InvalidOperation, TypeError):
+                    price = None
             try:
                 qty = Decimal(qty_str)
             except (InvalidOperation, TypeError):
@@ -632,6 +655,9 @@ def stock_bulk_create(request):
                 if stock_qs.exists():
                     stock = stock_qs.first()
                     stock.quantity += qty
+                    stock.last_supplied_date = timezone.now()
+                    if price is not None:
+                        stock.last_cost = price
                     stock.save()
                 else:
                     stock = Stock.objects.create(
@@ -642,6 +668,8 @@ def stock_bulk_create(request):
                         warehouse=warehouse,
                         is_archived=False,
                         company=company,
+                        last_supplied_date=timezone.now(),
+                        last_cost=price if price is not None else None,
                     )
 
                 # Log the movement of exactly the added quantity
@@ -653,6 +681,13 @@ def stock_bulk_create(request):
                     to_warehouse=warehouse,
                     note='Прием сырья',
                 )
+                if price is not None:
+                    CostRecord.objects.create(
+                        company=company,
+                        content_type=ct,
+                        object_id=item.id,
+                        cost=price,
+                    )
         row += 1
 
     return redirect('stock_list')
@@ -1315,13 +1350,15 @@ def post_receipt(request, receipt_id):
                 defaults={
                     'quantity': confirmed_qty,
                     'is_archived': False,
-                    'company': sq.company
+                    'company': sq.company,
+                    'last_supplied_date': timezone.now()
                 }
             )
 
             if not created:
                 # If it already existed, increment its quantity
                 stock.quantity += confirmed_qty
+                stock.last_supplied_date = timezone.now()
                 stock.save(update_fields=['quantity'])
 
             StockMovement.objects.create(

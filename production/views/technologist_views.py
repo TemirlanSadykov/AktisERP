@@ -22,6 +22,7 @@ from django.db.models.functions import Cast
 from django.db.models import Prefetch
 from django.db.models import Prefetch, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce, Cast
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -384,6 +385,7 @@ def add_client_api(request):
             'success': True,
             'client_id': client.id,
             'client_name': client.name,
+            'client_description': client.description,
         }
         return JsonResponse(data)
     else:
@@ -654,6 +656,7 @@ class OrderCreateView(CreateView):
         # Pass available colors and fabrics (and sizes) for use in the template.
         context['colors'] = Color.objects.filter(is_archived=False).order_by('name')
         context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
+        context['models'] = Model.objects.filter(is_archived=False).order_by('name')
         return context
     
 @require_POST
@@ -1562,17 +1565,18 @@ class ModelUnArchiveView(UpdateView):
         model.save()
         return HttpResponseRedirect(reverse_lazy('model_list'))
         
+@xframe_options_exempt
 @login_required
 @technologist_required
 def model_create(request, pk=None):
     copy_id = request.GET.get('copy')
     original = get_object_or_404(Model, pk=copy_id) if copy_id else None
+    modal = request.GET.get('modal') == '1'
 
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=None, copy_id=copy_id)
         if form.is_valid():
-            model_instance = form.save()  # Save the new model instance
-            # If we're copying from an existing model, copy its BOM entries too.
+            model_instance = form.save()
             if copy_id and original:
                 for bom in original.bill_of_materials.all():
                     BillOfMaterials.objects.create(
@@ -1580,8 +1584,15 @@ def model_create(request, pk=None):
                         item=bom.item,
                         quantity=bom.quantity
                     )
-            # Redirect to BOM creation page (which will display the copied BOM entries)
-            return redirect('model_detail', pk=model_instance.id)
+            # ✅ Decide where to redirect:
+            if modal:
+                return JsonResponse({
+                    'success': True,
+                    'model_id': model_instance.id,
+                    'model_name': model_instance.name
+                })
+            else:
+                return redirect('model_detail', pk=model_instance.id)
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), copy_id=copy_id)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
@@ -1602,6 +1613,7 @@ def model_create(request, pk=None):
         'copy_model': original if copy_id else None,
         'operations_order_json': operations_order_json,
         'sidebar_type': 'technology',
+        'modal': modal,
     }
     return render(request, template_name, context)
 
@@ -2174,6 +2186,7 @@ def bom_create(request, pk):
     colors = Color.objects.filter(is_archived=False)
     fabrics = Fabrics.objects.filter(is_archived=False)
     suppliers = Supplier.objects.filter(is_archived=False)
+    clients = Client.objects.filter(is_archived=False)
 
     return render(request, 'technologist/models/bom_create.html', {
         'order': order,
@@ -2185,6 +2198,7 @@ def bom_create(request, pk):
         'colors': colors,
         'fabrics': fabrics,
         'suppliers': suppliers,
+        'clients': clients
     })
 
 @require_POST
@@ -2246,9 +2260,10 @@ def add_fabric_item_api(request):
         color_name = fabric_item.color.name if fabric_item.color else ''
         fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
         supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
+        client_name = fabric_item.client.name if fabric_item.client else ''
         width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
 
-        fabric_item.name = f"{color_name} {fabric_name} {width_value}м от {supplier_name}".strip()
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м для {client_name} от {supplier_name}".strip()
         fabric_item.unit = "м"
 
         fabric_item.save()  # Now save

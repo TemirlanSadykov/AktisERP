@@ -128,6 +128,7 @@ class UserProfile(CompanyAwareModel):
 
 class Client(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
@@ -347,6 +348,7 @@ class CutSize(CompanyAwareModel):
 
 class Supplier(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
@@ -378,6 +380,7 @@ class Item(CompanyAwareModel):
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     fabric = models.ForeignKey(Fabrics, on_delete=models.SET_NULL, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
     width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
@@ -390,6 +393,7 @@ class Roll(CompanyAwareModel):
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
     fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='rolls', verbose_name='Клиент', null=True, blank=True)
     name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
     length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
     length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
@@ -491,6 +495,14 @@ class Stock(CompanyAwareModel):
         (ROLLS, 'Рулоны')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
+    last_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        verbose_name='Последняя цена закупки'
+    )
+    last_supplied_date = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Дата последней поставки'
+    )
     # Inventory-specific fields:
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     warehouse = models.ForeignKey(

@@ -6,7 +6,7 @@ from .cutter_views import *
 from .qc_views import *
 from .packer_views import *
 from .keeper_views import *
-from .accountant_view import *
+from .accountant_views import *
 from .sub_tech_view import *
 from .barcode_views import *
 from .whatsapp_qr_views import *
