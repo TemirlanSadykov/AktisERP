@@ -95,6 +95,7 @@
       </script>
     <main>
         <div class="d-flex" id="wrapper">
+            {% if not modal %}
             <div class="border-right" id="sidebar-wrapper">
                 <div class="d-flex justify-content-between align-items-center" style="width:222px;">
                     <button type="button" id="toggle-sidebar" aria-label="Toggle sidebar" style="color:#6c757d;    border: none;
@@ -396,6 +397,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
             <div id="page-content-wrapper">
                 {% block content %}{% endblock %}
                 {% block extra_js %}{% endblock %}
@@ -412,7 +414,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
 
-
+    {% if not modal %}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const sidebarWrapper = document.getElementById('sidebar-wrapper');
@@ -442,7 +444,8 @@
                 sidebarWrapper.classList.toggle('collapsed');
             });
         });
-    </script>        
+    </script>   
+    {% endif %}     
 
 </body>
 
