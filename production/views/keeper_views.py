@@ -16,6 +16,8 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
 from django.views.decorators.http import require_POST
 from decimal import Decimal, InvalidOperation
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum, Prefetch
 
 from ..decorators import keeper_required
 from ..forms import *
@@ -157,6 +159,69 @@ class BomDetailView(DetailView):
                  .all()
         )
 
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class BomDeficitView(DetailView):
+    model = Order
+    template_name = 'keeper/orders/bom_deficit.html'
+    context_object_name = 'order'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.object
+
+        # Days left
+        today = timezone.now().date()
+        term = order.client_order.term
+        context['days_left'] = max((term - today).days, 0)
+
+        # Prefetch size_quantities with their BOMs and items
+        size_quantities = (
+            order.size_quantities
+            .prefetch_related(
+                Prefetch(
+                    'bill_of_materials',
+                    queryset=BillOfMaterials.objects.select_related('item__category')
+                )
+            )
+        )
+
+        # Get all unique item IDs from the BOMs
+        all_bom_items = BillOfMaterials.objects.filter(
+            sizequantity__in=size_quantities
+        ).values_list('item_id', flat=True).distinct()
+
+        # Get total stock for all those items
+        item_type = ContentType.objects.get_for_model(Item)
+        stock_data = (
+            Stock.objects
+            .filter(
+                content_type=item_type,
+                object_id__in=all_bom_items,
+                is_archived=False
+            )
+            .values('object_id')
+            .annotate(total_qty=Sum('quantity'))
+        )
+
+        # item_id -> available stock quantity
+        stock_lookup = {entry['object_id']: entry['total_qty'] or 0 for entry in stock_data}
+
+        # Annotate each BOM with required, available, missing
+        for sq in size_quantities:
+            for bom in sq.bill_of_materials.all():
+                produced = sq.quantity or 0
+                required_qty = bom.quantity * produced
+                available_qty = stock_lookup.get(bom.item_id, 0)
+                missing_qty = max(required_qty - available_qty, 0)
+
+                bom.required_qty = required_qty
+                bom.available_qty = available_qty
+                bom.missing_qty = missing_qty
+
+        context['size_quantities'] = size_quantities
         context['sidebar_type'] = 'keeper'
         return context
 
