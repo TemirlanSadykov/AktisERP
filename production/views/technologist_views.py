@@ -1651,7 +1651,8 @@ def model_edit(request, pk):
     return render(request, 'technologist/models/edit.html', {
         'form': form,
         'model': model_instance,
-        'operations_order_json': operations_order_json
+        'operations_order_json': operations_order_json,
+        'sidebar_type': 'technology'
     })
 
 @method_decorator([login_required, technologist_required], name='dispatch')
