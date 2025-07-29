@@ -1651,7 +1651,8 @@ def model_edit(request, pk):
     return render(request, 'technologist/models/edit.html', {
         'form': form,
         'model': model_instance,
-        'operations_order_json': operations_order_json
+        'operations_order_json': operations_order_json,
+        'sidebar_type': 'technology'
     })
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -2300,3 +2301,186 @@ class OrderBomView(DetailView):
 
         context['sidebar_type'] = 'technology'
         return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeListTechnologistView(ListView):
+    model = UserProfile
+    template_name = 'technologist/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=False
+        ).exclude(type=UserProfile.ADMIN).annotate(
+            employee_id_int=Cast('employee_id', IntegerField())
+        ).order_by('employee_id_int')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['upload_form'] = UploadFileForm()
+        context['sidebar_type'] = 'technology'
+        
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeCreateTechnologistView(CreateView):
+    template_name = 'technologist/employees/create.html'
+    form_class = UserWithProfileTechnologistForm
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeDetailTechnologistView(DetailView):
+    model = UserProfile
+    template_name = 'technologist/employees/detail.html'
+    context_object_name = 'employee'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@login_required
+@technologist_required
+def employee_edit_technologist(request, pk):
+    user_profile = get_object_or_404(UserProfile, pk=pk)
+    user = user_profile.user
+
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=user)
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Employee details updated successfully.')
+            return redirect('employee_list_technologist')
+    else:
+        user_form = UserEditTechnologistForm(instance=user)
+
+    context = {'user_form': user_form, 'user_profile': user_profile}
+    context['sidebar_type'] = 'technology'
+    return render(request, 'technologist/employees/edit.html', context)
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeDeleteTechnologistView(DeleteView):
+    model = UserProfile
+    template_name = 'technologist/employees/delete.html'
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeArchiveTechnologistView(UpdateView):
+    model = UserProfile
+    template_name = 'technologist/employees/list.html'
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = True
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+   
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeUnArchiveTechnologistView(UpdateView):
+    model = UserProfile
+    template_name = 'technologist/employees/list.html'
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = False
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+     
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedEmployeeListTechnologistView(ListView):
+    template_name = 'technologist/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=True
+            ).order_by('employee_id')
+    
+
+@login_required
+@technologist_required
+@require_POST
+def employee_upload_technologist(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            # Get the current company from thread-local storage.
+            current_company = get_current_company()
+            if current_company is None:
+                messages.error(request, 'No company found in context.')
+                return redirect(reverse_lazy('employee_list_technologist'))
+
+            with transaction.atomic():
+                # Iterate rows skipping the header (starting at row 2)
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    first_name, last_name, employee_id, emp_type, password = row
+                    
+                    # Generate username using current company ID and employee ID.
+                    username = f"{current_company.id}-{employee_id}"
+                    
+                    try:
+                        # Because of your custom manager, this lookup is already company-aware.
+                        profile = UserProfile.objects.get(employee_id=employee_id)
+                    except UserProfile.DoesNotExist:
+                        # Create a new user and UserProfile.
+                        user = User.objects.create(
+                            username=username,
+                            first_name=first_name,
+                            last_name=last_name
+                        )
+                        user.set_password(password)
+                        user.save()
+                        # The save method on CompanyAwareModel will assign the current company.
+                        profile = UserProfile.objects.create(
+                            user=user,
+                            employee_id=employee_id,
+                            type=int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        )
+                    else:
+                        # Update existing user and profile.
+                        user = profile.user
+                        user.first_name = first_name
+                        user.last_name = last_name
+                        user.username = username
+                        user.set_password(password)
+                        user.save()
+                        
+                        profile.type = int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        profile.save()
+
+            messages.success(request, 'Employees uploaded successfully.')
+            return redirect(reverse_lazy('employee_list_technologist'))
+        except Exception as e:
+            messages.error(request, f'Error processing the file: {e}')
+            return redirect(reverse_lazy('employee_list_technologist'))
+        finally:
+            workbook.close()
+    else:
+        messages.error(request, 'Invalid file format.')
+        return redirect(reverse_lazy('employee_list_technologist'))
