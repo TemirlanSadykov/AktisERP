@@ -32,6 +32,16 @@ urlpatterns = [
     path('admin/employees/archived/', ArchivedEmployeeListView.as_view(), name='archived_employee_list'),
     path('admin/employees/upload_employees/', employee_upload, name='employee_upload'),
 
+    path('technologist/employees/', EmployeeListTechnologistView.as_view(), name='employee_list_technologist'),
+    path('technologist/employees/create/', EmployeeCreateTechnologistView.as_view(), name='employee_create_technologist'),
+    path('technologist/employees/<int:pk>/', EmployeeDetailTechnologistView.as_view(), name='employee_detail_technologist'),
+    path('technologist/employees/<int:pk>/edit/', employee_edit_technologist, name='employee_edit_technologist'),
+    path('technologist/employees/<int:pk>/delete/', EmployeeDeleteTechnologistView.as_view(), name='employee_delete_technologist'),
+    path('technologist/employees/<int:pk>/archive/', EmployeeArchiveTechnologistView.as_view(), name='employee_archive_technologist'),
+    path('technologist/employees/<int:pk>/unarchive/', EmployeeUnArchiveTechnologistView.as_view(), name='employee_unarchive_technologist'),
+    path('technologist/employees/archived/', ArchivedEmployeeListTechnologistView.as_view(), name='archived_employee_list_technologist'),
+    path('technologist/employees/upload_employees/', employee_upload_technologist, name='employee_upload_technologist'),
+
     path('sub_tech/client/orders/', ClientOrderListSubView.as_view(), name='client_order_list_sub'),
     path('sub_tech/client/orders/<int:pk>/', ClientOrderDetailSubView.as_view(), name='client_order_detail_sub'),
     path('sub_tech/client/orders/order/<int:pk>/', OrderDetailSubView.as_view(), name='order_detail_sub'),
