@@ -613,24 +613,46 @@ class StockListView(ListView):
 
     def get_queryset(self):
         qs = Stock.objects.filter(is_archived=False)
-        stock_type = self.request.GET.get('type')
+        stock_type = self.request.GET.get('type', '2')
+        client_id = self.request.GET.get('client', '0')
+        try:
+            client_id = int(client_id)
+        except ValueError:
+            client_id = 0  
 
-        # Only filter if a valid type is explicitly passed
         if stock_type in ['0', '1', '2']:
             qs = qs.filter(type=int(stock_type))
         else:
-            # If invalid or missing type, default to '2' (Rolls)
-            stock_type = '2'
             qs = qs.filter(type=2)
 
-        self.selected_type = stock_type  # store for use in context
+        # Filter by client if provided
+        if client_id != 0:
+            filtered_ids = []
+
+            for stock in qs:
+                content = stock.content_object
+                if hasattr(content, 'client') and content.client_id == client_id:
+                    filtered_ids.append(stock.id)
+                elif isinstance(content, SizeQuantity):
+                    orders = content.orders.select_related('client_order__client')
+                    if any(order.client_order.client_id == client_id for order in orders):
+                        filtered_ids.append(stock.id)
+                elif hasattr(content, 'order'):
+                    if hasattr(content.order, 'client_order') and content.order.client_order.client_id == client_id:
+                        filtered_ids.append(stock.id)
+
+            qs = qs.filter(id__in=filtered_ids)
+
+        self.selected_type = stock_type
+        self.selected_client = client_id
         return qs.order_by('id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
-        # Pass the currently selected type; defaults to 'all'
         context['selected_type'] = self.request.GET.get('type', '2')
+        context['selected_client'] = self.request.GET.get('client', '0')
+        context['clients'] = Client.objects.all()
 
         for stock in context['stocks']:
             if stock.type == Stock.ROLLS:
@@ -646,7 +668,6 @@ class StockListView(ListView):
                 stock.category_display = "Готовая продукция"
             else:
                 stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
-
 
         return context
 

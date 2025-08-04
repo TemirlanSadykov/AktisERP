@@ -26,17 +26,33 @@
     <div class="custom-nav-tabs-scrollable">
       <ul class="custom-nav nav nav-tabs" role="tablist">
         <li class="nav-item">
-          <a href="{% url 'stock_list' %}?type=2" class="nav-link {% if selected_type == '2' %}active{% endif %}" role="tab">
+          <a href="{% url 'stock_list' %}?type={{ selected_type }}&client=0" class="nav-link {% if selected_client == '0' %}active{% endif %}">
+            {% trans "All Clients" %}
+          </a>
+        </li>
+        {% for client in clients %}
+          <li class="nav-item">
+            <a href="{% url 'stock_list' %}?type={{ selected_type }}&client={{ client.id }}" class="nav-link {% if client.id|stringformat:"s" == selected_client %}active{% endif %}">
+              {{ client.name }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="custom-nav-tabs-scrollable tab-content">
+      <ul class="custom-nav nav nav-tabs" role="tablist">
+        <li class="nav-item">
+          <a href="{% url 'stock_list' %}?type=2&client={{ selected_client }}" class="nav-link {% if selected_type == '2' %}active{% endif %}" role="tab">
             {% trans "Fabrics" %}
           </a>
         </li>
         <li class="nav-item">
-          <a href="{% url 'stock_list' %}?type=0" class="nav-link {% if selected_type == '0' %}active{% endif %}" role="tab">
+          <a href="{% url 'stock_list' %}?type=0&client={{ selected_client }}" class="nav-link {% if selected_type == '0' %}active{% endif %}" role="tab">
             {% trans "Raw Materials" %}
           </a>
         </li>
         <li class="nav-item">
-          <a href="{% url 'stock_list' %}?type=1" class="nav-link {% if selected_type == '1' %}active{% endif %}" role="tab">
+          <a href="{% url 'stock_list' %}?type=1&client={{ selected_client }}" class="nav-link {% if selected_type == '1' %}active{% endif %}" role="tab">
             {% trans "Finished Goods" %}
           </a>
         </li>
@@ -131,7 +147,7 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6">{% trans "No stocks available." %}</td>
+              <td colspan="8">{% trans "No stocks available." %}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -143,30 +159,36 @@
         <ul class="pagination justify-content-center">
           {% if page_obj.has_previous %}
             <li class="page-item">
-              <a class="page-link" href="?type={{ selected_type }}&page=1">&laquo; first</a>
+              <a class="page-link" href="?type={{ selected_type }}{% if selected_client %}&client={{ selected_client }}{% endif %}&page=1">&laquo; first</a>
             </li>
             <li class="page-item">
-              <a class="page-link" href="?type={{ selected_type }}&page={{ page_obj.previous_page_number }}">&lsaquo; previous</a>
+              <a class="page-link" href="?type={{ selected_type }}{% if selected_client %}&client={{ selected_client }}{% endif %}&page={{ page_obj.previous_page_number }}">&lsaquo; previous</a>
             </li>
           {% endif %}
+    
           {% for num in paginator.page_range %}
             {% if page_obj.number == num %}
-              <li class="page-item"><a class="page-link active" href="?type={{ selected_type }}&page={{ num }}">{{ num }}</a></li>
+              <li class="page-item">
+                <a class="page-link active" href="?type={{ selected_type }}{% if selected_client %}&client={{ selected_client }}{% endif %}&page={{ num }}">{{ num }}</a>
+              </li>
             {% else %}
-              <li class="page-item"><a class="page-link" href="?type={{ selected_type }}&page={{ num }}">{{ num }}</a></li>
+              <li class="page-item">
+                <a class="page-link" href="?type={{ selected_type }}{% if selected_client %}&client={{ selected_client }}{% endif %}&page={{ num }}">{{ num }}</a>
+              </li>
             {% endif %}
           {% endfor %}
+    
           {% if page_obj.has_next %}
             <li class="page-item">
-              <a class="page-link" href="?type={{ selected_type }}&page={{ page_obj.next_page_number }}">next &rsaquo;</a>
+              <a class="page-link" href="?type={{ selected_type }}{% if selected_client %}&client={{ selected_client }}{% endif %}&page={{ page_obj.next_page_number }}">next &rsaquo;</a>
             </li>
             <li class="page-item">
-              <a class="page-link" href="?type={{ selected_type }}&page={{ paginator.num_pages }}">last &raquo;</a>
+              <a class="page-link" href="?type={{ selected_type }}{% if selected_client %}&client={{ selected_client }}{% endif %}&page={{ paginator.num_pages }}">last &raquo;</a>
             </li>
           {% endif %}
         </ul>
       {% endif %}
-    </nav>
+    </nav>    
   </div>
 <script>
   document.addEventListener("DOMContentLoaded", function() {
