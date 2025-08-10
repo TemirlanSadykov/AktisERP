@@ -14,10 +14,11 @@ from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.db.models import F, Q, Count
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from decimal import Decimal, InvalidOperation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum, Prefetch
+from django.core.exceptions import ObjectDoesNotExist
 
 from ..decorators import keeper_required
 from ..forms import *
@@ -652,7 +653,12 @@ class StockListView(ListView):
         context['sidebar_type'] = 'keeper'
         context['selected_type'] = self.request.GET.get('type', '2')
         context['selected_client'] = self.request.GET.get('client', '0')
+        context['suppliers'] = Supplier.objects.all()
+        context['categories'] = Category.objects.all()
+        context['colors'] = Color.objects.all()
+        context['fabrics'] = Fabrics.objects.all()
         context['clients'] = Client.objects.all()
+        context['warehouses'] = Warehouse.objects.all()
 
         for stock in context['stocks']:
             if stock.type == Stock.ROLLS:
@@ -670,6 +676,216 @@ class StockListView(ListView):
                 stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
 
         return context
+
+@login_required
+@require_GET
+def stock_item_json(request, stock_id):
+    try:
+        stock = Stock.objects.get(pk=stock_id, is_archived=False)
+    except Stock.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Stock not found."}, status=404)
+
+    # Resolve item from content_object or nested .item
+    content = stock.content_object
+    item = content if isinstance(content, Item) else (getattr(content, 'item', None) if isinstance(getattr(content, 'item', None), Item) else None)
+    if not item:
+        return JsonResponse({"success": False, "message": "Item not found for this stock."}, status=404)
+
+    is_roll = (stock.type == Stock.ROLLS)
+
+    return JsonResponse({
+        "success": True,
+        "stock": {
+            "id": stock.id,
+            "last_cost": str(stock.last_cost) if stock.last_cost is not None else "",
+            "quantity": str(stock.quantity) if stock.quantity is not None else "",
+            "warehouse_id": stock.warehouse_id,
+        },
+        "item_id": item.id,
+        "is_roll": is_roll,
+        "fields": {
+            "name": item.name or "",
+            "sku": item.sku or "",
+            "description": item.description or "",
+            "unit": item.unit or "",
+            "category_id": item.category_id,
+            "supplier_id": item.supplier_id,
+            "client_id": item.client_id,
+            # roll-specific
+            "color_id": item.color_id,
+            "fabric_id": item.fabric_id,
+            "width": str(item.width) if item.width is not None else "",
+        }
+    }, status=200)
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def item_update(request, pk):
+    import json
+    from decimal import Decimal, InvalidOperation
+
+    try:
+        item = Item.objects.select_for_update().get(pk=pk, is_archived=False)
+    except Item.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Item not found."}, status=404)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    is_roll = bool(payload.get("is_roll", False))
+    f = payload.get("fields", {})
+
+    # ---- Item fields ----
+    item.name = (f.get("name") or "").strip()
+    item.sku = (f.get("sku") or "").strip() or None
+    item.description = (f.get("description") or "").strip() or None
+    item.unit = (f.get("unit") or "").strip() or None
+
+    def get_fk(model, key):
+        val = f.get(key)
+        if val in ("", None):
+            return None
+        try:
+            return model.objects.get(pk=int(val))
+        except (ValueError, ObjectDoesNotExist):
+            return None
+
+    item.category = get_fk(Category, "category_id")
+    item.supplier = get_fk(Supplier, "supplier_id")
+    item.client   = get_fk(Client, "client_id")
+
+    width_submitted = "width" in f
+    width_decimal = None
+    if width_submitted:
+        w_raw = (f.get("width") or "").strip()
+        if w_raw == "":
+            width_decimal = None
+        else:
+            try:
+                width_decimal = Decimal(w_raw)
+            except InvalidOperation:
+                return JsonResponse({"success": False, "message": "Invalid width."}, status=400)
+
+    if is_roll:
+        item.color  = get_fk(Color, "color_id")
+        item.fabric = get_fk(Fabrics, "fabric_id")
+        item.width  = width_decimal
+    else:
+        item.color = None
+        item.fabric = None
+        item.width = None if width_submitted else item.width
+
+    item.save()
+
+    # ---- Propagate to child Rolls (only for provided fields) ----
+    rolls_qs = Roll.objects.select_for_update().filter(roll_batch=item)
+    if rolls_qs.exists():
+        updates = {}
+
+        def get_id(key):
+            val = f.get(key)
+            if val in ("", None):
+                return None
+            try:
+                return int(val)
+            except (TypeError, ValueError):
+                return None
+
+        if "fabric_id" in f:
+            fabric_id = get_id("fabric_id")
+            if fabric_id is None:
+                return JsonResponse({"success": False, "message": "Fabric is required for rolls."}, status=400)
+            updates["fabric_id"] = fabric_id
+
+        if "color_id" in f:
+            color_id = get_id("color_id")
+            if color_id is None:
+                return JsonResponse({"success": False, "message": "Color is required for rolls."}, status=400)
+            updates["color_id"] = color_id
+
+        if "supplier_id" in f:
+            supplier_id = get_id("supplier_id")
+            if supplier_id is None:
+                return JsonResponse({"success": False, "message": "Supplier is required for rolls."}, status=400)
+            updates["supplier_id"] = supplier_id
+
+        if "client_id" in f:
+            updates["client_id"] = get_id("client_id")
+
+        if width_submitted:
+            updates["width"] = width_decimal
+
+        if updates:
+            rolls_qs.update(**updates)
+
+    # ---- Update the specific Stock row if provided ----
+    stock_payload = payload.get("stock")
+    if stock_payload:
+        try:
+            stock = Stock.objects.select_for_update().get(pk=int(stock_payload.get("id")))
+        except (Stock.DoesNotExist, TypeError, ValueError):
+            return JsonResponse({"success": False, "message": "Stock not found."}, status=404)
+
+        # Safety: ensure this stock belongs to this item (directly or via .item)
+        content = stock.content_object
+        content_item = content if isinstance(content, Item) else getattr(content, "item", None)
+        if not isinstance(content_item, Item) or content_item.pk != item.pk:
+            return JsonResponse({"success": False, "message": "Stock does not belong to this item."}, status=400)
+
+        if "last_cost" in stock_payload:
+            lc_raw = (stock_payload.get("last_cost") or "").strip()
+            if lc_raw == "":
+                stock.last_cost = None
+            else:
+                try:
+                    stock.last_cost = Decimal(lc_raw)
+                except InvalidOperation:
+                    return JsonResponse({"success": False, "message": "Invalid last_cost."}, status=400)
+
+        if "quantity" in stock_payload:
+            q_raw = (stock_payload.get("quantity") or "").strip()
+            if q_raw == "":
+                return JsonResponse({"success": False, "message": "Quantity is required."}, status=400)
+            try:
+                stock.quantity = Decimal(q_raw)
+            except InvalidOperation:
+                return JsonResponse({"success": False, "message": "Invalid quantity."}, status=400)
+
+        if "warehouse_id" in stock_payload:
+            wid = stock_payload.get("warehouse_id")
+            if wid in ("", None):
+                stock.warehouse = None
+            else:
+                try:
+                    stock.warehouse = Warehouse.objects.get(pk=int(wid))
+                except (Warehouse.DoesNotExist, TypeError, ValueError):
+                    return JsonResponse({"success": False, "message": "Invalid warehouse."}, status=400)
+
+        stock.save()
+
+    return JsonResponse({"success": True, "message": "Item and stock updated."}, status=200)
+
+@login_required
+@require_POST
+@keeper_required
+def stock_delete(request, pk):
+    """
+    Deletes only the Stock entry. Does NOT delete Item/Roll/Product behind content_object.
+    """
+    try:
+        stock = Stock.objects.get(pk=pk)
+    except Stock.DoesNotExist:
+        # If you prefer JSON:
+        # return JsonResponse({"success": False, "message": "Stock not found."}, status=404)
+        return redirect(request.META.get('HTTP_REFERER', reverse('stock_list')))
+
+    stock.delete()
+    # If you’re using messages, you could add a success message here.
+    return redirect(request.META.get('HTTP_REFERER', reverse('stock_list')))
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class ArchivedStockListView(ListView):
