@@ -22,6 +22,7 @@ from django.db.models.functions import Cast
 from django.db.models import Prefetch
 from django.db.models import Prefetch, Sum, Value, DecimalField
 from django.db.models.functions import Coalesce, Cast
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from ..decorators import technologist_required
 from ..forms import *
@@ -384,6 +385,7 @@ def add_client_api(request):
             'success': True,
             'client_id': client.id,
             'client_name': client.name,
+            'client_description': client.description,
         }
         return JsonResponse(data)
     else:
@@ -654,6 +656,7 @@ class OrderCreateView(CreateView):
         # Pass available colors and fabrics (and sizes) for use in the template.
         context['colors'] = Color.objects.filter(is_archived=False).order_by('name')
         context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
+        context['models'] = Model.objects.filter(is_archived=False).order_by('name')
         return context
     
 @require_POST
@@ -1127,11 +1130,9 @@ def update_passport_quantity(request):
 
     # Adjust SizeQuantity factual
     size_qty = passport_size.size_quantity
-    print(size_qty.factual)
     if size_qty:
         size_qty.factual = (size_qty.factual or 0) + delta
         size_qty.save()
-    print(size_qty.factual)
     # Update all AssignedWork records
     AssignedWork.objects.filter(work__passport_size=passport_size).update(quantity=new_quantity)
 
@@ -1564,17 +1565,18 @@ class ModelUnArchiveView(UpdateView):
         model.save()
         return HttpResponseRedirect(reverse_lazy('model_list'))
         
+@xframe_options_exempt
 @login_required
 @technologist_required
 def model_create(request, pk=None):
     copy_id = request.GET.get('copy')
     original = get_object_or_404(Model, pk=copy_id) if copy_id else None
+    modal = request.GET.get('modal') == '1'
 
     if request.method == 'POST':
         form = ModelCustomForm(request.POST, request.FILES, instance=None, copy_id=copy_id)
         if form.is_valid():
-            model_instance = form.save()  # Save the new model instance
-            # If we're copying from an existing model, copy its BOM entries too.
+            model_instance = form.save()
             if copy_id and original:
                 for bom in original.bill_of_materials.all():
                     BillOfMaterials.objects.create(
@@ -1582,8 +1584,15 @@ def model_create(request, pk=None):
                         item=bom.item,
                         quantity=bom.quantity
                     )
-            # Redirect to BOM creation page (which will display the copied BOM entries)
-            return redirect('model_detail', pk=model_instance.id)
+            # ✅ Decide where to redirect:
+            if modal:
+                return JsonResponse({
+                    'success': True,
+                    'model_id': model_instance.id,
+                    'model_name': model_instance.name
+                })
+            else:
+                return redirect('model_detail', pk=model_instance.id)
     else:
         form = ModelCustomForm(instance=(original if copy_id else None), copy_id=copy_id)
         form.fields['operations'].queryset = Operation.objects.select_related('node').all().order_by(
@@ -1604,6 +1613,7 @@ def model_create(request, pk=None):
         'copy_model': original if copy_id else None,
         'operations_order_json': operations_order_json,
         'sidebar_type': 'technology',
+        'modal': modal,
     }
     return render(request, template_name, context)
 
@@ -1641,7 +1651,8 @@ def model_edit(request, pk):
     return render(request, 'technologist/models/edit.html', {
         'form': form,
         'model': model_instance,
-        'operations_order_json': operations_order_json
+        'operations_order_json': operations_order_json,
+        'sidebar_type': 'technology'
     })
 
 @method_decorator([login_required, technologist_required], name='dispatch')
@@ -2176,8 +2187,10 @@ def bom_create(request, pk):
     colors = Color.objects.filter(is_archived=False)
     fabrics = Fabrics.objects.filter(is_archived=False)
     suppliers = Supplier.objects.filter(is_archived=False)
+    clients = Client.objects.filter(is_archived=False)
 
     return render(request, 'technologist/models/bom_create.html', {
+        'order': order,
         'sizequantity': size_qty,
         'categories': categories,
         'items_by_category': dict(items_by_cat),
@@ -2186,11 +2199,11 @@ def bom_create(request, pk):
         'colors': colors,
         'fabrics': fabrics,
         'suppliers': suppliers,
+        'clients': clients
     })
 
 @require_POST
 @login_required
-@technologist_required
 def add_category_api(request):
     name = request.POST.get('name', '').strip()
     is_fabric = request.POST.get('is_fabric') == 'on'
@@ -2210,7 +2223,6 @@ def add_category_api(request):
 
 
 @login_required
-@technologist_required
 def items_by_category_api(request):
     cat_id = request.GET.get('category')
     if not cat_id:
@@ -2239,7 +2251,6 @@ def add_item_api(request):
     
 @require_POST
 @login_required
-@technologist_required
 def add_fabric_item_api(request):
     form = FabricItemForm(request.POST)
 
@@ -2250,9 +2261,10 @@ def add_fabric_item_api(request):
         color_name = fabric_item.color.name if fabric_item.color else ''
         fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
         supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
+        client_name = fabric_item.client.name if fabric_item.client else ''
         width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
 
-        fabric_item.name = f"{color_name} {fabric_name} {width_value}м от {supplier_name}".strip()
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м для {client_name} от {supplier_name}".strip()
         fabric_item.unit = "м"
 
         fabric_item.save()  # Now save
@@ -2264,36 +2276,6 @@ def add_fabric_item_api(request):
         })
     else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-
-@method_decorator(login_required, name='dispatch')
-class ConsumptionCalculationView(View):
-    def get(self, request, model_id):
-        # Retrieve the Model instance.
-        model_instance = get_object_or_404(Model, pk=model_id)
-        
-        # Aggregate total roll length over all passports that belong to this model.
-        total_roll_length = Passport.objects.filter(
-            cut__order__model=model_instance,
-            roll__isnull=False
-        ).aggregate(
-            total=Coalesce(Sum('roll__length_t', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
-        )['total']
-        
-        # Aggregate total quantity from all passport sizes for passports that belong to this model.
-        total_quantity = PassportSize.objects.filter(
-            passport__cut__order__model=model_instance
-        ).aggregate(
-            total=Coalesce(Sum('quantity', output_field=DecimalField(max_digits=10, decimal_places=2)), 0, output_field=DecimalField(max_digits=10, decimal_places=2))
-        )['total']
-        
-        # Calculate consumption safely (avoid division by zero).
-        consumption = total_roll_length / total_quantity if total_quantity > 0 else 0
-        
-        # Save the recalculated consumption to the model.
-        model_instance.consumption_p = consumption
-        model_instance.save(update_fields=["consumption_p"])
-        
-        return JsonResponse({'consumption': consumption})
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class OrderBomView(DetailView):
@@ -2319,3 +2301,186 @@ class OrderBomView(DetailView):
 
         context['sidebar_type'] = 'technology'
         return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeListTechnologistView(ListView):
+    model = UserProfile
+    template_name = 'technologist/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=False
+        ).exclude(type=UserProfile.ADMIN).annotate(
+            employee_id_int=Cast('employee_id', IntegerField())
+        ).order_by('employee_id_int')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['upload_form'] = UploadFileForm()
+        context['sidebar_type'] = 'technology'
+        
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeCreateTechnologistView(CreateView):
+    template_name = 'technologist/employees/create.html'
+    form_class = UserWithProfileTechnologistForm
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeDetailTechnologistView(DetailView):
+    model = UserProfile
+    template_name = 'technologist/employees/detail.html'
+    context_object_name = 'employee'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+@login_required
+@technologist_required
+def employee_edit_technologist(request, pk):
+    user_profile = get_object_or_404(UserProfile, pk=pk)
+    user = user_profile.user
+
+    if request.method == 'POST':
+        user_form = UserEditForm(request.POST, instance=user)
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Employee details updated successfully.')
+            return redirect('employee_list_technologist')
+    else:
+        user_form = UserEditTechnologistForm(instance=user)
+
+    context = {'user_form': user_form, 'user_profile': user_profile}
+    context['sidebar_type'] = 'technology'
+    return render(request, 'technologist/employees/edit.html', context)
+
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeDeleteTechnologistView(DeleteView):
+    model = UserProfile
+    template_name = 'technologist/employees/delete.html'
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeArchiveTechnologistView(UpdateView):
+    model = UserProfile
+    template_name = 'technologist/employees/list.html'
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = True
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+   
+@method_decorator([login_required, technologist_required], name='dispatch')
+class EmployeeUnArchiveTechnologistView(UpdateView):
+    model = UserProfile
+    template_name = 'technologist/employees/list.html'
+    success_url = reverse_lazy('employee_list_technologist')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        employee = self.get_object()
+        employee.is_archived = False
+        employee.save()
+        return HttpResponseRedirect(self.success_url)
+     
+@method_decorator([login_required, technologist_required], name='dispatch')
+class ArchivedEmployeeListTechnologistView(ListView):
+    template_name = 'technologist/employees/list.html'
+    context_object_name = 'employees'
+    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'technology'
+        return context
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(
+            is_archived=True
+            ).order_by('employee_id')
+    
+
+@login_required
+@technologist_required
+@require_POST
+def employee_upload_technologist(request):
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        excel_file = request.FILES['excel_file']
+        try:
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
+            # Get the current company from thread-local storage.
+            current_company = get_current_company()
+            if current_company is None:
+                messages.error(request, 'No company found in context.')
+                return redirect(reverse_lazy('employee_list_technologist'))
+
+            with transaction.atomic():
+                # Iterate rows skipping the header (starting at row 2)
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    first_name, last_name, employee_id, emp_type, password = row
+                    
+                    # Generate username using current company ID and employee ID.
+                    username = f"{current_company.id}-{employee_id}"
+                    
+                    try:
+                        # Because of your custom manager, this lookup is already company-aware.
+                        profile = UserProfile.objects.get(employee_id=employee_id)
+                    except UserProfile.DoesNotExist:
+                        # Create a new user and UserProfile.
+                        user = User.objects.create(
+                            username=username,
+                            first_name=first_name,
+                            last_name=last_name
+                        )
+                        user.set_password(password)
+                        user.save()
+                        # The save method on CompanyAwareModel will assign the current company.
+                        profile = UserProfile.objects.create(
+                            user=user,
+                            employee_id=employee_id,
+                            type=int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        )
+                    else:
+                        # Update existing user and profile.
+                        user = profile.user
+                        user.first_name = first_name
+                        user.last_name = last_name
+                        user.username = username
+                        user.set_password(password)
+                        user.save()
+                        
+                        profile.type = int(emp_type) if emp_type is not None else UserProfile.EMPLOYEE
+                        profile.save()
+
+            messages.success(request, 'Employees uploaded successfully.')
+            return redirect(reverse_lazy('employee_list_technologist'))
+        except Exception as e:
+            messages.error(request, f'Error processing the file: {e}')
+            return redirect(reverse_lazy('employee_list_technologist'))
+        finally:
+            workbook.close()
+    else:
+        messages.error(request, 'Invalid file format.')
+        return redirect(reverse_lazy('employee_list_technologist'))

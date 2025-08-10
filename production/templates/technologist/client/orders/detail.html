@@ -85,6 +85,7 @@
               <table class="table table-striped">
                 <thead>
                   <tr>
+                    <th></th>
                     <th>#</th>
                     <th>{% trans "Model" %}</th>
                     <th>{% trans "Colors" %}</th>
@@ -95,9 +96,10 @@
                     <th>{% trans "Actions" %}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="orderRows">
                   {% for order in orders %}
-                    <tr>
+                    <tr data-id="{{ order.pk }}">
+                      <td class="drag-handle" style="cursor: grab;">🔀</td>
                       <td>{{ forloop.counter }}</td>
                       <td>{{ order.model.name }}</td>
                       <td>
@@ -172,33 +174,53 @@
 <!-- </div> -->
       </div>
 </div>
-  <script>
-    document.getElementById('deleteBtn').onclick = function() {
-        document.getElementById('deleteModal').style.display = 'flex';
-    };
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  // Row reordering and persistence
+  const orderKey = "dragSort_" + window.location.pathname;
+  const tbody = document.getElementById("orderRows");
 
-    document.getElementById('closeBtn').onclick = function() {
-        document.getElementById('deleteModal').style.display = 'none';
-    };
+  const sortable = Sortable.create(tbody, {
+    animation: 150,
+    handle: ".drag-handle", // <== only allow dragging via this class
+    onSort: function () {
+      const ids = Array.from(tbody.children).map(row => row.dataset.id);
+      localStorage.setItem(orderKey, JSON.stringify(ids));
+    }
+  });
 
-    document.getElementById('cancelBtn').onclick = function() {
-        document.getElementById('deleteModal').style.display = 'none';
-    };
+  window.addEventListener("DOMContentLoaded", () => {
+    const savedOrder = JSON.parse(localStorage.getItem(orderKey));
+    if (savedOrder && Array.isArray(savedOrder)) {
+      const currentRows = Array.from(tbody.children);
+      savedOrder.forEach(id => {
+        const row = currentRows.find(r => r.dataset.id === id);
+        if (row) tbody.appendChild(row); // move row to saved position
+      });
+    }
+  });
 
-    document.getElementById('confirmDeleteBtn').onclick = function() {
-        document.getElementById('archiveForm').submit();
-    };
-
-    document.getElementById('unArchiveBtn').onclick = function() {
-        document.getElementById('unarchiveModal').style.display = 'flex';
-    };
-
-    document.getElementById('closeUnarchiveBtn').onclick = function() {
-        document.getElementById('unarchiveModal').style.display = 'none';
-    };
-
-  document.getElementById('confirmUnarchiveBtn').onclick = function() {
-      document.getElementById('unArchiveForm').submit();
+  // Existing modal and button logic
+  document.getElementById('deleteBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'flex';
   };
+  document.getElementById('closeBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+  };
+  document.getElementById('cancelBtn').onclick = function() {
+      document.getElementById('deleteModal').style.display = 'none';
+  };
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+      document.getElementById('archiveForm').submit();
+  };
+  document.getElementById('unArchiveBtn')?.addEventListener("click", () => {
+      document.getElementById('unarchiveModal').style.display = 'flex';
+  });
+  document.getElementById('closeUnarchiveBtn')?.addEventListener("click", () => {
+      document.getElementById('unarchiveModal').style.display = 'none';
+  });
+  document.getElementById('confirmUnarchiveBtn')?.addEventListener("click", () => {
+      document.getElementById('unArchiveForm').submit();
+  });
 </script>
 {% endblock %}

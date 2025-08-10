@@ -361,76 +361,32 @@ def complete_production(request):
         sq_id = data.get('size_quantity_id')
         if not sq_id:
             return JsonResponse({'success': False, 'message': 'Missing size_quantity_id.'})
-        
-        sq_obj = SizeQuantity.objects.get(pk=sq_id)
-        sq_obj.production_complete = True
-        sq_obj.save()
 
-        packed_quantity = sq_obj.packed or 0
-        packed_quantity = Decimal(packed_quantity)
+        with transaction.atomic():
+            sq_obj = get_object_or_404(SizeQuantity, pk=sq_id)
 
-        # Get warehouse
-        warehouse = Warehouse.objects.filter(is_archived=False).first()
-        if not warehouse:
-            return JsonResponse({'success': False, 'message': 'No available warehouse.'})
+            # Mark production complete
+            sq_obj.production_complete = True
+            sq_obj.save(update_fields=["production_complete"])
 
-        # Create finished goods stock
-        content_type = ContentType.objects.get_for_model(sq_obj)
-        stock = Stock.objects.create(
-            content_type=content_type,
-            object_id=sq_obj.pk,
-            quantity=packed_quantity,
-            warehouse=warehouse,
-            is_archived=False,
-            type=Stock.FINSHED_GOODS
-        )
+            packed_quantity = Decimal(sq_obj.packed or 0)
 
-        StockMovement.objects.create(
-            stock=stock,
-            movement_type='IN',
-            quantity=packed_quantity,
-            from_warehouse=None,
-            to_warehouse=warehouse,
-            note="Прием готовой продукции"
-        )
+            if packed_quantity <= 0:
+                return JsonResponse({'success': False, 'message': 'Packed quantity must be greater than 0.'})
 
-        # Subtract raw materials used in BOM
-        for bom in sq_obj.bill_of_materials.select_related('item').all():
-            total_needed = bom.quantity * packed_quantity
-
-            # Find raw material stock
-            raw_stock = Stock.objects.filter(
-                content_type=ContentType.objects.get_for_model(bom.item),
-                object_id=bom.item.pk,
-                type__in=[Stock.RAW_MATERIALS, Stock.ROLLS],
-                warehouse=warehouse,
-                is_archived=False
-            ).first()
-
-            if not raw_stock:
-                return JsonResponse({'success': False, 'message': f"No stock for raw material: {bom.item.name}"})
-
-            raw_stock.quantity -= total_needed
-            raw_stock.save()
-
-            StockMovement.objects.create(
-                stock=raw_stock,
-                movement_type='OUT',
-                quantity=total_needed,
-                from_warehouse=warehouse,
-                to_warehouse=None,
-                note=f"Расход для производства {sq_obj}"
+            # Create draft production receipt
+            ProductionReceipt.objects.create(
+                size_quantity=sq_obj,
+                reported_qty=packed_quantity,
+                status=ProductionReceipt.DRAFT
             )
 
-        return JsonResponse({'success': True})
+        return JsonResponse({'success': True, 'message': 'Receipt created and production marked complete.'})
 
     except SizeQuantity.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
-
-
-
 
 @login_required
 @packer_required

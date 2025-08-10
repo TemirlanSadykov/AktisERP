@@ -128,6 +128,7 @@ class UserProfile(CompanyAwareModel):
 
 class Client(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
     def __str__(self):
@@ -225,8 +226,6 @@ class Model(CompanyAwareModel):
     assortment = models.ForeignKey(Assortment, on_delete=models.CASCADE, related_name='models', verbose_name='Ассортимент', null=True, blank=True)
     operations = models.ManyToManyField(Operation, through='ModelOperation', related_name='models', verbose_name='Операции')
     photo = models.ImageField(upload_to='model_photos/', null=True, blank=True, verbose_name='Фото')
-    consumption_t = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход Теоретический', blank=True, null=True)
-    consumption_p = models.DecimalField(max_digits=5, decimal_places=2, verbose_name='Расход Практический', blank=True, null=True)
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
@@ -349,6 +348,7 @@ class CutSize(CompanyAwareModel):
 
 class Supplier(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
     def __str__(self):
@@ -380,6 +380,7 @@ class Item(CompanyAwareModel):
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     fabric = models.ForeignKey(Fabrics, on_delete=models.SET_NULL, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
     width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
@@ -392,6 +393,7 @@ class Roll(CompanyAwareModel):
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
     fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='rolls', verbose_name='Клиент', null=True, blank=True)
     name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
     length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
     length_p = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина П (м)', null=True, blank=True)
@@ -493,6 +495,14 @@ class Stock(CompanyAwareModel):
         (ROLLS, 'Рулоны')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
+    last_cost = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        verbose_name='Последняя цена закупки'
+    )
+    last_supplied_date = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Дата последней поставки'
+    )
     # Inventory-specific fields:
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     warehouse = models.ForeignKey(
@@ -578,3 +588,51 @@ class CostRecord(CompanyAwareModel):
 
     def __str__(self):
         return f"Cost for {self.content_object}: {self.cost}"
+    
+class ProductionReceipt(CompanyAwareModel):
+    """
+    Records the hand-over of finished goods from production to the keeper.
+    Inventory is updated only after a receipt reaches POSTED.
+    """
+
+    # Workflow
+    DRAFT     = "draft"      # created by packer, waiting for keeper review
+    CONFIRMED = "confirmed"  # keeper checked / edited quantity, ready to post
+    STATUS_CHOICES = [
+        (DRAFT,     "Draft"),
+        (CONFIRMED, "Confirmed")
+    ]
+
+    # Links
+    size_quantity = models.ForeignKey(
+        SizeQuantity,
+        related_name="receipts",
+        on_delete=models.CASCADE,
+        verbose_name="Размер-кол-во"
+    )
+
+    # Quantities
+    reported_qty  = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        verbose_name="Сообщённое кол-во"
+    )
+    confirmed_qty = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        null=True, blank=True,
+        verbose_name="Подтверждённое кол-во"
+    )
+
+    # Workflow status
+    status    = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=DRAFT,
+        verbose_name="Статус"
+    )
+    posted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Дата проведения в склад"
+    )
+
+    def __str__(self):
+        return f"Receipt #{self.pk} – {self.size_quantity} ({self.status})"

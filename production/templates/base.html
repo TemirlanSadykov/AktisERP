@@ -95,6 +95,7 @@
       </script>
     <main>
         <div class="d-flex" id="wrapper">
+            {% if not modal %}
             <div class="border-right" id="sidebar-wrapper">
                 <div class="d-flex justify-content-between align-items-center" style="width:222px;">
                     <button type="button" id="toggle-sidebar" aria-label="Toggle sidebar" style="color:#6c757d;    border: none;
@@ -128,6 +129,11 @@
                     data-id="operations">
                         <i class="fas fa-toolbox fa-fw"></i>
                         <span class="sidetext">{% trans 'Operations' %}</span>
+                    </a>
+                    <a href="{% url 'employee_list_technologist' %}"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset"
+                        data-id="employees">
+                        <i class="fas fa-id-card fa-fw"></i><span class="sidetext">{% trans 'Employees' %}</span>
                     </a>
 
                     <!-- Additional dropdown tab -->
@@ -262,12 +268,15 @@
                         <a href="{% url 'client_order_list_keeper' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
+                        <a href="{% url 'receipt_list' %}"
+                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
+                            <i class="fas fa-sign-in-alt fa-fw"></i><span class="sidetext">{% trans 'Logs' %}</span></a>
                         <a href="{% url 'stock_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-layer-group fa-fw"></i><span class="sidetext">{% trans 'Stocks' %}</span></a>
                         <a href="{% url 'stock_movement' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-sign-in-alt fa-fw"></i><span class="sidetext">{% trans 'Stock Movement' %}</span></a>
+                            <i class="fas fa-truck-moving fa-fw"></i><span class="sidetext">{% trans 'Stock Movement' %}</span></a>
                         {% comment %} <a href="{% url 'item_list' %}"
                             class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
                             <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Items' %}</span></a> {% endcomment %}
@@ -393,6 +402,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
             <div id="page-content-wrapper">
                 {% block content %}{% endblock %}
                 {% block extra_js %}{% endblock %}
@@ -409,7 +419,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
 
-
+    {% if not modal %}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const sidebarWrapper = document.getElementById('sidebar-wrapper');
@@ -439,7 +449,8 @@
                 sidebarWrapper.classList.toggle('collapsed');
             });
         });
-    </script>        
+    </script>   
+    {% endif %}     
 
 </body>
 

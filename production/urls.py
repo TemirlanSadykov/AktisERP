@@ -32,10 +32,22 @@ urlpatterns = [
     path('admin/employees/archived/', ArchivedEmployeeListView.as_view(), name='archived_employee_list'),
     path('admin/employees/upload_employees/', employee_upload, name='employee_upload'),
 
+    path('technologist/employees/', EmployeeListTechnologistView.as_view(), name='employee_list_technologist'),
+    path('technologist/employees/create/', EmployeeCreateTechnologistView.as_view(), name='employee_create_technologist'),
+    path('technologist/employees/<int:pk>/', EmployeeDetailTechnologistView.as_view(), name='employee_detail_technologist'),
+    path('technologist/employees/<int:pk>/edit/', employee_edit_technologist, name='employee_edit_technologist'),
+    path('technologist/employees/<int:pk>/delete/', EmployeeDeleteTechnologistView.as_view(), name='employee_delete_technologist'),
+    path('technologist/employees/<int:pk>/archive/', EmployeeArchiveTechnologistView.as_view(), name='employee_archive_technologist'),
+    path('technologist/employees/<int:pk>/unarchive/', EmployeeUnArchiveTechnologistView.as_view(), name='employee_unarchive_technologist'),
+    path('technologist/employees/archived/', ArchivedEmployeeListTechnologistView.as_view(), name='archived_employee_list_technologist'),
+    path('technologist/employees/upload_employees/', employee_upload_technologist, name='employee_upload_technologist'),
+
     path('sub_tech/client/orders/', ClientOrderListSubView.as_view(), name='client_order_list_sub'),
     path('sub_tech/client/orders/<int:pk>/', ClientOrderDetailSubView.as_view(), name='client_order_detail_sub'),
     path('sub_tech/client/orders/order/<int:pk>/', OrderDetailSubView.as_view(), name='order_detail_sub'),
-    path('sub_tech/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut_sub, name='assign_operations_by_cut_sub'),
+    path('sub_tech/client/orders/order/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut_sub, name='assign_operations_by_cut_sub'),
+    path('sub_tech/passports/update_work/', update_work_sub, name='update_work_sub'),
+    path('sub_tech/passports/update_passport_quantity/', update_passport_quantity_sub, name='update_passport_quantity_sub'),
 
     path('technologist/client/orders/', ClientOrderListView.as_view(), name='client_order_list'),
     path('technologist/client/orders/create/', ClientOrderCreateView.as_view(), name='client_order_create'),
@@ -81,7 +93,7 @@ urlpatterns = [
     path('technologist/client/orders/order/<int:pk>/edit/', OrderUpdateView.as_view(), name='order_edit'),
     path('technologist/client/orders/order/<int:pk>/delete/', OrderDeleteView.as_view(), name='order_delete'),
     path('technologist/passports/<int:passport_id>/assign_operations/', assign_operations, name='assign_operations'),
-    path('technologist/passports/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
+    path('technologist/client/orders/order/<int:cut_id>/assign_operations_by_cut/', assign_operations_by_cut, name='assign_operations_by_cut'),
     path('technologist/passports/update_work/', update_work, name='update_work'),
     path('technologist/passports/update_work_success/', update_work_success, name='update_work_success'),
     path('technologist/passports/update_passport_quantity/', update_passport_quantity, name='update_passport_quantity'),
@@ -134,8 +146,6 @@ urlpatterns = [
     path('technologist/equipment/<int:pk>/archive/', EquipmentArchiveView.as_view(), name='equipment_archive'),
     path('technologist/equipment<int:pk>/unarchive/', EquipmentUnArchiveView.as_view(), name='equipment_unarchive'), 
     path('technologist/equipment/<int:pk>/delete/', EquipmentDeleteView.as_view(), name='equipment_delete'),
-
-    path('technologist/calculate_consumption/<int:model_id>/', ConsumptionCalculationView.as_view(), name='calculate_consumption'),
 
     path('employee/works/<int:id>/complete/', complete_work, name='complete_work'),
 
@@ -239,7 +249,12 @@ urlpatterns = [
     path('keeper/stocks/<int:pk>/archive/', StockArchiveView.as_view(), name='stock_archive'),
     path('keeper/stocks/<int:pk>/unarchive/', StockUnArchiveView.as_view(), name='stock_unarchive'),
 
+    path('keeper/receipts/', ReceiptListView.as_view(), name='receipt_list'),
+    path('keeper/receipts/<int:receipt_id>/post/', post_receipt, name='post_receipt'),
+    path('keeper/receipts/<int:receipt_id>/delete/', delete_receipt, name='delete_receipt'),
+
     path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
+    path('keeper/client/orders/order/<int:pk>/bom-deficit/', BomDeficitView.as_view(), name='bom_deficit'),
 
     path('keeper/warehouses/', WarehouseListView.as_view(), name='warehouse_list'),
     path('keeper/warehouses/create/', WarehouseCreateView.as_view(), name='warehouse_create'),

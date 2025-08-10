@@ -65,6 +65,7 @@
   }
 </style>
 
+{% if not modal %}
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
   <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
     <i class="fas fa-bars"></i>
@@ -84,6 +85,7 @@
     </ul>
   </div>
 </nav>
+{% endif %}
 
 <div class="container maincontr">
   <div class="card-header">
@@ -109,12 +111,6 @@
         {{ form.assortment }}
         {% if form.assortment.errors %}
             <div class="error">{{ form.assortment.errors }}</div>
-        {% endif %}
-
-        <label for="{{ form.consumption_t.id_for_label }}">{{ form.consumption_t.label }}</label>
-        {{ form.consumption_t }}
-        {% if form.consumption_t.errors %}
-        <div class="error">{{ form.consumption_t.errors }}</div>
         {% endif %}
 
         <label for="{{ form.operations.id_for_label }}">{{ form.operations.label }}</label>
@@ -186,21 +182,105 @@
   </div>
 </div>
 
+{% if modal %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('modelForm');
+  if (!form) return;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    fetch("", {
+      method: "POST",
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.parent.postMessage({
+          newModelId: data.model_id,
+          newModelName: data.model_name
+        }, "*");
+      } else {
+        showErrors(data.errors);
+      }
+    })
+    .catch(err => {
+      alert("An error occurred: " + err);
+    });
+  });
+
+  function showErrors(errors) {
+    let errorDiv = document.getElementById('formErrors');
+    if (!errorDiv) {
+      errorDiv = document.createElement('div');
+      errorDiv.id = 'formErrors';
+      errorDiv.className = 'alert alert-danger';
+      form.parentNode.insertBefore(errorDiv, form);
+    }
+    errorDiv.innerHTML = "";
+    for (const field in errors) {
+      errors[field].forEach(msg => {
+        errorDiv.innerHTML += `<p>${field}: ${msg}</p>`;
+      });
+    }
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+</script>
+{% else %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('modelForm');
+  if (!form) return;
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    selectedOperations = [];
+    let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
+    sortedItems.forEach(function(item, index) {
+      selectedOperations.push({
+        operation_id: item.getAttribute('data-id'),
+        order: index
+      });
+    });
+    document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
+    form.submit();
+  });
+});
+</script>
+{% endif %}
+
 <script>
 let selectedOperations = [];
 
 document.getElementById('searchOperations').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const operations = document.querySelectorAll('#operationsContainer table tbody tr[data-operation-content]');
-    operations.forEach(op => {
-        const content = op.getAttribute('data-operation-content');
-        const namePart = content.split('-')[2].trim();
-        if (namePart.toLowerCase().includes(searchTerm)) {
-            op.style.display = '';
-        } else {
-            op.style.display = 'none';
-        }
-    });
+  const searchTerm = e.target.value.toLowerCase();
+  const operations = document.querySelectorAll('#operationsContainer table tbody tr[data-operation-content]');
+  operations.forEach(op => {
+    const content = op.getAttribute('data-operation-content');
+    const namePart = content.split('-')[2].trim();
+    op.style.display = namePart.toLowerCase().includes(searchTerm) ? '' : 'none';
+  });
 });
 
 function prepareOperations() {
@@ -208,48 +288,34 @@ function prepareOperations() {
   let operationsContainer = document.getElementById('selectedOperations');
   operationsContainer.innerHTML = '';
   checkedBoxes.forEach(function(checkbox, index) {
-      let parentRow = checkbox.closest('tr');
-      let label = parentRow.getAttribute('data-operation-content');
-      let div = document.createElement('div');
-      div.className = 'sortable-item';
-      div.setAttribute('data-id', checkbox.value);
-      
-      let orderSpan = document.createElement('span');
-      orderSpan.className = 'order-number';
-      orderSpan.textContent = (index + 1) + '. ';
-      
-      div.appendChild(orderSpan);
-      div.appendChild(document.createTextNode(label));
-      
-      operationsContainer.appendChild(div);
+    let parentRow = checkbox.closest('tr');
+    let label = parentRow.getAttribute('data-operation-content');
+    let div = document.createElement('div');
+    div.className = 'sortable-item';
+    div.setAttribute('data-id', checkbox.value);
+
+    let orderSpan = document.createElement('span');
+    orderSpan.className = 'order-number';
+    orderSpan.textContent = (index + 1) + '. ';
+
+    div.appendChild(orderSpan);
+    div.appendChild(document.createTextNode(label));
+
+    operationsContainer.appendChild(div);
   });
 
   new Sortable(operationsContainer, {
-      animation: 150,
-      ghostClass: 'sortable-ghost',
-      onUpdate: function(evt) {
-          let items = operationsContainer.getElementsByClassName('sortable-item');
-          Array.from(items).forEach((item, idx) => {
-              item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
-          });
-      }
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    onUpdate: function(evt) {
+      let items = operationsContainer.getElementsByClassName('sortable-item');
+      Array.from(items).forEach((item, idx) => {
+        item.getElementsByClassName('order-number')[0].textContent = (idx + 1) + '. ';
+      });
+    }
   });
 }
 
-function submitOperations(event) {
-    event.preventDefault();
-    selectedOperations = [];
-    let sortedItems = document.querySelectorAll('#selectedOperations .sortable-item');
-    sortedItems.forEach(function(item, index) {
-        selectedOperations.push({operation_id: item.getAttribute('data-id'), order: index});
-    });
-    document.getElementById('id_operations_data').value = JSON.stringify(selectedOperations);
-    document.getElementById('modelForm').submit();
-}
-
-document.getElementById('modelForm').addEventListener('submit', submitOperations);
-
-// Function to retrieve a cookie value by name (for CSRF token)
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -264,9 +330,8 @@ function getCookie(name) {
   }
   return cookieValue;
 }
-document.addEventListener('DOMContentLoaded', function () {
 
-  // ===== Assortment Modal =====
+document.addEventListener('DOMContentLoaded', function () {
   const assortmentSelect = document.getElementById('id_assortment');
   const addAssortmentModalEl = document.getElementById('addAssortmentModal');
   const addAssortmentModal = new bootstrap.Modal(addAssortmentModalEl, { backdrop: false });
@@ -305,6 +370,6 @@ document.addEventListener('DOMContentLoaded', function () {
       alert("An error occurred: " + error);
     });
   });
-})
+});
 </script>
 {% endblock %}

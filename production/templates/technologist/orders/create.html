@@ -41,7 +41,13 @@
           {% csrf_token %}
           <div class="form-group">
             <label for="id_model">{% trans "Model:" %}</label>
-            {{ form.model }}
+            <select name="model" id="id_model" class="form-control">
+              <option value="" disabled selected>{% trans "-------" %}</option>
+              <option value="">{% trans "[ДОБАВИТЬ]" %}</option>
+              {% for model in models %}
+                <option value="{{ model.pk }}">{{ model.name }}</option>
+              {% endfor %}
+            </select>
           </div>
       
         <div class="row" style="margin-bottom: 10px;">
@@ -74,7 +80,7 @@
                     <div class="col">
                       <select name="row-0_color" class="form-control color-select">
                         <option value="">{% trans "-------" %}</option>
-                        <option value="add_new_color">{% trans "Add New Color" %}</option>
+                        <option value="add_new_color">{% trans "[ДОБАВИТЬ]" %}</option>
                         {% for color in colors %}
                           <option value="{{ color.pk }}">{{ color.name }}</option>
                         {% endfor %}
@@ -83,7 +89,7 @@
                     <div class="col">
                       <select name="row-0_fabric" class="form-control fabric-select">
                         <option value="">{% trans "-------" %}</option>
-                        <option value="add_new_fabric">{% trans "Add New Fabric" %}</option>
+                        <option value="add_new_fabric">{% trans "[ДОБАВИТЬ]" %}</option>
                         {% for fabric in fabrics %}
                           <option value="{{ fabric.pk }}">{{ fabric.name }}</option>
                         {% endfor %}
@@ -135,6 +141,25 @@
           <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
           <a href="{% url 'client_order_detail' client_order_pk %}" class="btn btn-outline-secondary">{% trans "Back" %}</a>
         </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== -->
+<!-- Add New Model Modal -->
+<!-- ======================== -->
+<div class="modal" data-backdrop="false" id="addModelModal" tabindex="-1" role="dialog" aria-labelledby="addModelModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content" style="max-width: 100%;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addModelModalLabel">{% trans "Add New Model" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="height: 80vh; padding: 0;">
+        <iframe id="modelCreationIframe" src="" width="100%" height="100%" style="border: none;"></iframe>
       </div>
     </div>
   </div>
@@ -202,6 +227,24 @@
 <!-- JavaScript Section -->
 <!-- ======================== -->
 <script>
+  document.getElementById('id_model').addEventListener('change', function(e) {
+    if (e.target.options[e.target.selectedIndex].text === '[ДОБАВИТЬ]') {
+      e.target.value = "";
+      document.getElementById('modelCreationIframe').src = "{% url 'model_create' %}?modal=1";
+      $('#addModelModal').modal('show');
+    }
+  });
+  window.addEventListener('message', function(e) {
+    if (e.data.newModelId) {
+      const select = document.getElementById('id_model');
+      const option = new Option(e.data.newModelName, e.data.newModelId, true, true);
+      select.appendChild(option);
+      select.value = e.data.newModelId;
+      $('#addModelModal').modal('hide');
+    }
+  });
+</script>
+<script>
 // Global arrays for colors and fabrics.
 var globalColors = [
   {% for color in colors %}
@@ -236,7 +279,7 @@ function getCookie(name) {
 // Helper functions to generate option markup from global arrays.
 function getColorOptionsHTML() {
   let html = '<option value="">{% trans "-------" %}</option>';
-  html += '<option value="add_new_color">{% trans "Add New Color" %}</option>';
+  html += '<option value="add_new_color">{% trans "[ДОБАВИТЬ]" %}</option>';
   globalColors.forEach(function(color) {
     html += `<option value="${color.id}">${color.name}</option>`;
   });
@@ -245,7 +288,7 @@ function getColorOptionsHTML() {
 
 function getFabricOptionsHTML() {
   let html = '<option value="">{% trans "-------" %}</option>';
-  html += '<option value="add_new_fabric">{% trans "Add New Fabric" %}</option>';
+  html += '<option value="add_new_fabric">{% trans "[ДОБАВИТЬ]" %}</option>';
   globalFabrics.forEach(function(fabric) {
     html += `<option value="${fabric.id}">${fabric.name}</option>`;
   });

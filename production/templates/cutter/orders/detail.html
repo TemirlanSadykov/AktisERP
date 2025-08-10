@@ -54,11 +54,20 @@
         <div class="col-md-5 text-center">
           {% if order.model.photo %}
             <div class="operation-photo">
-              <img src="{{ order.model.photo.url }}" alt="{% trans 'Model Photo' %}">
+              <img src="{{ order.model.photo.url }}" id="enlargePhoto" alt="{% trans 'Model Photo' %}" style="cursor:pointer;" class="img-fluid">
             </div>
           {% else %}
-            <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
+            <img src="{% static 'img/noimg1.png' %}" id="enlargePhoto" alt="Model Image" style="cursor:pointer;" class="img-fluid">
           {% endif %}
+        </div>
+        <div class="modal" id="photoModal" style="display: none; position: fixed; z-index: 1050; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center;">
+          <div style="max-width: 95vw; max-height: 94vh; display: flex; align-items: center; justify-content: center;">
+            {% if order.model.photo %}
+              <img src="{{ order.model.photo.url }}" class="img-fluid rounded" alt="{% trans 'Model Photo' %}" style="max-height: 94vh; max-width: 100%; border: 5px solid white;">
+            {% else %}
+              <img src="{% static 'img/noimg1.png' %}" class="img-fluid rounded" alt="{% trans 'Model Photo' %}" style="max-height: 94vh; max-width: 100%; border: 5px solid white;">
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
@@ -191,4 +200,22 @@
     </div>    
   </div>
 </div>
+<script>
+  const photoTrigger = document.getElementById('enlargePhoto');
+  const photoModal = document.getElementById('photoModal');
+
+  photoTrigger.addEventListener('click', function () {
+    if (photoModal.style.display === 'none' || photoModal.style.display === '') {
+      photoModal.style.display = 'flex';
+    } else {
+      photoModal.style.display = 'none';
+    }
+  });
+
+  photoModal.addEventListener('click', function (e) {
+    if (e.target === photoModal) {
+      photoModal.style.display = 'none';
+    }
+  });
+</script>
 {% endblock %}
