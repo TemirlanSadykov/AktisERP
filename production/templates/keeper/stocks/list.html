@@ -119,31 +119,54 @@
               </td>
               <td>
                 {% if selected_type == '0' %}
-                  <!-- Raw Materials -->
-                  <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary">
-                    {% trans "View" %}
-                  </a>
-                {% elif selected_type == '2' %}
-                  <!-- Rolls -->
-                  <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
-                    {% trans "View" %}
-                  </a>
-                {% elif selected_type == '1' %}
-                  <!-- Finished Goods -->
                   <div class="d-flex" style="gap: 5px;">
-                    <a href="{% url 'bom_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
-                      {% trans "View" %}
-                    </a>
-                    <button class="btn btn-sm btn-success ship-btn" data-sq-id="{{ stock.content_object.pk }}">
-                      {% trans "Ship" %}
+                    <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary" style="margin-bottom: 0;">{% trans "View" %}</a>
+                    <button class="btn btn-sm btn-secondary w-100 edit-item-btn" style="margin-bottom: 0;"
+                            data-stock-id="{{ stock.pk }}" data-type="{{ selected_type }}">
+                      {% trans "Edit" %}
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-stock-btn"
+                            data-stock-id="{{ stock.pk }}"
+                            data-item-name="{{ stock.content_object }}">
+                      {% trans "Delete" %}
+                    </button>
+                  </div>
+
+                {% elif selected_type == '2' %}
+                  <div class="d-flex" style="gap: 5px;">
+                    <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary" style="margin-bottom: 0;">{% trans "View" %}</a>
+                    <button class="btn btn-sm btn-secondary w-100 edit-item-btn" style="margin-bottom: 0;"
+                            data-stock-id="{{ stock.pk }}" data-type="{{ selected_type }}">
+                      {% trans "Edit" %}
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-stock-btn"
+                            data-stock-id="{{ stock.pk }}"
+                            data-item-name="{{ stock.content_object }}">
+                      {% trans "Delete" %}
+                    </button>
+                  </div>
+
+                {% elif selected_type == '1' %}
+                  <div class="d-flex" style="gap: 5px;">
+                    <a href="{% url 'bom_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary" style="margin-bottom: 0;">{% trans "View" %}</a>
+                    <button class="btn btn-sm btn-success ship-btn" data-sq-id="{{ stock.content_object.pk }}" style="margin-bottom: 0;">{% trans "Ship" %}</button>
+                    <button class="btn btn-sm btn-danger delete-stock-btn"
+                            data-stock-id="{{ stock.pk }}"
+                            data-item-name="{{ stock.content_object }}">
+                      {% trans "Delete" %}
                     </button>
                   </div>
                 {% else %}
-                  <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">
-                    {% trans "View" %}
-                  </a>
+                  <div class="d-flex" style="gap: 5px;">
+                    <a href="{% url 'roll_combination_detail' stock.content_object.pk %}" class="btn btn-sm btn-primary">{% trans "View" %}</a>
+                    <button class="btn btn-sm btn-danger delete-stock-btn"
+                            data-stock-id="{{ stock.pk }}"
+                            data-item-name="{{ stock.content_object }}">
+                      {% trans "Delete" %}
+                    </button>
+                  </div>
                 {% endif %}
-              </td>
+              </td>              
             </tr>
           {% empty %}
             <tr>
@@ -189,6 +212,175 @@
         </ul>
       {% endif %}
     </nav>    
+  </div>
+  <!-- Hidden form for POST delete with CSRF -->
+  <form id="deleteStockForm" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+
+  <!-- Simple confirm modal -->
+  <div class="modal" id="deleteModal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" id="closeDeleteModalBtn">&times;</span>
+      <p id="deleteModalText">
+        {% trans 'Are you sure you want to delete this stock entry?' %}
+      </p>
+      <div class="modal-buttons">
+        <button class="btn confirm" id="confirmDeleteBtn">{% trans 'Confirm' %}</button>
+        <button class="btn cancel" id="cancelDeleteBtn">{% trans 'Cancel' %}</button>
+      </div>
+    </div>
+  </div>
+  <!-- Edit Item Modal -->
+  <div class="modal fade" id="editItemModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content" style="max-width: 100%; width: 100%;">
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Edit Stock & Item" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+  
+        <div class="modal-body">
+          <form id="editItemForm">
+            <input type="hidden" id="editItemId">
+            <input type="hidden" id="editIsRoll">
+            <input type="hidden" id="editStockId">
+  
+            <div class="row">
+              <!-- LEFT: Stock -->
+              <div class="col-lg-5">
+                <div class="card shadow-sm mb-3">
+                  <div class="card-header py-2">
+                    <strong>{% trans "Stock" %}</strong>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label>{% trans "Last Cost" %}</label>
+                      <input type="number" step="0.01" class="form-control" id="editLastCost" placeholder="0.00">
+                      <small class="text-muted">{% trans "Leave empty to clear." %}</small>
+                    </div>
+  
+                    <div class="form-group" id="stockQuantityGroup">
+                      <label>{% trans "Quantity" %}</label>
+                      <input type="number" step="0.01" class="form-control" id="editQuantity" required>
+                    </div>
+  
+                    <div class="form-group">
+                      <label>{% trans "Warehouse" %}</label>
+                      <select class="form-control" id="editWarehouse">
+                        <option value="">{% trans "— None —" %}</option>
+                        {% for w in warehouses %}
+                          <option value="{{ w.id }}">{{ w.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+  
+              <!-- RIGHT: Item -->
+              <div class="col-lg-7">
+                <div class="card shadow-sm mb-3">
+                  <div class="card-header py-2">
+                    <strong>{% trans "Item" %}</strong>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label>{% trans "Name" %}</label>
+                        <input type="text" class="form-control" id="editName" required>
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label>SKU</label>
+                        <input type="text" class="form-control" id="editSku">
+                      </div>
+                    </div>
+  
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label>{% trans "Category" %}</label>
+                        <select class="form-control" id="editCategory">
+                          <option value="">{% trans "— Select —" %}</option>
+                          {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label>{% trans "Unit" %}</label>
+                        <input type="text" class="form-control" id="editUnit">
+                      </div>
+                    </div>
+  
+                    <div class="form-row">
+                      <div class="form-group col-md-6">
+                        <label>{% trans "Supplier" %}</label>
+                        <select class="form-control" id="editSupplier">
+                          <option value="">{% trans "— None —" %}</option>
+                          {% for s in suppliers %}
+                            <option value="{{ s.id }}">{{ s.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="form-group col-md-6">
+                        <label>{% trans "Client" %}</label>
+                        <select class="form-control" id="editClient">
+                          <option value="">{% trans "— None —" %}</option>
+                          {% for cl in clients %}
+                            <option value="{{ cl.id }}">{{ cl.name }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+  
+                    <div class="form-group">
+                      <label>{% trans "Description" %}</label>
+                      <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                    </div>
+  
+                    <!-- Roll-specific -->
+                    <div id="rollSpecificFields" style="display:none;">
+                      <hr/>
+                      <div class="form-row">
+                        <div class="form-group col-md-4">
+                          <label>{% trans "Color" %}</label>
+                          <select class="form-control" id="editColor">
+                            <option value="">{% trans "— None —" %}</option>
+                            {% for col in colors %}
+                              <option value="{{ col.id }}">{{ col.name }}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                          <label>{% trans "Fabric" %}</label>
+                          <select class="form-control" id="editFabric">
+                            <option value="">{% trans "— None —" %}</option>
+                            {% for f in fabrics %}
+                              <option value="{{ f.id }}">{{ f.name }}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                          <label>{% trans "Width" %}</label>
+                          <input type="number" step="0.01" class="form-control" id="editWidth">
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /Roll-specific -->
+                  </div>
+                </div>
+              </div>
+            </div> <!-- /row -->
+          </form>
+        </div>
+        <div class="modal-buttons">
+          <button class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+          <button class="btn save" id="saveItemBtn">{% trans "Save" %}</button>
+        </div>
+      </div>
+    </div>
   </div>
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -244,6 +436,176 @@
           alert("An error occurred while shipping.");
         });
       });
+    });
+    const editButtons = document.querySelectorAll(".edit-item-btn");
+    const modalEl = document.getElementById("editItemModal");
+
+    function showRollFields(show) {
+      document.getElementById("rollSpecificFields").style.display = show ? "block" : "none";
+    }
+
+    function setSelectValue(selectId, value) {
+      const el = document.getElementById(selectId);
+      el.value = (value === null || value === undefined) ? "" : String(value);
+    }
+
+    function toggleStockQuantity(isRoll) {
+      const grp = document.getElementById("stockQuantityGroup");
+      const input = document.getElementById("editQuantity");
+      if (!grp || !input) return;
+      if (isRoll) {
+        grp.style.display = "none";
+        input.disabled = true;   // prevent accidental form edits
+        input.removeAttribute("required");
+      } else {
+        grp.style.display = "";
+        input.disabled = false;
+        input.setAttribute("required", "required");
+      }
+    }  
+
+    editButtons.forEach(btn => {
+      btn.addEventListener("click", function() {
+        const stockId = this.dataset.stockId;
+        if (!stockId) return;
+  
+        fetch(`{% url 'stock_item_json' 0 %}`.replace('/0/', `/${stockId}/`))
+          .then(r => r.json())
+          .then(data => {
+            if (!data.success) { alert(data.message || "Failed to load item."); return; }
+  
+            // Stock side
+            document.getElementById("editStockId").value = data.stock.id;
+            document.getElementById("editLastCost").value = data.stock.last_cost || "";
+            document.getElementById("editQuantity").value = data.stock.quantity || "0";
+            setSelectValue("editWarehouse", data.stock.warehouse_id);
+  
+            // Item side
+            document.getElementById("editItemId").value = data.item_id;
+            document.getElementById("editIsRoll").value = data.is_roll ? "1" : "0";
+  
+            document.getElementById("editName").value = data.fields.name || "";
+            document.getElementById("editSku").value = data.fields.sku || "";
+            document.getElementById("editDescription").value = data.fields.description || "";
+            document.getElementById("editUnit").value = data.fields.unit || "";
+  
+            setSelectValue("editCategory", data.fields.category_id);
+            setSelectValue("editSupplier", data.fields.supplier_id);
+            setSelectValue("editClient",   data.fields.client_id);
+  
+            if (data.is_roll) {
+              setSelectValue("editColor",  data.fields.color_id);
+              setSelectValue("editFabric", data.fields.fabric_id);
+              document.getElementById("editWidth").value = data.fields.width || "";
+            }
+            showRollFields(data.is_roll);
+            toggleStockQuantity(data.is_roll);
+  
+            if (window.$) { $("#editItemModal").modal("show"); }
+            else { modalEl.style.display='block'; modalEl.classList.add('show'); }
+          })
+          .catch(err => { console.error(err); alert("Error loading item."); });
+      });
+    });
+
+    document.getElementById("saveItemBtn").addEventListener("click", function() {
+      const itemId = document.getElementById("editItemId").value;
+      const isRoll = document.getElementById("editIsRoll").value === "1";
+      const stockId = document.getElementById("editStockId").value;
+  
+      const payload = {
+        is_roll: isRoll,
+        fields: {
+          name: document.getElementById("editName").value,
+          sku: document.getElementById("editSku").value,
+          description: document.getElementById("editDescription").value,
+          unit: document.getElementById("editUnit").value,
+          category_id: document.getElementById("editCategory").value || null,
+          supplier_id: document.getElementById("editSupplier").value || null,
+          client_id: document.getElementById("editClient").value || null
+        },
+        stock: {
+          id: stockId,
+          last_cost: document.getElementById("editLastCost").value,
+          quantity: document.getElementById("editQuantity").value,
+          warehouse_id: document.getElementById("editWarehouse").value || null
+        }
+      };
+  
+      if (isRoll) {
+        payload.fields.color_id  = document.getElementById("editColor").value || null;
+        payload.fields.fabric_id = document.getElementById("editFabric").value || null;
+        payload.fields.width     = document.getElementById("editWidth").value || "";
+      }
+  
+      fetch(`{% url 'item_update' 0 %}`.replace('/0/', `/${itemId}/`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          alert("{% trans 'Item and stock updated.' %}");
+          window.location.reload();
+        } else {
+          alert(data.message || "Update failed.");
+        }
+      })
+      .catch(err => { console.error(err); alert("Error saving."); });
+    });
+    const deleteButtons = document.querySelectorAll('.delete-stock-btn');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+    const deleteModalText = document.getElementById('deleteModalText');
+    const deleteForm = document.getElementById('deleteStockForm');
+
+    let pendingDeleteStockId = null;
+
+    function openDeleteModal(stockId, itemName) {
+      pendingDeleteStockId = stockId;
+      if (deleteModalText) {
+        deleteModalText.textContent = itemName
+          ? (`{% trans 'Are you sure you want to delete this stock entry for' %} “${itemName}”?`)
+          : (`{% trans 'Are you sure you want to delete this stock entry?' %}`);
+      }
+      deleteModal.style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      deleteModal.style.display = 'none';
+      pendingDeleteStockId = null;
+    }
+
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const stockId = this.dataset.stockId;
+        const itemName = this.dataset.itemName || '';
+        if (!stockId) return;
+        openDeleteModal(stockId, itemName);
+      });
+    });
+
+    if (closeDeleteModalBtn) closeDeleteModalBtn.onclick = closeDeleteModal;
+    if (cancelDeleteBtn) cancelDeleteBtn.onclick = closeDeleteModal;
+
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.onclick = function() {
+        if (!pendingDeleteStockId) return;
+
+        // Set dynamic action to /stocks/<id>/delete/
+        const url = `{% url 'stock_delete' 0 %}`.replace('/0/', `/${pendingDeleteStockId}/`);
+        deleteForm.setAttribute('action', url);
+
+        deleteForm.submit();
+      };
+    }
+
+    // Optional: close when clicking outside modal-content
+    deleteModal.addEventListener('click', function(e) {
+      if (e.target === deleteModal) closeDeleteModal();
     });
   });
 </script>
