@@ -2187,8 +2187,7 @@ def bom_create(request, pk):
     colors = Color.objects.filter(is_archived=False)
     fabrics = Fabrics.objects.filter(is_archived=False)
     suppliers = Supplier.objects.filter(is_archived=False)
-    clients = Client.objects.filter(is_archived=False)
-
+    order_client = order.client_order.client if order and order.client_order else None
     return render(request, 'technologist/models/bom_create.html', {
         'order': order,
         'sizequantity': size_qty,
@@ -2199,7 +2198,7 @@ def bom_create(request, pk):
         'colors': colors,
         'fabrics': fabrics,
         'suppliers': suppliers,
-        'clients': clients
+        'order_client': order_client
     })
 
 @require_POST
