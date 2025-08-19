@@ -653,12 +653,12 @@ class StockListView(ListView):
         context['sidebar_type'] = 'keeper'
         context['selected_type'] = self.request.GET.get('type', '2')
         context['selected_client'] = self.request.GET.get('client', '0')
-        context['suppliers'] = Supplier.objects.all()
-        context['categories'] = Category.objects.all()
-        context['colors'] = Color.objects.all()
-        context['fabrics'] = Fabrics.objects.all()
-        context['clients'] = Client.objects.all()
-        context['warehouses'] = Warehouse.objects.all()
+        context['suppliers'] = Supplier.objects.filter(is_archived=False)
+        context['categories'] = Category.objects.filter(is_archived=False)
+        context['colors'] = Color.objects.filter(is_archived=False)
+        context['fabrics'] = Fabrics.objects.filter(is_archived=False)
+        context['clients'] = Client.objects.filter(is_archived=False)
+        context['warehouses'] = Warehouse.objects.filter(is_archived=False)
 
         for stock in context['stocks']:
             if stock.type == Stock.ROLLS:
@@ -907,7 +907,7 @@ class ArchivedStockListView(ListView):
 def stock_bulk_create(request):
     # GET: render form with categories & items_by_category
     if request.method == 'GET':
-        categories = Category.objects.filter(is_archived=False).order_by('name')
+        categories = Category.objects.filter(is_archived=False, is_fabric=False).order_by('name')
         items = Item.objects.filter(is_archived=False).order_by('name')
         items_by_category = defaultdict(list)
         for it in items:
@@ -916,6 +916,8 @@ def stock_bulk_create(request):
         return render(request, 'keeper/stocks/bulk_create.html', {
             'categories':        categories,
             'items_by_category': dict(items_by_category),
+            'suppliers': Supplier.objects.filter(is_archived=False),
+            'clients': Client.objects.filter(is_archived=False),
             'sidebar_type':      'keeper',
         })
 

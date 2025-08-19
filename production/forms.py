@@ -836,10 +836,12 @@ class BulkStockForm(forms.ModelForm):
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'category', 'unit']
+        fields = ['name', 'category', 'unit', 'client', 'supplier']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'client': forms.Select(attrs={'class': 'form-control'}),
         }
 
 class FabricItemForm(forms.ModelForm):

@@ -88,12 +88,12 @@
             <button type="button" class="btn btn-danger btn-sm delete-row-btn">
               {% trans "Delete" %}
             </button>
-          </td>          
+          </td>
         </tr>
       </tbody>
       <tfoot>
         <tr class="control-row" style="height:50px;">
-          <td colspan="5">
+          <td colspan="6">
             <div style="display:flex; height:100%;">
               <div
                 id="addRowControl"
@@ -146,7 +146,7 @@
   </div>
 </div>
 
-<!-- Add New Item Modal -->
+<!-- Add New Item Modal (with Supplier + Client) -->
 <div class="modal" data-backdrop="false" id="additemModal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -166,6 +166,84 @@
           <div class="form-group">
             <label for="id_item_unit">{% trans "Item Unit" %}</label>
             <input type="text" class="form-control" id="id_item_unit" name="unit" required>
+          </div>
+          <div class="form-group">
+            <label for="id_item_supplier">{% trans "Supplier" %}</label>
+            <select class="form-control" id="id_item_supplier" name="supplier">
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new">{% trans "Add New Supplier" %}</option>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.pk }}">{{ supplier.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="id_item_client">{% trans "Client" %}</label>
+            <select class="form-control" id="id_item_client" name="client">
+              <option value="">{% trans "-------" %}</option>
+              <option value="add_new">{% trans "Add New Client" %}</option>
+              {% for client in clients %}
+                <option value="{{ client.pk }}">{{ client.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Supplier Modal -->
+<div class="modal" data-backdrop="false" id="addSupplierModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addSupplierForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Supplier" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_supplier_name">{% trans "Supplier Name" %}</label>
+            <input type="text" class="form-control" id="id_supplier_name" name="name" required>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Save" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add New Client Modal -->
+<div class="modal" data-backdrop="false" id="addClientModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addClientForm" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Add New Client" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="id_client_name">{% trans "Client Name" %}</label>
+            <input type="text" class="form-control" id="id_client_name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="id_client_description">{% trans "Client Description" %}</label>
+            <input type="text" class="form-control" id="id_client_description" name="description" placeholder="{% trans 'Enter client description' %}">
           </div>
         </div>
         <div class="modal-buttons">
@@ -195,21 +273,6 @@
     {% endfor %}
   ];
 
-  function getCategoryOptionsHTML() {
-    let html = `
-      <option value="">{% trans "-------" %}</option>
-      <option value="add_new_category">{% trans "Add New Category" %}</option>
-    `;
-    globalcategories.forEach(cat => {
-      html += `<option value="${cat.id}">${cat.name}</option>`;
-    });
-    return html;
-  }
-
-  function getItemPlaceholderHTML() {
-    return `<option value="">{% trans "Select category first" %}</option>`;
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -218,7 +281,8 @@
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
       });
-    });    
+    });
+
     const tbody = document.querySelector('#stockTable tbody');
     let rowCount = tbody.children.length;
 
@@ -226,12 +290,27 @@
       tbody.querySelectorAll('tr').forEach((tr, idx) => {
         tr.dataset.row = idx;
         tr.querySelector('.category-select').name = `row-${idx}_category`;
-        const itemSel = tr.querySelector('.item-select');
-        itemSel.name = `row-${idx}_item`;
+        tr.querySelector('.item-select').name     = `row-${idx}_item`;
         tr.querySelector('input[name$="_quantity"]').name = `row-${idx}_quantity`;
-        tr.querySelector('input[name$="_unit"]').name = `row-${idx}_unit`;
+        tr.querySelector('input[name$="_unit"]').name     = `row-${idx}_unit`;
+        tr.querySelector('input[name$="_price"]').name    = `row-${idx}_price`;
       });
       rowCount = tbody.children.length;
+    }
+
+    function getCategoryOptionsHTML() {
+      let html = `
+        <option value="">{% trans "-------" %}</option>
+        <option value="add_new_category">{% trans "Add New Category" %}</option>
+      `;
+      globalcategories.forEach(cat => {
+        html += `<option value="${cat.id}">${cat.name}</option>`;
+      });
+      return html;
+    }
+
+    function getItemPlaceholderHTML() {
+      return `<option value="">{% trans "Select category first" %}</option>`;
     }
 
     function addRow() {
@@ -322,18 +401,18 @@
         fetch(`{% url 'items_by_category_api' %}?category=${sel.value}`, {
           headers: { 'X-CSRFToken': getCookie('csrftoken') },
         })
-          .then(res => res.json())
-          .then(data => {
-            let html = `
-              <option value="">{% trans "-------" %}</option>
-              <option value="add_new_item">{% trans "Add New Item" %}</option>
-            `;
-            data.items.forEach(it => {
-              html += `<option value="${it.id}" data-unit="${it.unit}">${it.name}</option>`;
-            });
-            itemSel.innerHTML = html;
-            itemSel.disabled = false;
+        .then(res => res.json())
+        .then(data => {
+          let html = `
+            <option value="">{% trans "-------" %}</option>
+            <option value="add_new_item">{% trans "Add New Item" %}</option>
+          `;
+          data.items.forEach(it => {
+            html += `<option value="${it.id}" data-unit="${it.unit}">${it.name}</option>`;
           });
+          itemSel.innerHTML = html;
+          itemSel.disabled = false;
+        });
       } else {
         itemSel.innerHTML = getItemPlaceholderHTML();
         itemSel.disabled = true;
@@ -357,8 +436,32 @@
       }
 
       const opt = sel.selectedOptions[0];
-      const unit = opt.dataset.unit || '-';
+      const unit = opt?.dataset?.unit || '-';
       tr.querySelector('input[name$="_unit"]').value = unit;
+    });
+
+    // ITEM modal: Supplier/Client -> "Add New ..."
+    const itemSupplier = document.getElementById('id_item_supplier');
+    const itemClient   = document.getElementById('id_item_client');
+
+    itemSupplier?.addEventListener('change', () => {
+      if (itemSupplier.value === 'add_new') {
+        document.getElementById('addSupplierForm').reset();
+        const m = document.getElementById('addSupplierModal');
+        m.classList.add('show');
+        m.style.display = 'block';
+        itemSupplier.value = '';
+      }
+    });
+
+    itemClient?.addEventListener('change', () => {
+      if (itemClient.value === 'add_new') {
+        document.getElementById('addClientForm').reset();
+        const m = document.getElementById('addClientModal');
+        m.classList.add('show');
+        m.style.display = 'block';
+        itemClient.value = '';
+      }
     });
 
     // ADD CATEGORY AJAX
@@ -370,26 +473,26 @@
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         body: formData,
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            globalcategories.push({ id: data.category_id, name: data.category_name });
-            document.querySelectorAll('.category-select').forEach(cs => {
-              if (![...cs.options].some(o => o.value == data.category_id)) {
-                cs.add(new Option(data.category_name, data.category_id));
-              }
-            });
-            const modal = document.getElementById('addCategoryModal');
-            const triggerSelect = modal.dataset.triggerSelect;
-            const sel = document.querySelector(`[name="${triggerSelect}"]`);
-            sel.value = data.category_id;
-            sel.dispatchEvent(new Event('change', { bubbles: true }));
-            modal.classList.remove('show');
-            modal.style.display = 'none';
-          } else {
-            alert('Error: ' + JSON.stringify(data.errors));
-          }
-        });
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          globalcategories.push({ id: data.category_id, name: data.category_name });
+          document.querySelectorAll('.category-select').forEach(cs => {
+            if (![...cs.options].some(o => o.value == data.category_id)) {
+              cs.add(new Option(data.category_name, data.category_id));
+            }
+          });
+          const modal = document.getElementById('addCategoryModal');
+          const triggerSelect = modal.dataset.triggerSelect;
+          const sel = document.querySelector(`[name="${triggerSelect}"]`);
+          sel.value = data.category_id;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          modal.classList.remove('show');
+          modal.style.display = 'none';
+        } else {
+          alert('Error: ' + JSON.stringify(data.errors));
+        }
+      });
     });
 
     // ADD ITEM AJAX
@@ -407,21 +510,75 @@
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         body: formData,
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            const sel = document.querySelector(`[name="${triggerSelect}"]`);
-            const opt = new Option(data.item_name, data.item_id);
-            opt.dataset.unit = data.unit;              // <-- attach unit here
-            sel.add(opt);
-            sel.value = data.item_id;
-            sel.dispatchEvent(new Event('change', { bubbles: true }));
-            modal.classList.remove('show');
-            modal.style.display = 'none';
-          } else {
-            alert('Error: ' + JSON.stringify(data.errors));
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const sel = document.querySelector(`[name="${triggerSelect}"]`);
+          const opt = new Option(data.item_name, data.item_id);
+          opt.dataset.unit = data.unit;
+          sel.add(opt);
+          sel.value = data.item_id;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          modal.classList.remove('show');
+          modal.style.display = 'none';
+        } else {
+          alert('Error: ' + JSON.stringify(data.errors));
+        }
+      });
+    });
+
+    // ADD SUPPLIER AJAX
+    document.getElementById('addSupplierForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      fetch(`{% url 'add_supplier_api' %}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData,
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const itemSupplier = document.getElementById('id_item_supplier');
+          if (itemSupplier && ![...itemSupplier.options].some(o => o.value == data.supplier_id)) {
+            itemSupplier.add(new Option(data.supplier_name, data.supplier_id));
           }
-        });
+          itemSupplier.value = data.supplier_id;
+
+          const modal = document.getElementById('addSupplierModal');
+          modal.classList.remove('show');
+          modal.style.display = 'none';
+        } else {
+          alert('Error: ' + JSON.stringify(data.errors));
+        }
+      });
+    });
+
+    // ADD CLIENT AJAX
+    document.getElementById('addClientForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      fetch(`{% url 'add_client_api' %}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData,
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const itemClient = document.getElementById('id_item_client');
+          if (itemClient && ![...itemClient.options].some(o => o.value == data.client_id)) {
+            itemClient.add(new Option(data.client_name, data.client_id));
+          }
+          itemClient.value = data.client_id;
+
+          const modal = document.getElementById('addClientModal');
+          modal.classList.remove('show');
+          modal.style.display = 'none';
+        } else {
+          alert('Error: ' + JSON.stringify(data.errors));
+        }
+      });
     });
   });
 </script>
