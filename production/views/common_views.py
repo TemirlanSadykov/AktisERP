@@ -41,3 +41,8 @@ def user_redirect(request):
         return redirect('client_order_list_sub')
     else:
         return redirect('index')
+    
+def set_client_scope(request):
+    if request.method == "POST":
+        request.session["client_scope_id"] = request.POST.get("client_id", "all")
+    return redirect(request.META.get("HTTP_REFERER") or reverse("admin_page"))

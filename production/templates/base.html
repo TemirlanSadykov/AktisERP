@@ -110,6 +110,23 @@
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
+                <!-- Client scope selector (global, session-based) -->
+                <form action="{% url 'set_client_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
+                {% csrf_token %}
+                <select name="client_id" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="all" {% if current_client_id == 'all' %}selected{% endif %}>
+                    {% trans 'All clients' %}
+                    </option>
+                    <option value="shared" {% if current_client_id == 'shared' %}selected{% endif %}>
+                    {% trans 'Unassigned / Shared' %}
+                    </option>
+                    {% for c in clients %}
+                    <option value="{{ c.id }}" {% if current_client_id == c.id|stringformat:'s' %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                </form>
 
                 {% if sidebar_type == 'technology' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">

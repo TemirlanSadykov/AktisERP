@@ -314,4 +314,5 @@ urlpatterns = [
     path('accountant/ajax/get-size-cost-data/<int:size_id>/', ajax_get_size_cost_data, name='ajax_get_size_cost_data'),
     path('accountant/ajax/save-costs/', save_costs, name='save_costs'),
 
+    path("set-client-scope/", set_client_scope, name="set_client_scope"),
 ]
