@@ -20,6 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum, Prefetch
 from django.core.exceptions import ObjectDoesNotExist
 
+from ..utils import apply_client_scope
 from ..decorators import keeper_required
 from ..forms import *
 from ..models import *
@@ -44,32 +45,32 @@ class ClientOrderListKeeperView(ListView):
     form_class = DateRangeForm 
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(is_archived=False)
+        qs = super().get_queryset().filter(is_archived=False).select_related("client")
+
+        qs = apply_client_scope(qs, self.request)
+
         today = timezone.localdate()
+        term_filter = self.request.GET.get("term", "upcoming").lower()
 
-        # Get the term filter from the request, defaulting to 'upcoming'
-        term_filter = self.request.GET.get('term', 'upcoming').lower()
-
-        if term_filter == 'upcoming':
-            queryset = queryset.filter(term__gte=today).order_by('term')
-        elif term_filter == 'passed':
-            queryset = queryset.filter(term__lt=today).order_by('-term')
+        if term_filter == "upcoming":
+            qs = qs.filter(term__gte=today).order_by("term")
+        elif term_filter == "passed":
+            qs = qs.filter(term__lt=today).order_by("-term")
         else:
-            queryset = queryset.filter(term__gte=today).order_by('term')
+            qs = qs.filter(term__gte=today).order_by("term")
 
-        # Apply optional date range filtering
         form = self.form_class(self.request.GET)
         if form.is_valid():
-            start_date = form.cleaned_data.get('start_date')
-            end_date = form.cleaned_data.get('end_date')
-            if start_date and end_date:
-                queryset = queryset.filter(launch__range=[start_date, end_date])
-            elif start_date:
-                queryset = queryset.filter(launch__gte=start_date)
-            elif end_date:
-                queryset = queryset.filter(launch__lte=end_date)
+            start = form.cleaned_data.get("start_date")
+            end = form.cleaned_data.get("end_date")
+            if start and end:
+                qs = qs.filter(launch__range=[start, end])
+            elif start:
+                qs = qs.filter(launch__gte=start)
+            elif end:
+                qs = qs.filter(launch__lte=end)
 
-        return queryset
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
