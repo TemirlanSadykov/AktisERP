@@ -495,14 +495,12 @@ class Stock(CompanyAwareModel):
         (ROLLS, 'Рулоны')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
-    last_cost = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True,
-        verbose_name='Последняя цена закупки'
+    last_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Последняя цена закупки')
+    last_supplied_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата последней поставки')
+    last_supplier = models.ForeignKey(
+        Supplier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Последний поставщик'
     )
-    last_supplied_date = models.DateTimeField(
-        null=True, blank=True,
-        verbose_name='Дата последней поставки'
-    )
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, verbose_name='Клиент', null=True, blank=True)
     # Inventory-specific fields:
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     warehouse = models.ForeignKey(
@@ -517,44 +515,6 @@ class Stock(CompanyAwareModel):
     def __str__(self):
         return f"{self.content_object} - {self.quantity}"
     
-class StockMovement(CompanyAwareModel):
-    MOVEMENT_TYPES = (
-       ('IN', 'Incoming'),
-       ('OUT', 'Outgoing'),
-       ('ADJ', 'Adjustment'),
-       ('TRF', 'Transfer'),
-    )
-    
-    # Reference to the inventory record being moved
-    stock = models.ForeignKey(
-        Stock,
-        on_delete=models.CASCADE,
-        related_name='stock_movements'
-    )
-    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    # For transfers, you can record where the movement originates and where it goes.
-    from_warehouse = models.ForeignKey(
-        Warehouse,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='outgoing_movements'
-    )
-    to_warehouse = models.ForeignKey(
-        Warehouse,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='incoming_movements'
-    )
-    
-    note = models.TextField(null=True, blank=True)
-    
-    def __str__(self):
-        return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"
-
 class BillOfMaterials(CompanyAwareModel):
     sizequantity = models.ForeignKey(
         SizeQuantity,
@@ -622,6 +582,9 @@ class ProductionReceipt(CompanyAwareModel):
         verbose_name="Подтверждённое кол-во"
     )
 
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, verbose_name='Поставщик', null=True, blank=True)
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, verbose_name='Клиент', null=True, blank=True)
+
     # Workflow status
     status    = models.CharField(
         max_length=10,
@@ -636,3 +599,133 @@ class ProductionReceipt(CompanyAwareModel):
 
     def __str__(self):
         return f"Receipt #{self.pk} – {self.size_quantity} ({self.status})"
+
+class MaterialReceipt(CompanyAwareModel):
+    """
+    Records the delivery of materials (fabrics, accessories, others) from a supplier.
+    Inventory is updated only after a receipt is posted.
+    """
+
+    # Workflow statuses
+    DRAFT     = "draft"
+    CONFIRMED = "confirmed"
+    POSTED    = "posted"
+    STATUS_CHOICES = [
+        (DRAFT, "Draft"),
+        (CONFIRMED, "Confirmed"),
+        (POSTED, "Posted"),
+    ]
+
+    # Links
+    item = models.ForeignKey(
+        Item,
+        related_name="material_receipts",
+        on_delete=models.PROTECT,
+        verbose_name="Item"
+    )
+    supplier = models.ForeignKey(
+        Supplier,
+        related_name="material_receipts",
+        on_delete=models.PROTECT,
+        verbose_name="Supplier"
+    )
+    warehouse = models.ForeignKey(
+        Warehouse,
+        related_name="material_receipts",
+        on_delete=models.PROTECT,
+        verbose_name="Warehouse"
+    )
+    client = models.ForeignKey(
+        Client,
+        related_name="material_receipts",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name="Client"
+    )
+
+    # Quantities
+    reported_qty = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        verbose_name="Reported quantity"
+    )
+    confirmed_qty = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        null=True, blank=True,
+        verbose_name="Confirmed quantity"
+    )
+
+    # Workflow fields
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=DRAFT,
+        verbose_name="Status"
+    )
+    posted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Posted at"
+    )
+
+    # Optional fabric-specific metadata
+    roll_no = models.CharField(max_length=100, null=True, blank=True, verbose_name="Roll number")
+    measured_length_m = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, verbose_name="Measured length (m)")
+    width_m = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, verbose_name="Width (m)")
+    weight_kg = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, verbose_name="Weight (kg)")
+    lot_code = models.CharField(max_length=100, null=True, blank=True, verbose_name="Lot code")
+
+    note = models.TextField(null=True, blank=True, verbose_name="Note")
+
+    def __str__(self):
+        return f"MaterialReceipt #{self.pk} – {self.item.name} ({self.status})"
+    
+class StockMovement(CompanyAwareModel):
+    MOVEMENT_TYPES = (
+       ('IN', 'Incoming'),
+       ('OUT', 'Outgoing'),
+       ('ADJ', 'Adjustment'),
+       ('TRF', 'Transfer'),
+    )
+    REASONS = (
+        ('purchase', 'Purchase'),
+        ('prod_receipt', 'Production Receipt'),
+        ('consume', 'Consume'),
+        ('transfer', 'Transfer'),
+        ('cycle_count', 'Cycle Count'),
+        ('damage', 'Damage'),
+        ('return_supplier', 'Return to Supplier'),
+        ('return_customer', 'Customer Return'),
+        ('correction', 'Correction'),
+    )
+    # Reference to the inventory record being moved
+    stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        related_name='stock_movements'
+    )
+    reason = models.CharField(max_length=32, choices=REASONS, null=True, blank=True)
+    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    material_receipt   = models.ForeignKey(MaterialReceipt,   on_delete=models.SET_NULL, null=True, blank=True, related_name='movements')
+    production_receipt = models.ForeignKey(ProductionReceipt, on_delete=models.SET_NULL, null=True, blank=True, related_name='movements')
+    # For transfers, you can record where the movement originates and where it goes.
+    from_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='outgoing_movements'
+    )
+    to_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='incoming_movements'
+    )
+    
+    note = models.TextField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"
