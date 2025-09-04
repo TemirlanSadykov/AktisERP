@@ -1,4 +1,6 @@
-def apply_client_scope(qs, request, key="client_scope_id"):
+from .constants import CLIENT_SCOPE_SESSION_KEY
+
+def apply_client_scope(qs, request, key=CLIENT_SCOPE_SESSION_KEY):
     """
     Restrict queryset to the client currently selected in session.
     - "all": no filter

@@ -24,6 +24,7 @@ from ..utils import apply_client_scope
 from ..decorators import keeper_required
 from ..forms import *
 from ..models import *
+from ..constants import CLIENT_SCOPE_SESSION_KEY
 
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
@@ -680,12 +681,12 @@ class StockListView(ListView):
     
     
 # ---------- Helpers ----------
-def _get_client_scope(request):
+def _get_client_scope(request, key=CLIENT_SCOPE_SESSION_KEY):
     """
     Reads the client scope you set via the sidebar form.
     Expected values you post: 'all', 'shared', or a client_id (as str/int).
     """
-    val = request.session.get('current_client_id', 'all')
+    val = request.session.get(key, 'all')
     # normalize:
     if val in ('all', 'shared'):
         return val

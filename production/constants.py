@@ -1,0 +1,1 @@
+CLIENT_SCOPE_SESSION_KEY = "client_scope_id"
