@@ -677,6 +677,164 @@ class StockListView(ListView):
                 stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
 
         return context
+    
+    
+# ---------- Helpers ----------
+def _get_client_scope(request):
+    """
+    Reads the client scope you set via the sidebar form.
+    Expected values you post: 'all', 'shared', or a client_id (as str/int).
+    """
+    val = request.session.get('current_client_id', 'all')
+    # normalize:
+    if val in ('all', 'shared'):
+        return val
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return 'all'
+
+def _filter_by_client(qs, client_scope):
+    """
+    Filters the Stock queryset by client.
+    Because Stock.content_object is heterogeneous (GFK), we keep a compact
+    Python-side filter that mirrors your current logic—but scoped and fast.
+    """
+    if client_scope == 'all':
+        return qs
+    filtered_ids = []
+
+    for stock in qs:
+        content = stock.content_object
+        # Direct .client
+        if client_scope == 'shared':
+            # unassigned / shared (no client on item)
+            if hasattr(content, 'client') and getattr(content, 'client_id', None) is None:
+                filtered_ids.append(stock.id)
+            elif isinstance(content, SizeQuantity):
+                # "shared" for FG if orders have no client?
+                # If your domain defines shared FG differently, adjust here.
+                has_any_client = False
+                for order in content.orders.select_related('client_order__client'):
+                    if getattr(order.client_order, 'client_id', None) is not None:
+                        has_any_client = True
+                        break
+                if not has_any_client:
+                    filtered_ids.append(stock.id)
+            elif hasattr(content, 'order'):
+                # If there is an order but no client on client_order, consider it shared
+                client_id = getattr(getattr(content.order, 'client_order', None), 'client_id', None)
+                if client_id is None:
+                    filtered_ids.append(stock.id)
+
+        elif isinstance(client_scope, int):
+            # specific client id
+            if hasattr(content, 'client') and getattr(content, 'client_id', None) == client_scope:
+                filtered_ids.append(stock.id)
+            elif isinstance(content, SizeQuantity):
+                orders = content.orders.select_related('client_order__client')
+                if any(o.client_order.client_id == client_scope for o in orders):
+                    filtered_ids.append(stock.id)
+            elif hasattr(content, 'order'):
+                co = getattr(content.order, 'client_order', None)
+                if getattr(co, 'client_id', None) == client_scope:
+                    filtered_ids.append(stock.id)
+
+    return qs.filter(id__in=filtered_ids)
+
+
+class BaseKeeperStockList(ListView):
+    """
+    Shared bits for the three pages. Subclasses must set STOCK_TYPE and TEMPLATE_NAME.
+    """
+    model = Stock
+    context_object_name = 'stocks'
+    paginate_by = 10
+    STOCK_TYPE = None
+    TEMPLATE_NAME = None
+
+    @method_decorator([login_required, keeper_required], name='dispatch')
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_queryset(self):
+        assert self.STOCK_TYPE in (Stock.RAW_MATERIALS, Stock.FINSHED_GOODS, Stock.ROLLS)
+        qs = Stock.objects.filter(is_archived=False, type=self.STOCK_TYPE)
+
+        # Scope by client (from sidebar session)
+        client_scope = _get_client_scope(self.request)
+        qs = _filter_by_client(qs, client_scope)
+
+        # Stable ordering
+        return qs.order_by('id')
+
+    def get_template_names(self):
+        return [self.TEMPLATE_NAME]
+
+    def _compute_labels(self, stock):
+        # Unit label
+        if stock.type == Stock.ROLLS:
+            stock.unit_display = 'м'
+        elif stock.type == Stock.FINSHED_GOODS:
+            stock.unit_display = 'шт'
+        else:
+            stock.unit_display = getattr(stock.content_object, 'unit', '')
+
+        # Category label
+        if stock.type == Stock.ROLLS:
+            stock.category_display = "Рулон"
+        elif stock.type == Stock.FINSHED_GOODS:
+            stock.category_display = "Готовая продукция"
+        else:
+            stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        # Sidebar + selects
+        ctx['sidebar_type'] = 'keeper'
+        ctx['clients'] = Client.objects.filter(is_archived=False)
+        ctx['suppliers'] = Supplier.objects.filter(is_archived=False)
+        ctx['categories'] = Category.objects.filter(is_archived=False)
+        ctx['colors'] = Color.objects.filter(is_archived=False)
+        ctx['fabrics'] = Fabrics.objects.filter(is_archived=False)
+        ctx['warehouses'] = Warehouse.objects.filter(is_archived=False)
+
+        # Current scope (for template logic if needed)
+        client_scope = _get_client_scope(self.request)
+        ctx['selected_client_scope'] = client_scope  # 'all' | 'shared' | int
+
+        # Add computed labels
+        for s in ctx['stocks']:
+            self._compute_labels(s)
+
+        return ctx
+
+
+# ---------- 3 focused pages ----------
+
+class FabricsStockListView(BaseKeeperStockList):
+    """
+    Materials → Fabrics (Rolls)
+    """
+    STOCK_TYPE = Stock.ROLLS        # usually 2
+    TEMPLATE_NAME = 'keeper/stocks/fabrics_list.html'
+
+
+class RawMaterialsStockListView(BaseKeeperStockList):
+    """
+    Materials → Accessories / Other Raw Materials
+    """
+    STOCK_TYPE = Stock.RAW_MATERIALS          # usually 0
+    TEMPLATE_NAME = 'keeper/stocks/raw_materials_list.html'
+
+
+class FinishedGoodsStockListView(BaseKeeperStockList):
+    """
+    Finished Goods (SizeQuantity-based)
+    """
+    STOCK_TYPE = Stock.FINSHED_GOODS  # usually 1
+    TEMPLATE_NAME = 'keeper/stocks/finished_goods_list.html'
 
 @login_required
 @require_GET
