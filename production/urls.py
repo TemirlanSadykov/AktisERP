@@ -259,6 +259,10 @@ urlpatterns = [
     path('keeper/receipts/<int:receipt_id>/post/', post_receipt, name='post_receipt'),
     path('keeper/receipts/<int:receipt_id>/delete/', delete_receipt, name='delete_receipt'),
 
+    path('keeper/receipts/material/', MaterialReceiptListView.as_view(), name='material_receipt_list'),
+    path('keeper/receipts/material/<int:receipt_id>/post/', post_material_receipt, name='material_receipt_confirm'),
+    path('keeper/receipts/material/<int:receipt_id>/delete/', delete_material_receipt, name='material_receipt_delete'),
+
     path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
     path('keeper/client/orders/order/<int:pk>/bom-deficit/', BomDeficitView.as_view(), name='bom_deficit'),
 
@@ -311,6 +315,8 @@ urlpatterns = [
     path('packer/ajax/get-orders/', ajax_get_orders, name='ajax_get_orders'),
     path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity_manually, name='update_packed_quantity_manually'),
     path('packer/ajax/orders/complete-production/', complete_production, name='complete_production'),
+
+    path('keeper/ajax/orders/complete-purchase/', complete_purchase, name='complete_purchase'),
 
     path('accountant/manual_cost_page/', manual_cost_page, name='manual_cost_page'),
     path('accountant/ajax/get-model-sizes/', ajax_get_model_sizes, name='ajax_get_model_sizes'),

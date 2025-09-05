@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.db.models import F, Q, Count
 from django.urls import reverse_lazy, reverse
 from django.views.generic import FormView
@@ -19,6 +19,7 @@ from decimal import Decimal, InvalidOperation
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum, Prefetch
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.functions import Coalesce
 
 from ..utils import apply_client_scope
 from ..decorators import keeper_required
@@ -191,32 +192,51 @@ class BomDeficitView(DetailView):
             )
         )
 
-        # Get all unique item IDs from the BOMs
+        # All unique BOM item IDs
         all_bom_items = BillOfMaterials.objects.filter(
             sizequantity__in=size_quantities
         ).values_list('item_id', flat=True).distinct()
 
-        # Get total stock for all those items
-        item_type = ContentType.objects.get_for_model(Item)
+        # Available stock per item
+        item_ct = ContentType.objects.get_for_model(Item)
         stock_data = (
             Stock.objects
             .filter(
-                content_type=item_type,
+                content_type=item_ct,
                 object_id__in=all_bom_items,
                 is_archived=False
             )
             .values('object_id')
             .annotate(total_qty=Sum('quantity'))
         )
+        stock_lookup = {row['object_id']: row['total_qty'] or 0 for row in stock_data}
 
-        # item_id -> available stock quantity
-        stock_lookup = {entry['object_id']: entry['total_qty'] or 0 for entry in stock_data}
+        # —— NEW: Pending (В ожидании) from MaterialReceipt ——
+        # Only receipts that are NOT posted yet should count as “pending”.
+        # We use COALESCE(confirmed_qty, reported_qty) per receipt.
+        # Optionally scope by client if your order has a client.
+        order_client = getattr(order.client_order, 'client', None)
 
-        # Annotate each BOM with required, available, missing
+        pending_qs = MaterialReceipt.objects.filter(
+            item_id__in=all_bom_items,
+            status__in=[MaterialReceipt.DRAFT, MaterialReceipt.CONFIRMED]
+        )
+        if order_client:
+            pending_qs = pending_qs.filter(client=order_client)
+
+        pending_data = (
+            pending_qs
+            .values('item_id')
+            .annotate(pending_qty=Sum(Coalesce('confirmed_qty', 'reported_qty')))
+        )
+        pending_lookup = {row['item_id']: row['pending_qty'] or 0 for row in pending_data}
+        # —— END NEW ——
+
+        # Annotate each BOM with required, available, missing, pending
         for sq in size_quantities:
             for bom in sq.bill_of_materials.all():
                 produced = sq.quantity or 0
-                required_qty = bom.quantity * produced
+                required_qty = (bom.quantity or 0) * produced
                 available_qty = stock_lookup.get(bom.item_id, 0)
                 missing_qty = max(required_qty - available_qty, 0)
 
@@ -224,7 +244,11 @@ class BomDeficitView(DetailView):
                 bom.available_qty = available_qty
                 bom.missing_qty = missing_qty
 
+                # NEW:
+                bom.pending_qty = pending_lookup.get(bom.item_id, 0)
+
         context['size_quantities'] = size_quantities
+        context['suppliers'] = Supplier.objects.filter(is_archived=False).only('id', 'name').order_by('name')
         context['sidebar_type'] = 'keeper'
         return context
 
@@ -1849,4 +1873,139 @@ def delete_receipt(request, receipt_id):
         receipt.delete()
         return JsonResponse({'success': True})
     except ProductionReceipt.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)
+    
+@require_POST
+@login_required
+@keeper_required
+def complete_purchase(request):
+    order_id     = request.POST.get("order_id")
+    item_id      = request.POST.get("item_id")
+    supplier_id  = request.POST.get("supplier_id")
+    qty          = request.POST.get("quantity")
+    cost         = request.POST.get("cost")
+
+    order     = get_object_or_404(Order, pk=order_id)
+    item      = get_object_or_404(Item, pk=item_id)
+    supplier  = get_object_or_404(Supplier, pk=supplier_id)
+    warehouse = Warehouse.objects.filter(is_archived=False).first()
+    client = order.client_order.client
+
+    receipt = MaterialReceipt(
+        item=item,
+        supplier=supplier,
+        warehouse=warehouse,
+        cost=cost,
+        client=client,
+        reported_qty=qty,
+        status=MaterialReceipt.DRAFT,
+    )
+    receipt.save()
+
+    return redirect("bom_deficit", pk=order_id)
+
+@method_decorator([login_required, keeper_required], name='dispatch')
+class MaterialReceiptListView(ListView):
+    model = MaterialReceipt
+    template_name = 'keeper/receipts/materials_list.html'
+    context_object_name = 'receipts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return (
+            MaterialReceipt.objects
+            .filter(status=MaterialReceipt.DRAFT)
+            .select_related('item', 'supplier', 'client', 'warehouse')
+            .order_by('id')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sidebar_type'] = 'keeper'
+        return context
+
+@login_required
+@require_POST
+@keeper_required
+def post_material_receipt(request, receipt_id):
+    try:
+        with transaction.atomic():
+            data = json.loads(request.body or "{}")
+            try:
+                confirmed_qty = Decimal(str(data.get("confirmed_qty", "0")))
+            except Exception:
+                return HttpResponseBadRequest("Invalid confirmed_qty")
+
+            if confirmed_qty <= 0:
+                return JsonResponse({'success': False, 'message': 'Invalid quantity'}, status=400)
+
+            receipt = MaterialReceipt.objects.select_for_update().get(pk=receipt_id)
+
+            # Already posted? (MaterialReceipt supports POSTED)
+            if receipt.status == MaterialReceipt.POSTED:
+                return JsonResponse({'success': False, 'message': 'Already posted.'})
+
+            # Determine stock type: rolls if item has width, else raw materials
+            item = receipt.item
+            is_rolls = bool(getattr(item, "width", None))
+            stock_type = getattr(Stock, "ROLLS", None) if is_rolls else getattr(Stock, "RAW_MATERIALS", None)
+            if stock_type is None:
+                return JsonResponse({'success': False, 'message': 'Unknown stock type mapping.'}, status=500)
+
+            # Update receipt to POSTED
+            receipt.confirmed_qty = confirmed_qty
+            receipt.status = MaterialReceipt.POSTED
+            receipt.posted_at = timezone.now()
+            receipt.save(update_fields=["confirmed_qty", "status", "posted_at"])
+
+            # Ensure there is a warehouse
+            warehouse = Warehouse.objects.filter(is_archived=False).first()
+            if not warehouse:
+                warehouse = Warehouse.objects.create(name="Default", is_archived=False)
+
+            # Create / update Stock for the ITEM
+            content_type = ContentType.objects.get_for_model(item)
+            stock, created = Stock.objects.get_or_create(
+                content_type=content_type,
+                object_id=item.pk,
+                warehouse=warehouse,
+                type=stock_type,
+                last_cost = Decimal(str(data.get("cost"))),
+                defaults={
+                    'quantity': confirmed_qty,
+                    'is_archived': False,
+                    'company': receipt.company,  # CompanyAwareModel
+                    'last_supplied_date': timezone.now(),
+                }
+            )
+
+            if not created:
+                stock.quantity += confirmed_qty
+                stock.last_supplied_date = timezone.now()
+                stock.save(update_fields=['quantity', 'last_supplied_date'])
+
+            StockMovement.objects.create(
+                stock=stock,
+                movement_type="IN",
+                quantity=confirmed_qty,
+                to_warehouse=warehouse,
+                note=f"Поступление материалов: {item}"
+            )
+
+        return JsonResponse({'success': True})
+
+    except MaterialReceipt.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@require_POST
+@login_required
+@keeper_required
+def delete_material_receipt(request, receipt_id):
+    try:
+        receipt = MaterialReceipt.objects.get(pk=receipt_id)
+        receipt.delete()
+        return JsonResponse({'success': True})
+    except MaterialReceipt.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)

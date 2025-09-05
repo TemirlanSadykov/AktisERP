@@ -642,7 +642,7 @@ class MaterialReceipt(CompanyAwareModel):
         null=True, blank=True,
         verbose_name="Client"
     )
-
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Cost per unit")
     # Quantities
     reported_qty = models.DecimalField(
         max_digits=12,
@@ -667,13 +667,6 @@ class MaterialReceipt(CompanyAwareModel):
         null=True, blank=True,
         verbose_name="Posted at"
     )
-
-    # Optional fabric-specific metadata
-    roll_no = models.CharField(max_length=100, null=True, blank=True, verbose_name="Roll number")
-    measured_length_m = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, verbose_name="Measured length (m)")
-    width_m = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, verbose_name="Width (m)")
-    weight_kg = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, verbose_name="Weight (kg)")
-    lot_code = models.CharField(max_length=100, null=True, blank=True, verbose_name="Lot code")
 
     note = models.TextField(null=True, blank=True, verbose_name="Note")
 
