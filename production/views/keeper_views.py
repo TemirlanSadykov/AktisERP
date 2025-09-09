@@ -785,6 +785,34 @@ def _filter_by_client(qs, client_scope):
 
     return qs.filter(id__in=filtered_ids)
 
+def _get_category_filter(request):
+    """
+    Read ?category= from querystring.
+    Returns 'all' or an int category_id.
+    """
+    val = request.GET.get('category', 'all')
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return 'all'
+
+
+def _filter_by_category(qs, category_filter):
+    """
+    Filters Stock queryset by Category when the content_object has `category_id`.
+    Works for heterogeneous GFK content by doing a compact Python-side filter.
+    """
+    if category_filter == 'all':
+        return qs
+
+    filtered_ids = []
+    for stock in qs:
+        obj = stock.content_object
+        cid = getattr(obj, 'category_id', None)
+        if cid == category_filter:
+            filtered_ids.append(stock.id)
+
+    return qs.filter(id__in=filtered_ids)
 
 class BaseKeeperStockList(ListView):
     """
@@ -808,52 +836,39 @@ class BaseKeeperStockList(ListView):
         client_scope = _get_client_scope(self.request)
         qs = _filter_by_client(qs, client_scope)
 
-        # Stable ordering
+        # Category filter (from tabs)
+        category_filter = _get_category_filter(self.request)
+        qs = _filter_by_category(qs, category_filter)
+
         return qs.order_by('id')
 
     def get_template_names(self):
         return [self.TEMPLATE_NAME]
 
-    def _compute_labels(self, stock):
-        # Unit label
-        if stock.type == Stock.ROLLS:
-            stock.unit_display = 'м'
-        elif stock.type == Stock.FINSHED_GOODS:
-            stock.unit_display = 'шт'
-        else:
-            stock.unit_display = getattr(stock.content_object, 'unit', '')
-
-        # Category label
-        if stock.type == Stock.ROLLS:
-            stock.category_display = "Рулон"
-        elif stock.type == Stock.FINSHED_GOODS:
-            stock.category_display = "Готовая продукция"
-        else:
-            stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
-
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
 
-        # Sidebar + selects
+        # Sidebar + selects (yours)
         ctx['sidebar_type'] = 'keeper'
         ctx['clients'] = Client.objects.filter(is_archived=False)
         ctx['suppliers'] = Supplier.objects.filter(is_archived=False)
-        ctx['categories'] = Category.objects.filter(is_archived=False)
         ctx['colors'] = Color.objects.filter(is_archived=False)
         ctx['fabrics'] = Fabrics.objects.filter(is_archived=False)
         ctx['warehouses'] = Warehouse.objects.filter(is_archived=False)
-
-        # Current scope (for template logic if needed)
+        if self.STOCK_TYPE == Stock.ROLLS:
+            categories = Category.objects.filter(is_archived=False, is_fabric=True)
+        else:
+            categories = Category.objects.filter(is_archived=False, is_fabric=False)
+        ctx['categories'] = categories
+        # Current scope (yours)
         client_scope = _get_client_scope(self.request)
         ctx['selected_client_scope'] = client_scope  # 'all' | 'shared' | int
 
-        # Add computed labels
-        for s in ctx['stocks']:
-            self._compute_labels(s)
+        # Category tabs state
+        ctx['selected_category_id'] = _get_category_filter(self.request)
+        ctx['categories_for_tabs'] = ctx['categories']  # alias for clarity in templates
 
         return ctx
-
-
 # ---------- 3 focused pages ----------
 
 class FabricsStockListView(BaseKeeperStockList):

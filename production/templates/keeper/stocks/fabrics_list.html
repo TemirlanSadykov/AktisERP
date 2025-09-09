@@ -25,7 +25,7 @@
     <span class="operation-text">{% trans "Рулоны" %}</span>
     <a href="{% url 'roll_bulk_create' %}" class="btn create-btn mr-2">{% trans "Create" %}</a>
   </div>
-
+  {% include "keeper/stocks/_category_tabs.html" %}
   {% include "keeper/stocks/_stock_table.html" with stocks=stocks %}
 </div>
 

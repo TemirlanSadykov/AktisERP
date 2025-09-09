@@ -511,7 +511,23 @@ class Stock(CompanyAwareModel):
         related_name='inventory_stock'
     )
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-    
+        
+    @property
+    def item_category(self):
+        obj = self.content_object
+        # if content_object is an Item
+        if hasattr(obj, "category"):
+            return getattr(obj.category, "name", str(obj.category))
+        return None
+
+    @property
+    def item_unit(self):
+        obj = self.content_object
+        # if content_object is an Item
+        if hasattr(obj, "unit"):
+            return obj.unit
+
+        return None
     def __str__(self):
         return f"{self.content_object} - {self.quantity}"
     

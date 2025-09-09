@@ -1,0 +1,28 @@
+{% load i18n %}
+{% load querystring %}
+
+{% if categories_for_tabs %}
+<ul class="nav nav-tabs" role="tablist">
+  {# "All" tab #}
+  <li class="nav-item">
+    <a href="{% qurl category=None page=None %}"
+       class="nav-link {% if selected_category_id == 'all' %}active{% endif %}"
+       role="tab"
+       aria-selected="{% if selected_category_id == 'all' %}true{% else %}false{% endif %}">
+      {% trans "Все" %}
+    </a>
+  </li>
+
+  {# One tab per category #}
+  {% for cat in categories_for_tabs %}
+  <li class="nav-item">
+    <a href="{% qurl category=cat.id page=None %}"
+       class="nav-link {% if selected_category_id == cat.id %}active{% endif %}"
+       role="tab"
+       aria-selected="{% if selected_category_id == cat.id %}true{% else %}false{% endif %}">
+      {{ cat.name }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

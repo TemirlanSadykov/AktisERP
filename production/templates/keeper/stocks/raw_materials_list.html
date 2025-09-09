@@ -26,7 +26,7 @@
     <a href="{% url 'stock_create' %}" class="btn create-btn mr-2">{% trans "Create" %}</a>
     <a href="{% url 'archived_stocks_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
   </div>
-
+  {% include "keeper/stocks/_category_tabs.html" %}
   {% include "keeper/stocks/_stock_table.html" with stocks=stocks %}
 </div>
 {% endblock %}
