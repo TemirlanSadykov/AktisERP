@@ -295,7 +295,7 @@
                             <a href="{% url 'client_order_list_keeper' %}" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Список' %}
                             </a>
-                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                            {% comment %} <a href="#" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Готовые к отправке' %}
                             </a>
                             <a href="#" class="list-group-item list-group-item-action text-black ">
@@ -306,7 +306,7 @@
                             </a>
                             <a href="#" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Возврат' %}
-                            </a>
+                            </a> {% endcomment %}
                         </div>
 
                         <!-- FINISHED GOODS -->

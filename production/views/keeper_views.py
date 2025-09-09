@@ -44,23 +44,31 @@ class ClientOrderListKeeperView(ListView):
     template_name = 'keeper/client/orders/list.html'
     context_object_name = 'orders'
     paginate_by = 10
-    form_class = DateRangeForm 
+    form_class = DateRangeForm
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_archived=False).select_related("client")
+        qs = (
+            super()
+            .get_queryset()
+            .filter(is_archived=False)
+            .select_related("client")
+        )
 
+        # scope by client
         qs = apply_client_scope(qs, self.request)
 
-        today = timezone.localdate()
-        term_filter = self.request.GET.get("term", "upcoming").lower()
+        # ---- status filter (tabs) ----
+        # ?status=new | in_progress | completed
+        status_param = (self.request.GET.get("status") or "new").lower()
+        status_map = {
+            "new": ClientOrder.NEW,
+            "in_progress": ClientOrder.IN_PROGRESS,
+            "completed": ClientOrder.COMPLETED,
+        }
+        if status_param in status_map:
+            qs = qs.filter(status=status_map[status_param])
 
-        if term_filter == "upcoming":
-            qs = qs.filter(term__gte=today).order_by("term")
-        elif term_filter == "passed":
-            qs = qs.filter(term__lt=today).order_by("-term")
-        else:
-            qs = qs.filter(term__gte=today).order_by("term")
-
+        # ---- optional date range filter (launch) ----
         form = self.form_class(self.request.GET)
         if form.is_valid():
             start = form.cleaned_data.get("start_date")
@@ -72,24 +80,34 @@ class ClientOrderListKeeperView(ListView):
             elif end:
                 qs = qs.filter(launch__lte=end)
 
+        # default sort by term asc
+        qs = qs.order_by("-launch")
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.form_class(self.request.GET or None)
+        request = self.request
         today = timezone.localdate()
 
-        # Calculate days_left for each order
-        orders_with_days_left = []
-        for order in context['orders']:
-            days_left = (order.term - today).days
-            orders_with_days_left.append({'order': order, 'days_left': days_left})
-        context['orders_with_days_left'] = orders_with_days_left
+        context["form"] = self.form_class(request.GET or None)
 
-        # Pass the current term filter to the template
-        context['term_filter'] = self.request.GET.get('term', 'upcoming').lower()
-        context['ClientOrder'] = ClientOrder
-        context['sidebar_type'] = 'keeper'
+        # Compute days_left safely
+        orders_with_days_left = []
+        for order in context["orders"]:
+            days_left = (order.term - today).days if getattr(order, "term", None) else None
+            orders_with_days_left.append({"order": order, "days_left": days_left})
+        context["orders_with_days_left"] = orders_with_days_left
+
+        # Current status for active tab
+        context["status_filter"] = (request.GET.get("status") or "new").lower()
+
+        # Preserve all current GET params except 'page' for pagination links
+        params = request.GET.copy()
+        params.pop("page", None)
+        context["qs"] = params.urlencode()
+
+        context["ClientOrder"] = ClientOrder
+        context["sidebar_type"] = "keeper"
         return context
     
 @method_decorator([login_required, keeper_required], name='dispatch')
