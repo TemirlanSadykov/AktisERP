@@ -324,4 +324,6 @@ urlpatterns = [
     path('accountant/ajax/save-costs/', save_costs, name='save_costs'),
 
     path("set-client-scope/", set_client_scope, name="set_client_scope"),
+    path("set-warehouse-scope/", set_warehouse_scope, name="set_warehouse_scope"),
+    path("set-supplier-scope/", set_supplier_scope, name="set_supplier_scope"),
 ]

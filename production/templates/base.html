@@ -130,6 +130,51 @@
                     {% endfor %}
                 </select>
                 </form>
+                {# --- Warehouse scope selector (global, session-based) --- #}
+                <form action="{% url 'set_warehouse_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
+                {% csrf_token %}
+                <select name="warehouse_id"
+                        class="form-control form-control-sm"
+                        onchange="this.form.submit()"
+                        style="margin-top:8px;">
+                    <option value="all" {% if current_warehouse_id == 'all' %}selected{% endif %}>
+                    {% trans 'Все склады' %}
+                    </option>
+                    {# Optional: show entries with no warehouse; uncomment if you support it server-side
+                    <option value="none" {% if current_warehouse_id == 'none' %}selected{% endif %}>
+                    {% trans 'Без склада' %}
+                    </option>
+                    #}
+                    {% for w in warehouses %}
+                    <option value="{{ w.id }}" {% if current_warehouse_id == w.id|stringformat:'s' %}selected{% endif %}>
+                        {{ w.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                </form>
+
+                {# --- Supplier scope selector (global, session-based) --- #}
+                <form action="{% url 'set_supplier_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
+                {% csrf_token %}
+                <select name="supplier_id"
+                        class="form-control form-control-sm"
+                        onchange="this.form.submit()"
+                        style="margin-top:8px; margin-bottom:4px;">
+                    <option value="all" {% if current_supplier_id == 'all' %}selected{% endif %}>
+                    {% trans 'Все поставщики' %}
+                    </option>
+                    {# Optional: suppliers-null bucket if supported
+                    <option value="none" {% if current_supplier_id == 'none' %}selected{% endif %}>
+                    {% trans 'Без поставщика' %}
+                    </option>
+                    #}
+                    {% for s in suppliers %}
+                    <option value="{{ s.id }}" {% if current_supplier_id == s.id|stringformat:'s' %}selected{% endif %}>
+                        {{ s.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                </form>
 
                 {% if sidebar_type == 'technology' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">

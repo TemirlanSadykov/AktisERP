@@ -224,6 +224,8 @@ AWS_S3_ADDRESSING_STYLE = "virtual"
 
 TEMPLATES[0]["OPTIONS"]["context_processors"] += [
     "production.context_processors.client_scope",
+    "production.context_processors.warehouse_scope",
+    "production.context_processors.supplier_scope",
 ]
 
 # LOGGING = {
