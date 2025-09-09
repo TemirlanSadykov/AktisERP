@@ -323,7 +323,7 @@
                                 {% trans 'Приемка' %}
                             </a>
                             <a href="#" class="list-group-item list-group-item-action text-black ">
-                                {% trans 'Журнал Приемок' %}
+                                {% trans 'Возвраты' %}
                             </a>
                             <a href="{% url 'stock_movement'%}" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Движение запасов' %}
@@ -344,6 +344,9 @@
                                 {% trans 'Фурнитура' %}
                             </a>
                             <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Запчасти' %}
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Другие' %}
                             </a>
                             <a href="#" class="list-group-item list-group-item-action text-black ">
@@ -351,9 +354,6 @@
                             </a>
                             <a href="{% url 'material_receipt_list' %}" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Приемка' %}
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action text-black ">
-                                {% trans 'Журнал Приемок' %}
                             </a>
                             <a href="{% url 'stock_movement'%}" class="list-group-item list-group-item-action text-black ">
                                 {% trans 'Движение запасов' %}
@@ -368,10 +368,10 @@
                         </a>
                         <div class="collapse show" id="additionalSubmenu">
                             <a href="{% url 'supplier_list' %}" class="list-group-item list-group-item-action text-black ">
-                                {% trans 'Suppliers' %}
+                                {% trans 'Поставщики' %}
                             </a>
                             <a href="{% url 'warehouse_list' %}" class="list-group-item list-group-item-action text-black ">
-                                {% trans 'Warehouses' %}
+                                {% trans 'Склады' %}
                             </a>
                         </div>
 
