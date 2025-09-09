@@ -887,12 +887,72 @@ class RawMaterialsStockListView(BaseKeeperStockList):
     TEMPLATE_NAME = 'keeper/stocks/raw_materials_list.html'
 
 
-class FinishedGoodsStockListView(BaseKeeperStockList):
+@method_decorator([login_required], name='dispatch')
+class FinishedGoodsStockListView(ListView):
     """
-    Finished Goods (SizeQuantity-based)
+    Finished Goods: completely separate page & template with its own display.
+    Shows one row per SizeQuantity-backed Stock with model/variant/size columns.
     """
-    STOCK_TYPE = Stock.FINSHED_GOODS  # usually 1
-    TEMPLATE_NAME = 'keeper/stocks/finished_goods_list.html'
+    model = Stock
+    context_object_name = 'fg_stocks'
+    template_name = 'keeper/stocks/finished_goods_list.html'
+    paginate_by = 20
+
+    def get_queryset(self):
+        qs = (
+            Stock.objects
+            .filter(is_archived=False, type=Stock.FINSHED_GOODS)
+            .select_related()  # harmless; GFK stays lazy but keep for consistency
+            .order_by('id')
+        )
+
+        # Client scoping (reuse your helper exactly as-is)
+        client_scope = _get_client_scope(self.request)
+        qs = _filter_by_client(qs, client_scope)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        # Sidebar filters (keep the same lists you already surface elsewhere)
+        ctx['sidebar_type'] = 'keeper'
+        ctx['clients'] = Client.objects.filter(is_archived=False)
+        ctx['suppliers'] = Supplier.objects.filter(is_archived=False)
+        ctx['colors'] = Color.objects.filter(is_archived=False)
+        ctx['fabrics'] = Fabrics.objects.filter(is_archived=False)
+        ctx['warehouses'] = Warehouse.objects.filter(is_archived=False)
+
+        # keep current client scope to highlight the sidebar selection
+        ctx['selected_client_scope'] = _get_client_scope(self.request)
+
+        # This page intentionally has NO category tabs or shared stock table.
+        # Build lightweight presentation attrs for the template:
+        rows = []
+        for s in ctx['fg_stocks']:
+            obj = s.content_object  # expected to be SizeQuantity-backed
+            model_name = getattr(getattr(obj, 'model', None), 'name', None) or str(obj)
+            color_name = getattr(getattr(obj, 'color', None), 'name', None)
+            fabric_name = getattr(getattr(obj, 'fabrics', None), 'name', None)
+            size_label = getattr(obj, 'size', None) or getattr(obj, 'size_label', None)
+            variant = " / ".join([v for v in (color_name, fabric_name) if v]) or "—"
+            unit = "шт"  # finished goods pieces; adjust if you store per-obj unit
+
+            rows.append({
+                'id': s.id,
+                'sq_id': getattr(obj, 'pk', None),
+                'model_name': model_name,
+                'variant': variant,
+                'size': size_label or "—",
+                'quantity': s.quantity,
+                'unit': unit,
+                'last_supplied_date': s.last_supplied_date,
+                'last_cost': s.last_cost,
+            })
+
+        ctx['rows'] = rows
+        return ctx
+
 
 @login_required
 @require_GET
