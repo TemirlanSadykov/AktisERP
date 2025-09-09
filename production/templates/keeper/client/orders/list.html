@@ -22,28 +22,28 @@
   <div class="container maincontr">
     <!-- Status tabs -->
     <ul class="nav nav-tabs" role="tablist">
-  <li class="nav-item">
-    <a href="?status=new"
-       class="nav-link {% if status_filter == "new" %}active{% endif %}"
-       id="status-new" role="tab" aria-selected="{% if status_filter == "new" %}true{% else %}false{% endif %}">
-      {% trans 'На ожидании формирования' %}
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="?status=in_progress"
-       class="nav-link {% if status_filter == "in_progress" %}active{% endif %}"
-       id="status-inprogress" role="tab" aria-selected="{% if status_filter == "in_progress" %}true{% else %}false{% endif %}">
-      {% trans 'В процессе' %}
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="?status=completed"
-       class="nav-link {% if status_filter == "completed" %}active{% endif %}"
-       id="status-completed" role="tab" aria-selected="{% if status_filter == "completed" %}true{% else %}false{% endif %}">
-      {% trans 'Готовые к отправке' %}
-    </a>
-  </li>
-</ul>
+      <li class="nav-item">
+        <a href="?status=new"
+          class="nav-link {% if status_filter == "new" %}active{% endif %}"
+          id="status-new" role="tab" aria-selected="{% if status_filter == "new" %}true{% else %}false{% endif %}">
+          {% trans 'На ожидании формирования' %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="?status=in_progress"
+          class="nav-link {% if status_filter == "in_progress" %}active{% endif %}"
+          id="status-inprogress" role="tab" aria-selected="{% if status_filter == "in_progress" %}true{% else %}false{% endif %}">
+          {% trans 'В процессе' %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="?status=completed"
+          class="nav-link {% if status_filter == "completed" %}active{% endif %}"
+          id="status-completed" role="tab" aria-selected="{% if status_filter == "completed" %}true{% else %}false{% endif %}">
+          {% trans 'Готовые к отправке' %}
+        </a>
+      </li>
+    </ul>
 
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="orders" role="tabpanel">
