@@ -545,6 +545,7 @@ class OrderDetailView(DetailView):
         context.update({
             'pivot_data': pivot_data,   # Pivoted required quantities.
             'all_sizes': all_sizes,     # Sorted list of sizes for header.
+            'first_sq': order.size_quantities.order_by('id').first(),  # For BOM link.
             'days_left': days_left,
             'associated_cuts': associated_cuts,
             'cut_details': cut_details, # Detailed cut info including aggregated colors, sizes, and total layers.
@@ -2121,59 +2122,110 @@ def bom_create(request, pk):
     all_sqs = list(order.size_quantities.all().order_by('id'))
     idx = all_sqs.index(size_qty)
 
-    if request.method == 'POST':
-        # Clear previous BOMs
-        size_qty.bill_of_materials.all().delete()
+    # Build ordered (color_id, fabrics_id) group sequence following the same order as all_sqs
+    group_seq = []
+    group_to_first_sq = {}  # (color_id, fabrics_id) -> first SQ (for landing)
+    for sq in all_sqs:
+        key = (sq.color_id, sq.fabrics_id)
+        if key not in group_seq:
+            group_seq.append(key)
+            group_to_first_sq[key] = sq
 
+    # Current group key
+    cur_key = (size_qty.color_id, size_qty.fabrics_id)
+    cur_group_index = group_seq.index(cur_key)
+
+    if request.method == 'POST':
+        # ---------- parse scope ----------
+        apply_scope = request.POST.get('apply_scope', 'this')  # 'this' | 'same_cf' | 'all_order'
+
+        # ---------- Parse posted rows once ----------
+        rows = []
         row = 0
         while f'row-{row}_item' in request.POST:
-            item_id = request.POST[f'row-{row}_item']
-            qty = request.POST[f'row-{row}_quantity']
-            if item_id and qty:
+            item_id = request.POST.get(f'row-{row}_item')
+            qty_str = request.POST.get(f'row-{row}_quantity')
+            if item_id and qty_str:
                 item = get_object_or_404(Item, pk=item_id)
-                quantity = Decimal(qty)
+                quantity = Decimal(qty_str)
 
-                # Create BOM entry
-                BillOfMaterials.objects.create(
-                    sizequantity=size_qty,
-                    item=item,
-                    quantity=quantity
-                )
-
-                # Determine stock type:
+                # Determine stock type
                 stock_type = Stock.RAW_MATERIALS
-                if item.category and item.category.is_fabric:
+                if item.category and getattr(item.category, 'is_fabric', False):
                     stock_type = Stock.ROLLS
 
-                # Ensure stock exists for this item as RAW_MATERIALS
-                content_type = ContentType.objects.get_for_model(item)
-                exists = Stock.objects.filter(
-                    content_type=content_type,
-                    object_id=item.pk,
-                    type=stock_type,
-                    is_archived=False
-                ).exists()
-
-                if not exists:
-                    default_warehouse = Warehouse.objects.filter(is_archived=False).first()
-                    Stock.objects.create(
-                        content_type=content_type,
-                        object_id=item.pk,
-                        quantity=0,
-                        warehouse=default_warehouse,
-                        is_archived=False,
-                        type=stock_type
-                    )
-
+                rows.append((item, quantity, stock_type))
             row += 1
 
-        # Redirect to next SQ or back to order
-        if idx + 1 < len(all_sqs):
-            return redirect('bom_create', pk=all_sqs[idx + 1].pk)
+        # If nothing was entered, just bounce back
+        if not rows:
+            return redirect('bom_create', pk=size_qty.pk)
 
+        # ---------- Determine target SizeQuantity set ----------
+        if apply_scope == 'same_cf':
+            # same color + fabric as current, across this order
+            target_sqs = order.size_quantities.filter(
+                color_id=size_qty.color_id,
+                fabrics_id=size_qty.fabrics_id,
+            ).order_by('id')
+        elif apply_scope == 'all_order':
+            # all sizes in this order (color/fabric agnostic)
+            target_sqs = order.size_quantities.all().order_by('id')
+        else:
+            # only this size (current behavior)
+            target_sqs = SizeQuantity.objects.filter(pk=size_qty.pk)
+
+        # ---------- Ensure Stock placeholders exist once per (item, stock_type) ----------
+        content_type_item = ContentType.objects.get_for_model(Item)
+        for item, _qty, stock_type in rows:
+            exists = Stock.objects.filter(
+                content_type=content_type_item,
+                object_id=item.pk,
+                type=stock_type,
+                is_archived=False
+            ).exists()
+            if not exists:
+                default_warehouse = Warehouse.objects.filter(is_archived=False).first()
+                Stock.objects.create(
+                    content_type=content_type_item,
+                    object_id=item.pk,
+                    quantity=0,
+                    warehouse=default_warehouse,
+                    is_archived=False,
+                    type=stock_type
+                )
+
+        # ---------- Apply rows to all targets atomically ----------
+        with transaction.atomic():
+            for sq in target_sqs:
+                sq.bill_of_materials.all().delete()
+                for item, quantity, _stock_type in rows:
+                    BillOfMaterials.objects.create(
+                        sizequantity=sq,
+                        item=item,
+                        quantity=quantity
+                    )
+
+        # ---------- Navigation after write ----------
+        if apply_scope == 'this':
+            # Step to next size within all_sqs; if none, go to order detail
+            if idx + 1 < len(all_sqs):
+                return redirect('bom_create', pk=all_sqs[idx + 1].pk)
+            return redirect('order_detail', pk=order.pk)
+
+        if apply_scope == 'same_cf':
+            # Step to next (color,fabric) group; if none, go to order detail
+            next_group_index = cur_group_index + 1
+            if next_group_index < len(group_seq):
+                next_key = group_seq[next_group_index]
+                next_sq = group_to_first_sq[next_key]  # first SQ of next group
+                return redirect('bom_create', pk=next_sq.pk)
+            return redirect('order_detail', pk=order.pk)
+
+        # apply_scope == 'all_order' → done; go to order detail
         return redirect('order_detail', pk=order.pk)
 
-    # GET: Load categories and items
+    # ---------- GET (unchanged except context additions) ----------
     categories = Category.objects.filter(is_archived=False).order_by('name')
     items = Item.objects.filter(is_archived=False).order_by('name')
     items_by_cat = defaultdict(list)
@@ -2188,6 +2240,7 @@ def bom_create(request, pk):
     fabrics = Fabrics.objects.filter(is_archived=False)
     suppliers = Supplier.objects.filter(is_archived=False)
     order_client = order.client_order.client if order and order.client_order else None
+
     return render(request, 'technologist/models/bom_create.html', {
         'order': order,
         'sizequantity': size_qty,
@@ -2198,7 +2251,8 @@ def bom_create(request, pk):
         'colors': colors,
         'fabrics': fabrics,
         'suppliers': suppliers,
-        'order_client': order_client
+        'order_client': order_client,
+        'cf_hint': f"{getattr(size_qty.color,'name','')}/{getattr(size_qty.fabrics,'name','')}",
     })
 
 @require_POST
@@ -2297,7 +2351,7 @@ class OrderBomView(DetailView):
                  .prefetch_related('bill_of_materials__item__category')
                  .all()
         )
-
+        context['first_sq'] = context['size_quantities'].first().pk if context['size_quantities'] else None
         context['sidebar_type'] = 'technology'
         return context
 

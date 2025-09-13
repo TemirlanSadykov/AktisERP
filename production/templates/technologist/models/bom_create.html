@@ -27,6 +27,27 @@
   <h2>{% trans "Create Bill of Materials for" %} {{ sizequantity.color.name }} {{ sizequantity.fabrics.name }} {{ sizequantity.size }}</h2>
   <form method="post">
     {% csrf_token %}
+    <div class="form-group">
+      <label><strong>{% trans "Apply to" %}</strong></label>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="apply_scope" id="scope_this" value="this" checked>
+        <label class="form-check-label" for="scope_this">
+          {% trans "Only this size" %} ({{ sizequantity.size }})
+        </label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="apply_scope" id="scope_same_cf" value="same_cf">
+        <label class="form-check-label" for="scope_same_cf">
+          {% blocktrans %}All sizes with same Color/Fabric ({{ cf_hint }}) in this order{% endblocktrans %}
+        </label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="apply_scope" id="scope_all_order" value="all_order">
+        <label class="form-check-label" for="scope_all_order">
+          {% trans "All sizes in this order" %}
+        </label>
+      </div>
+    </div>
     <table id="bomTable" class="table table-bordered">
       <thead>
         <tr>
