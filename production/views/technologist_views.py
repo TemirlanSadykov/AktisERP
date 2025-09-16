@@ -2144,17 +2144,11 @@ def bom_create(request, pk):
         row = 0
         while f'row-{row}_item' in request.POST:
             item_id = request.POST.get(f'row-{row}_item')
-            qty_str = request.POST.get(f'row-{row}_quantity')
+            qty_str  = request.POST.get(f'row-{row}_quantity')
             if item_id and qty_str:
                 item = get_object_or_404(Item, pk=item_id)
                 quantity = Decimal(qty_str)
-
-                # Determine stock type
-                stock_type = Stock.RAW_MATERIALS
-                if item.category and getattr(item.category, 'is_fabric', False):
-                    stock_type = Stock.ROLLS
-
-                rows.append((item, quantity, stock_type))
+                rows.append((item, quantity))
             row += 1
 
         # If nothing was entered, just bounce back
@@ -2175,31 +2169,13 @@ def bom_create(request, pk):
             # only this size (current behavior)
             target_sqs = SizeQuantity.objects.filter(pk=size_qty.pk)
 
-        # ---------- Ensure Stock placeholders exist once per (item, stock_type) ----------
-        content_type_item = ContentType.objects.get_for_model(Item)
-        for item, _qty, stock_type in rows:
-            exists = Stock.objects.filter(
-                content_type=content_type_item,
-                object_id=item.pk,
-                type=stock_type,
-                is_archived=False
-            ).exists()
-            if not exists:
-                default_warehouse = Warehouse.objects.filter(is_archived=False).first()
-                Stock.objects.create(
-                    content_type=content_type_item,
-                    object_id=item.pk,
-                    quantity=0,
-                    warehouse=default_warehouse,
-                    is_archived=False,
-                    type=stock_type
-                )
+        # ---------- REMOVED: Stock placeholder creation ----------
 
         # ---------- Apply rows to all targets atomically ----------
         with transaction.atomic():
             for sq in target_sqs:
                 sq.bill_of_materials.all().delete()
-                for item, quantity, _stock_type in rows:
+                for item, quantity in rows:
                     BillOfMaterials.objects.create(
                         sizequantity=sq,
                         item=item,
