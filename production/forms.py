@@ -8,6 +8,7 @@ from django.db import transaction
 from collections import defaultdict
 from django.contrib.auth import authenticate
 from django.forms import inlineformset_factory
+from django.utils.text import slugify
 
 import json
 from .models import *
@@ -51,7 +52,13 @@ class CustomLoginForm(forms.Form):
     def get_user(self):
         return self.cleaned_data.get('user')
 
-class UserWithProfileForm(UserCreationForm):
+def _company_token(name: str) -> str:
+    # keep only letters/numbers, lowercased; fallback to "company" if empty
+    token = slugify(name or "")  # e.g. "Acme Inc" -> "acme-inc"
+    token = "".join(ch for ch in token if ch.isalnum())
+    return token or "company"
+
+class UserWithProfileForm(forms.ModelForm):
     first_name = forms.CharField(
         max_length=30,
         required=True,
@@ -73,14 +80,9 @@ class UserWithProfileForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
-
     class Meta:
         model = User
-        fields = ('employee_id', 'first_name', 'last_name', 'password1', 'password2')
+        fields = ('employee_id', 'first_name', 'last_name')  # no passwords
 
     def clean_employee_id(self):
         employee_id = self.cleaned_data.get('employee_id')
@@ -93,25 +95,39 @@ class UserWithProfileForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+
+        # Names
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        # Retrieve the current company from thread-local storage.
+
+        # Company context
         current_company = get_current_company()
         if not current_company:
             raise ValueError("No company found in context.")
+
         employee_id = self.cleaned_data['employee_id']
-        # Generate the username in the same manner as in employee_upload.
+
+        # Username consistent with your bulk-upload logic
         user.username = f"{current_company.id}-{employee_id}"
+
+        # --- Auto-generate password: 123{company_name}321 ---
+        company_token = _company_token(getattr(current_company, 'name', ''))
+        raw_password = f"123{company_token}321"
+        user.set_password(raw_password)
         if commit:
             user.save()
             UserProfile.objects.create(
                 user=user,
                 employee_id=employee_id,
                 type=self.cleaned_data['type'],
+                company=current_company,  # include if your model expects it
             )
+
+        # expose for view (optional, if you want to show/notify)
+        self.generated_password = raw_password
         return user
 
-class UserWithProfileTechnologistForm(UserCreationForm):
+class UserWithProfileTechnologistForm(forms.ModelForm):
     first_name = forms.CharField(
         max_length=30,
         required=True,
@@ -133,16 +149,18 @@ class UserWithProfileTechnologistForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
+    class Meta:
+        model = User
+        fields = ('employee_id', 'first_name', 'last_name')  # no passwords here
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+        # exclude ADMIN from selectable types
         self.fields['type'].choices = [
-            (value, label) for value, label in UserProfile.TYPE_CHOICES if value != UserProfile.ADMIN
+            (value, label)
+            for value, label in UserProfile.TYPE_CHOICES
+            if value != UserProfile.ADMIN
         ]
-    class Meta:
-        model = User
-        fields = ('employee_id', 'first_name', 'last_name', 'password1', 'password2')
 
     def clean_employee_id(self):
         employee_id = self.cleaned_data.get('employee_id')
@@ -155,24 +173,38 @@ class UserWithProfileTechnologistForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+
+        # Names
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        # Retrieve the current company from thread-local storage.
+
+        # Company context
         current_company = get_current_company()
         if not current_company:
             raise ValueError("No company found in context.")
+
         employee_id = self.cleaned_data['employee_id']
-        # Generate the username in the same manner as in employee_upload.
+
+        # Username consistent with bulk-upload logic
         user.username = f"{current_company.id}-{employee_id}"
+
+        # Auto-generate password: 123{company_name}321
+        company_token = _company_token(getattr(current_company, 'name', ''))
+        raw_password = f"123{company_token}321"
+        user.set_password(raw_password)
+
         if commit:
             user.save()
             UserProfile.objects.create(
                 user=user,
                 employee_id=employee_id,
                 type=self.cleaned_data['type'],
+                company=current_company,  # ensure company is set
             )
-        return user
 
+        # expose generated password for the view (optional)
+        self.generated_password = raw_password
+        return user
 class UserEditForm(forms.ModelForm):
     employee_id = forms.CharField(
         max_length=100,

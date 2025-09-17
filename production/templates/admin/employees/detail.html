@@ -29,7 +29,6 @@
         <div class="col-md-6 details">
           <p><strong>{% trans 'Employee ID:' %}</strong> {{ employee.employee_id }}</p>
           <p><strong>{% trans 'Full Name:' %}</strong> {{ employee.user.get_full_name }}</p>
-          <p><strong>{% trans 'Username:' %}</strong> {{ employee.user.username }}</p>
           <p><strong>{% trans 'Type:' %}</strong> {{ employee.get_type_display }}</p>
           
           {% if not employee.is_archived %}

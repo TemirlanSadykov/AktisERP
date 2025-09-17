@@ -747,10 +747,11 @@ class EmployeeCreateView(CreateView):
     template_name = 'admin/employees/create.html'
     form_class = UserWithProfileForm
     success_url = reverse_lazy('employee_list')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, "User created successfully.")
+        return super().form_valid(form)
+
 
 @method_decorator([login_required, admin_required], name='dispatch')
 class EmployeeDetailView(DetailView):

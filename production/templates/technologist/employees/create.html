@@ -28,13 +28,11 @@
         <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New User" %}</h2>
       </div>
       <div class="card-body">
-        <form method="post" onsubmit="return validateForm(event);" novalidate>
+        <form method="post" novalidate>
           {% csrf_token %}
           {% if form.non_field_errors %}
             <div class="alert alert-danger">
-              {% for error in form.non_field_errors %}
-                {{ error }}<br>
-              {% endfor %}
+              {% for error in form.non_field_errors %}{{ error }}<br>{% endfor %}
             </div>
           {% endif %}
           <div class="form-group">
@@ -42,9 +40,7 @@
             {{ form.employee_id }}
             {% if form.employee_id.errors %}
               <div class="text-danger">
-                {% for error in form.employee_id.errors %}
-                  {{ error }}<br>
-                {% endfor %}
+                {% for error in form.employee_id.errors %}{{ error }}<br>{% endfor %}
               </div>
             {% endif %}
           </div>
@@ -53,9 +49,7 @@
             {{ form.first_name }}
             {% if form.first_name.errors %}
               <div class="text-danger">
-                {% for error in form.first_name.errors %}
-                  {{ error }}<br>
-                {% endfor %}
+                {% for error in form.first_name.errors %}{{ error }}<br>{% endfor %}
               </div>
             {% endif %}
           </div>
@@ -64,49 +58,7 @@
             {{ form.last_name }}
             {% if form.last_name.errors %}
               <div class="text-danger">
-                {% for error in form.last_name.errors %}
-                  {{ error }}<br>
-                {% endfor %}
-              </div>
-            {% endif %}
-          </div>
-          <!-- Password Field with Toggle Icon -->
-          <div class="form-group">
-            <label for="id_password1">{% trans "Password" %}:</label>
-            <div class="input-group">
-              {{ form.password1 }}
-              <div class="input-group-append">
-                <span class="input-group-text" style="cursor:pointer;" onclick="togglePassword('id_password1', this)">
-                  <i class="fas fa-lock"></i>
-                </span>
-              </div>
-            </div>
-            <small id="passwordError" class="text-danger"></small>
-            {% if form.password1.errors %}
-              <div class="text-danger">
-                {% for error in form.password1.errors %}
-                  {{ error }}<br>
-                {% endfor %}
-              </div>
-            {% endif %}
-          </div>
-          <!-- Confirm Password Field with Toggle Icon -->
-          <div class="form-group">
-            <label for="id_password2">{% trans "Confirm Password" %}:</label>
-            <div class="input-group">
-              {{ form.password2 }}
-              <div class="input-group-append">
-                <span class="input-group-text" style="cursor:pointer;" onclick="togglePassword('id_password2', this)">
-                  <i class="fas fa-lock"></i>
-                </span>
-              </div>
-            </div>
-            <small id="passwordVerifyError" class="text-danger"></small>
-            {% if form.password2.errors %}
-              <div class="text-danger">
-                {% for error in form.password2.errors %}
-                  {{ error }}<br>
-                {% endfor %}
+                {% for error in form.last_name.errors %}{{ error }}<br>{% endfor %}
               </div>
             {% endif %}
           </div>
@@ -115,9 +67,7 @@
             {{ form.type }}
             {% if form.type.errors %}
               <div class="text-danger">
-                {% for error in form.type.errors %}
-                  {{ error }}<br>
-                {% endfor %}
+                {% for error in form.type.errors %}{{ error }}<br>{% endfor %}
               </div>
             {% endif %}
           </div>
@@ -127,7 +77,7 @@
                 <button type="submit" class="btn btn-create btnset buttonsetting">{% trans "Create" %}</button>
               </div>
               <div class="col text-right">
-                <a href="{% url 'employee_list_technologist' %}" class="btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
+                <a href="{% url 'employee_list' %}" class="btn btn-back btn back-btn btnback">{% trans "Back" %}</a>
               </div>
             </div>
           </div>

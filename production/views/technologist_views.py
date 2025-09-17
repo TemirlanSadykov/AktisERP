@@ -2357,10 +2357,10 @@ class EmployeeCreateTechnologistView(CreateView):
     template_name = 'technologist/employees/create.html'
     form_class = UserWithProfileTechnologistForm
     success_url = reverse_lazy('employee_list_technologist')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
+    
+    def form_valid(self, form):
+        messages.success(self.request, "User created successfully.")
+        return super().form_valid(form)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeDetailTechnologistView(DetailView):
