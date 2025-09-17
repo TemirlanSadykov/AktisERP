@@ -61,7 +61,7 @@
                                 {% if passport.passport_sizes.all %}
                                     {% with ps=passport.passport_sizes.all.0 %}
                                         <td>{{ ps.size_quantity.color }}</td>
-                                        <td>{{ ps.size_quantity.fabrics }}</td>
+                                        <td>{{ ps.size_quantity.fabric }}</td>
                                     {% endwith %}
                                 {% else %}
                                     <td>-</td>

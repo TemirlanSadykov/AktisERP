@@ -132,7 +132,7 @@ class OrderListQcView(ListView):
             queryset = queryset.filter(
                 Q(model__name__icontains=search_query) |
                 Q(color__icontains=search_query) |
-                Q(fabrics__icontains=search_query)
+                Q(fabric__icontains=search_query)
             )
             
         return queryset
@@ -175,7 +175,7 @@ class OrderDetailQcView(DetailView):
 
         for sq in required_qs:
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)  # group by color and fabric
+            key = (sq.color, sq.fabric)  # group by color and fabric
             if key not in pivot_data:
                 pivot_data[key] = {}
                 pivot_data_checked[key] = {}
@@ -257,7 +257,7 @@ def get_piece_info(request, barcode):
         cut = passport_size.passport.cut.number
         model = passport_size.passport.cut.order.model.name
         color = passport_size.size_quantity.color.name if passport_size.size_quantity.color else "-"
-        fabrics = passport_size.size_quantity.fabrics.name if passport_size.size_quantity.fabrics else "-"
+        fabric = passport_size.size_quantity.fabric.name if passport_size.size_quantity.fabric else "-"
         size = passport_size.size_quantity.size
         passport_number = passport_size.passport.number
         order = passport_size.passport.cut.order
@@ -270,7 +270,7 @@ def get_piece_info(request, barcode):
             'cut': cut,
             'model': model,
             'color': color,
-            'fabrics': fabrics,
+            'fabric': fabric,
             'size': size,
             'order_id': order_id,
             'order_name': order_name,
@@ -299,7 +299,7 @@ def update_piece_qc(request, piece_id):
     try:
         passport_size = PassportSize.objects.select_related(
             'size_quantity__color',
-            'size_quantity__fabrics'
+            'size_quantity__fabric'
         ).get(id=piece_id)
     except PassportSize.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'PassportSize not found.'}, status=404)
@@ -309,7 +309,7 @@ def update_piece_qc(request, piece_id):
         size_quantity.checked = (size_quantity.checked or 0) + 1
         size_quantity.save(update_fields=['checked'])
 
-        combo = f"{size_quantity.color} {size_quantity.fabrics}"
+        combo = f"{size_quantity.color} {size_quantity.fabric}"
         return JsonResponse({
             'success': True,
             'message': 'Единица обновлена до статуса Проверено.',
@@ -334,14 +334,14 @@ def get_order_table_data_qc(request, order_id):
         # Get the size quantities for the order.
         # Each size quantity is assumed to have attributes:
         # size, color, fabrics, quantity, checked, and packed.
-        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
+        required_qs = order.size_quantities.all().order_by('color__name', 'fabric__name', 'size')
         
         # Build pivot data: key is "Color Fabrics" and value is a dict mapping size to required quantity.
         pivot_data = {}
         all_sizes_set = set()
         for sq in required_qs:
             all_sizes_set.add(sq.size)
-            key = f"{sq.color} {sq.fabrics}"
+            key = f"{sq.color} {sq.fabric}"
             if key not in pivot_data:
                 pivot_data[key] = {}
             pivot_data[key][sq.size] = sq.factual
@@ -356,7 +356,7 @@ def get_order_table_data_qc(request, order_id):
         # This dictionary uses the same key ("Color Fabrics") and maps each size to its checked value.
         checked_counts = {}
         for sq in required_qs:
-            key = f"{sq.color} {sq.fabrics}"
+            key = f"{sq.color} {sq.fabric}"
             if key not in checked_counts:
                 checked_counts[key] = {}
             checked_counts[key][sq.size] = sq.checked if sq.checked is not None else 0
@@ -403,9 +403,9 @@ def ajax_get_orders(request):
             # Collect unique color & fabric combinations from size_quantities.
             unique_combos = set()
             for sq in order.size_quantities.all():
-                if sq.color and sq.fabrics:
+                if sq.color and sq.fabric:
                     # The __str__ methods on Color and Fabrics will be used.
-                    unique_combos.add(f"{sq.color} {sq.fabrics}")
+                    unique_combos.add(f"{sq.color} {sq.fabric}")
             
             combos_str = ", ".join(sorted(unique_combos))
             
@@ -449,7 +449,7 @@ def update_checked_quantity(request):
         sq = order.size_quantities.get(
             size=size.strip(),
             color__name=color_name,
-            fabrics__name=fabric_name
+            fabric__name=fabric_name
         )
         
         # Directly assign the provided quantity to the checked field.

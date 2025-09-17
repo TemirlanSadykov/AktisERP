@@ -40,7 +40,7 @@
               {% trans "No colors selected" %}
             {% endfor %}
           </p>
-          <p><strong>{% trans "Fabrics:" %}</strong>
+          <p><strong>{% trans "Fabric:" %}</strong>
             {% for fabric in order.fabrics.all %}
               {{ fabric }}{% if not forloop.last %}, {% endif %}
             {% empty %}
@@ -84,7 +84,7 @@
   
     {% for sq in size_quantities %}
       <h4>
-        {{ sq.color.name }} {{ sq.fabrics.name }} {{ sq.size }}
+        {{ sq.color.name }} {{ sq.fabric.name }} {{ sq.size }}
       </h4>
       <div class="table-responsive mb-4">
         <table class="table table-bordered">

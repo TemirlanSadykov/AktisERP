@@ -655,7 +655,7 @@
                             <th>{% trans 'Price' %}</th>
                             <th>{% trans 'Assortment' %}</th>
                             <th>{% trans 'Color' %}</th>
-                            <th>{% trans 'Fabrics' %}</th>
+                            <th>{% trans 'Fabric' %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -735,7 +735,7 @@
                     <tr>
                         <th>{% trans 'Name' %}</th>
                         <th>{% trans 'Color' %}</th>
-                        <th>{% trans 'Fabrics' %}</th>
+                        <th>{% trans 'Fabric' %}</th>
                         <th>{% trans 'Total Meters' %}</th>
                         <th>{% trans 'Used Meters' %}</th>
                         <th>{% trans 'Available Meters' %}</th>
@@ -745,7 +745,7 @@
                     {% for roll in inventory_data %}
                         <td><a href="#" data-toggle="modal" class="linkset" data-target="#rollModal" onclick="fetchRollDetails({{ roll.id }})">{{ roll.name }}</a></td>
                         <td>{{ roll.color_name }}</td>
-                        <td>{{ roll.fabrics_name }}</td>
+                        <td>{{ roll.fabric_name }}</td>
                         <td>{{ roll.meters }}</td>
                         <td>{{ roll.used_meters }}</td>
                         <td>{{ roll.available_meters }}</td>
@@ -1070,7 +1070,7 @@
                                     <p><strong>Статус:</strong> ${data.status}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Ткань:</strong> ${data.fabrics}</p>
+                                    <p><strong>Ткань:</strong> ${data.fabric}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Цвет:</strong> ${data.color}</p>
@@ -1115,7 +1115,7 @@
                                     <p><strong>Цвет:</strong> ${data.color}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
-                                    <p><strong>Ткань:</strong> ${data.fabrics}</p>
+                                    <p><strong>Ткань:</strong> ${data.fabric}</p>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <p><strong>Всего Метров:</strong> ${data.meters}</p>

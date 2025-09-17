@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const sizeSet = new Set();
 
     sizeQuantities.forEach(q => {
-      const combo = q.color + ' ' + q.fabrics;
+      const combo = q.color + ' ' + q.fabric;
       sizeSet.add(q.size);
 
       if (!pivotRequired[combo]) {
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
           buildPivotState(data.size_quantities);
         } else {
           const scanned = data.size_quantities.find(q => q.sku === data.scanned_sku);
-          const combo = scanned.color + ' ' + scanned.fabrics;
+          const combo = scanned.color + ' ' + scanned.fabric;
           const size = scanned.size;
           pivotPacked[combo][size] = (pivotPacked[combo][size] || 0) + 1;
           lastUpdatedCell = { combo, size };

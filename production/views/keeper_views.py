@@ -701,7 +701,7 @@ class StockListView(ListView):
         context['suppliers'] = Supplier.objects.filter(is_archived=False)
         context['categories'] = Category.objects.filter(is_archived=False)
         context['colors'] = Color.objects.filter(is_archived=False)
-        context['fabrics'] = Fabrics.objects.filter(is_archived=False)
+        context['fabrics'] = Fabric.objects.filter(is_archived=False)
         context['clients'] = Client.objects.filter(is_archived=False)
         context['warehouses'] = Warehouse.objects.filter(is_archived=False)
 
@@ -797,7 +797,7 @@ class BaseKeeperStockList(ListView):
         ctx['clients'] = Client.objects.filter(is_archived=False)
         ctx['suppliers'] = Supplier.objects.filter(is_archived=False)
         ctx['colors'] = Color.objects.filter(is_archived=False)
-        ctx['fabrics'] = Fabrics.objects.filter(is_archived=False)
+        ctx['fabrics'] = Fabric.objects.filter(is_archived=False)
         ctx['warehouses'] = Warehouse.objects.filter(is_archived=False)
         if self.STOCK_TYPE == Stock.ROLLS:
             categories = Category.objects.filter(is_archived=False, is_fabric=True)
@@ -815,12 +815,12 @@ class BaseKeeperStockList(ListView):
         return ctx
 # ---------- 3 focused pages ----------
 
-class FabricsStockListView(BaseKeeperStockList):
+class RollsStockListView(BaseKeeperStockList):
     """
     Materials → Fabrics (Rolls)
     """
     STOCK_TYPE = Stock.ROLLS        # usually 2
-    TEMPLATE_NAME = 'keeper/stocks/fabrics_list.html'
+    TEMPLATE_NAME = 'keeper/stocks/rolls_list.html'
 
 
 class RawMaterialsStockListView(BaseKeeperStockList):
@@ -864,7 +864,7 @@ class FinishedGoodsStockListView(ListView):
         ctx['clients'] = Client.objects.filter(is_archived=False)
         ctx['suppliers'] = Supplier.objects.filter(is_archived=False)
         ctx['colors'] = Color.objects.filter(is_archived=False)
-        ctx['fabrics'] = Fabrics.objects.filter(is_archived=False)
+        ctx['fabrics'] = Fabric.objects.filter(is_archived=False)
         ctx['warehouses'] = Warehouse.objects.filter(is_archived=False)
 
         # keep current client scope to highlight the sidebar selection
@@ -877,7 +877,7 @@ class FinishedGoodsStockListView(ListView):
             obj = s.content_object  # expected to be SizeQuantity-backed
             model_name = getattr(getattr(obj, 'model', None), 'name', None) or str(obj)
             color_name = getattr(getattr(obj, 'color', None), 'name', None)
-            fabric_name = getattr(getattr(obj, 'fabrics', None), 'name', None)
+            fabric_name = getattr(getattr(obj, 'fabric', None), 'name', None)
             size_label = getattr(obj, 'size', None) or getattr(obj, 'size_label', None)
             variant = " / ".join([v for v in (color_name, fabric_name) if v]) or "—"
             unit = "шт"  # finished goods pieces; adjust if you store per-obj unit
@@ -993,7 +993,7 @@ def item_update(request, pk):
 
     if is_roll:
         item.color  = get_fk(Color, "color_id")
-        item.fabric = get_fk(Fabrics, "fabric_id")
+        item.fabric = get_fk(Fabric, "fabric_id")
         item.width  = width_decimal
     else:
         item.color = None
@@ -1877,7 +1877,7 @@ class ReceiptListView(ListView):
         return (
             ProductionReceipt.objects
             .filter(status=ProductionReceipt.DRAFT)
-            .select_related('size_quantity__model', 'size_quantity__color', 'size_quantity__fabrics')
+            .select_related('size_quantity__model', 'size_quantity__color', 'size_quantity__fabric')
             .order_by('id')
         )
 

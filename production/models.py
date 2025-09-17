@@ -146,7 +146,7 @@ class Color(CompanyAwareModel):
     def __str__(self):
         return self.name
     
-class Fabrics(CompanyAwareModel):
+class Fabric(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
@@ -248,13 +248,13 @@ class SizeQuantity(CompanyAwareModel):
     packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
     shipped = models.IntegerField(verbose_name='Отправлено', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
-    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
+    fabric = models.ForeignKey(Fabric, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
     production_complete = models.BooleanField(default=False, verbose_name='Производство завершено')
     shipment_complete = models.BooleanField(default=False, verbose_name='Отправка завершено')
     
     def __str__(self):
-        return f"{self.model} {self.color} {self.fabrics} {self.size}"
+        return f"{self.model} {self.color} {self.fabric} {self.size}"
     
 class ClientOrder(CompanyAwareModel):
     order_number = models.CharField(max_length=100, verbose_name='Название')
@@ -284,7 +284,7 @@ class Order(CompanyAwareModel):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
     colors = models.ManyToManyField(Color, related_name='orders', blank=True, verbose_name='Цвета')
-    fabrics = models.ManyToManyField(Fabrics, related_name='orders', blank=True, verbose_name='Ткани')
+    fabrics = models.ManyToManyField(Fabric, related_name='orders', blank=True, verbose_name='Ткани')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
@@ -378,7 +378,7 @@ class Item(CompanyAwareModel):
 
     # Roll-specific fields
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
-    fabric = models.ForeignKey(Fabrics, on_delete=models.SET_NULL, null=True, blank=True)
+    fabric = models.ForeignKey(Fabric, on_delete=models.SET_NULL, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
     width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -391,7 +391,7 @@ class Item(CompanyAwareModel):
 class Roll(CompanyAwareModel):
     roll_batch = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='rolls', verbose_name='Рулоны', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
-    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
+    fabric = models.ForeignKey(Fabric, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='rolls', verbose_name='Клиент', null=True, blank=True)
     name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')

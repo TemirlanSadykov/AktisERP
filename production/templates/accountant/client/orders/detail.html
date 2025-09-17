@@ -84,7 +84,7 @@
                         {% for fabric in order.fabrics.all %}
                           {{ fabric }}{% if not forloop.last %}, {% endif %}
                         {% empty %}
-                          {% trans "No fabrics selected" %}
+                          {% trans "No fabric selected" %}
                         {% endfor %}
                       </td>
                       <td>{{ order.quantity }}</td>

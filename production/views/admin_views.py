@@ -187,13 +187,13 @@ def order_details_api(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
 
     # Get all SizeQuantity objects for the order (with related color and fabrics)
-    size_quantities = order.size_quantities.select_related('color', 'fabrics').all()
+    size_quantities = order.size_quantities.select_related('color', 'fabric').all()
 
     # Group SizeQuantity objects by unique (color, fabric) pair, and then by size.
     groups = {}  # key: (color, fabric)
     for sq in size_quantities:
         color_name = sq.color.name if sq.color else ""
-        fabric_name = sq.fabrics.name if sq.fabrics else ""
+        fabric_name = sq.fabric.name if sq.fabric else ""
         key = (color_name, fabric_name)
         if key not in groups:
             groups[key] = {}

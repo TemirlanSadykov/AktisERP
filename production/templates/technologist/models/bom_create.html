@@ -24,7 +24,7 @@
 </nav>
 
 <div class="container maincontr" style="max-width: 100%;">
-  <h2>{% trans "Create Bill of Materials for" %} {{ sizequantity.color.name }} {{ sizequantity.fabrics.name }} {{ sizequantity.size }}</h2>
+  <h2>{% trans "Create Bill of Materials for" %} {{ sizequantity.color.name }} {{ sizequantity.fabric.name }} {{ sizequantity.size }}</h2>
   <form method="post">
     {% csrf_token %}
     <div class="form-group">

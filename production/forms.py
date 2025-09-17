@@ -392,8 +392,8 @@ class CutForm(forms.ModelForm):
                 size_val = cs.size_quantity.size
                 groups[size_val].append(cs)
             for size_val, records in groups.items():
-                # Determine the unique (color, fabrics) combinations for these records.
-                unique_combos = set((cs.size_quantity.color, cs.size_quantity.fabrics) for cs in records)
+                # Determine the unique (color, fabric) combinations for these records.
+                unique_combos = set((cs.size_quantity.color, cs.size_quantity.fabric) for cs in records)
                 # If there are duplicates from multiple color/fabric combinations,
                 # assume each combination should contribute the same number.
                 if unique_combos:
@@ -467,7 +467,7 @@ class PassportForm(forms.ModelForm):
             unique_combinations = set()
             for cut_size in cut.cut_sizes.all():
                 color = cut_size.size_quantity.color
-                fabric = cut_size.size_quantity.fabrics
+                fabric = cut_size.size_quantity.fabric
                 unique_combinations.add((color.id, fabric.id, str(color), str(fabric)))
             choices = [
                 (f"{color_id}|{fabric_id}", f"{color_name} {fabric_name}")
@@ -685,7 +685,7 @@ class OrderForm(forms.ModelForm):
         super(OrderForm, self).__init__(*args, **kwargs)
         self.fields['model'].queryset = Model.objects.filter(is_archived=False).order_by('name')
         self.fields['colors'].queryset = Color.objects.filter(is_archived=False).order_by('name')
-        self.fields['fabrics'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabrics'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
 
         # Make certain fields optional in the form
         self.fields['model'].required = False
@@ -717,12 +717,12 @@ class ColorForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color name'}),
         }
 
-class FabricsForm(forms.ModelForm):
+class FabricForm(forms.ModelForm):
     class Meta:
-        model = Fabrics
+        model = Fabric
         fields = ['name']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabric name'}),
         }
 
 class SizeQuantityChoiceField(forms.ModelChoiceField):
@@ -769,7 +769,7 @@ class RollForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
-        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
         self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
         self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
@@ -826,7 +826,7 @@ class BulkRollForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Use the same choices as RollForm for consistency.
         self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
-        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
         self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
         self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
 

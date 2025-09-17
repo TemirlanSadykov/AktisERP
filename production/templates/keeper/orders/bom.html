@@ -40,7 +40,7 @@
               {% trans "No colors selected" %}
             {% endfor %}
           </p>
-          <p><strong>{% trans "Fabrics:" %}</strong>
+          <p><strong>{% trans "Fabric:" %}</strong>
             {% for fabric in order.fabrics.all %}
               {{ fabric }}{% if not forloop.last %}, {% endif %}
             {% empty %}

@@ -57,10 +57,10 @@
             <strong>{{ assigned_work.work.passport_size.passport.cut.order.model }}</strong>
           </div>
           <div class="employee-passport">
-            {% trans "Fabrics:" %}
+            {% trans "Fabric:" %}
             <strong>
-              {% if assigned_work.work.passport_size.size_quantity.color and assigned_work.work.passport_size.size_quantity.fabrics %}
-                {{ assigned_work.work.passport_size.size_quantity.color }} - {{ assigned_work.work.passport_size.size_quantity.fabrics }}
+              {% if assigned_work.work.passport_size.size_quantity.color and assigned_work.work.passport_size.size_quantity.fabric %}
+                {{ assigned_work.work.passport_size.size_quantity.color }} - {{ assigned_work.work.passport_size.size_quantity.fabric }}
               {% else %} -- {% endif %}
             </strong>
           </div>

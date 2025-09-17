@@ -40,7 +40,7 @@
               {% trans "No colors selected" %}
             {% endfor %}
           </p>
-          <p><strong>{% trans "Fabrics:" %}</strong>
+          <p><strong>{% trans "Fabric:" %}</strong>
             {% for fabric in order.fabrics.all %}
               {{ fabric }}{% if not forloop.last %}, {% endif %}
             {% empty %}
@@ -93,7 +93,7 @@
             {% with packed=sq.packed|default:0 shipped=sq.shipped|default:0 %}
             <tr>
               <td>{{ sq.color.name }}</td>
-              <td>{{ sq.fabrics.name }}</td>
+              <td>{{ sq.fabric.name }}</td>
               <td>{{ sq.size }}</td>
               <td>{{ packed }}</td>
               <td>{{ shipped }}</td>
