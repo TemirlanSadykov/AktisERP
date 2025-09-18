@@ -242,11 +242,11 @@ class ModelOperation(CompanyAwareModel):
 class SizeQuantity(CompanyAwareModel):
     model = models.ForeignKey(Model, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Модель')
     size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
-    quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
-    factual = models.IntegerField(verbose_name='Факт', null=True, blank=True)
-    checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
-    packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
-    shipped = models.IntegerField(verbose_name='Отправлено', null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=0, verbose_name='Количество')
+    factual  = models.PositiveIntegerField(default=0, verbose_name='Факт')
+    checked  = models.PositiveIntegerField(default=0, verbose_name='Проверено')
+    packed   = models.PositiveIntegerField(default=0, verbose_name='Упаковано')
+    shipped  = models.PositiveIntegerField(default=0, verbose_name='Отправлено')
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
     fabric = models.ForeignKey(Fabric, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
@@ -487,11 +487,11 @@ class Stock(CompanyAwareModel):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     RAW_MATERIALS = 0
-    FINSHED_GOODS = 1
+    FINISHED_GOODS = 1
     ROLLS = 2
     TYPE_CHOICES = [
         (RAW_MATERIALS, 'Сырье'),
-        (FINSHED_GOODS, 'Готовая продукция'),
+        (FINISHED_GOODS, 'Готовая продукция'),
         (ROLLS, 'Рулоны')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
@@ -574,9 +574,11 @@ class ProductionReceipt(CompanyAwareModel):
     # Workflow
     DRAFT     = "draft"      # created by packer, waiting for keeper review
     CONFIRMED = "confirmed"  # keeper checked / edited quantity, ready to post
+    POSTED    = "posted"
     STATUS_CHOICES = [
         (DRAFT,     "Draft"),
-        (CONFIRMED, "Confirmed")
+        (CONFIRMED, "Confirmed"),
+        (POSTED, "Posted")
     ]
 
     # Links
@@ -585,6 +587,14 @@ class ProductionReceipt(CompanyAwareModel):
         related_name="receipts",
         on_delete=models.CASCADE,
         verbose_name="Размер-кол-во"
+    )
+
+    warehouse = models.ForeignKey(
+        Warehouse,
+        related_name="production_receipts",
+        on_delete=models.SET_NULL,
+        verbose_name="Warehouse",
+        null=True, blank=True
     )
 
     # Quantities
@@ -636,20 +646,22 @@ class MaterialReceipt(CompanyAwareModel):
     item = models.ForeignKey(
         Item,
         related_name="material_receipts",
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         verbose_name="Item"
     )
     supplier = models.ForeignKey(
         Supplier,
         related_name="material_receipts",
-        on_delete=models.PROTECT,
-        verbose_name="Supplier"
+        on_delete=models.SET_NULL,
+        verbose_name="Supplier", 
+        null=True, blank=True
     )
     warehouse = models.ForeignKey(
         Warehouse,
         related_name="material_receipts",
-        on_delete=models.PROTECT,
-        verbose_name="Warehouse"
+        on_delete=models.SET_NULL,
+        verbose_name="Warehouse", 
+        null=True, blank=True
     )
     client = models.ForeignKey(
         Client,

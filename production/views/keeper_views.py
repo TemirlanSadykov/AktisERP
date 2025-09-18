@@ -708,14 +708,14 @@ class StockListView(ListView):
         for stock in context['stocks']:
             if stock.type == Stock.ROLLS:
                 stock.unit_display = 'м'
-            elif stock.type == Stock.FINSHED_GOODS:
+            elif stock.type == Stock.FINISHED_GOODS:
                 stock.unit_display = 'шт'
             else:
                 stock.unit_display = getattr(stock.content_object, 'unit', '')
 
             if stock.type == Stock.ROLLS:
                 stock.category_display = "Рулон"
-            elif stock.type == Stock.FINSHED_GOODS:
+            elif stock.type == Stock.FINISHED_GOODS:
                 stock.category_display = "Готовая продукция"
             else:
                 stock.category_display = getattr(stock.content_object, 'category', 'Сырье')
@@ -766,7 +766,7 @@ class BaseKeeperStockList(ListView):
         return super().dispatch(*args, **kwargs)
 
     def get_queryset(self):
-        assert self.STOCK_TYPE in (Stock.RAW_MATERIALS, Stock.FINSHED_GOODS, Stock.ROLLS)
+        assert self.STOCK_TYPE in (Stock.RAW_MATERIALS, Stock.FINISHED_GOODS, Stock.ROLLS)
         qs = Stock.objects.filter(is_archived=False, type=self.STOCK_TYPE)
 
         # Scope by client (from sidebar session)
@@ -845,7 +845,7 @@ class FinishedGoodsStockListView(ListView):
     def get_queryset(self):
         qs = (
             Stock.objects
-            .filter(is_archived=False, type=Stock.FINSHED_GOODS)
+            .filter(is_archived=False, type=Stock.FINISHED_GOODS)
             .select_related()  # harmless; GFK stays lazy but keep for consistency
             .order_by('id')
         )
@@ -1700,7 +1700,7 @@ def shipment_complete(request):
         stock = Stock.objects.filter(
             content_type=content_type,
             object_id=sq_obj.pk,
-            type=Stock.FINSHED_GOODS,
+            type=Stock.FINISHED_GOODS,
             is_archived=False
         ).first()
 
@@ -1738,7 +1738,7 @@ class _ContentTypeMovementBase(ListView):
     Abstract: lists StockMovement filtered by stock.content_type (and optionally stock.type).
     Subclasses must set:
       - CONTENT_MODEL   -> the Django model used for ContentType filtering (Item / SizeQuantity)
-      - STOCK_TYPE_FLAG -> one of Stock.RAW_MATERIALS / Stock.FINSHED_GOODS (optional but safer)
+      - STOCK_TYPE_FLAG -> one of Stock.RAW_MATERIALS / Stock.FINISHED_GOODS (optional but safer)
       - PAGE_TITLE      -> string for header
     """
     model = StockMovement
@@ -1798,7 +1798,7 @@ class FinishedGoodsMovementListView(_ContentTypeMovementBase):
     Movements where stock.content_object is a SizeQuantity (finished goods).
     """
     CONTENT_MODEL = SizeQuantity
-    STOCK_TYPE_FLAG = Stock.FINSHED_GOODS
+    STOCK_TYPE_FLAG = Stock.FINISHED_GOODS
     PAGE_TITLE = 'Finished Goods Movements'
     ACTIVE_TAB = 'fg'
 
@@ -1827,7 +1827,7 @@ def complete_shipment(request):
             content_type=content_type,
             object_id=sq_obj.pk,
             warehouse=warehouse,
-            type=Stock.FINSHED_GOODS,
+            type=Stock.FINISHED_GOODS,
             is_archived=False
         ).first()
 
@@ -1922,7 +1922,7 @@ def post_receipt(request, receipt_id):
                 content_type=content_type,
                 object_id=sq.pk,
                 warehouse=warehouse,
-                type=Stock.FINSHED_GOODS,
+                type=Stock.FINISHED_GOODS,
                 defaults={
                     'quantity': confirmed_qty,
                     'is_archived': False,
