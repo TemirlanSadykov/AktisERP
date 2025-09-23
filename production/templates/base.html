@@ -113,6 +113,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
+                {% if sidebar_type == 'keeper' %}
                 <!-- Client scope selector (global, session-based) -->
                 <form action="{% url 'set_client_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
                 {% csrf_token %}
@@ -175,6 +176,7 @@
                     {% endfor %}
                 </select>
                 </form>
+                {% endif %}
 
                 {% if sidebar_type == 'technology' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">

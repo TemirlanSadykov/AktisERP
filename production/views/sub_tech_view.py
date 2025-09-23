@@ -264,11 +264,7 @@ def assign_operations_by_cut_sub(request, cut_id):
                         employee_id_input = entry.strip()
                         quantity = total_quantity
 
-                    employee_profile = UserProfile.objects.filter(
-                        employee_id=employee_id_input,
-                        type=UserProfile.EMPLOYEE,
-                        
-                    ).first()
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input).first()
                     if not employee_profile:
                         raise Exception(f"Employee not found.")
 
