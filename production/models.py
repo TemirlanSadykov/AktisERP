@@ -126,8 +126,19 @@ class UserProfile(CompanyAwareModel):
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"
 
+class Assortment(CompanyAwareModel):
+    name = models.CharField(max_length=100, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+
 class Client(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    pin = models.CharField(max_length=20, null=True, blank=True, verbose_name='ИНН')
+    assortments = models.ManyToManyField(Assortment, related_name='assortments', verbose_name='Категории', blank=True)
+    contact_info = models.TextField(null=True, blank=True, verbose_name='Контактные данные')
+    bank_account = models.CharField(max_length=255, null=True, blank=True, verbose_name='Расчетный счет')
     description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
@@ -213,13 +224,6 @@ class Operation(CompanyAwareModel):
                 self.company.refresh_from_db(fields=['last_operation_number'])
                 self.number = self.company.last_operation_number
         super().save(*args, **kwargs)
-    
-class Assortment(CompanyAwareModel):
-    name = models.CharField(max_length=100, verbose_name='Название')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return self.name
 
 class Model(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
@@ -345,20 +349,22 @@ class CutSize(CompanyAwareModel):
     
     def __str__(self):
         return f"{self.size_quantity.size} - {self.extra}"
-
-class Supplier(CompanyAwareModel):
-    name = models.CharField(max_length=100, verbose_name='Имя')
-    description = models.TextField(null=True, blank=True, verbose_name='Описание')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return self.name
     
 class Category(CompanyAwareModel):
     name = models.CharField(max_length=255)
     is_fabric = models.BooleanField(default=False, verbose_name='Is Fabric')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
+    def __str__(self):
+        return self.name
+
+class Supplier(CompanyAwareModel):
+    name = models.CharField(max_length=100, verbose_name='Имя')
+    categories = models.ManyToManyField(Category, related_name='categories', verbose_name='Категории', blank=True)
+    contact_info = models.TextField(null=True, blank=True, verbose_name='Контактные данные')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
 

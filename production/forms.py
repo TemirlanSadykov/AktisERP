@@ -635,11 +635,44 @@ class ModelCustomForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['name', 'description']
+        fields = [
+            'name',
+            'pin',
+            'assortments',
+            'contact_info',
+            'bank_account',
+            'description',
+        ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
-            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Name'
+            }),
+            'pin': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ИНН'
+            }),
+            'assortments': forms.SelectMultiple(attrs={
+                'class': 'form-control'
+            }),
+            'contact_info': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact Information',
+                'rows': 3
+            }),
+            'bank_account': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Bank Account'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Description',
+                'rows': 3
+            }),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['assortments'].queryset = Assortment.objects.filter(is_archived=False).order_by('name')
 
 class ClientOrderForm(forms.ModelForm):
     class Meta:
@@ -739,11 +772,35 @@ class UploadFileForm(forms.Form):
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['name', 'description']
+        fields = [
+            'name',
+            'categories',
+            'contact_info',
+            'description',
+        ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
-            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Name'
+            }),
+            'categories': forms.SelectMultiple(attrs={
+                'class': 'form-control'
+            }),
+            'contact_info': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact Information',
+                'rows': 3
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Description',
+                'rows': 3
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['categories'].queryset = Category.objects.filter(is_archived=False).order_by('name')
 
 class RollForm(forms.ModelForm):
     class Meta:
