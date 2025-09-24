@@ -29,19 +29,6 @@
   {% include "keeper/stocks/_category_tabs.html" %}
   {% include "keeper/stocks/_stock_table.html" with stocks=stocks %}
 </div>
-{% endblock %}
+{% include "keeper/stocks/_edit_delete_modals.html" %}
 
-{% block stock_actions %}
-  <div class="d-flex" style="gap:5px;">
-    <a href="{% url 'stock_detail' stock.pk %}" class="btn btn-sm btn-primary" style="margin-bottom:0;">{% trans "View" %}</a>
-    <button class="btn btn-sm btn-secondary w-100 edit-item-btn" style="margin-bottom:0;"
-            data-stock-id="{{ stock.pk }}" data-type="0">
-      {% trans "Edit" %}
-    </button>
-    <button class="btn btn-sm btn-danger delete-stock-btn"
-            data-stock-id="{{ stock.pk }}"
-            data-item-name="{{ stock.content_object }}">
-      {% trans "Delete" %}
-    </button>
-  </div>
 {% endblock %}

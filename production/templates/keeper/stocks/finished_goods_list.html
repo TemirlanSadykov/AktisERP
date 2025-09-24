@@ -64,12 +64,12 @@
             {% endif %}
           </td>
           <td>
-            {% comment %} <div class="d-flex" style="gap:5px;">
+            <div class="d-flex" style="gap:5px;">
               {# Adapt these URLs to your existing routes #}
               {% if r.sq_id %}
-                <a href="{% url 'bom_detail' r.sq_id %}" class="btn btn-sm btn-primary" style="margin-bottom:0;">
+                {% comment %} <a href="{% url 'bom_detail' r.sq_id %}" class="btn btn-sm btn-primary" style="margin-bottom:0;">
                   {% trans "View" %}
-                </a>
+                </a> {% endcomment %}
                 <button class="btn btn-sm btn-success ship-btn" data-sq-id="{{ r.sq_id }}" style="margin-bottom:0;">
                   {% trans "Ship" %}
                 </button>
@@ -79,7 +79,7 @@
                       data-item-name="{{ r.model_name }} {{ r.variant }} {{ r.size }}">
                 {% trans "Delete" %}
               </button>
-            </div> {% endcomment %}
+            </div>
           </td>
         </tr>
         {% empty %}

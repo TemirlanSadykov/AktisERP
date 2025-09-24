@@ -37,7 +37,19 @@
             {% endif %}
           </td>
           <td>
-            {% block stock_actions %}{% endblock %}
+            <div class="d-flex" style="gap:5px;">
+              <div class="d-flex" style="gap: 5px;">
+                  <button class="btn btn-sm btn-secondary w-100 edit-item-btn" style="margin-bottom: 0;"
+                          data-stock-id="{{ stock.pk }}">
+                    {% trans "Edit" %}
+                  </button>
+                  <button class="btn btn-sm btn-danger delete-stock-btn"
+                          data-stock-id="{{ stock.pk }}"
+                          data-item-name="{{ stock.content_object }}">
+                    {% trans "Delete" %}
+                  </button>
+                </div>
+            </div>
           </td>
         </tr>
       {% empty %}
