@@ -23,6 +23,10 @@
     <form method="post" id="bulk-create-form">
       {% csrf_token %}
       <div class="form-group">
+        <label for="id_category">{% trans "Category" %}</label>
+        {{ form.category }}
+      </div>
+      <div class="form-group">
         <label for="id_color">{% trans "Color" %}</label>
         {{ form.color }}
       </div>

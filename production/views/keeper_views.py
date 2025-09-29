@@ -551,13 +551,14 @@ class RollBulkCreateView(CreateView):
     model = Roll
     form_class = BulkRollForm
     template_name = "keeper/rolls/bulk_create.html"
-    success_url = reverse_lazy("stock_list")
+    success_url = reverse_lazy("stock_list")  # fallback
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
-    
+
+    @transaction.atomic
     def form_valid(self, form):
         color     = form.cleaned_data["color"]
         fabric    = form.cleaned_data["fabric"]
@@ -565,45 +566,46 @@ class RollBulkCreateView(CreateView):
         client    = form.cleaned_data["client"]
         width     = form.cleaned_data["width"]
         quantity  = form.cleaned_data["quantity"]
-        price     = form.cleaned_data["price"]
+        category  = form.cleaned_data["category"]
+        price     = form.cleaned_data["price"]  # per-unit cost (meters)
 
         weights_raw = self.request.POST.getlist("weight")
         lengths_raw = self.request.POST.getlist("length")
 
-        parse = lambda v: (Decimal(v) if v.strip() else None)
+        parse = lambda v: (Decimal(v) if (v or "").strip() else None)
         weights = [parse(w) for w in weights_raw]
         lengths = [parse(l) for l in lengths_raw]
 
         company   = get_current_company()
         warehouse = Warehouse.objects.filter(is_archived=False).first()
 
-        # 1. RollBatch
+        # 1) RollBatch (Item)
         batch, _ = Item.objects.get_or_create(
-            color=color, fabric=fabric, supplier=supplier,
-            client=client, width=width, company=company,
+            color=color, fabric=fabric,
+            width=width, company=company,
+            category=category, unit="м",
             defaults={
-                "name": f"{color.name} {fabric.name} {width}м для {client.name} от {supplier.name}",
+                "name": f"{color.name} {fabric.name} {width}м",
             }
         )
 
-        # 2. bulk-create rolls
+        # 2) bulk-create rolls
         start_idx = Roll.objects.filter(
-            color=color,
-            fabric=fabric,
-            supplier=supplier,
-            client=client
+            color=color, fabric=fabric, supplier=supplier, client=client
         ).count()
+
         new_rolls = []
         metres_in = Decimal("0")
+        known_lengths = True
 
         for i in range(quantity):
             length_val = lengths[i] if i < len(lengths) else None
             weight_val = weights[i] if i < len(weights) else None
+
             new_rolls.append(
                 Roll(
                     roll_batch=batch,
                     color=color, fabric=fabric,
-                    supplier=supplier, client=client,
                     width=width,
                     name=start_idx + i + 1,
                     length_t=length_val,
@@ -611,44 +613,38 @@ class RollBulkCreateView(CreateView):
                     company=company,
                 )
             )
-            if length_val:
+            if length_val is not None:
                 metres_in += length_val
+            else:
+                known_lengths = False
 
-        Roll.objects.bulk_create(new_rolls)
-        if price is not None:
-            CostRecord.objects.create(
-                company=company,
-                content_type=ContentType.objects.get_for_model(Item),
-                object_id=batch.id,
-                cost=price
-            )
-        # 4. Stock row per SKU (RollBatch)
-        ct = ContentType.objects.get_for_model(Item)
-        stock, _ = Stock.objects.get_or_create(
-            content_type=ct, object_id=batch.id,
-            type=Stock.ROLLS,
-            warehouse=warehouse, company=company,
-            defaults={"quantity": Decimal("0")},
+        if new_rolls:
+            Roll.objects.bulk_create(new_rolls)
+
+        # 3) Create MaterialReceipt (do NOT update Stock here)
+        # Choose initial status/confirmed_qty based on whether all lengths are known.
+        status = MaterialReceipt.DRAFT
+
+        receipt = MaterialReceipt.objects.create(
+            company=company,
+            item=batch,
+            supplier=supplier,
+            warehouse=warehouse,
+            client=client,
+            cost=price,                    
+            reported_qty=metres_in,
+            status=status,
+            note="Автосоздано из массового приема рулонов",
         )
-        if metres_in:
-            updates = {
-                "quantity": F("quantity") + metres_in,
-                "last_supplied_date": timezone.now(),
-            }
-            if price is not None:
-                updates["last_cost"] = price
 
-            Stock.objects.filter(pk=stock.pk).update(**updates)
-
-            StockMovement.objects.create(
-                stock=stock, movement_type="IN",
-                quantity=metres_in,
-                from_warehouse=None, to_warehouse=warehouse,
-                note="Прием рулонов",
-            )
-
+        # Keep a sensible redirect: go to receipt detail if you have it; else fallback.
         self.object = new_rolls[0] if new_rolls else None
-        return HttpResponseRedirect(self.get_success_url())
+
+        try:
+            return redirect('material_receipt_list')
+        except Exception:
+            # If the route doesn't exist yet, use the fallback list
+            return HttpResponseRedirect(self.get_success_url())
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class StockListView(ListView):
@@ -930,8 +926,8 @@ def stock_item_json(request, stock_id):
             "description": item.description or "",
             "unit": item.unit or "",
             "category_id": item.category_id,
-            "supplier_id": item.supplier_id,
-            "client_id": item.client_id,
+            "supplier_id": stock.last_supplier.id if stock.last_supplier else "",
+            "client_id": stock.client.id if stock.client else "",
             # roll-specific
             "color_id": item.color_id,
             "fabric_id": item.fabric_id,
@@ -976,8 +972,6 @@ def item_update(request, pk):
             return None
 
     item.category = get_fk(Category, "category_id")
-    item.supplier = get_fk(Supplier, "supplier_id")
-    item.client   = get_fk(Client, "client_id")
 
     width_submitted = "width" in f
     width_decimal = None
@@ -2053,24 +2047,37 @@ def post_material_receipt(request, receipt_id):
 
             # Create / update Stock for the ITEM
             content_type = ContentType.objects.get_for_model(item)
+            supplier = getattr(receipt, "supplier", None)   # if MaterialReceipt has supplier FK
+            client   = getattr(receipt, "client", None)     # if MaterialReceipt has client FK
+
             stock, created = Stock.objects.get_or_create(
                 content_type=content_type,
                 object_id=item.pk,
                 warehouse=warehouse,
                 type=stock_type,
-                last_cost = Decimal(str(data.get("cost"))),
+                client=client,
                 defaults={
                     'quantity': confirmed_qty,
                     'is_archived': False,
                     'company': receipt.company,  # CompanyAwareModel
                     'last_supplied_date': timezone.now(),
+                    'last_cost': Decimal(str(data.get("cost"))),
+                    'last_supplier': supplier,
                 }
             )
 
             if not created:
                 stock.quantity += confirmed_qty
                 stock.last_supplied_date = timezone.now()
-                stock.save(update_fields=['quantity', 'last_supplied_date'])
+                stock.last_supplier = supplier
+                stock.last_cost = Decimal(str(data.get("cost")))  # update cost if provided
+                stock.save(update_fields=[
+                    'quantity',
+                    'last_supplied_date',
+                    'last_supplier',
+                    'client',
+                    'last_cost',
+                ])
 
             StockMovement.objects.create(
                 stock=stock,

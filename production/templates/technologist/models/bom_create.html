@@ -221,16 +221,6 @@
             <label for="id_item_unit">{% trans "Item Unit" %}</label>
             <input type="text" class="form-control" id="id_item_unit" name="unit" required>
           </div>
-          <div class="form-group">
-            <label for="id_item_supplier">{% trans "Supplier" %}</label>
-            <select class="form-control" id="id_item_supplier" name="supplier">
-              <option value="">{% trans "-------" %}</option>
-              <option value="add_new">{% trans "Add New Supplier" %}</option>
-              {% for supplier in suppliers %}
-                <option value="{{ supplier.pk }}">{{ supplier.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
         </div>
         <div class="modal-buttons">
           <button type="submit" class="btn save">{% trans "Save" %}</button>
@@ -277,16 +267,6 @@
           <div class="form-group">
             <label>{% trans "Width" %}</label>
             <input type="number" step="0.01" class="form-control" id="fabric_width" name="width" required>
-          </div>
-          <div class="form-group">
-            <label>{% trans "Supplier" %}</label>
-            <select class="form-control" id="fabric_supplier" name="supplier" required>
-              <option value="">{% trans "-------" %}</option>
-              <option value="add_new">{% trans "Add New Supplier" %}</option>
-              {% for supplier in suppliers %}
-                <option value="{{ supplier.pk }}">{{ supplier.name }}</option>
-              {% endfor %}
-            </select>
           </div>
         </div>
         <div class="modal-buttons">
@@ -350,33 +330,6 @@
   </div>
 </div>
 
-<!-- Nested: Add Supplier Modal -->
-<div class="modal" data-backdrop="false" id="addSupplierModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form id="addSupplierForm" method="post">
-        {% csrf_token %}
-        <div class="modal-header">
-          <h5 class="modal-title">{% trans "Add New Supplier" %}</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="id_supplier_name">{% trans "Supplier Name" %}</label>
-            <input type="text" class="form-control" id="id_supplier_name" name="name" required>
-          </div>
-        </div>
-        <div class="modal-buttons">
-          <button type="submit" class="btn save">{% trans "Save" %}</button>
-          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <script>
   function getCookie(name) {
     let cookieValue = null;
@@ -392,8 +345,6 @@
   document.addEventListener("DOMContentLoaded", () => {
     const fabricColor = document.getElementById("fabric_color");
     const fabricFabric = document.getElementById("fabric_fabric");
-    const fabricSupplier = document.getElementById("fabric_supplier");
-    const itemSupplier = document.getElementById("id_item_supplier");
 
     // Open nested modals
     fabricColor?.addEventListener("change", () => {
@@ -413,25 +364,6 @@
         fabricFabric.value = "";
       }
     });
-
-    fabricSupplier?.addEventListener("change", () => {
-      if (fabricSupplier.value === "add_new") {
-        document.getElementById("addSupplierForm").reset();
-        document.getElementById("addSupplierModal").style.display = "block";
-        document.getElementById("addSupplierModal").classList.add("show");
-        fabricSupplier.value = "";
-      }
-    });
-
-    itemSupplier?.addEventListener("change", () => {
-      if (itemSupplier.value === "add_new") {
-        document.getElementById("addSupplierForm").reset();
-        const m = document.getElementById("addSupplierModal");
-        m.style.display = "block";
-        m.classList.add("show");
-        itemSupplier.value = "";
-      }
-    });    
 
     // AJAX submits for nested modals
     document.getElementById("addColorForm").addEventListener("submit", e => {
@@ -474,39 +406,7 @@
           alert("Error: " + JSON.stringify(data.errors));
         }
       });
-    });
-
-    document.getElementById("addSupplierForm").addEventListener("submit", e => {
-      e.preventDefault();
-      fetch("{% url 'add_supplier_api' %}", {
-        method: "POST",
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
-        body: new FormData(e.target)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          // Update fabric supplier select (if present)
-          if (fabricSupplier) {
-            let opt = new Option(data.supplier_name, data.supplier_id, false, true);
-            fabricSupplier.appendChild(opt);
-            fabricSupplier.value = data.supplier_id;
-          }
-          // Update item supplier select (if present)
-          if (itemSupplier) {
-            let opt2 = new Option(data.supplier_name, data.supplier_id, false, true);
-            itemSupplier.appendChild(opt2);
-            itemSupplier.value = data.supplier_id;
-          }
-    
-          const modal = document.getElementById("addSupplierModal");
-          modal.classList.remove("show");
-          modal.style.display = "none";
-        } else {
-          alert("Error: " + JSON.stringify(data.errors));
-        }
-      });
-    });    
+    }); 
   });
 </script>
 
@@ -725,7 +625,6 @@
       let row = triggerName.split('_')[0].split('-')[1];
       let cat = document.querySelector(`select[name="row-${row}_category"]`).value;
       f.append('category', cat);
-      f.append('client', '{{ order_client.pk }}');
       fetch("{% url 'add_item_api' %}", {
         method:'POST',
         headers:{ 'X-CSRFToken': getCookie('csrftoken') },
@@ -756,7 +655,6 @@
       let row = triggerName.split('_')[0].split('-')[1];
       let cat = document.querySelector(`select[name="row-${row}_category"]`).value;
       f.append('category', cat);
-      f.append('client', '{{ order_client.pk }}');
   
       fetch("{% url 'add_fabric_item_api' %}", {
         method: 'POST',

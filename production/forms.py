@@ -808,8 +808,6 @@ class RollForm(forms.ModelForm):
         fields = [
             'color',
             'fabric',
-            'supplier',
-            'client',
             'length_t',
             'width',
             'weight',
@@ -817,8 +815,6 @@ class RollForm(forms.ModelForm):
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
             'length_t': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Длина Т (м)'}),
             'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
             'weight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Вес (кг)'}),
@@ -827,8 +823,6 @@ class RollForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
         self.fields['fabric'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
-        self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
-        self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         color_choices = list(self.fields['color'].choices)
         self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
@@ -837,17 +831,10 @@ class RollForm(forms.ModelForm):
         fabric_choices = list(self.fields['fabric'].choices)
         self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
 
-        # Prepend an "Add New Node" option.
-        supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
-
-        client_choices = list(self.fields['client'].choices)
-        self.fields['client'].choices = [("add_new", "[ДОБАВИТЬ]")] + client_choices
-
 class BulkRollForm(forms.ModelForm):
     quantity = forms.IntegerField(
-        min_value=1, 
-        label="Quantity", 
+        min_value=1,
+        label="Quantity",
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'})
     )
     price = forms.DecimalField(
@@ -855,50 +842,50 @@ class BulkRollForm(forms.ModelForm):
         label="Price",
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'})
     )
-    
+
+    # Extra fields (not in Roll model)
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.none(), required=False, label="Supplier",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    client = forms.ModelChoiceField(
+        queryset=Client.objects.none(), required=False, label="Client",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.none(), required=False, label="Category",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = Roll
-        # We only need the following fields from the Roll model for bulk creation.
-        # In this case, color, fabric, supplier come from the initial selection,
-        # while weight is provided per roll in the table.
         fields = [
             'color',
             'fabric',
-            'supplier',
-            'client',
             'width',
-            'price'
+            'price',
         ]
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
             'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'})
         }
-    
+
     def __init__(self, *args, **kwargs):
-        # Remove any 'instance' passed in so that ModelForm does not complain
         kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
-        # Use the same choices as RollForm for consistency.
         self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
         self.fields['fabric'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
         self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
         self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
+        self.fields['category'].queryset = Category.objects.filter(is_fabric=True, is_archived=False).order_by('name')
 
-        # Prepend an "Add New" option (same as in RollForm)
+        # Prepend "Add New" options
         color_choices = list(self.fields['color'].choices)
         self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 
         fabric_choices = list(self.fields['fabric'].choices)
         self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
-
-        supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
-
-        client_choices = list(self.fields['client'].choices)
-        self.fields['client'].choices = [("add_new", "[ДОБАВИТЬ]")] + client_choices
 
 class BulkStockForm(forms.ModelForm):
     # how many rows you want
@@ -925,24 +912,20 @@ class BulkStockForm(forms.ModelForm):
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'category', 'unit', 'client', 'supplier']
+        fields = ['name', 'category', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
         }
 
 class FabricItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['color', 'fabric', 'width', 'supplier', 'client', 'category']
+        fields = ['color', 'fabric', 'width', 'category']
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
             'width': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Width'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
         }
 
 class WarehouseForm(forms.ModelForm):

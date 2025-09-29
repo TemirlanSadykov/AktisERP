@@ -2286,11 +2286,9 @@ def add_fabric_item_api(request):
         # Auto-generate name and unit
         color_name = fabric_item.color.name if fabric_item.color else ''
         fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
-        supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
-        client_name = fabric_item.client.name if fabric_item.client else ''
         width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
 
-        fabric_item.name = f"{color_name} {fabric_name} {width_value}м для {client_name} от {supplier_name}".strip()
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м".strip()
         fabric_item.unit = "м"
 
         fabric_item.save()  # Now save
