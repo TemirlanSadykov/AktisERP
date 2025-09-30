@@ -2225,7 +2225,7 @@ def bom_create(request, pk):
         'fabrics': fabrics,
         'suppliers': suppliers,
         'order_client': order_client,
-        'cf_hint': f"{getattr(size_qty.color,'name','')}/{getattr(size_qty.fabrics,'name','')}",
+        'cf_hint': f"{getattr(size_qty.color,'name','')}/{getattr(size_qty.fabric,'name','')}",
     })
 
 @require_POST
