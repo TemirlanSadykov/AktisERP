@@ -1116,7 +1116,6 @@ class ArchivedStockListView(ListView):
     def get_queryset(self):
         return Stock.objects.filter(is_archived=True).order_by('id')
 
-
 @login_required
 @keeper_required
 def stock_bulk_create(request):
@@ -1131,85 +1130,86 @@ def stock_bulk_create(request):
         return render(request, 'keeper/stocks/bulk_create.html', {
             'categories':        categories,
             'items_by_category': dict(items_by_category),
-            'suppliers': Supplier.objects.filter(is_archived=False),
-            'clients': Client.objects.filter(is_archived=False),
+            'suppliers':         Supplier.objects.filter(is_archived=False),
+            'clients':           Client.objects.filter(is_archived=False),
+            'warehouses':        Warehouse.objects.filter(is_archived=False).order_by('name'),
             'sidebar_type':      'keeper',
         })
 
-    # POST: parse each row and update or create stock
-    warehouse = Warehouse.objects.filter(is_archived=False).first()
-    company   = get_current_company()
-    ct        = ContentType.objects.get_for_model(Item)
+    # POST: create MaterialReceipt rows (no stock updates here)
+    company = get_current_company()
 
+    # Optional header-level selections
+    supplier_id  = request.POST.get('supplier')   # expect <select name="supplier">
+    client_id    = request.POST.get('client')     # expect <select name="client">
+    warehouse_id = request.POST.get('warehouse')  # expect <select name="warehouse">
+
+    supplier  = Supplier.objects.filter(pk=supplier_id).first() if supplier_id else None
+    client    = Client.objects.filter(pk=client_id).first() if client_id else None
+
+    if warehouse_id:
+        warehouse = Warehouse.objects.filter(pk=warehouse_id, is_archived=False).first()
+    else:
+        warehouse = Warehouse.objects.filter(is_archived=False).first()
+
+    # Iterate dynamic rows
     row = 0
-    while f'row-{row}_item' in request.POST:
-        item_id = request.POST.get(f'row-{row}_item')
-        qty_str = request.POST.get(f'row-{row}_quantity')
-        price_str = request.POST.get(f'row-{row}_price')
+    created = 0
 
-        if item_id and qty_str:
-            price = None
-            if price_str:
+    with transaction.atomic():
+        while f'row-{row}_item' in request.POST:
+            item_id   = request.POST.get(f'row-{row}_item')
+            qty_str   = request.POST.get(f'row-{row}_quantity')
+            price_str = request.POST.get(f'row-{row}_price')
+            note      = request.POST.get(f'row-{row}_note')  # optional if you add it in UI
+
+            # Allow per-row overrides (if your template includes these)
+            row_supplier_id  = request.POST.get(f'row-{row}_supplier')
+            row_client_id    = request.POST.get(f'row-{row}_client')
+            row_warehouse_id = request.POST.get(f'row-{row}_warehouse')
+
+            row_supplier  = Supplier.objects.filter(pk=row_supplier_id).first() if row_supplier_id else supplier
+            row_client    = Client.objects.filter(pk=row_client_id).first() if row_client_id else client
+            row_warehouse = (Warehouse.objects.filter(pk=row_warehouse_id, is_archived=False).first()
+                             if row_warehouse_id else warehouse)
+
+            if item_id and qty_str:
+                # Parse cost/qty
+                cost = None
+                if price_str:
+                    try:
+                        cost = Decimal(price_str)
+                    except (InvalidOperation, TypeError):
+                        cost = None
+
                 try:
-                    price = Decimal(price_str)
+                    reported_qty = Decimal(qty_str)
                 except (InvalidOperation, TypeError):
-                    price = None
-            try:
-                qty = Decimal(qty_str)
-            except (InvalidOperation, TypeError):
-                qty = None
+                    reported_qty = None
 
-            if qty is not None:
-                item = get_object_or_404(Item, pk=item_id)
+                if reported_qty is not None:
+                    item = get_object_or_404(Item, pk=item_id)
 
-                # Try to find existing stock record
-                stock_qs = Stock.objects.filter(
-                    content_type=ct,
-                    object_id=item.id,
-                    type=Stock.RAW_MATERIALS,
-                    warehouse=warehouse,
-                    is_archived=False,
-                    company=company
-                )
-                if stock_qs.exists():
-                    stock = stock_qs.first()
-                    stock.quantity += qty
-                    stock.last_supplied_date = timezone.now()
-                    if price is not None:
-                        stock.last_cost = price
-                    stock.save()
-                else:
-                    stock = Stock.objects.create(
-                        content_type=ct,
-                        object_id=item.id,
-                        type=Stock.RAW_MATERIALS,
-                        quantity=qty,
-                        warehouse=warehouse,
-                        is_archived=False,
+                    # Create MaterialReceipt in DRAFT (inventory updates happen on "post")
+                    MaterialReceipt.objects.create(
                         company=company,
-                        last_supplied_date=timezone.now(),
-                        last_cost=price if price is not None else None,
+                        item=item,
+                        supplier=row_supplier,
+                        client=row_client,
+                        warehouse=row_warehouse,
+                        cost=cost,  # cost per unit (optional)
+                        reported_qty=reported_qty,
+                        confirmed_qty=None,     # can be filled later during verification
+                        status=MaterialReceipt.DRAFT,
+                        posted_at=None,
+                        note=note or 'Bulk receipt entry',
                     )
+                    created += 1
 
-                # Log the movement of exactly the added quantity
-                StockMovement.objects.create(
-                    stock=stock,
-                    movement_type='IN',
-                    quantity=qty,
-                    from_warehouse=None,
-                    to_warehouse=warehouse,
-                    note='Прием сырья',
-                )
-                if price is not None:
-                    CostRecord.objects.create(
-                        company=company,
-                        content_type=ct,
-                        object_id=item.id,
-                        cost=price,
-                    )
-        row += 1
+            row += 1
 
-    return redirect('stock_list')
+    # You can send them to a receipts list if you have it; keeping existing redirect for now.
+    return redirect('material_receipt_list')
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class StockDetailView(DetailView):
