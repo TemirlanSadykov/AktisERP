@@ -1783,7 +1783,7 @@ class RawMaterialMovementListView(_ContentTypeMovementBase):
     Movements where stock.content_object is an Item (raw materials).
     """
     CONTENT_MODEL = Item
-    STOCK_TYPE_FLAG = Stock.RAW_MATERIALS
+    STOCK_TYPE_FLAGS = [Stock.RAW_MATERIALS, Stock.ROLLS]
     PAGE_TITLE = 'Raw Materials Movements'
     ACTIVE_TAB = 'raw'
 
