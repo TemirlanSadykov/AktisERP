@@ -414,6 +414,13 @@ class Roll(CompanyAwareModel):
         related_name='remainders'
     )
     is_used = models.BooleanField(default=False, verbose_name='Is Used')
+    material_receipt = models.ForeignKey(
+        'MaterialReceipt',
+        related_name='rolls',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='Materials Receipt'
+    )
 
     @property
     def length_u(self):

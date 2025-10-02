@@ -576,74 +576,76 @@ class RollBulkCreateView(CreateView):
         weights = [parse(w) for w in weights_raw]
         lengths = [parse(l) for l in lengths_raw]
 
-        company   = get_current_company()
+        company = get_current_company()
         warehouse = Warehouse.objects.filter(is_archived=False).first()
 
-        # 1) RollBatch (Item)
+        # ---- 1) Ensure/resolve RollBatch (Item)
         batch, _ = Item.objects.get_or_create(
-            color=color, fabric=fabric,
-            width=width, company=company,
-            category=category, unit="м",
+            company=company,
+            color=color,
+            fabric=fabric,
+            width=width,
+            category=category,
+            unit="м",
             defaults={
                 "name": f"{color.name} {fabric.name} {width}м",
             }
         )
 
-        # 2) bulk-create rolls
-        start_idx = Roll.objects.filter(
-            color=color, fabric=fabric, supplier=supplier, client=client
-        ).count()
-
-        new_rolls = []
+        # ---- 2) Pre-compute reported meters from provided lengths
         metres_in = Decimal("0")
-        known_lengths = True
+        for i in range(min(quantity, len(lengths))):
+            if lengths[i] is not None:
+                metres_in += lengths[i]
 
-        for i in range(quantity):
-            length_val = lengths[i] if i < len(lengths) else None
-            weight_val = weights[i] if i < len(weights) else None
-
-            new_rolls.append(
-                Roll(
-                    roll_batch=batch,
-                    color=color, fabric=fabric,
-                    width=width,
-                    name=start_idx + i + 1,
-                    length_t=length_val,
-                    weight=weight_val,
-                    company=company,
-                )
-            )
-            if length_val is not None:
-                metres_in += length_val
-            else:
-                known_lengths = False
-
-        if new_rolls:
-            Roll.objects.bulk_create(new_rolls)
-
-        # 3) Create MaterialReceipt (do NOT update Stock here)
-        # Choose initial status/confirmed_qty based on whether all lengths are known.
-        status = MaterialReceipt.DRAFT
-
+        # ---- 3) Create MaterialReceipt FIRST (no Stock updates here)
         receipt = MaterialReceipt.objects.create(
             company=company,
             item=batch,
             supplier=supplier,
             warehouse=warehouse,
             client=client,
-            cost=price,                    
-            reported_qty=metres_in,
-            status=status,
+            cost=price,
+            reported_qty=metres_in,  # sum of known lengths; can be adjusted on confirm
+            status=MaterialReceipt.DRAFT,
             note="Автосоздано из массового приема рулонов",
         )
 
-        # Keep a sensible redirect: go to receipt detail if you have it; else fallback.
-        self.object = new_rolls[0] if new_rolls else None
+        # ---- 4) Bulk-create rolls linked to this receipt
+        # Sequential numbering continues within same (color, fabric, supplier, client)
+        start_idx = Roll.objects.filter(
+            roll_batch = batch,
+        ).count()
 
+        new_rolls = []
+        for i in range(quantity):
+            length_val = lengths[i] if i < len(lengths) else None
+            weight_val = weights[i] if i < len(weights) else None
+
+            new_rolls.append(
+                Roll(
+                    company=company,
+                    roll_batch=batch,
+                    color=color,
+                    fabric=fabric,
+                    supplier=supplier,
+                    client=client,
+                    width=width,
+                    name=start_idx + i + 1,  # 1..N numbering
+                    length_t=length_val,     # your intake length field
+                    weight=weight_val,
+                    material_receipt=receipt # <-- explicit linkage
+                )
+            )
+
+        if new_rolls:
+            Roll.objects.bulk_create(new_rolls)
+
+        # ---- 5) Redirect
+        self.object = new_rolls[0] if new_rolls else None
         try:
             return redirect('material_receipt_list')
         except Exception:
-            # If the route doesn't exist yet, use the fallback list
             return HttpResponseRedirect(self.get_success_url())
 
 @method_decorator([login_required, keeper_required], name='dispatch')
@@ -1998,6 +2000,7 @@ class MaterialReceiptListView(ListView):
             MaterialReceipt.objects
             .filter(status=MaterialReceipt.DRAFT)
             .select_related('item', 'supplier', 'client', 'warehouse')
+            .annotate(roll_count=Count('rolls'))
             .order_by('id')
         )
 
@@ -2104,3 +2107,223 @@ def delete_material_receipt(request, receipt_id):
         return JsonResponse({'success': True})
     except MaterialReceipt.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Receipt not found.'}, status=404)
+
+@login_required
+@keeper_required
+@require_GET
+def material_receipt_rolls_view(request, receipt_id):
+    """
+    GET /api/material_receipt_rolls/?receipt_id=123
+    Returns the rolls for a materials receipt as JSON:
+    {
+      "success": true,
+      "rolls": [
+        {"id": 1, "color": "Red", "fabric": "Cotton", "width": "1.60", "name": 12, "length_t": "100.00"},
+        ...
+      ]
+    }
+    """
+    if not receipt_id:
+        return JsonResponse({"success": False, "message": "Missing 'receipt_id'."}, status=400)
+
+    try:
+        # Ensure receipt exists (and optionally belongs to user's tenant)
+        rec_qs = MaterialReceipt.objects.filter(id=receipt_id)
+        receipt = rec_qs.select_related(None).only('id').first()
+        if not receipt:
+            return JsonResponse({"success": False, "message": "Receipt not found."}, status=404)
+
+        rolls_qs = Roll.objects.filter(material_receipt_id=receipt_id) \
+                               .select_related('color', 'fabric') \
+                               .only('id', 'name', 'width', 'length_t', 'color__name', 'fabric__name')
+
+        data = []
+        for r in rolls_qs:
+            data.append({
+                "id": r.id,
+                "color": getattr(r.color, 'name', None),
+                "fabric": getattr(r.fabric, 'name', None),
+                "width": None if r.width is None else str(r.width),
+                "name": r.name,
+                "length_t": None if r.length_t is None else str(r.length_t),
+            })
+
+        return JsonResponse({"success": True, "rolls": data})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+@login_required
+@keeper_required
+@require_POST
+@transaction.atomic
+def save_material_receipt_rolls_view(request):
+    """
+    POST /api/material_receipt_rolls/save/
+    Body:
+      {
+        "receipt_id": 123,
+        "rolls": [{"id": 1, "length_t": 98.5}, ...],
+        "cost": 12.34               # optional; per-unit cost (m)
+      }
+
+    Behavior:
+      - Validates receipt (and not already posted)
+      - Saves provided rolls' length_t (only for rolls belonging to the receipt)
+      - If incoming length_t == 0 => deletes that roll
+      - Sums length_t across ALL remaining rolls of this receipt to get confirmed_qty
+      - Marks receipt POSTED, sets posted_at, confirmed_qty
+      - Increments/creates Stock for the Item (type=ROLLS), updates last_* fields
+      - Adds StockMovement IN
+    """
+    try:
+        payload = json.loads(request.body.decode('utf-8') or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    receipt_id = payload.get('receipt_id')
+    rolls_payload = payload.get('rolls', [])
+
+    if not receipt_id:
+        return JsonResponse({"success": False, "message": "Missing 'receipt_id'."}, status=400)
+
+    # Lock the receipt row for the transaction
+    try:
+        receipt = MaterialReceipt.objects.select_for_update().get(id=receipt_id)
+    except MaterialReceipt.DoesNotExist:
+        return JsonResponse({"success": False, "message": "Receipt not found."}, status=404)
+
+    # Already posted?
+    if getattr(receipt, "status", None) == getattr(MaterialReceipt, "POSTED", None):
+        return JsonResponse({"success": False, "message": "Already posted."}, status=400)
+
+    if not isinstance(rolls_payload, list) or len(rolls_payload) == 0:
+        return JsonResponse({"success": False, "message": "'rolls' must be a non-empty list."}, status=400)
+
+    # Prepare map: incoming by id
+    try:
+        roll_ids = [int(r['id']) for r in rolls_payload if isinstance(r, dict) and 'id' in r]
+    except (TypeError, ValueError):
+        return JsonResponse({"success": False, "message": "Invalid roll id(s)."}, status=400)
+
+    payload_by_id = {int(r['id']): r for r in rolls_payload if 'id' in r}
+
+    # Fetch only rolls belonging to this receipt
+    rolls_qs = Roll.objects.select_for_update().filter(id__in=roll_ids, material_receipt_id=receipt_id)
+
+    updated = 0
+    deleted = 0
+
+    # Save or delete each roll per payload
+    for roll in rolls_qs:
+        incoming = payload_by_id.get(roll.id, {})
+        if 'length_t' not in incoming:
+            continue
+
+        val = incoming['length_t']
+
+        # Treat explicit 0 (numeric or "0"/"0.0") as delete
+        if val is not None:
+            try:
+                dec_val = Decimal(str(val))
+            except (InvalidOperation, ValueError):
+                return JsonResponse({"success": False, "message": f"Invalid length_t for roll id {roll.id}."}, status=400)
+
+            if dec_val == 0:
+                # Delete the roll
+                roll.delete()
+                deleted += 1
+                continue
+            elif dec_val < 0:
+                return JsonResponse({"success": False, "message": f"length_t must be >= 0 for roll id {roll.id}."}, status=400)
+            else:
+                roll.length_t = dec_val
+                roll.save(update_fields=['length_t'])
+                updated += 1
+        else:
+            # None or empty -> set to NULL (does not delete)
+            roll.length_t = None
+            roll.save(update_fields=['length_t'])
+            updated += 1
+
+    # Recalculate confirmed quantity across ALL remaining rolls for this receipt
+    confirmed_qty = Roll.objects.filter(material_receipt_id=receipt_id).aggregate(
+        total=Coalesce(Sum('length_t'), Decimal('0'))
+    )['total']
+
+    if confirmed_qty <= 0:
+        return JsonResponse({"success": False, "message": "Confirmed quantity must be > 0."}, status=400)
+
+    # Determine stock type = ROLLS (force rolls)
+    stock_type = getattr(Stock, "ROLLS", None)
+    if stock_type is None:
+        return JsonResponse({"success": False, "message": "Unknown stock type mapping for rolls."}, status=500)
+
+    # Ensure a warehouse
+    warehouse = Warehouse.objects.filter(is_archived=False).first()
+    if not warehouse:
+        warehouse = Warehouse.objects.create(name="Default", is_archived=False)
+
+    # Stock is for the ITEM behind the receipt
+    item = receipt.item
+    if item is None:
+        return JsonResponse({"success": False, "message": "Receipt has no item."}, status=400)
+
+    content_type = ContentType.objects.get_for_model(item)
+
+    supplier = getattr(receipt, "supplier", None)
+    client = getattr(receipt, "client", None)
+    last_cost = receipt.cost
+
+    # Create/update stock
+    stock, created = Stock.objects.select_for_update().get_or_create(
+        content_type=content_type,
+        object_id=item.pk,
+        warehouse=warehouse,
+        type=stock_type,
+        client=client,
+        defaults={
+            'quantity': confirmed_qty,
+            'is_archived': False,
+            'company': receipt.company,  # if CompanyAwareModel
+            'last_supplied_date': timezone.now(),
+            'last_cost': last_cost if last_cost is not None else Decimal('0'),
+            'last_supplier': supplier,
+        }
+    )
+
+    if not created:
+        stock.quantity = (stock.quantity or Decimal('0')) + confirmed_qty
+        stock.last_supplied_date = timezone.now()
+        stock.last_supplier = supplier
+        if last_cost is not None:
+            stock.last_cost = last_cost
+        stock.save(update_fields=[
+            'quantity',
+            'last_supplied_date',
+            'last_supplier',
+            'last_cost',
+        ])
+
+    # Stock movement IN
+    StockMovement.objects.create(
+        stock=stock,
+        movement_type="IN",
+        quantity=confirmed_qty,
+        to_warehouse=warehouse,
+        note=f"Поступление рулонов: {item}"
+    )
+
+    # Update receipt -> POSTED
+    receipt.confirmed_qty = confirmed_qty
+    receipt.status = getattr(MaterialReceipt, "POSTED", receipt.status)
+    receipt.posted_at = timezone.now()
+    receipt.save(update_fields=["confirmed_qty", "status", "posted_at"])
+
+    return JsonResponse({
+        "success": True,
+        "updated_rolls": updated,
+        "deleted_rolls": deleted,
+        "confirmed_qty": str(confirmed_qty),
+        "stock_id": stock.id,
+        "posted": True
+    })

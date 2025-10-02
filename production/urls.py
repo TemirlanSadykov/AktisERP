@@ -222,6 +222,8 @@ urlpatterns = [
     path('api/categories/add/', add_category_api, name='add_category_api'),
     path('api/items/by_category/', items_by_category_api, name='items_by_category_api'),
 
+    path('api/material_receipt_rolls/<receipt_id>', material_receipt_rolls_view, name='material_receipt_rolls'),
+    path('api/material_receipt_rolls/save/', save_material_receipt_rolls_view, name='material_receipt_rolls_save'),
 
     path('api/payment_details/', payment_details_view, name='payment_details'),
     path('api/client_orders/', production_details_view, name='production_details'),

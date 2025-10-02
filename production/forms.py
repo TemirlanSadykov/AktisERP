@@ -868,7 +868,8 @@ class BulkRollForm(forms.ModelForm):
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
-            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'})
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -881,6 +882,9 @@ class BulkRollForm(forms.ModelForm):
         self.fields['category'].queryset = Category.objects.filter(is_fabric=True, is_archived=False).order_by('name')
 
         # Prepend "Add New" options
+        category_choices = list(self.fields['category'].choices)
+        self.fields['category'].choices = [("add_new", "[ДОБАВИТЬ]")] + category_choices
+
         color_choices = list(self.fields['color'].choices)
         self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 

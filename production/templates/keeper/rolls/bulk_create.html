@@ -81,6 +81,35 @@
     </form>
   </div>
   
+  <!-- Add Category Modal -->
+  <div class="modal" data-backdrop="false" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form id="addCategoryForm" method="post">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="addCategoryModalLabel">{% trans "Add New Category" %}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- New Category Form Field -->
+            <div class="form-group">
+              <label for="id_category_name">{% trans "Category Name" %}</label>
+              <input type="text" class="form-control" id="id_category_name" name="name" placeholder="{% trans 'Enter category name' %}" required>
+            </div>
+          </div>
+          <input type="hidden" name="is_fabric" id="id_is_fabric" value="on">
+          <div class="modal-buttons">
+            <button type="submit" class="btn save">{% trans "Save" %}</button>
+            <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Cancel" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Add Color Modal -->
   <div class="modal" data-backdrop="false" id="addColorModal" tabindex="-1" role="dialog" aria-labelledby="addColorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -219,10 +248,52 @@
     
     document.addEventListener("DOMContentLoaded", function () {
   
+      const categorySelect = document.getElementById("id_category");
       const colorSelect = document.getElementById("id_color");
       const fabricSelect = document.getElementById("id_fabric");
       const supplierSelect = document.getElementById("id_supplier");
+      const clientSelect = document.getElementById("id_client");
   
+
+      const addCategoryModalEl = document.getElementById("addCategoryModal");
+      const addCategoryModal = addCategoryModalEl ? new bootstrap.Modal(addCategoryModalEl, { backdrop: false }) : null;
+      const addCategoryForm = document.getElementById("addCategoryForm");
+
+      if (categorySelect) {
+        categorySelect.addEventListener("change", function () {
+          if (this.value === "add_new") {
+            if (addCategoryForm) addCategoryForm.reset();
+            if (addCategoryModal) addCategoryModal.show();
+            this.value = "";
+          }
+        });
+      }
+
+      addCategoryForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(addCategoryForm);
+
+        fetch("{% url 'add_category_api' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          body: formData,
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Expecting { success: true, category_id: ..., category_name: ... }
+              const newOption = new Option(data.category_name, data.category_id, false, true);
+              categorySelect.appendChild(newOption);
+              // Fire change in case you have dependent logic (select2, etc.)
+              categorySelect.dispatchEvent(new Event("change", { bubbles: true }));
+              if (addCategoryModal) addCategoryModal.hide();
+            } else {
+              alert("Error: " + JSON.stringify(data.errors || data));
+            }
+          })
+          .catch(error => alert("An error occurred: " + error));
+      });
+
       // ===== Color Modal =====
       const addColorModalEl = document.getElementById("addColorModal");
       const addColorModal = new bootstrap.Modal(addColorModalEl, { backdrop: false });
@@ -332,7 +403,6 @@
       const addClientModalEl = document.getElementById("addClientModal");
       const addClientModal = new bootstrap.Modal(addClientModalEl, { backdrop: false });
       const addClientForm = document.getElementById("addClientForm");
-      const clientSelect = document.getElementById("id_client");
 
       if (clientSelect) {
         clientSelect.addEventListener("change", function () {
