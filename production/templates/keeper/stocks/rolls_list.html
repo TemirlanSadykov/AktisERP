@@ -32,14 +32,14 @@
           <th>#</th>
           <th>{% trans "Last Supplied" %}</th>
           <th>{% trans "Category" %}</th>
+            <th>{% trans "SKU" %}</th>
           <th>{% trans "Item" %}</th>
           <th>{% trans "Last Supplier" %}</th>
           <th>{% trans "Client" %}</th>
           <th>{% trans "Color" %}</th>
           <th>{% trans "Width" %}</th>
           <th>{% trans "Price" %}</th>
-          <th>{% trans "Quantity" %}</th>
-          <th>{% trans "Unit" %}</th>
+          <th>{% trans "Quantity" %} (м)</th>
           <th>{% trans "Warehouse" %}</th>
           <th>{% trans "QR Code" %}</th>
           <th>{% trans "Actions" %}</th>
@@ -55,6 +55,7 @@
               {% else %}&mdash;{% endif %}
             </td>
             <td>{{ stock.item_category }}</td>
+            <td>{{ stock.item_sku }}</td>
             <td>{{ stock.content_object }}</td>
             <td>{{ stock.last_supplier }}</td>
             <td>{{ stock.client|default:"—" }}</td>
@@ -66,7 +67,6 @@
               {% else %}&mdash;{% endif %}
             </td>
             <td>{{ stock.quantity }}</td>
-            <td>{{ stock.item_unit }}</td>
             <td>
               {% if stock.warehouse %}{{ stock.warehouse }}{% else %}&mdash;{% endif %}
             </td>

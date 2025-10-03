@@ -532,6 +532,13 @@ class Stock(CompanyAwareModel):
         if hasattr(obj, "category"):
             return getattr(obj.category, "name", str(obj.category))
         return None
+    
+    @property
+    def item_sku(self):
+        obj = self.content_object
+        # if content_object is an Item
+        if hasattr(obj, "sku"):
+            return obj.sku
 
     @property
     def item_unit(self):

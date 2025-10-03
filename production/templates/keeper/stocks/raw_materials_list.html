@@ -33,10 +33,10 @@
           <th>#</th>
           <th>{% trans "Last Supplied" %}</th>
           <th>{% trans "Category" %}</th>
+          <th>{% trans "SKU" %}</th>
           <th>{% trans "Item" %}</th>
           <th>{% trans "Last Supplier" %}</th>
           <th>{% trans "Client" %}</th>
-          <th>{% trans "Color" %}</th>
           <th>{% trans "Price" %}</th>
           <th>{% trans "Quantity" %}</th>
           <th>{% trans "Unit" %}</th>
@@ -55,10 +55,10 @@
               {% else %}&mdash;{% endif %}
             </td>
             <td>{{ stock.item_category }}</td>
+            <td>{{ stock.item_sku }}</td>
             <td>{{ stock.content_object }}</td>
             <td>{{ stock.last_supplier }}</td>
             <td>{{ stock.client|default:"—" }}</td>
-            <td>{{ stock.color|default:stock.content_object.color|default:"—" }}</td>
             <td>
               {% if stock.last_cost %}
                 {{ stock.last_cost }}

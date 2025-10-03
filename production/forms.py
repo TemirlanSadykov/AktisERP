@@ -842,6 +842,11 @@ class BulkRollForm(forms.ModelForm):
         label="Price",
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'})
     )
+    sku = forms.CharField(
+        max_length=100, required=False,
+        label="SKU",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU'})
+    )
 
     # Extra fields (not in Roll model)
     supplier = forms.ModelChoiceField(
@@ -864,12 +869,14 @@ class BulkRollForm(forms.ModelForm):
             'fabric',
             'width',
             'price',
+            'sku',
         ]
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
             'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -916,9 +923,10 @@ class BulkStockForm(forms.ModelForm):
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'category', 'unit']
+        fields = ['name', 'sku', 'category', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
         }
 

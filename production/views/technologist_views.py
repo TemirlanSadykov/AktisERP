@@ -2268,6 +2268,7 @@ def add_item_api(request):
             'success': True,
             'item_id': item.id,
             'item_name': item.name,
+            'sku': item.sku,
             'unit': item.unit
         }
         return JsonResponse(data)

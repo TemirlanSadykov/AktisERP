@@ -567,7 +567,8 @@ class RollBulkCreateView(CreateView):
         width     = form.cleaned_data["width"]
         quantity  = form.cleaned_data["quantity"]
         category  = form.cleaned_data["category"]
-        price     = form.cleaned_data["price"]  # per-unit cost (meters)
+        price     = form.cleaned_data["price"]
+        sku       = form.cleaned_data["sku"]
 
         weights_raw = self.request.POST.getlist("weight")
         lengths_raw = self.request.POST.getlist("length")
@@ -582,6 +583,7 @@ class RollBulkCreateView(CreateView):
         # ---- 1) Ensure/resolve RollBatch (Item)
         batch, _ = Item.objects.get_or_create(
             company=company,
+            sku=sku,
             color=color,
             fabric=fabric,
             width=width,
