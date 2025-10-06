@@ -20,6 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum, Prefetch
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.functions import Coalesce
+from django.core.paginator import Paginator
 
 from ..utils import apply_client_scope
 from ..decorators import keeper_required
@@ -1223,7 +1224,42 @@ class StockDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        stock = self.object
         context['sidebar_type'] = 'keeper'
+
+        # Base queryset: all movements for this stock
+        qs = (
+            StockMovement.objects.select_related(
+                'stock__content_type',
+                'from_warehouse',
+                'to_warehouse',
+            )
+            .filter(stock=stock)
+            .order_by('-created_at')
+        )
+
+        # Optional filtering (keep same logic as _ContentTypeMovementBase)
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(
+                Q(note__icontains=q)
+                | Q(from_warehouse__name__icontains=q)
+                | Q(to_warehouse__name__icontains=q)
+                | Q(stock__content_object__icontains=q)
+            )
+
+        # Paginate like _ContentTypeMovementBase
+        paginator = Paginator(qs, 20)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['movements'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['page_obj'] = page_obj
+        context['paginator'] = paginator
+        context['page_title'] = "Stock Details"
+        context['active_tab'] = 'stocks'
+
         return context
 
 
