@@ -31,9 +31,11 @@
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>#</th>
+          <th>{% trans "Date" %}</th>
+          <th>{% trans "Category" %}</th>
           <th>{% trans "Item" %}</th>
           <th>{% trans "SKU" %}</th>
+          <th>{% trans "Color" %}</th>
           <th>{% trans "Supplier" %}</th>
           <th>{% trans "Client" %}</th>
           <th>{% trans "Warehouse" %}</th>
@@ -45,9 +47,11 @@
       <tbody>
         {% for receipt in receipts %}
         <tr>
-          <td>{{ forloop.counter }}</td>
+          <td>{{ receipt.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ receipt.item.category }}</td>
           <td>{{ receipt.item }}</td>
           <td>{{ receipt.item.sku }}</td>
+          <td>{{ receipt.item.color }}</td>
           <td>{{ receipt.supplier }}</td>
           <td>{{ receipt.client|default:"—" }}</td>
           <td>{{ receipt.warehouse }}</td>
