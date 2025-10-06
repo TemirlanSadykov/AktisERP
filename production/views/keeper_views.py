@@ -1939,6 +1939,7 @@ def post_receipt(request, receipt_id):
                 stock=stock,
                 movement_type="IN",
                 quantity=confirmed_qty,
+                production_receipt=receipt,
                 to_warehouse=warehouse,
                 note=f"Прием готовой продукции: {sq}"
             )
@@ -2088,6 +2089,7 @@ def post_material_receipt(request, receipt_id):
                 stock=stock,
                 movement_type="IN",
                 quantity=confirmed_qty,
+                material_receipt=receipt,
                 to_warehouse=warehouse,
                 note=f"Поступление материалов: {item}"
             )

@@ -768,5 +768,23 @@ class StockMovement(CompanyAwareModel):
     
     note = models.TextField(null=True, blank=True)
     
+    @property
+    def receipt_date(self):
+        if self.material_receipt:
+            return self.material_receipt.created_at
+        elif self.production_receipt:
+            return self.production_receipt.created_at
+        else:
+            return None
+
+    @property
+    def receipt(self):
+        if self.material_receipt:
+            return self.material_receipt.id
+        elif self.production_receipt:
+            return self.production_receipt.id
+        else:
+            return None
+        
     def __str__(self):
         return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"
