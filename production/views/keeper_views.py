@@ -1982,7 +1982,7 @@ def post_material_receipt(request, receipt_id):
                 return JsonResponse({'success': False, 'message': 'Invalid quantity'}, status=400)
 
             receipt = MaterialReceipt.objects.select_for_update().get(pk=receipt_id)
-
+            cost = Decimal(str(data.get("cost")))
             # Already posted? (MaterialReceipt supports POSTED)
             if receipt.status == MaterialReceipt.POSTED:
                 return JsonResponse({'success': False, 'message': 'Already posted.'})
@@ -2021,7 +2021,7 @@ def post_material_receipt(request, receipt_id):
                     'is_archived': False,
                     'company': receipt.company,  # CompanyAwareModel
                     'last_supplied_date': timezone.now(),
-                    'last_cost': Decimal(str(data.get("cost"))),
+                    'last_cost': cost,
                     'last_supplier': supplier,
                 }
             )
@@ -2030,7 +2030,7 @@ def post_material_receipt(request, receipt_id):
                 stock.quantity += confirmed_qty
                 stock.last_supplied_date = timezone.now()
                 stock.last_supplier = supplier
-                stock.last_cost = Decimal(str(data.get("cost")))  # update cost if provided
+                stock.last_cost = cost  # update cost if provided
                 stock.save(update_fields=[
                     'quantity',
                     'last_supplied_date',
@@ -2045,7 +2045,13 @@ def post_material_receipt(request, receipt_id):
                 quantity=confirmed_qty,
                 material_receipt=receipt,
                 to_warehouse=warehouse,
-                note=f"Поступление материалов: {item}"
+                note=f"Поступление фурнитуры: {item}"
+            )
+
+            CostRecord.objects.create(
+                content_type=ContentType.objects.get_for_model(Item),
+                object_id=item.id,
+                cost=cost,
             )
 
         return JsonResponse({'success': True})
@@ -2267,9 +2273,17 @@ def save_material_receipt_rolls_view(request):
         stock=stock,
         movement_type="IN",
         quantity=confirmed_qty,
+        material_receipt=receipt,
         to_warehouse=warehouse,
         note=f"Поступление рулонов: {item}"
     )
+
+    CostRecord.objects.create(
+        content_type=ContentType.objects.get_for_model(Item),
+        object_id=item.id,
+        cost=last_cost,
+    )
+    
 
     # Update receipt -> POSTED
     receipt.confirmed_qty = confirmed_qty
