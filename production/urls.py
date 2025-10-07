@@ -74,7 +74,6 @@ urlpatterns = [
     path('keeper/client/orders/', ClientOrderListKeeperView.as_view(), name='client_order_list_keeper'),
     path('keeper/client/orders/<int:pk>/', ClientOrderDetailKeeperView.as_view(), name='client_order_detail_keeper'),
     path('keeper/client/orders/order/<int:pk>/', OrderDetailKeeperView.as_view(), name='order_detail_keeper'),
-    path('keeper/client/orders/order/ship/', shipment_complete, name='shipment_complete'),
 
     path('admin/calendar/', OrderCalendarView.as_view(), name='order_calendar'),
     path('admin/calendar/events/', OrderCalendarEventsView.as_view(), name='order_calendar_events'),
@@ -266,8 +265,7 @@ urlpatterns = [
     path('keeper/receipts/material/<int:receipt_id>/post/', post_material_receipt, name='material_receipt_confirm'),
     path('keeper/receipts/material/<int:receipt_id>/delete/', delete_material_receipt, name='material_receipt_delete'),
 
-    path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
-    path('keeper/client/orders/order/<int:pk>/bom-deficit/', BomDeficitView.as_view(), name='bom_deficit'),
+    path('keeper/client/orders/order/<int:pk>/bom-deficit/', BomDetailView.as_view(), name='bom_detail'),
 
     path('keeper/warehouses/', WarehouseListView.as_view(), name='warehouse_list'),
     path('keeper/warehouses/create/', WarehouseCreateView.as_view(), name='warehouse_create'),

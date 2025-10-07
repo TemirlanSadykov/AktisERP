@@ -159,37 +159,8 @@ class OrderDetailKeeperView(DetailView):
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class BomDetailView(DetailView):
-    model = SizeQuantity
-    template_name = 'keeper/orders/bom.html'
-    context_object_name = 'size_quantity'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        size_quantity = self.object
-
-        # get the related order from the SizeQuantity
-        order = size_quantity.orders.first()
-        context['order'] = order
-
-        # days left
-        today = timezone.now().date()
-        term = order.client_order.term
-        context['days_left'] = max((term - today).days, 0)
-
-        # bring in all size‐quantities + their BOM entries
-        context['size_quantities'] = (
-            order.size_quantities
-                 .prefetch_related('bill_of_materials__item__category')
-                 .all()
-        )
-
-        context['sidebar_type'] = 'keeper'
-        return context
-
-@method_decorator([login_required, keeper_required], name='dispatch')
-class BomDeficitView(DetailView):
     model = Order
-    template_name = 'keeper/orders/bom_deficit.html'
+    template_name = 'keeper/orders/detail.html'
     context_object_name = 'order'
 
     def get_context_data(self, **kwargs):
@@ -1713,59 +1684,6 @@ class ItemUnArchiveView(UpdateView):
         item.save()
         return HttpResponseRedirect(self.success_url)
     
-@login_required
-@keeper_required
-@require_POST
-def shipment_complete(request):
-    try:
-        data = json.loads(request.body)
-        sq_id = data.get('size_quantity_id')
-        quantity = data.get('quantity')
-
-        if not sq_id or quantity is None:
-            return JsonResponse({'success': False, 'message': 'Missing required fields.'})
-
-        # Get the SizeQuantity object
-        sq_obj = SizeQuantity.objects.get(pk=sq_id)
-        ship_quantity = Decimal(str(quantity))
-
-        # Get the Stock record for this SizeQuantity (assumes 1:1 mapping)
-        content_type = ContentType.objects.get_for_model(sq_obj)
-        stock = Stock.objects.filter(
-            content_type=content_type,
-            object_id=sq_obj.pk,
-            type=Stock.FINISHED_GOODS,
-            is_archived=False
-        ).first()
-
-        if not stock:
-            return JsonResponse({'success': False, 'message': 'No stock available for this item.'})
-
-        # Subtract the quantity
-        stock.quantity -= ship_quantity
-        stock.save()
-
-        # Record StockMovement
-        StockMovement.objects.create(
-            stock=stock,
-            movement_type='OUT',
-            quantity=ship_quantity,
-            from_warehouse=stock.warehouse,
-            to_warehouse=None,
-            note="Отправка"
-        )
-
-        # Update shipment status and shipped count
-        sq_obj.shipped = ship_quantity
-        sq_obj.shipment_complete = True
-        sq_obj.save()
-
-        return JsonResponse({'success': True})
-
-    except SizeQuantity.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Size quantity not found.'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
 
 class _ContentTypeMovementBase(ListView):
     """
@@ -2025,7 +1943,7 @@ def complete_purchase(request):
     )
     receipt.save()
 
-    return redirect("bom_deficit", pk=order_id)
+    return redirect("detail", pk=order_id)
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class MaterialReceiptListView(ListView):
