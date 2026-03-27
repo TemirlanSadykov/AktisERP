@@ -1,0 +1,401 @@
+{# templates/keeper/material_receipts/list.html #}
+{% extends "base.html" %}
+{% load i18n l10n %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 style="color: #232323; margin:auto;" class="navfont">{% trans "Material Receipts" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin: 10px;">
+        {{ request.user.username }}
+      </li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container clients-wrapper maincontr" style="max-width: 100%;">
+  <div class="clients-header">
+    <span class="operation-text">{% trans "Receipts Awaiting Confirmation" %}</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>{% trans "Date" %}</th>
+          <th>{% trans "Category" %}</th>
+          <th>{% trans "Item" %}</th>
+          <th>{% trans "SKU" %}</th>
+          <th>{% trans "Color" %}</th>
+          <th>{% trans "Supplier" %}</th>
+          <th>{% trans "Client" %}</th>
+          <th>{% trans "Warehouse" %}</th>
+          <th>{% trans "Reported Qty" %}</th>
+          <th>{% trans "Цена за единицу" %}</th>
+          <th>{% trans "Actions" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for receipt in receipts %}
+        <tr>
+          <td>{{ receipt.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ receipt.item.category }}</td>
+          <td>{{ receipt.item }}</td>
+          <td>{{ receipt.item.sku }}</td>
+          <td>{{ receipt.item.color }}</td>
+          <td>{{ receipt.supplier }}</td>
+          <td>{{ receipt.client|default:"—" }}</td>
+          <td>{{ receipt.warehouse }}</td>
+          <td>{{ receipt.reported_qty }}</td>
+          <td>{{ receipt.cost }}</td>
+          <td>
+            {% if receipt.roll_count %}
+              <button
+                class="btn btn-sm btn-primary review-rolls-btn"
+                style="margin-bottom:0; width:auto;"
+                data-toggle="modal"
+                data-target="#rollsModal"
+                data-receipt-id="{{ receipt.id }}"
+                data-rolls-url="{% url 'material_receipt_rolls' receipt.id %}">
+              {% trans "Review" %}
+              </button>
+               {% else %}
+              <button
+                class="btn btn-sm btn-primary review-btn" style="margin-bottom: 0; width: auto;"
+                data-toggle="modal"
+                data-target="#fixModal"
+                data-receipt-id="{{ receipt.id }}"
+                data-reported-qty="{{ receipt.reported_qty }}"
+                data-cost="{{ receipt.cost|unlocalize }}"
+                data-confirm-url="{% url 'material_receipt_confirm' receipt.id %}">
+                {% trans "Review" %}
+              </button>
+              {% endif %}
+            <button
+              class="btn btn-sm btn-danger delete-btn"
+              data-delete-url="{% url 'material_receipt_delete' receipt.id %}">
+              {% trans "Delete" %}
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8">{% trans "No receipts available." %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Pagination (optional) #}
+  {% if is_paginated %}
+    <nav aria-label="Pagination" class="mt-3">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+  <!-- Fix Modal -->
+  <div class="modal fade" id="fixModal" tabindex="-1" role="dialog" aria-labelledby="fixModalLabel" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Review and Confirm Quantity" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="fix-form">
+            {% csrf_token %}
+            <input type="hidden" id="confirm-url">
+            <div class="form-group">
+              <label for="fixed-qty">{% trans "Quantity" %}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="fixed-qty">
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Confirm" %}</button>
+            <input type="hidden" class="form-control" id="cost">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rolls Modal -->
+<div class="modal fade" id="rollsModal" tabindex="-1" role="dialog" aria-labelledby="rollsModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog modal-lg" role="document">  {# large, lists 10–20 rows comfortably #}
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Review Roll Lengths" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="rolls-receipt-id" value="">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped mb-0">
+            <thead>
+              <tr>
+                <th style="width:44%">{% trans "Roll" %}</th>
+                <th style="width:28%">{% trans "Length Reported (m)" %}</th>
+                <th style="width:28%">{% trans "Length Confirmed (m)" %}</th>
+              </tr>
+            </thead>
+            <tbody id="rollsTableBody">
+              {# rows injected by JS #}
+            </tbody>
+          </table>
+        </div>
+        <small class="text-muted d-block mt-2">
+          {% trans "Adjust lengths if needed. These values will be saved when you confirm the materials receipt." %}
+        </small>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="saveRollsDraftBtn" class="btn btn-primary">
+          {% trans "Confirm" %}
+        </button>
+        {# Note: Final save happens on the main Confirm (Review) modal submit; this button lets you save edits as draft if desired #}
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Build a roll label like: "Roll (Red Cotton 1.60m #12)"
+  function rollLabel(r) {
+    const parts = [];
+    if (r.name) parts.push(`#${r.name}`);
+    if (r.color) parts.push(r.color);
+    if (r.fabric) parts.push(r.fabric);
+    if (r.width) parts.push(`${r.width}m`);
+    return `${parts.join(' ')}`;
+  }
+
+  // Inject rows into the rolls table
+  function renderRolls(rows) {
+    const tbody = document.getElementById('rollsTableBody');
+    tbody.innerHTML = '';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+
+      const tdInfo = document.createElement('td');
+      tdInfo.textContent = rollLabel(r);
+
+      const tdLength = document.createElement('td');
+      const lengthSpan = document.createElement('span');
+      lengthSpan.textContent = (r.length_t ?? '') === '' ? '—' : r.length_t;
+      tdLength.appendChild(lengthSpan);
+
+      const tdLen = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.step = '0.01';
+      inp.min = '0';
+      inp.className = 'form-control form-control-sm';
+      inp.value = r.length_t ?? '';
+      inp.dataset.rollId = r.id;        // 👈 capture id
+      inp.dataset.field = 'length_t';   // we edit length_t
+      tdLen.appendChild(inp);
+
+      tr.appendChild(tdInfo);
+      tr.appendChild(tdLength);
+      tr.appendChild(tdLen);
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Collect edited rolls from the table
+  function collectEditedRolls() {
+    const inputs = document.querySelectorAll('#rollsTableBody input[data-roll-id]');
+    const arr = [];
+    inputs.forEach(inp => {
+      const id = parseInt(inp.dataset.rollId, 10);
+      const val = inp.value.trim(); // Only send numeric values; allow empty -> null
+      arr.push({
+        id: id,
+        length_t: (val === '' ? null : parseFloat(val))
+      });
+    });
+    return arr;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const SAVE_ROLLS_URL = "{% url 'material_receipt_rolls_save' %}";  // /api/material_receipt_rolls/save/
+
+    // --- Open main Review modal with data ---
+    document.querySelectorAll(".review-btn").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const reported = this.dataset.reportedQty;
+        const cost = this.dataset.cost;
+        const confirmUrl = this.dataset.confirmUrl;
+
+        document.getElementById("fixed-qty").value = reported || '';
+        document.getElementById("cost").value = cost || '';
+        document.getElementById("confirm-url").value = confirmUrl;
+
+        // Also remember which receipt is being confirmed (for tying to rolls)
+        const recId = this.dataset.receiptId;
+        document.getElementById("rolls-receipt-id").value = recId || '';
+      });
+    });
+
+    // --- Open Rolls modal & fetch rolls for the receipt (via /api/material_receipt_rolls/?receipt_id=ID) ---
+    document.querySelectorAll(".review-rolls-btn").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const receiptId = this.dataset.receiptId;
+        document.getElementById("rolls-receipt-id").value = receiptId;
+
+        const url = `/production/api/material_receipt_rolls/${encodeURIComponent(receiptId)}`;
+
+        fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) {
+            alert(data.message || "Error fetching rolls");
+            return;
+          }
+          // Expected: { success: true, rolls: [{id, color, fabric, width, name, length_t}, ...] }
+          renderRolls(data.rolls || []);
+        })
+        .catch(err => alert("Error: " + err.message));
+      });
+    });
+
+    // --- Optional: Save rolls edits as draft (POST /api/material_receipt_rolls/save/) ---
+    const draftBtn = document.getElementById("saveRollsDraftBtn");
+    if (draftBtn) {
+      draftBtn.addEventListener("click", function () {
+        const receiptId = document.getElementById("rolls-receipt-id").value;
+        const rollsPayload = collectEditedRolls();
+        if (!receiptId) {
+          alert("No receipt selected.");
+          return;
+        }
+
+        fetch(SAVE_ROLLS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ receipt_id: receiptId, rolls: rollsPayload })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            // Don’t reload; keep user in the modal
+            alert("{% trans 'Rolls saved.' %}");
+            window.location.reload();
+          } else {
+            alert(data.message || "Error saving rolls");
+          }
+        })
+        .catch(err => alert("Error: " + err.message));
+      });
+    }
+
+    // --- Submit Confirm (sets confirmed_qty & status=confirmed, and also persists roll edits if any) ---
+    document.getElementById("fix-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const url = document.getElementById("confirm-url").value; // existing confirm endpoint
+      const fixedQty = document.getElementById("fixed-qty").value;
+      const cost = document.getElementById("cost").value;
+
+      // Include any roll edits (may be empty array)
+      const rollsPayload = collectEditedRolls();
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          confirmed_qty: fixedQty,
+          cost: cost,
+          rolls: rollsPayload
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || "Error confirming receipt");
+        }
+      })
+      .catch(err => alert("Error: " + err.message));
+    });
+
+    // --- Delete receipt (unchanged) ---
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", function () {
+        if (!confirm("{% trans 'Are you sure you want to delete?' %}")) return;
+        const url = this.dataset.deleteUrl;
+
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || "Error deleting receipt");
+          }
+        })
+        .catch(err => alert("Error: " + err.message));
+      });
+    });
+  });
+</script>
+{% endblock %}

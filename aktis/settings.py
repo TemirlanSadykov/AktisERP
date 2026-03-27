@@ -222,6 +222,12 @@ AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
 AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
 AWS_S3_ADDRESSING_STYLE = "virtual"
 
+TEMPLATES[0]["OPTIONS"]["context_processors"] += [
+    "production.context_processors.client_scope",
+    "production.context_processors.warehouse_scope",
+    "production.context_processors.supplier_scope",
+]
+
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,

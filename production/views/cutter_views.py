@@ -138,7 +138,7 @@ class OrderListCutterView(ListView):
             queryset = queryset.filter(
                 Q(model__name__icontains=search_query) |
                 Q(color__icontains=search_query) |
-                Q(fabrics__icontains=search_query)
+                Q(fabric__icontains=search_query)
             )
 
         return queryset
@@ -175,7 +175,7 @@ class OrderDetailCutterView(DetailView):
             # Prefetch order's size quantities with related color/fabrics.
             Prefetch(
                 'size_quantities',
-                queryset=SizeQuantity.objects.select_related('color', 'fabrics').order_by('size')
+                queryset=SizeQuantity.objects.select_related('color', 'fabric').order_by('size')
             ),
             # Prefetch cuts, annotate total_layers from passports, and prefetch their related objects.
             Prefetch(
@@ -189,7 +189,7 @@ class OrderDetailCutterView(DetailView):
                         queryset=Passport.objects.prefetch_related(
                             Prefetch(
                                 'size_quantities',
-                                queryset=SizeQuantity.objects.select_related('color', 'fabrics')
+                                queryset=SizeQuantity.objects.select_related('color', 'fabric')
                             )
                         )
                     )
@@ -207,7 +207,7 @@ class OrderDetailCutterView(DetailView):
         all_sizes_set = set()
         for sq in order.size_quantities.all():
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)  # relies on __str__ of these models.
+            key = (sq.color, sq.fabric)  # relies on __str__ of these models.
             pivot_data.setdefault(key, {})[sq.size] = sq.quantity
 
         try:
@@ -237,7 +237,7 @@ class OrderDetailCutterView(DetailView):
             aggregated_colors = set()
             for passport in cut.passports.all():
                 colors = {psq.color.name for psq in passport.size_quantities.all() if psq.color}
-                fabrics = {psq.fabrics.name for psq in passport.size_quantities.all() if psq.fabrics}
+                fabrics = {psq.fabric.name for psq in passport.size_quantities.all() if psq.fabric}
                 aggregated_colors.update(colors)
                 passport_list.append({
                     'passport_id': passport.id,
@@ -457,7 +457,7 @@ class PassportCreateView(CreateView):
         color_id, fabric_id = combination.split("|")
         matching_cut_sizes = cut.cut_sizes.filter(
             size_quantity__color_id=color_id,
-            size_quantity__fabrics_id=fabric_id
+            size_quantity__fabric_id=fabric_id
         )
 
         for cut_size in matching_cut_sizes:

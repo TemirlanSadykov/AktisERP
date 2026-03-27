@@ -130,7 +130,7 @@ class OrderListPackerView(ListView):
             queryset = queryset.filter(
                 Q(model__name__icontains=search_query) |
                 Q(color__icontains=search_query) |
-                Q(fabrics__icontains=search_query)
+                Q(fabric__icontains=search_query)
             )
 
         return queryset
@@ -173,7 +173,7 @@ class OrderDetailPackerView(DetailView):
 
         for sq in required_qs:
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)  # tuple key based on color and fabric
+            key = (sq.color, sq.fabric)  # tuple key based on color and fabric
             if key not in pivot_data:
                 pivot_data[key] = {}
                 pivot_data_checked[key] = {}
@@ -257,7 +257,7 @@ def manual_pack_page(request):
 def get_order_table_data_packer(request, order_id):
     try:
         order = Order.objects.get(id=order_id)
-        required_qs = order.size_quantities.all().order_by('color__name', 'fabrics__name', 'size')
+        required_qs = order.size_quantities.all().order_by('color__name', 'fabric__name', 'size')
         
         pivot_data = {}
         all_sizes_set = set()
@@ -266,7 +266,7 @@ def get_order_table_data_packer(request, order_id):
         
         for sq in required_qs:
             all_sizes_set.add(sq.size)
-            key = f"{sq.color} {sq.fabrics}"
+            key = f"{sq.color} {sq.fabric}"
             
             # Build the pivot mapping: key → {size: required quantity}
             if key not in pivot_data:
@@ -292,7 +292,7 @@ def get_order_table_data_packer(request, order_id):
         # Build packed_counts mapping: key → {size: packed value}
         packed_counts = {}
         for sq in required_qs:
-            key = f"{sq.color} {sq.fabrics}"
+            key = f"{sq.color} {sq.fabric}"
             if key not in packed_counts:
                 packed_counts[key] = {}
             packed_counts[key][sq.size] = sq.packed if sq.packed is not None else 0
@@ -452,7 +452,7 @@ def update_packed_by_sku(request, sku):
             size_qty_data.append({
                 'sku': qty.sku,
                 'color': str(qty.color),
-                'fabrics': str(qty.fabrics),
+                'fabric': str(qty.fabric),
                 'size': qty.size,
                 'quantity': qty.quantity,
                 'packed': qty.packed if qty.packed is not None else 0,

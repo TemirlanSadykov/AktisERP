@@ -126,8 +126,19 @@ class UserProfile(CompanyAwareModel):
     def __str__(self):
         return f"{self.employee_id} - {self.user.first_name}"
 
+class Assortment(CompanyAwareModel):
+    name = models.CharField(max_length=100, verbose_name='Название')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
+    def __str__(self):
+        return self.name
+
 class Client(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Имя')
+    pin = models.CharField(max_length=20, null=True, blank=True, verbose_name='ИНН')
+    assortments = models.ManyToManyField(Assortment, related_name='assortments', verbose_name='Категории', blank=True)
+    contact_info = models.TextField(null=True, blank=True, verbose_name='Контактные данные')
+    bank_account = models.CharField(max_length=255, null=True, blank=True, verbose_name='Расчетный счет')
     description = models.TextField(null=True, blank=True, verbose_name='Описание')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
@@ -146,7 +157,7 @@ class Color(CompanyAwareModel):
     def __str__(self):
         return self.name
     
-class Fabrics(CompanyAwareModel):
+class Fabric(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
 
@@ -213,13 +224,6 @@ class Operation(CompanyAwareModel):
                 self.company.refresh_from_db(fields=['last_operation_number'])
                 self.number = self.company.last_operation_number
         super().save(*args, **kwargs)
-    
-class Assortment(CompanyAwareModel):
-    name = models.CharField(max_length=100, verbose_name='Название')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return self.name
 
 class Model(CompanyAwareModel):
     name = models.CharField(max_length=100, verbose_name='Название')
@@ -242,19 +246,19 @@ class ModelOperation(CompanyAwareModel):
 class SizeQuantity(CompanyAwareModel):
     model = models.ForeignKey(Model, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Модель')
     size = models.CharField(max_length=10, verbose_name='Размер', null=True, blank=True)
-    quantity = models.IntegerField(verbose_name='Количество', null=True, blank=True)
-    factual = models.IntegerField(verbose_name='Факт', null=True, blank=True)
-    checked = models.IntegerField(verbose_name='Проверено', null=True, blank=True)
-    packed = models.IntegerField(verbose_name='Упаковано', null=True, blank=True)
-    shipped = models.IntegerField(verbose_name='Отправлено', null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=0, verbose_name='Количество')
+    factual  = models.PositiveIntegerField(default=0, verbose_name='Факт')
+    checked  = models.PositiveIntegerField(default=0, verbose_name='Проверено')
+    packed   = models.PositiveIntegerField(default=0, verbose_name='Упаковано')
+    shipped  = models.PositiveIntegerField(default=0, verbose_name='Отправлено')
     color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Цвет')
-    fabrics = models.ForeignKey(Fabrics, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
+    fabric = models.ForeignKey(Fabric, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Ткань')
     sku = models.CharField(max_length=50, verbose_name='SKU', null=True, blank=True)
     production_complete = models.BooleanField(default=False, verbose_name='Производство завершено')
     shipment_complete = models.BooleanField(default=False, verbose_name='Отправка завершено')
     
     def __str__(self):
-        return f"{self.model} {self.color} {self.fabrics} {self.size}"
+        return f"{self.model} {self.color} {self.fabric} {self.size}"
     
 class ClientOrder(CompanyAwareModel):
     order_number = models.CharField(max_length=100, verbose_name='Название')
@@ -284,7 +288,7 @@ class Order(CompanyAwareModel):
     client_order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='orders', verbose_name='Заказ клиента')
     model = models.ForeignKey(Model, on_delete=models.CASCADE, related_name='orders', verbose_name='Модель')
     colors = models.ManyToManyField(Color, related_name='orders', blank=True, verbose_name='Цвета')
-    fabrics = models.ManyToManyField(Fabrics, related_name='orders', blank=True, verbose_name='Ткани')
+    fabrics = models.ManyToManyField(Fabric, related_name='orders', blank=True, verbose_name='Ткани')
     NEW = 0
     IN_PROGRESS = 1
     COMPLETED = 2
@@ -345,20 +349,22 @@ class CutSize(CompanyAwareModel):
     
     def __str__(self):
         return f"{self.size_quantity.size} - {self.extra}"
-
-class Supplier(CompanyAwareModel):
-    name = models.CharField(max_length=100, verbose_name='Имя')
-    description = models.TextField(null=True, blank=True, verbose_name='Описание')
-    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
-
-    def __str__(self):
-        return self.name
     
 class Category(CompanyAwareModel):
     name = models.CharField(max_length=255)
     is_fabric = models.BooleanField(default=False, verbose_name='Is Fabric')
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
     
+    def __str__(self):
+        return self.name
+
+class Supplier(CompanyAwareModel):
+    name = models.CharField(max_length=100, verbose_name='Имя')
+    categories = models.ManyToManyField(Category, related_name='categories', verbose_name='Категории', blank=True)
+    contact_info = models.TextField(null=True, blank=True, verbose_name='Контактные данные')
+    description = models.TextField(null=True, blank=True, verbose_name='Описание')
+    is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+
     def __str__(self):
         return self.name
 
@@ -378,7 +384,7 @@ class Item(CompanyAwareModel):
 
     # Roll-specific fields
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
-    fabric = models.ForeignKey(Fabrics, on_delete=models.SET_NULL, null=True, blank=True)
+    fabric = models.ForeignKey(Fabric, on_delete=models.SET_NULL, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
     width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -391,8 +397,8 @@ class Item(CompanyAwareModel):
 class Roll(CompanyAwareModel):
     roll_batch = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='rolls', verbose_name='Рулоны', null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='rolls', verbose_name='Цвет')
-    fabric = models.ForeignKey(Fabrics, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик')
+    fabric = models.ForeignKey(Fabric, on_delete=models.CASCADE, related_name='rolls', verbose_name='Ткань')
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='rolls', verbose_name='Поставщик', null=True, blank=True)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='rolls', verbose_name='Клиент', null=True, blank=True)
     name = models.PositiveIntegerField(null=True, blank=True, verbose_name='Номер рулона')
     length_t = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Длина Т (м)', null=True, blank=True)
@@ -408,6 +414,13 @@ class Roll(CompanyAwareModel):
         related_name='remainders'
     )
     is_used = models.BooleanField(default=False, verbose_name='Is Used')
+    material_receipt = models.ForeignKey(
+        'MaterialReceipt',
+        related_name='rolls',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name='Materials Receipt'
+    )
 
     @property
     def length_u(self):
@@ -487,22 +500,20 @@ class Stock(CompanyAwareModel):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
     RAW_MATERIALS = 0
-    FINSHED_GOODS = 1
+    FINISHED_GOODS = 1
     ROLLS = 2
     TYPE_CHOICES = [
         (RAW_MATERIALS, 'Сырье'),
-        (FINSHED_GOODS, 'Готовая продукция'),
+        (FINISHED_GOODS, 'Готовая продукция'),
         (ROLLS, 'Рулоны')
     ]
     type = models.IntegerField(choices=TYPE_CHOICES, default=RAW_MATERIALS, verbose_name='Тип')
-    last_cost = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True,
-        verbose_name='Последняя цена закупки'
+    last_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Последняя цена закупки')
+    last_supplied_date = models.DateTimeField(null=True, blank=True, verbose_name='Дата последней поставки')
+    last_supplier = models.ForeignKey(
+        Supplier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Последний поставщик'
     )
-    last_supplied_date = models.DateTimeField(
-        null=True, blank=True,
-        verbose_name='Дата последней поставки'
-    )
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, verbose_name='Клиент', null=True, blank=True)
     # Inventory-specific fields:
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     warehouse = models.ForeignKey(
@@ -513,48 +524,33 @@ class Stock(CompanyAwareModel):
         related_name='inventory_stock'
     )
     is_archived = models.BooleanField(default=False, verbose_name='Is Archived')
+        
+    @property
+    def item_category(self):
+        obj = self.content_object
+        # if content_object is an Item
+        if hasattr(obj, "category"):
+            return getattr(obj.category, "name", str(obj.category))
+        return None
     
+    @property
+    def item_sku(self):
+        obj = self.content_object
+        # if content_object is an Item
+        if hasattr(obj, "sku"):
+            return obj.sku
+
+    @property
+    def item_unit(self):
+        obj = self.content_object
+        # if content_object is an Item
+        if hasattr(obj, "unit"):
+            return obj.unit
+
+        return None
     def __str__(self):
         return f"{self.content_object} - {self.quantity}"
     
-class StockMovement(CompanyAwareModel):
-    MOVEMENT_TYPES = (
-       ('IN', 'Incoming'),
-       ('OUT', 'Outgoing'),
-       ('ADJ', 'Adjustment'),
-       ('TRF', 'Transfer'),
-    )
-    
-    # Reference to the inventory record being moved
-    stock = models.ForeignKey(
-        Stock,
-        on_delete=models.CASCADE,
-        related_name='stock_movements'
-    )
-    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    # For transfers, you can record where the movement originates and where it goes.
-    from_warehouse = models.ForeignKey(
-        Warehouse,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='outgoing_movements'
-    )
-    to_warehouse = models.ForeignKey(
-        Warehouse,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='incoming_movements'
-    )
-    
-    note = models.TextField(null=True, blank=True)
-    
-    def __str__(self):
-        return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"
-
 class BillOfMaterials(CompanyAwareModel):
     sizequantity = models.ForeignKey(
         SizeQuantity,
@@ -598,9 +594,11 @@ class ProductionReceipt(CompanyAwareModel):
     # Workflow
     DRAFT     = "draft"      # created by packer, waiting for keeper review
     CONFIRMED = "confirmed"  # keeper checked / edited quantity, ready to post
+    POSTED    = "posted"
     STATUS_CHOICES = [
         (DRAFT,     "Draft"),
-        (CONFIRMED, "Confirmed")
+        (CONFIRMED, "Confirmed"),
+        (POSTED, "Posted")
     ]
 
     # Links
@@ -609,6 +607,14 @@ class ProductionReceipt(CompanyAwareModel):
         related_name="receipts",
         on_delete=models.CASCADE,
         verbose_name="Размер-кол-во"
+    )
+
+    warehouse = models.ForeignKey(
+        Warehouse,
+        related_name="production_receipts",
+        on_delete=models.SET_NULL,
+        verbose_name="Warehouse",
+        null=True, blank=True
     )
 
     # Quantities
@@ -621,6 +627,9 @@ class ProductionReceipt(CompanyAwareModel):
         null=True, blank=True,
         verbose_name="Подтверждённое кол-во"
     )
+
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, verbose_name='Поставщик', null=True, blank=True)
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, verbose_name='Клиент', null=True, blank=True)
 
     # Workflow status
     status    = models.CharField(
@@ -636,3 +645,146 @@ class ProductionReceipt(CompanyAwareModel):
 
     def __str__(self):
         return f"Receipt #{self.pk} – {self.size_quantity} ({self.status})"
+
+class MaterialReceipt(CompanyAwareModel):
+    """
+    Records the delivery of materials (fabrics, accessories, others) from a supplier.
+    Inventory is updated only after a receipt is posted.
+    """
+
+    # Workflow statuses
+    DRAFT     = "draft"
+    CONFIRMED = "confirmed"
+    POSTED    = "posted"
+    STATUS_CHOICES = [
+        (DRAFT, "Draft"),
+        (CONFIRMED, "Confirmed"),
+        (POSTED, "Posted"),
+    ]
+
+    # Links
+    item = models.ForeignKey(
+        Item,
+        related_name="material_receipts",
+        on_delete=models.CASCADE,
+        verbose_name="Item"
+    )
+    supplier = models.ForeignKey(
+        Supplier,
+        related_name="material_receipts",
+        on_delete=models.SET_NULL,
+        verbose_name="Supplier", 
+        null=True, blank=True
+    )
+    warehouse = models.ForeignKey(
+        Warehouse,
+        related_name="material_receipts",
+        on_delete=models.SET_NULL,
+        verbose_name="Warehouse", 
+        null=True, blank=True
+    )
+    client = models.ForeignKey(
+        Client,
+        related_name="material_receipts",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name="Client"
+    )
+    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Cost per unit")
+    # Quantities
+    reported_qty = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        verbose_name="Reported quantity"
+    )
+    confirmed_qty = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        null=True, blank=True,
+        verbose_name="Confirmed quantity"
+    )
+
+    # Workflow fields
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=DRAFT,
+        verbose_name="Status"
+    )
+    posted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Posted at"
+    )
+
+    note = models.TextField(null=True, blank=True, verbose_name="Note")
+
+    def __str__(self):
+        return f"MaterialReceipt #{self.pk} – {self.item.name} ({self.status})"
+    
+class StockMovement(CompanyAwareModel):
+    MOVEMENT_TYPES = (
+       ('IN', 'Incoming'),
+       ('OUT', 'Outgoing'),
+       ('ADJ', 'Adjustment'),
+       ('TRF', 'Transfer'),
+    )
+    REASONS = (
+        ('purchase', 'Purchase'),
+        ('prod_receipt', 'Production Receipt'),
+        ('consume', 'Consume'),
+        ('transfer', 'Transfer'),
+        ('cycle_count', 'Cycle Count'),
+        ('damage', 'Damage'),
+        ('return_supplier', 'Return to Supplier'),
+        ('return_customer', 'Customer Return'),
+        ('correction', 'Correction'),
+    )
+    # Reference to the inventory record being moved
+    stock = models.ForeignKey(
+        Stock,
+        on_delete=models.CASCADE,
+        related_name='stock_movements'
+    )
+    reason = models.CharField(max_length=32, choices=REASONS, null=True, blank=True)
+    movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    material_receipt   = models.ForeignKey(MaterialReceipt,   on_delete=models.SET_NULL, null=True, blank=True, related_name='movements')
+    production_receipt = models.ForeignKey(ProductionReceipt, on_delete=models.SET_NULL, null=True, blank=True, related_name='movements')
+    # For transfers, you can record where the movement originates and where it goes.
+    from_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='outgoing_movements'
+    )
+    to_warehouse = models.ForeignKey(
+        Warehouse,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='incoming_movements'
+    )
+    
+    note = models.TextField(null=True, blank=True)
+    
+    @property
+    def receipt_date(self):
+        if self.material_receipt:
+            return self.material_receipt.created_at
+        elif self.production_receipt:
+            return self.production_receipt.created_at
+        else:
+            return None
+
+    @property
+    def receipt(self):
+        if self.material_receipt:
+            return self.material_receipt.id
+        elif self.production_receipt:
+            return self.production_receipt.id
+        else:
+            return None
+        
+    def __str__(self):
+        return f"{self.get_movement_type_display()} of {self.quantity} for {self.stock}"

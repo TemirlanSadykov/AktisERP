@@ -113,7 +113,7 @@ class OrderListAccountantView(ListView):
             queryset = queryset.filter(
                 Q(model__name__icontains=search_query) |
                 Q(color__icontains=search_query) |
-                Q(fabrics__icontains=search_query)
+                Q(fabric__icontains=search_query)
             )
             
         return queryset
@@ -156,7 +156,7 @@ def ajax_get_model_sizes(request):
     if model_id:
         size_quantities = SizeQuantity.objects.filter(model_id=model_id)
         for sq in size_quantities:
-            label = f"{sq.color.name if sq.color else ''} {sq.fabrics.name if sq.fabrics else ''} {sq.size or ''}"
+            label = f"{sq.color.name if sq.color else ''} {sq.fabric.name if sq.fabric else ''} {sq.size or ''}"
             sizes_data.append({
                 "id": sq.id,
                 "label": label,

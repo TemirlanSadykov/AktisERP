@@ -25,15 +25,15 @@
 <div class="container clients-wrapper maincontr">
   {% comment %} <div class="clients-container"> {% endcomment %}
       <div class="clients-header">
-        <span class="operation-text">{% trans "Fabrics" %}</span>
-          <a href="{% url 'fabrics_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
-          <a href="{% url 'archived_fabrics_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+        <span class="operation-text">{% trans "Fabric" %}</span>
+          <a href="{% url 'fabric_create' %}" class="btn create-btn mr-2 ">{% trans "Create" %}</a>
+          <a href="{% url 'archived_fabric_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
       </div>
       <ul class="clients-list">
-        {% for fabrics in fabrics %}
-        <a href="{% url 'fabrics_detail' fabrics.pk %}">
+        {% for fabric in fabrics %}
+        <a href="{% url 'fabric_detail' fabric.pk %}">
         <li class="list-group-item listequal">
-            {{ fabrics.name }}
+            {{ fabric.name }}
           </li>
         </a>
           {% endfor %}

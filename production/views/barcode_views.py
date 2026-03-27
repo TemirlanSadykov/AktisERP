@@ -43,7 +43,7 @@ class QRPassportSize(View):
                 date = passport.cut.date
                 model = passport.cut.order.model.name
                 color = passport_size.size_quantity.color if passport_size.size_quantity.color else "-"
-                fabrics = passport_size.size_quantity.fabrics if passport_size.size_quantity.fabrics else "-"
+                fabric = passport_size.size_quantity.fabric if passport_size.size_quantity.fabric else "-"
                 size_text = (f"{passport_size.size_quantity.size} - {passport_size.extra}"
                              if passport_size.extra else passport_size.size_quantity.size)
                 total_quantity = passport_size.quantity
@@ -66,7 +66,7 @@ class QRPassportSize(View):
                     p.drawString(10, text_start_height - 25, f"Крой-Паспорт: {passport}")
                     p.drawString(10, text_start_height - 50, f"Модель: {model}")
                     p.drawString(10, text_start_height - 75, f"Цвет: {color}")
-                    p.drawString(10, text_start_height - 100, f"Ткань: {fabrics}")
+                    p.drawString(10, text_start_height - 100, f"Ткань: {fabric}")
                     p.drawString(10, text_start_height - 125, f"Размер: {size_text}")
                     p.drawString(10, text_start_height - 150, f"Единица: {piece_number}/{total_quantity}")
 

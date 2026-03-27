@@ -39,6 +39,9 @@
         #additionalSubmenu .list-group-item {
             font-size: 0.85rem; /* Adjust this value as needed */
         }
+        #ordersSubmenu .list-group-item {
+            font-size: 0.85rem; /* Adjust this value as needed */
+        }
     </style>
 
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
@@ -110,6 +113,70 @@
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
+                {% if sidebar_type == 'keeper' %}
+                <!-- Client scope selector (global, session-based) -->
+                <form action="{% url 'set_client_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
+                {% csrf_token %}
+                <select name="client_id" class="form-control form-control-sm" onchange="this.form.submit()" style="margin-top:10px;">
+                    <option value="all" {% if current_client_id == 'all' %}selected{% endif %}>
+                    {% trans 'Все клиенты' %}
+                    </option>
+                    <option value="shared" {% if current_client_id == 'shared' %}selected{% endif %}>
+                    {% trans 'Без клиента' %}
+                    </option>
+                    {% for c in clients %}
+                    <option value="{{ c.id }}" {% if current_client_id == c.id|stringformat:'s' %}selected{% endif %}>
+                        {{ c.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                </form>
+                {# --- Warehouse scope selector (global, session-based) --- #}
+                <form action="{% url 'set_warehouse_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
+                {% csrf_token %}
+                <select name="warehouse_id"
+                        class="form-control form-control-sm"
+                        onchange="this.form.submit()"
+                        style="margin-top:8px;">
+                    <option value="all" {% if current_warehouse_id == 'all' %}selected{% endif %}>
+                    {% trans 'Все склады' %}
+                    </option>
+                    {# Optional: show entries with no warehouse; uncomment if you support it server-side
+                    <option value="none" {% if current_warehouse_id == 'none' %}selected{% endif %}>
+                    {% trans 'Без склада' %}
+                    </option>
+                    #}
+                    {% for w in warehouses %}
+                    <option value="{{ w.id }}" {% if current_warehouse_id == w.id|stringformat:'s' %}selected{% endif %}>
+                        {{ w.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                </form>
+
+                {# --- Supplier scope selector (global, session-based) --- #}
+                <form action="{% url 'set_supplier_scope' %}" method="post" class="px-2 pb-2" style="width:222px;">
+                {% csrf_token %}
+                <select name="supplier_id"
+                        class="form-control form-control-sm"
+                        onchange="this.form.submit()"
+                        style="margin-top:8px; margin-bottom:4px;">
+                    <option value="all" {% if current_supplier_id == 'all' %}selected{% endif %}>
+                    {% trans 'Все поставщики' %}
+                    </option>
+                    {# Optional: suppliers-null bucket if supported
+                    <option value="none" {% if current_supplier_id == 'none' %}selected{% endif %}>
+                    {% trans 'Без поставщика' %}
+                    </option>
+                    #}
+                    {% for s in suppliers %}
+                    <option value="{{ s.id }}" {% if current_supplier_id == s.id|stringformat:'s' %}selected{% endif %}>
+                        {{ s.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                </form>
+                {% endif %}
 
                 {% if sidebar_type == 'technology' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">
@@ -146,22 +213,22 @@
                         <span class="sidetext">{% trans 'Additional' %}</span>
                     </a>
                     <div class="collapse show" id="additionalSubmenu">
-                        <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                        <a href="{% url 'assortment_list' %}" class="list-group-item list-group-item-action text-black ">
                             {% trans 'Assortments' %}
                         </a>
-                        <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                        <a href="{% url 'client_list' %}" class="list-group-item list-group-item-action text-black ">
                             {% trans 'Clients' %}
                         </a>
-                        <a href="{% url 'color_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                        <a href="{% url 'color_list' %}" class="list-group-item list-group-item-action text-black ">
                             {% trans 'Colors' %}
                         </a>
-                        <a href="{% url 'fabrics_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                        <a href="{% url 'fabric_list' %}" class="list-group-item list-group-item-action text-black ">
                             {% trans 'Fabrics' %}
                         </a>
-                        <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                        <a href="{% url 'node_list' %}" class="list-group-item list-group-item-action text-black ">
                             {% trans 'Nodes' %}
                         </a>
-                        <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black ml-4">
+                        <a href="{% url 'equipment_list' %}" class="list-group-item list-group-item-action text-black ">
                             {% trans 'Equipment' %}
                         </a>
                     </div>
@@ -265,60 +332,115 @@
                 </div>
                 {% elif sidebar_type == 'keeper' %}
                     <div id="sidebar" class="list-group list-group-flush sidenavres">
-                        <a href="{% url 'client_order_list_keeper' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-home fa-fw"></i><span class="sidetext">{% trans 'Home' %}</span></a>
-                        <a href="{% url 'receipt_list' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-sign-in-alt fa-fw"></i><span class="sidetext">{% trans 'Logs' %}</span></a>
-                        <a href="{% url 'stock_list' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-layer-group fa-fw"></i><span class="sidetext">{% trans 'Stocks' %}</span></a>
-                        <a href="{% url 'stock_movement' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-truck-moving fa-fw"></i><span class="sidetext">{% trans 'Stock Movement' %}</span></a>
-                        {% comment %} <a href="{% url 'item_list' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset" data-id="Models">
-                            <i class="fas fa-paperclip fa-fw"></i><span class="sidetext">{% trans 'Items' %}</span></a> {% endcomment %}
-                        <a href="#" 
-                            class="list-group-item list-group-item-action text-black collapsesidebarset" 
-                            data-toggle="collapse" 
-                            aria-expanded="true" 
-                            aria-controls="additionalSubmenu">
-                            <i class="fas fa-plus fa-fw"></i>
-                            <span class="sidetext">{% trans 'Additional' %}</span>
+                        <!-- ORDERS -->
+                        <a href="#"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset">
+                            <i class="fas fa-clipboard-list fa-fw"></i>
+                            <span class="sidetext">{% trans 'Заказы' %}</span>
                         </a>
                         <div class="collapse show" id="additionalSubmenu">
-                            <a href="{% url 'supplier_list' %}" class="list-group-item list-group-item-action text-black ml-4">
-                                {% trans 'Suppliers' %}
+                            <a href="{% url 'client_order_list_keeper' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Список' %}
                             </a>
-                            <a href="{% url 'category_list' %}" class="list-group-item list-group-item-action text-black ml-4">
-                                {% trans 'Category' %}
+                            {% comment %} <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Готовые к отправке' %}
                             </a>
-                            <a href="{% url 'item_list' %}" class="list-group-item list-group-item-action text-black ml-4">
-                                {% trans 'Items' %}
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Отправка' %}
                             </a>
-                            <a href="{% url 'warehouse_list' %}" class="list-group-item list-group-item-action text-black ml-4">
-                                {% trans 'Warehouses' %}
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Журнал Отправок' %}
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Возврат' %}
+                            </a> {% endcomment %}
+                        </div>
+
+                        <!-- FINISHED GOODS -->
+                        <a href="#"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset">
+                            <i class="fas fa-box fa-fw"></i>
+                            <span class="sidetext">{% trans 'Продукция' %}</span>
+                        </a>
+                        <div class="collapse show" id="additionalSubmenu">
+                            <a href="{% url 'stock_list_finished' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Готовые изделия' %}
+                            </a>
+                            <a href="{% url 'receipt_list' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Приемка' %}
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Возвраты' %}
+                            </a>
+                            <a href="{% url 'stock_movements_fg'%}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Движение запасов' %}
                             </a>
                         </div>
+
+                        <!-- MATERIALS -->
+                        <a href="#"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset">
+                            <i class="fas fa-layer-group fa-fw"></i>
+                            <span class="sidetext">{% trans 'Сырье' %}</span>
+                        </a>
+                        <div class="collapse show" id="additionalSubmenu">
+                            <a href="{% url 'stock_list_rolls' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Ткани' %}
+                            </a>
+                            <a href="{% url 'stock_list_raw' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Фурнитура' %}
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Запчасти' %}
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Другие' %}
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Остатки' %}
+                            </a>
+                            <a href="{% url 'material_receipt_list' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Приемка' %}
+                            </a>
+                            <a href="{% url 'stock_movements_raw'%}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Движение запасов' %}
+                            </a>
+                        </div>
+
+                        <!-- MASTERS -->
+                        <a href="#"
+                        class="list-group-item list-group-item-action text-black collapsesidebarset">
+                            <i class="fas fa-cogs fa-fw"></i>
+                            <span class="sidetext">{% trans 'Дополнительно' %}</span>
+                        </a>
+                        <div class="collapse show" id="additionalSubmenu">
+                            <a href="{% url 'supplier_list' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Поставщики' %}
+                            </a>
+                            <a href="{% url 'warehouse_list' %}" class="list-group-item list-group-item-action text-black ">
+                                {% trans 'Склады' %}
+                            </a>
+                        </div>
+
+                        <!-- Return links -->
                         {% if request.user.userprofile.type == 0 %}
                         <a href="{% url 'admin_page' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
-                            data-id="Return">
+                        class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
+                        data-id="Return">
                             <i class="fas fa-backward fa-fw"></i>
                             <span class="sidetext">{% trans 'Return' %}</span>
                         </a>
-                        {% endif %}  
+                        {% endif %}
                         {% if request.user.userprofile.type == 3 %}
                         <a href="{% url 'cutter_page' %}"
-                            class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
-                            data-id="Return">
+                        class="list-group-item list-group-item-action text-black collapsesidebarset sidebar-return"
+                        data-id="Return">
                             <i class="fas fa-backward fa-fw"></i>
                             <span class="sidetext">{% trans 'Return' %}</span>
                         </a>
-                        {% endif %}              
-                </div>
+                        {% endif %}
+                    </div>
+
                 {% comment %} {% elif sidebar_type == 'keeper' %}
                 <div id="sidebar" class="list-group list-group-flush sidenavres">
                     <a href="{% url 'user_redirect' %}"

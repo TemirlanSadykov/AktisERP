@@ -28,7 +28,9 @@
     <table class="table table-bordered table-striped align-middle">
       <thead>
         <tr>
-          <th>{% trans "Date" %}</th>
+          <th>{% trans "Receive Date" %}</th>
+          <th>{% trans "Accept Date" %}</th>
+          <th>{% trans "Receipt" %}</th>
           <th>{% trans "Type" %}</th>
           <th>{% trans "Item" %}</th>
           <th>{% trans "Quantity" %}</th>
@@ -40,7 +42,9 @@
       <tbody>
         {% for m in movements %}
         <tr>
-          <td><strong>{{ m.created_at|date:"Y-m-d H:i" }}</strong></td>
+          <td>{{ m.material_receipt.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ m.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ m.receipt }}</td>
           <td>
             {% if m.movement_type == 'IN' %}
               <span class="badge bg-success">{% trans "Incoming" %}</span>

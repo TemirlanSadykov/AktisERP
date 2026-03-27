@@ -53,7 +53,7 @@
                     {% endif %}
                     {% if passport.passport_sizes.all %}
                       {% with ps=passport.passport_sizes.all.0 %}
-                        {{ ps.size_quantity.fabrics }}
+                        {{ ps.size_quantity.fabric }}
                       {% endwith %}
                     {% else %}
                       -

@@ -8,6 +8,7 @@ from django.db import transaction
 from collections import defaultdict
 from django.contrib.auth import authenticate
 from django.forms import inlineformset_factory
+from django.utils.text import slugify
 
 import json
 from .models import *
@@ -51,7 +52,13 @@ class CustomLoginForm(forms.Form):
     def get_user(self):
         return self.cleaned_data.get('user')
 
-class UserWithProfileForm(UserCreationForm):
+def _company_token(name: str) -> str:
+    # keep only letters/numbers, lowercased; fallback to "company" if empty
+    token = slugify(name or "")  # e.g. "Acme Inc" -> "acme-inc"
+    token = "".join(ch for ch in token if ch.isalnum())
+    return token or "company"
+
+class UserWithProfileForm(forms.ModelForm):
     first_name = forms.CharField(
         max_length=30,
         required=True,
@@ -73,14 +80,9 @@ class UserWithProfileForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
-
     class Meta:
         model = User
-        fields = ('employee_id', 'first_name', 'last_name', 'password1', 'password2')
+        fields = ('employee_id', 'first_name', 'last_name')  # no passwords
 
     def clean_employee_id(self):
         employee_id = self.cleaned_data.get('employee_id')
@@ -93,25 +95,39 @@ class UserWithProfileForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+
+        # Names
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        # Retrieve the current company from thread-local storage.
+
+        # Company context
         current_company = get_current_company()
         if not current_company:
             raise ValueError("No company found in context.")
+
         employee_id = self.cleaned_data['employee_id']
-        # Generate the username in the same manner as in employee_upload.
+
+        # Username consistent with your bulk-upload logic
         user.username = f"{current_company.id}-{employee_id}"
+
+        # --- Auto-generate password: 123{company_name}321 ---
+        company_token = _company_token(getattr(current_company, 'name', ''))
+        raw_password = f"123{company_token}321"
+        user.set_password(raw_password)
         if commit:
             user.save()
             UserProfile.objects.create(
                 user=user,
                 employee_id=employee_id,
                 type=self.cleaned_data['type'],
+                company=current_company,  # include if your model expects it
             )
+
+        # expose for view (optional, if you want to show/notify)
+        self.generated_password = raw_password
         return user
 
-class UserWithProfileTechnologistForm(UserCreationForm):
+class UserWithProfileTechnologistForm(forms.ModelForm):
     first_name = forms.CharField(
         max_length=30,
         required=True,
@@ -133,16 +149,18 @@ class UserWithProfileTechnologistForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
+    class Meta:
+        model = User
+        fields = ('employee_id', 'first_name', 'last_name')  # no passwords here
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['password1'].widget.attrs.update({'class': 'form-control'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+        # exclude ADMIN from selectable types
         self.fields['type'].choices = [
-            (value, label) for value, label in UserProfile.TYPE_CHOICES if value != UserProfile.ADMIN
+            (value, label)
+            for value, label in UserProfile.TYPE_CHOICES
+            if value != UserProfile.ADMIN
         ]
-    class Meta:
-        model = User
-        fields = ('employee_id', 'first_name', 'last_name', 'password1', 'password2')
 
     def clean_employee_id(self):
         employee_id = self.cleaned_data.get('employee_id')
@@ -155,24 +173,38 @@ class UserWithProfileTechnologistForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+
+        # Names
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        # Retrieve the current company from thread-local storage.
+
+        # Company context
         current_company = get_current_company()
         if not current_company:
             raise ValueError("No company found in context.")
+
         employee_id = self.cleaned_data['employee_id']
-        # Generate the username in the same manner as in employee_upload.
+
+        # Username consistent with bulk-upload logic
         user.username = f"{current_company.id}-{employee_id}"
+
+        # Auto-generate password: 123{company_name}321
+        company_token = _company_token(getattr(current_company, 'name', ''))
+        raw_password = f"123{company_token}321"
+        user.set_password(raw_password)
+
         if commit:
             user.save()
             UserProfile.objects.create(
                 user=user,
                 employee_id=employee_id,
                 type=self.cleaned_data['type'],
+                company=current_company,  # ensure company is set
             )
-        return user
 
+        # expose generated password for the view (optional)
+        self.generated_password = raw_password
+        return user
 class UserEditForm(forms.ModelForm):
     employee_id = forms.CharField(
         max_length=100,
@@ -360,8 +392,8 @@ class CutForm(forms.ModelForm):
                 size_val = cs.size_quantity.size
                 groups[size_val].append(cs)
             for size_val, records in groups.items():
-                # Determine the unique (color, fabrics) combinations for these records.
-                unique_combos = set((cs.size_quantity.color, cs.size_quantity.fabrics) for cs in records)
+                # Determine the unique (color, fabric) combinations for these records.
+                unique_combos = set((cs.size_quantity.color, cs.size_quantity.fabric) for cs in records)
                 # If there are duplicates from multiple color/fabric combinations,
                 # assume each combination should contribute the same number.
                 if unique_combos:
@@ -435,7 +467,7 @@ class PassportForm(forms.ModelForm):
             unique_combinations = set()
             for cut_size in cut.cut_sizes.all():
                 color = cut_size.size_quantity.color
-                fabric = cut_size.size_quantity.fabrics
+                fabric = cut_size.size_quantity.fabric
                 unique_combinations.add((color.id, fabric.id, str(color), str(fabric)))
             choices = [
                 (f"{color_id}|{fabric_id}", f"{color_name} {fabric_name}")
@@ -603,11 +635,44 @@ class ModelCustomForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['name', 'description']
+        fields = [
+            'name',
+            'pin',
+            'assortments',
+            'contact_info',
+            'bank_account',
+            'description',
+        ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
-            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Name'
+            }),
+            'pin': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ИНН'
+            }),
+            'assortments': forms.SelectMultiple(attrs={
+                'class': 'form-control'
+            }),
+            'contact_info': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact Information',
+                'rows': 3
+            }),
+            'bank_account': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Bank Account'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Description',
+                'rows': 3
+            }),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['assortments'].queryset = Assortment.objects.filter(is_archived=False).order_by('name')
 
 class ClientOrderForm(forms.ModelForm):
     class Meta:
@@ -653,7 +718,7 @@ class OrderForm(forms.ModelForm):
         super(OrderForm, self).__init__(*args, **kwargs)
         self.fields['model'].queryset = Model.objects.filter(is_archived=False).order_by('name')
         self.fields['colors'].queryset = Color.objects.filter(is_archived=False).order_by('name')
-        self.fields['fabrics'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabrics'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
 
         # Make certain fields optional in the form
         self.fields['model'].required = False
@@ -685,12 +750,12 @@ class ColorForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter color name'}),
         }
 
-class FabricsForm(forms.ModelForm):
+class FabricForm(forms.ModelForm):
     class Meta:
-        model = Fabrics
+        model = Fabric
         fields = ['name']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabrics name'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter fabric name'}),
         }
 
 class SizeQuantityChoiceField(forms.ModelChoiceField):
@@ -707,11 +772,35 @@ class UploadFileForm(forms.Form):
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['name', 'description']
+        fields = [
+            'name',
+            'categories',
+            'contact_info',
+            'description',
+        ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
-            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Name'
+            }),
+            'categories': forms.SelectMultiple(attrs={
+                'class': 'form-control'
+            }),
+            'contact_info': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact Information',
+                'rows': 3
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Description',
+                'rows': 3
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['categories'].queryset = Category.objects.filter(is_archived=False).order_by('name')
 
 class RollForm(forms.ModelForm):
     class Meta:
@@ -719,8 +808,6 @@ class RollForm(forms.ModelForm):
         fields = [
             'color',
             'fabric',
-            'supplier',
-            'client',
             'length_t',
             'width',
             'weight',
@@ -728,8 +815,6 @@ class RollForm(forms.ModelForm):
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
             'length_t': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Длина Т (м)'}),
             'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
             'weight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Вес (кг)'}),
@@ -737,9 +822,7 @@ class RollForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
-        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
-        self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
-        self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
         # Prepend an "Add New Equipment" option.
         color_choices = list(self.fields['color'].choices)
         self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
@@ -748,17 +831,10 @@ class RollForm(forms.ModelForm):
         fabric_choices = list(self.fields['fabric'].choices)
         self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
 
-        # Prepend an "Add New Node" option.
-        supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
-
-        client_choices = list(self.fields['client'].choices)
-        self.fields['client'].choices = [("add_new", "[ДОБАВИТЬ]")] + client_choices
-
 class BulkRollForm(forms.ModelForm):
     quantity = forms.IntegerField(
-        min_value=1, 
-        label="Quantity", 
+        min_value=1,
+        label="Quantity",
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity'})
     )
     price = forms.DecimalField(
@@ -766,50 +842,61 @@ class BulkRollForm(forms.ModelForm):
         label="Price",
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'})
     )
-    
+    sku = forms.CharField(
+        max_length=100, required=False,
+        label="SKU",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU'})
+    )
+
+    # Extra fields (not in Roll model)
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.none(), required=False, label="Supplier",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    client = forms.ModelChoiceField(
+        queryset=Client.objects.none(), required=False, label="Client",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.none(), required=False, label="Category",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = Roll
-        # We only need the following fields from the Roll model for bulk creation.
-        # In this case, color, fabric, supplier come from the initial selection,
-        # while weight is provided per roll in the table.
         fields = [
             'color',
             'fabric',
-            'supplier',
-            'client',
             'width',
-            'price'
+            'price',
+            'sku',
         ]
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
-            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'})
+            'width': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ширина (м)'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Price'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
-        # Remove any 'instance' passed in so that ModelForm does not complain
         kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
-        # Use the same choices as RollForm for consistency.
         self.fields['color'].queryset = Color.objects.filter(is_archived=False).order_by('name')
-        self.fields['fabric'].queryset = Fabrics.objects.filter(is_archived=False).order_by('name')
+        self.fields['fabric'].queryset = Fabric.objects.filter(is_archived=False).order_by('name')
         self.fields['supplier'].queryset = Supplier.objects.filter(is_archived=False).order_by('name')
         self.fields['client'].queryset = Client.objects.filter(is_archived=False).order_by('name')
+        self.fields['category'].queryset = Category.objects.filter(is_fabric=True, is_archived=False).order_by('name')
 
-        # Prepend an "Add New" option (same as in RollForm)
+        # Prepend "Add New" options
+        category_choices = list(self.fields['category'].choices)
+        self.fields['category'].choices = [("add_new", "[ДОБАВИТЬ]")] + category_choices
+
         color_choices = list(self.fields['color'].choices)
         self.fields['color'].choices = [("add_new", "[ДОБАВИТЬ]")] + color_choices
 
         fabric_choices = list(self.fields['fabric'].choices)
         self.fields['fabric'].choices = [("add_new", "[ДОБАВИТЬ]")] + fabric_choices
-
-        supplier_choices = list(self.fields['supplier'].choices)
-        self.fields['supplier'].choices = [("add_new", "[ДОБАВИТЬ]")] + supplier_choices
-
-        client_choices = list(self.fields['client'].choices)
-        self.fields['client'].choices = [("add_new", "[ДОБАВИТЬ]")] + client_choices
 
 class BulkStockForm(forms.ModelForm):
     # how many rows you want
@@ -836,22 +923,21 @@ class BulkStockForm(forms.ModelForm):
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'category', 'unit']
+        fields = ['name', 'sku', 'category', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU'}),
             'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit'}),
         }
 
 class FabricItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['color', 'fabric', 'width', 'supplier', 'client', 'category']
+        fields = ['color', 'fabric', 'width', 'category']
         widgets = {
             'color': forms.Select(attrs={'class': 'form-control'}),
             'fabric': forms.Select(attrs={'class': 'form-control'}),
             'width': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Width'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'client': forms.Select(attrs={'class': 'form-control'}),
         }
 
 class WarehouseForm(forms.ModelForm):

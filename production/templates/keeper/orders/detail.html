@@ -40,7 +40,7 @@
               {% trans "No colors selected" %}
             {% endfor %}
           </p>
-          <p><strong>{% trans "Fabrics:" %}</strong>
+          <p><strong>{% trans "Fabric:" %}</strong>
             {% for fabric in order.fabrics.all %}
               {{ fabric }}{% if not forloop.last %}, {% endif %}
             {% empty %}
@@ -54,122 +54,171 @@
         <div class="col-md-5 text-center">
           {% if order.model.photo %}
             <div class="operation-photo">
-              <img src="{{ order.model.photo.url }}" id="enlargePhoto" alt="{% trans 'Model Photo' %}" style="cursor:pointer;" class="img-fluid">
+              <img src="{{ order.model.photo.url }}" alt="{% trans 'Model Photo' %}">
             </div>
           {% else %}
-            <img src="{% static 'img/noimg1.png' %}" id="enlargePhoto" alt="Model Image" style="cursor:pointer;" class="img-fluid">
+            <img src="{% static 'img/noimg1.png' %}" alt="Model Image" class="img-fluid">
           {% endif %}
-        </div>
-        <div class="modal" id="photoModal" style="display: none; position: fixed; z-index: 1050; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center;">
-          <div style="max-width: 95vw; max-height: 94vh; display: flex; align-items: center; justify-content: center;">
-            {% if order.model.photo %}
-              <img src="{{ order.model.photo.url }}" class="img-fluid rounded" alt="{% trans 'Model Photo' %}" style="max-height: 94vh; max-width: 100%; border: 5px solid white;">
-            {% else %}
-              <img src="{% static 'img/noimg1.png' %}" class="img-fluid rounded" alt="{% trans 'Model Photo' %}" style="max-height: 94vh; max-width: 100%; border: 5px solid white;">
-            {% endif %}
-          </div>
         </div>
       </div>
     </div>
   </div>
-  <!-- Shipment Table -->
+  <!-- BOM per SizeQuantity -->
   <div class="container maincontr mt-4">
-    <h3>{% trans "Shipment Table" %}</h3>
-    <div class="table-responsive">
+  <h3>{% trans "Таблица Нехваток" %}</h3>
+  {% for sq in size_quantities %}
+    <h4>{{ sq.color.name }} {{ sq.fabric.name }} {{ sq.size }}</h4>
+    <div class="table-responsive mb-4">
       <table class="table table-bordered">
         <thead>
           <tr>
-            <th>{% trans "Color" %}</th>
-            <th>{% trans "Fabric" %}</th>
-            <th>{% trans "Size" %}</th>
-            <th>{% trans "Packed" %}</th>
-            <th>{% trans "Shipped" %}</th>
-            <th>{% trans "Remaining" %}</th>
-            <th>{% trans "Action" %}</th>
+            <th>{% trans "Category" %}</th>
+            <th>{% trans "Item" %}</th>
+            <th>{% trans "Required" %}</th>
+            <th>{% trans "Available" %}</th>
+            <th>{% trans "Missing" %}</th>
+            <th>{% trans "В ожидании" %}</th>  <!-- NEW -->
+            <th>{% trans "Actions" %}</th>
+            <th>{% trans "Remainders" %}</th>
           </tr>
         </thead>
         <tbody>
-          {% for sq in size_quantities %}
-            {% with packed=sq.packed|default:0 shipped=sq.shipped|default:0 %}
+          {% for bom in sq.bill_of_materials.all %}
             <tr>
-              <td>{{ sq.color.name }}</td>
-              <td>{{ sq.fabrics.name }}</td>
-              <td>{{ sq.size }}</td>
-              <td>{{ packed }}</td>
-              <td>{{ shipped }}</td>
-              <td>{{ packed|subtract:shipped }}</td>
-              <td>
-                {% if sq.shipment_complete %}
-                  <button class="btn btn-success btn-sm" style="margin-bottom: 0;" disabled>{% trans "Shipped" %}</button>
-                {% else %}
-                  <form method="post" action="{% url 'shipment_complete' %}">
-                    {% csrf_token %}
-                    <button
-                      class="btn btn-success btn-sm"
-                      style="margin-bottom: 0;"
-                      onclick="submitShipment({{ sq.id }}, {{ packed|subtract:shipped }})"
-                      type="button"
-                    >
-                      {% trans "Ship" %}
-                    </button>                  
-                  </form>
-                {% endif %}
+              <td>{{ bom.item.category.name }}</td>
+              <td>{{ bom.item.name }}</td>
+              <td>{{ bom.required_qty|floatformat:2 }}</td>
+              <td>{{ bom.available_qty|floatformat:2 }}</td>
+              <td class="text-danger font-weight-bold">{{ bom.missing_qty|floatformat:2 }}</td>
+
+              <!-- NEW: Pending -->
+              <td class="text-info font-weight-bold">{{ bom.pending_qty|floatformat:2 }}</td>
+
+              <td class="text-nowrap">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary js-buy-btn"
+                  data-toggle="modal"
+                  data-target="#buyModal"
+                  data-item-id="{{ bom.item_id }}"
+                  data-item-name="{{ bom.item.name|escape }}"
+                  data-item-unit="{{ bom.item.unit|escape }}"
+                  data-sq-id="{{ sq.id }}"
+                  data-order-id="{{ order.id }}"
+                  data-default-qty="{{ bom.missing_qty|floatformat:2 }}"
+                >
+                  {% trans "Докупить" %}
+                </button>
+              </td>
+
+              <td style="max-width:160px;">
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  step="0.01"
+                  name="remainder_{{ sq.id }}_{{ bom.item_id }}"
+                  placeholder="{% trans 'Enter remainder' %}"
+                />
               </td>
             </tr>
-            {% endwith %}
           {% empty %}
             <tr>
-              <td colspan="7" class="text-center text-muted">{% trans "No size quantities available." %}</td>
+              <td colspan="8" class="text-center text-muted">
+                {% trans "No materials defined." %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+  {% endfor %}
+  </div>
+</div>
+{# ---- Buy Modal ---- #}
+<div class="modal fade" id="buyModal" data-backdrop="false" tabindex="-1" role="dialog" aria-labelledby="buyModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <form method="post" action="{% url 'complete_purchase' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="buyModalLabel">{% trans "Создать заявку на докупку" %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{% trans 'Close' %}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="mb-1 text-muted">{% trans "Материал" %}</label>
+            <div id="buy-item-display" class="font-weight-bold">—</div>
+          </div>
+
+          <div class="form-group">
+            <label for="buy-supplier">{% trans "Поставщик" %}</label>
+            <select id="buy-supplier" name="supplier_id" class="form-control" required>
+              <option value="" selected disabled>— {% trans "Выберите поставщика" %} —</option>
+              {% for s in suppliers %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="buy-qty">{% trans "Количество" %}</label>
+            <input id="buy-qty" name="quantity" type="number" step="0.01" min="0" class="form-control" required />
+          </div>
+
+          <div class="form-group">
+            <label for="buy-cost">{% trans "Цена за единицу измерения" %}</label>
+            <input id="buy-cost" name="cost" type="number" step="0.01" min="0" class="form-control" required />
+          </div>
+
+          {# Hidden context #}
+          <input type="hidden" name="order_id" id="buy-order-id" />
+          <input type="hidden" name="sizequantity_id" id="buy-sq-id" />
+          <input type="hidden" name="item_id" id="buy-item-id" />
+        </div>
+
+        <div class="modal-buttons">
+          <button type="submit" class="btn save">{% trans "Создать" %}</button>
+          <button type="button" class="btn cancel" data-dismiss="modal">{% trans "Отменить" %}</button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 <script>
-  const photoTrigger = document.getElementById('enlargePhoto');
-  const photoModal = document.getElementById('photoModal');
+document.addEventListener('DOMContentLoaded', function () {
+  var buttons = document.querySelectorAll('.js-buy-btn');
+  var itemDisplay = document.getElementById('buy-item-display');
+  var supplierSelect = document.getElementById('buy-supplier');
+  var qtyInput = document.getElementById('buy-qty');
 
-  photoTrigger.addEventListener('click', function () {
-    if (photoModal.style.display === 'none' || photoModal.style.display === '') {
-      photoModal.style.display = 'flex';
-    } else {
-      photoModal.style.display = 'none';
-    }
-  });
+  var orderInput = document.getElementById('buy-order-id');
+  var sqInput = document.getElementById('buy-sq-id');
+  var itemInput = document.getElementById('buy-item-id');
 
-  photoModal.addEventListener('click', function (e) {
-    if (e.target === photoModal) {
-      photoModal.style.display = 'none';
-    }
-  });
-</script>
-<script>
-  function submitShipment(sqId, quantity) {
-    fetch("{% url 'shipment_complete' %}", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-      body: JSON.stringify({
-        size_quantity_id: sqId,
-        quantity: quantity
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        location.reload(); // Reload to show updated status
-      } else {
-        alert(data.message || "Shipment failed.");
-      }
-    })
-    .catch(error => {
-      alert("Error: " + error);
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var itemId = this.getAttribute('data-item-id');
+      var itemName = this.getAttribute('data-item-name');
+      var itemUnit = this.getAttribute('data-item-unit');
+      var sqId = this.getAttribute('data-sq-id');
+      var orderId = this.getAttribute('data-order-id');
+      var defaultQty = this.getAttribute('data-default-qty');
+
+      itemDisplay.textContent = itemName + ' (' + itemUnit + ')' || '—';
+      orderInput.value = orderId;
+      sqInput.value = sqId;
+      itemInput.value = itemId;
+      qtyInput.value = defaultQty;
+
+      // Reset supplier selection each time
+      if (supplierSelect) supplierSelect.selectedIndex = 0;
     });
-  }
+  });
+});
 </script>
+
 
 {% endblock %}

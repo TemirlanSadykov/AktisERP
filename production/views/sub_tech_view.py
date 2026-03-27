@@ -128,7 +128,7 @@ class OrderDetailSubView(DetailView):
             # Prefetch order's size quantities with related color/fabrics.
             Prefetch(
                 'size_quantities',
-                queryset=SizeQuantity.objects.select_related('color', 'fabrics').order_by('size')
+                queryset=SizeQuantity.objects.select_related('color', 'fabric').order_by('size')
             ),
             # Prefetch cuts, annotate total_layers from passports, and prefetch their related objects.
             Prefetch(
@@ -142,7 +142,7 @@ class OrderDetailSubView(DetailView):
                         queryset=Passport.objects.prefetch_related(
                             Prefetch(
                                 'size_quantities',
-                                queryset=SizeQuantity.objects.select_related('color', 'fabrics')
+                                queryset=SizeQuantity.objects.select_related('color', 'fabric')
                             )
                         )
                     )
@@ -160,7 +160,7 @@ class OrderDetailSubView(DetailView):
         all_sizes_set = set()
         for sq in order.size_quantities.all():
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)  # relies on __str__ of these models.
+            key = (sq.color, sq.fabric)  # relies on __str__ of these models.
             pivot_data.setdefault(key, {})[sq.size] = sq.quantity
 
         try:
@@ -190,7 +190,7 @@ class OrderDetailSubView(DetailView):
             aggregated_colors = set()
             for passport in cut.passports.all():
                 colors = {psq.color.name for psq in passport.size_quantities.all() if psq.color}
-                fabrics = {psq.fabrics.name for psq in passport.size_quantities.all() if psq.fabrics}
+                fabrics = {psq.fabric.name for psq in passport.size_quantities.all() if psq.fabric}
                 aggregated_colors.update(colors)
                 passport_list.append({
                     'passport_id': passport.id,
@@ -264,11 +264,7 @@ def assign_operations_by_cut_sub(request, cut_id):
                         employee_id_input = entry.strip()
                         quantity = total_quantity
 
-                    employee_profile = UserProfile.objects.filter(
-                        employee_id=employee_id_input,
-                        type=UserProfile.EMPLOYEE,
-                        
-                    ).first()
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input).first()
                     if not employee_profile:
                         raise Exception(f"Employee not found.")
 

@@ -1,0 +1,126 @@
+{# keeper/stocks/raw_materials_list.html #}
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+  <button class="navbar-toggler" type="button" id="menu-toggle" aria-label="Toggle sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+  <h4 class="navfont" style="color:#232323; margin:auto;">{% trans "Фурнитура" %}</h4>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display:inline;">
+    <ul class="navbar-nav ml-auto mt-2 mt-lg-0 navres">
+      <li class="nav-item dropdown" style="margin:10px;">{{ request.user.username }}</li>
+      <li class="nav-item dropdown">
+        <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+          <button type="submit" class="btn btn-primary">{% trans 'Logout' %}</button>
+        </form>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container clients-wrapper maincontr" style="max-width:100%;">
+  <div class="clients-header">
+    <span class="operation-text">{% trans "Фурнитура" %}</span>
+    <a href="{% url 'stock_create' %}" class="btn create-btn mr-2">{% trans "Create" %}</a>
+    <a href="{% url 'archived_stocks_list' %}" class="btn create-btn">{% trans "Archived" %}</a>
+  </div>
+  {% include "keeper/stocks/_category_tabs.html" %}
+    <table id="stocksTable" class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>{% trans "Last Supplied" %}</th>
+          <th>{% trans "Category" %}</th>
+          <th>{% trans "SKU" %}</th>
+          <th>{% trans "Item" %}</th>
+          <th>{% trans "Last Supplier" %}</th>
+          <th>{% trans "Client" %}</th>
+          <th>{% trans "Price" %}</th>
+          <th>{% trans "Quantity" %}</th>
+          <th>{% trans "Unit" %}</th>
+          <th>{% trans "Warehouse" %}</th>
+          <th>{% trans "QR Code" %}</th>
+          <th>{% trans "Actions" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in stocks %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              {% if stock.last_supplied_date %}
+                {{ stock.last_supplied_date|date:"Y-m-d H:i" }}
+              {% else %}&mdash;{% endif %}
+            </td>
+            <td>{{ stock.item_category }}</td>
+            <td>{{ stock.item_sku }}</td>
+            <td>{{ stock.content_object }}</td>
+            <td>{{ stock.last_supplier }}</td>
+            <td>{{ stock.client|default:"—" }}</td>
+            <td>
+              {% if stock.last_cost %}
+                {{ stock.last_cost }}
+              {% else %}&mdash;{% endif %}
+            </td>
+            <td>{{ stock.quantity }}</td>
+            <td>{{ stock.item_unit }}</td>
+            <td>
+              {% if stock.warehouse %}{{ stock.warehouse }}{% else %}&mdash;{% endif %}
+            </td>
+            <td>
+              {% if stock.pk %}
+                <a href="#" target="_blank" rel="noopener">
+                  {% trans "Download" %}
+                </a>
+              {% else %}&mdash;{% endif %}
+            </td>
+            <td>
+              <div class="d-flex" style="gap:5px;">
+                <a class="btn btn-sm btn-primary w-100" style="margin-bottom:0;"
+                        href="{% url 'stock_detail' stock.pk %}">
+                  {% trans "View" %}
+                </a>
+                <button class="btn btn-sm btn-secondary w-100 edit-item-btn" style="margin-bottom:0;"
+                        data-stock-id="{{ stock.pk }}">
+                  {% trans "Edit" %}
+                </button>
+                <button class="btn btn-sm btn-danger delete-stock-btn"
+                        data-stock-id="{{ stock.pk }}"
+                        data-item-name="{{ stock.content_object }}">
+                  {% trans "Delete" %}
+                </button>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="14">{% trans "No stocks available." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">&laquo; first</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; previous</a></li>
+      {% endif %}
+      {% for num in paginator.page_range %}
+        <li class="page-item">
+          <a class="page-link {% if page_obj.number == num %}active{% endif %}" href="?page={{ num }}">{{ num }}</a>
+        </li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">next &rsaquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">last &raquo;</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% include "keeper/stocks/_edit_delete_modals.html" %}
+
+{% endblock %}

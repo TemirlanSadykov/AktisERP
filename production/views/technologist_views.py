@@ -420,7 +420,7 @@ class OrderListView(ListView):
             queryset = queryset.filter(
                 Q(model__name__icontains=search_query) |
                 Q(color__icontains=search_query) |
-                Q(fabrics__icontains=search_query)
+                Q(fabric__icontains=search_query)
             )
 
         return queryset
@@ -454,10 +454,10 @@ class OrderDetailView(DetailView):
 
     def get_queryset(self):
         return Order.objects.prefetch_related(
-            # Prefetch order's size quantities with related color/fabrics.
+            # Prefetch order's size quantities with related color/fabric.
             Prefetch(
                 'size_quantities',
-                queryset=SizeQuantity.objects.select_related('color', 'fabrics').order_by('size')
+                queryset=SizeQuantity.objects.select_related('color', 'fabric').order_by('size')
             ),
             # Prefetch cuts, annotate total_layers from passports, and prefetch their related objects.
             Prefetch(
@@ -471,7 +471,7 @@ class OrderDetailView(DetailView):
                         queryset=Passport.objects.prefetch_related(
                             Prefetch(
                                 'size_quantities',
-                                queryset=SizeQuantity.objects.select_related('color', 'fabrics')
+                                queryset=SizeQuantity.objects.select_related('color', 'fabric')
                             )
                         )
                     )
@@ -489,7 +489,7 @@ class OrderDetailView(DetailView):
         all_sizes_set = set()
         for sq in order.size_quantities.all():
             all_sizes_set.add(sq.size)
-            key = (sq.color, sq.fabrics)  # relies on __str__ of these models.
+            key = (sq.color, sq.fabric)  # relies on __str__ of these models.
             pivot_data.setdefault(key, {})[sq.size] = sq.quantity
 
         try:
@@ -519,7 +519,7 @@ class OrderDetailView(DetailView):
             aggregated_colors = set()
             for passport in cut.passports.all():
                 colors = {psq.color.name for psq in passport.size_quantities.all() if psq.color}
-                fabrics = {psq.fabrics.name for psq in passport.size_quantities.all() if psq.fabrics}
+                fabrics = {psq.fabric.name for psq in passport.size_quantities.all() if psq.fabric}
                 aggregated_colors.update(colors)
                 passport_list.append({
                     'passport_id': passport.id,
@@ -545,6 +545,7 @@ class OrderDetailView(DetailView):
         context.update({
             'pivot_data': pivot_data,   # Pivoted required quantities.
             'all_sizes': all_sizes,     # Sorted list of sizes for header.
+            'first_sq': order.size_quantities.order_by('id').first(),  # For BOM link.
             'days_left': days_left,
             'associated_cuts': associated_cuts,
             'cut_details': cut_details, # Detailed cut info including aggregated colors, sizes, and total layers.
@@ -612,7 +613,7 @@ class OrderCreateView(CreateView):
 
             # Lookup the color and fabric objects.
             color = Color.objects.filter(pk=color_id).first() if color_id else None
-            fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
+            fabric = Fabric.objects.filter(pk=fabric_id).first() if fabric_id else None
             model = order.model
             if color:
                 used_colors.add(color)
@@ -634,7 +635,7 @@ class OrderCreateView(CreateView):
                         model=model,
                         sku=sku,  # Save SKU along with quantity.
                         color=color,
-                        fabrics=fabric
+                        fabric=fabric
                     )
                     order.size_quantities.add(size_qty)
             row += 1
@@ -655,7 +656,7 @@ class OrderCreateView(CreateView):
         context['sidebar_type'] = 'technology'
         # Pass available colors and fabrics (and sizes) for use in the template.
         context['colors'] = Color.objects.filter(is_archived=False).order_by('name')
-        context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
+        context['fabrics'] = Fabric.objects.filter(is_archived=False).order_by('name')
         context['models'] = Model.objects.filter(is_archived=False).order_by('name')
         return context
     
@@ -678,7 +679,7 @@ def add_color_api(request):
 @require_POST
 @login_required
 def add_fabric_api(request):
-    form = FabricsForm(request.POST)
+    form = FabricForm(request.POST)
     if form.is_valid():
         fabric = form.save()
         data = {
@@ -702,7 +703,7 @@ class OrderUpdateView(UpdateView):
         context['client_order_pk'] = self.object.client_order.pk
         context['sidebar_type'] = 'technology'
         context['colors'] = Color.objects.filter(is_archived=False).order_by('name')
-        context['fabrics'] = Fabrics.objects.filter(is_archived=False).order_by('name')
+        context['fabrics'] = Fabric.objects.filter(is_archived=False).order_by('name')
         
         # --- Build the table header & rows from existing size quantities ---
         size_quantities = self.object.size_quantities.all()
@@ -715,7 +716,7 @@ class OrderUpdateView(UpdateView):
         
         rows_dict = {}
         for sq in size_quantities:
-            key = (sq.color_id, sq.fabrics_id)
+            key = (sq.color_id, sq.fabric_id)
             if key not in rows_dict:
                 rows_dict[key] = {}
             # Include sku in the cell data.
@@ -809,7 +810,7 @@ class OrderUpdateView(UpdateView):
 
             # Lookup color and fabric objects.
             color = Color.objects.filter(pk=color_id).first() if color_id else None
-            fabric = Fabrics.objects.filter(pk=fabric_id).first() if fabric_id else None
+            fabric = Fabric.objects.filter(pk=fabric_id).first() if fabric_id else None
 
             if color:
                 used_colors.add(color)
@@ -832,7 +833,7 @@ class OrderUpdateView(UpdateView):
                             sq_obj.factual = quantity_val
                             sq_obj.size = size  # Update header if changed.
                             sq_obj.color = color
-                            sq_obj.fabrics = fabric
+                            sq_obj.fabric = fabric
                             sq_obj.sku = sku_val  # Update SKU.
                             sq_obj.save()
                             processed_sq_ids.add(sq_obj.pk)
@@ -843,7 +844,7 @@ class OrderUpdateView(UpdateView):
                                 factual=quantity_val,
                                 sku=sku_val,
                                 color=color,
-                                fabrics=fabric
+                                fabric=fabric
                             )
                             order.size_quantities.add(sq_obj)
                             processed_sq_ids.add(sq_obj.pk)
@@ -853,7 +854,7 @@ class OrderUpdateView(UpdateView):
                             quantity=quantity_val,
                             sku=sku_val,
                             color=color,
-                            fabrics=fabric
+                            fabric=fabric
                         )
                         order.size_quantities.add(sq_obj)
                         processed_sq_ids.add(sq_obj.pk)
@@ -1053,11 +1054,7 @@ def assign_operations_by_cut(request, cut_id):
                         employee_id_input = entry.strip()
                         quantity = total_quantity
 
-                    employee_profile = UserProfile.objects.filter(
-                        employee_id=employee_id_input,
-                        type=UserProfile.EMPLOYEE,
-                        
-                    ).first()
+                    employee_profile = UserProfile.objects.filter(employee_id=employee_id_input).first()
                     if not employee_profile:
                         raise Exception(f"Employee not found.")
 
@@ -2011,29 +2008,30 @@ class ColorDeleteView(DeleteView):
 
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsListView(ListView):
-    model = Fabrics
-    template_name = 'technologist/fabrics/list.html'
+class FabricListView(ListView):
+    model = Fabric
+    template_name = 'technologist/fabric/list.html'
     context_object_name = 'fabrics'
     paginate_by = 10
 
     def get_queryset(self):
-        return Fabrics.objects.filter(is_archived=False).order_by('name')
+        return Fabric.objects.filter(is_archived=False).order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'technology'
         return context
 
+
 @method_decorator([login_required, technologist_required], name='dispatch')
-class ArchivedFabricsListView(ListView):
-    model = Fabrics
-    template_name = 'technologist/fabrics/list.html'
+class ArchivedFabricListView(ListView):
+    model = Fabric
+    template_name = 'technologist/fabric/list.html'
     context_object_name = 'fabrics'
     paginate_by = 10
 
     def get_queryset(self):
-        return Fabrics.objects.filter(is_archived=True).order_by('name')
+        return Fabric.objects.filter(is_archived=True).order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2041,10 +2039,10 @@ class ArchivedFabricsListView(ListView):
         return context
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsArchiveView(UpdateView):
-    model = Fabrics
-    template_name = 'technologist/fabrics/delete.html'
-    success_url = reverse_lazy('fabrics_list')
+class FabricArchiveView(UpdateView):
+    model = Fabric
+    template_name = 'technologist/fabric/delete.html'
+    success_url = reverse_lazy('fabric_list')
 
     def post(self, request, *args, **kwargs):
         fabric = self.get_object()
@@ -2053,10 +2051,10 @@ class FabricsArchiveView(UpdateView):
         return HttpResponseRedirect(self.success_url)
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsUnArchiveView(UpdateView):
-    model = Fabrics
-    template_name = 'technologist/fabrics/delete.html'
-    success_url = reverse_lazy('fabrics_list')
+class FabricUnArchiveView(UpdateView):
+    model = Fabric
+    template_name = 'technologist/fabric/delete.html'
+    success_url = reverse_lazy('fabric_list')
 
     def post(self, request, *args, **kwargs):
         fabric = self.get_object()
@@ -2065,11 +2063,11 @@ class FabricsUnArchiveView(UpdateView):
         return HttpResponseRedirect(self.success_url)
     
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsCreateView(CreateView):
-    model = Fabrics
-    form_class = FabricsForm
-    template_name = 'technologist/fabrics/create.html'
-    success_url = reverse_lazy('fabrics_list')
+class FabricCreateView(CreateView):
+    model = Fabric
+    form_class = FabricForm
+    template_name = 'technologist/fabric/create.html'
+    success_url = reverse_lazy('fabric_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2077,10 +2075,10 @@ class FabricsCreateView(CreateView):
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsDetailView(DetailView):
-    model = Fabrics
-    template_name = 'technologist/fabrics/detail.html'
-    context_object_name = 'fabrics'
+class FabricDetailView(DetailView):
+    model = Fabric
+    template_name = 'technologist/fabric/detail.html'
+    context_object_name = 'fabric'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2088,11 +2086,11 @@ class FabricsDetailView(DetailView):
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsUpdateView(UpdateView):
-    model = Fabrics
-    form_class = FabricsForm
-    template_name = 'technologist/fabrics/edit.html'
-    success_url = reverse_lazy('fabrics_list')
+class FabricUpdateView(UpdateView):
+    model = Fabric
+    form_class = FabricForm
+    template_name = 'technologist/fabric/edit.html'
+    success_url = reverse_lazy('fabric_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2100,10 +2098,10 @@ class FabricsUpdateView(UpdateView):
         return context
 
 @method_decorator([login_required, technologist_required], name='dispatch')
-class FabricsDeleteView(DeleteView):
-    model = Fabrics
-    template_name = 'technologist/fabrics/delete.html'
-    success_url = reverse_lazy('fabrics_list')
+class FabricDeleteView(DeleteView):
+    model = Fabric
+    template_name = 'technologist/fabric/delete.html'
+    success_url = reverse_lazy('fabric_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -2121,59 +2119,86 @@ def bom_create(request, pk):
     all_sqs = list(order.size_quantities.all().order_by('id'))
     idx = all_sqs.index(size_qty)
 
-    if request.method == 'POST':
-        # Clear previous BOMs
-        size_qty.bill_of_materials.all().delete()
+    # Build ordered (color_id, fabrics_id) group sequence following the same order as all_sqs
+    group_seq = []
+    group_to_first_sq = {}  # (color_id, fabrics_id) -> first SQ (for landing)
+    for sq in all_sqs:
+        key = (sq.color_id, sq.fabric_id)
+        if key not in group_seq:
+            group_seq.append(key)
+            group_to_first_sq[key] = sq
 
+    # Current group key
+    cur_key = (size_qty.color_id, size_qty.fabric_id)
+    cur_group_index = group_seq.index(cur_key)
+
+    if request.method == 'POST':
+        # ---------- parse scope ----------
+        apply_scope = request.POST.get('apply_scope', 'this')  # 'this' | 'same_cf' | 'all_order'
+
+        # ---------- Parse posted rows once ----------
+        rows = []
         row = 0
         while f'row-{row}_item' in request.POST:
-            item_id = request.POST[f'row-{row}_item']
-            qty = request.POST[f'row-{row}_quantity']
-            if item_id and qty:
+            item_id = request.POST.get(f'row-{row}_item')
+            qty_str  = request.POST.get(f'row-{row}_quantity')
+            if item_id and qty_str:
                 item = get_object_or_404(Item, pk=item_id)
-                quantity = Decimal(qty)
-
-                # Create BOM entry
-                BillOfMaterials.objects.create(
-                    sizequantity=size_qty,
-                    item=item,
-                    quantity=quantity
-                )
-
-                # Determine stock type:
-                stock_type = Stock.RAW_MATERIALS
-                if item.category and item.category.is_fabric:
-                    stock_type = Stock.ROLLS
-
-                # Ensure stock exists for this item as RAW_MATERIALS
-                content_type = ContentType.objects.get_for_model(item)
-                exists = Stock.objects.filter(
-                    content_type=content_type,
-                    object_id=item.pk,
-                    type=stock_type,
-                    is_archived=False
-                ).exists()
-
-                if not exists:
-                    default_warehouse = Warehouse.objects.filter(is_archived=False).first()
-                    Stock.objects.create(
-                        content_type=content_type,
-                        object_id=item.pk,
-                        quantity=0,
-                        warehouse=default_warehouse,
-                        is_archived=False,
-                        type=stock_type
-                    )
-
+                quantity = Decimal(qty_str)
+                rows.append((item, quantity))
             row += 1
 
-        # Redirect to next SQ or back to order
-        if idx + 1 < len(all_sqs):
-            return redirect('bom_create', pk=all_sqs[idx + 1].pk)
+        # If nothing was entered, just bounce back
+        if not rows:
+            return redirect('bom_create', pk=size_qty.pk)
 
+        # ---------- Determine target SizeQuantity set ----------
+        if apply_scope == 'same_cf':
+            # same color + fabric as current, across this order
+            target_sqs = order.size_quantities.filter(
+                color_id=size_qty.color_id,
+                fabric_id=size_qty.fabric_id,
+            ).order_by('id')
+        elif apply_scope == 'all_order':
+            # all sizes in this order (color/fabric agnostic)
+            target_sqs = order.size_quantities.all().order_by('id')
+        else:
+            # only this size (current behavior)
+            target_sqs = SizeQuantity.objects.filter(pk=size_qty.pk)
+
+        # ---------- REMOVED: Stock placeholder creation ----------
+
+        # ---------- Apply rows to all targets atomically ----------
+        with transaction.atomic():
+            for sq in target_sqs:
+                sq.bill_of_materials.all().delete()
+                for item, quantity in rows:
+                    BillOfMaterials.objects.create(
+                        sizequantity=sq,
+                        item=item,
+                        quantity=quantity
+                    )
+
+        # ---------- Navigation after write ----------
+        if apply_scope == 'this':
+            # Step to next size within all_sqs; if none, go to order detail
+            if idx + 1 < len(all_sqs):
+                return redirect('bom_create', pk=all_sqs[idx + 1].pk)
+            return redirect('order_detail', pk=order.pk)
+
+        if apply_scope == 'same_cf':
+            # Step to next (color,fabric) group; if none, go to order detail
+            next_group_index = cur_group_index + 1
+            if next_group_index < len(group_seq):
+                next_key = group_seq[next_group_index]
+                next_sq = group_to_first_sq[next_key]  # first SQ of next group
+                return redirect('bom_create', pk=next_sq.pk)
+            return redirect('order_detail', pk=order.pk)
+
+        # apply_scope == 'all_order' → done; go to order detail
         return redirect('order_detail', pk=order.pk)
 
-    # GET: Load categories and items
+    # ---------- GET (unchanged except context additions) ----------
     categories = Category.objects.filter(is_archived=False).order_by('name')
     items = Item.objects.filter(is_archived=False).order_by('name')
     items_by_cat = defaultdict(list)
@@ -2185,9 +2210,9 @@ def bom_create(request, pk):
         boms_qs = all_sqs[idx - 1].bill_of_materials.all()
 
     colors = Color.objects.filter(is_archived=False)
-    fabrics = Fabrics.objects.filter(is_archived=False)
+    fabrics = Fabric.objects.filter(is_archived=False)
     suppliers = Supplier.objects.filter(is_archived=False)
-    clients = Client.objects.filter(is_archived=False)
+    order_client = order.client_order.client if order and order.client_order else None
 
     return render(request, 'technologist/models/bom_create.html', {
         'order': order,
@@ -2199,7 +2224,8 @@ def bom_create(request, pk):
         'colors': colors,
         'fabrics': fabrics,
         'suppliers': suppliers,
-        'clients': clients
+        'order_client': order_client,
+        'cf_hint': f"{getattr(size_qty.color,'name','')}/{getattr(size_qty.fabric,'name','')}",
     })
 
 @require_POST
@@ -2242,6 +2268,7 @@ def add_item_api(request):
             'success': True,
             'item_id': item.id,
             'item_name': item.name,
+            'sku': item.sku,
             'unit': item.unit
         }
         return JsonResponse(data)
@@ -2260,11 +2287,9 @@ def add_fabric_item_api(request):
         # Auto-generate name and unit
         color_name = fabric_item.color.name if fabric_item.color else ''
         fabric_name = fabric_item.fabric.name if fabric_item.fabric else ''
-        supplier_name = fabric_item.supplier.name if fabric_item.supplier else ''
-        client_name = fabric_item.client.name if fabric_item.client else ''
         width_value = f"{fabric_item.width:.2f}" if fabric_item.width else ''
 
-        fabric_item.name = f"{color_name} {fabric_name} {width_value}м для {client_name} от {supplier_name}".strip()
+        fabric_item.name = f"{color_name} {fabric_name} {width_value}м".strip()
         fabric_item.unit = "м"
 
         fabric_item.save()  # Now save
@@ -2298,7 +2323,7 @@ class OrderBomView(DetailView):
                  .prefetch_related('bill_of_materials__item__category')
                  .all()
         )
-
+        context['first_sq'] = context['size_quantities'].first().pk if context['size_quantities'] else None
         context['sidebar_type'] = 'technology'
         return context
 
@@ -2328,10 +2353,10 @@ class EmployeeCreateTechnologistView(CreateView):
     template_name = 'technologist/employees/create.html'
     form_class = UserWithProfileTechnologistForm
     success_url = reverse_lazy('employee_list_technologist')
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['sidebar_type'] = 'technology'
-        return context
+    
+    def form_valid(self, form):
+        messages.success(self.request, "User created successfully.")
+        return super().form_valid(form)
 
 @method_decorator([login_required, technologist_required], name='dispatch')
 class EmployeeDetailTechnologistView(DetailView):

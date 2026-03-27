@@ -74,7 +74,6 @@ urlpatterns = [
     path('keeper/client/orders/', ClientOrderListKeeperView.as_view(), name='client_order_list_keeper'),
     path('keeper/client/orders/<int:pk>/', ClientOrderDetailKeeperView.as_view(), name='client_order_detail_keeper'),
     path('keeper/client/orders/order/<int:pk>/', OrderDetailKeeperView.as_view(), name='order_detail_keeper'),
-    path('keeper/client/orders/order/ship/', shipment_complete, name='shipment_complete'),
 
     path('admin/calendar/', OrderCalendarView.as_view(), name='order_calendar'),
     path('admin/calendar/events/', OrderCalendarEventsView.as_view(), name='order_calendar_events'),
@@ -190,14 +189,14 @@ urlpatterns = [
     path('keeper/color<int:pk>/unarchive/', ColorUnArchiveView.as_view(), name='color_unarchive'), 
     path('keeper/color/<int:pk>/delete/', ColorDeleteView.as_view(), name='color_delete'),
 
-    path('keeper/fabrics/', FabricsListView.as_view(), name='fabrics_list'),
-    path('keeper/fabrics/create/', FabricsCreateView.as_view(), name='fabrics_create'),
-    path('keeper/fabrics/<int:pk>/', FabricsDetailView.as_view(), name='fabrics_detail'),
-    path('keeper/fabrics/<int:pk>/edit/', FabricsUpdateView.as_view(), name='fabrics_edit'),
-    path('keeper/fabrics/archived/', ArchivedFabricsListView.as_view(), name='archived_fabrics_list'),
-    path('keeper/fabrics/<int:pk>/archive/', FabricsArchiveView.as_view(), name='fabrics_archive'),
-    path('keeper/fabrics<int:pk>/unarchive/', FabricsUnArchiveView.as_view(), name='fabrics_unarchive'), 
-    path('keeper/fabrics/<int:pk>/delete/', FabricsDeleteView.as_view(), name='fabrics_delete'),
+    path('keeper/fabric/', FabricListView.as_view(), name='fabric_list'),
+    path('keeper/fabric/create/', FabricCreateView.as_view(), name='fabric_create'),
+    path('keeper/fabric/<int:pk>/', FabricDetailView.as_view(), name='fabric_detail'),
+    path('keeper/fabric/<int:pk>/edit/', FabricUpdateView.as_view(), name='fabric_edit'),
+    path('keeper/fabric/archived/', ArchivedFabricListView.as_view(), name='archived_fabric_list'),
+    path('keeper/fabric/<int:pk>/archive/', FabricArchiveView.as_view(), name='fabric_archive'),
+    path('keeper/fabric<int:pk>/unarchive/', FabricUnArchiveView.as_view(), name='fabric_unarchive'), 
+    path('keeper/fabric/<int:pk>/delete/', FabricDeleteView.as_view(), name='fabric_delete'),
     
     # For name changes
     path('technologist/update-assortment-name/<int:pk>/', update_assortment_name, name='update_assortment_name'),
@@ -222,6 +221,8 @@ urlpatterns = [
     path('api/categories/add/', add_category_api, name='add_category_api'),
     path('api/items/by_category/', items_by_category_api, name='items_by_category_api'),
 
+    path('api/material_receipt_rolls/<receipt_id>', material_receipt_rolls_view, name='material_receipt_rolls'),
+    path('api/material_receipt_rolls/save/', save_material_receipt_rolls_view, name='material_receipt_rolls_save'),
 
     path('api/payment_details/', payment_details_view, name='payment_details'),
     path('api/client_orders/', production_details_view, name='production_details'),
@@ -240,7 +241,11 @@ urlpatterns = [
     path('keeper/suppliers/<int:pk>/unarchive/', SupplierUnArchiveView.as_view(), name='supplier_unarchive'),
 
     path('keeper/stocks/', StockListView.as_view(), name='stock_list'),
-    path('keeper/stocks/stock-movement', StockMovementListView.as_view(), name='stock_movement'),
+    path('keeper/stocks/materials/rolls/', RollsStockListView.as_view(), name='stock_list_rolls'),
+    path('keeper/stocks/materials/raw/', RawMaterialsStockListView.as_view(), name='stock_list_raw'),
+    path('keeper/stocks/finished-goods/', FinishedGoodsStockListView.as_view(), name='stock_list_finished'),
+    path('keeper/stocks/movements/raw/', RawMaterialMovementListView.as_view(), name='stock_movements_raw'),
+    path('keeper/stocks/movements/fg/', FinishedGoodsMovementListView.as_view(), name='stock_movements_fg'),
     path('keeper/stocks/create/', stock_bulk_create, name='stock_create'),
     path('keeper/stocks/<int:pk>/', StockDetailView.as_view(), name='stock_detail'),
     path('keeper/stocks/<int:pk>/edit/', StockUpdateView.as_view(), name='stock_edit'),
@@ -256,8 +261,11 @@ urlpatterns = [
     path('keeper/receipts/<int:receipt_id>/post/', post_receipt, name='post_receipt'),
     path('keeper/receipts/<int:receipt_id>/delete/', delete_receipt, name='delete_receipt'),
 
-    path('keeper/stocks/<int:pk>/bom/detail/', BomDetailView.as_view(), name='bom_detail'),
-    path('keeper/client/orders/order/<int:pk>/bom-deficit/', BomDeficitView.as_view(), name='bom_deficit'),
+    path('keeper/receipts/material/', MaterialReceiptListView.as_view(), name='material_receipt_list'),
+    path('keeper/receipts/material/<int:receipt_id>/post/', post_material_receipt, name='material_receipt_confirm'),
+    path('keeper/receipts/material/<int:receipt_id>/delete/', delete_material_receipt, name='material_receipt_delete'),
+
+    path('keeper/client/orders/order/<int:pk>/bom-deficit/', BomDetailView.as_view(), name='bom_detail'),
 
     path('keeper/warehouses/', WarehouseListView.as_view(), name='warehouse_list'),
     path('keeper/warehouses/create/', WarehouseCreateView.as_view(), name='warehouse_create'),
@@ -309,9 +317,14 @@ urlpatterns = [
     path('packer/ajax/orders/update-packed-quantity/', update_packed_quantity_manually, name='update_packed_quantity_manually'),
     path('packer/ajax/orders/complete-production/', complete_production, name='complete_production'),
 
+    path('keeper/ajax/orders/complete-purchase/', complete_purchase, name='complete_purchase'),
+
     path('accountant/manual_cost_page/', manual_cost_page, name='manual_cost_page'),
     path('accountant/ajax/get-model-sizes/', ajax_get_model_sizes, name='ajax_get_model_sizes'),
     path('accountant/ajax/get-size-cost-data/<int:size_id>/', ajax_get_size_cost_data, name='ajax_get_size_cost_data'),
     path('accountant/ajax/save-costs/', save_costs, name='save_costs'),
 
+    path("set-client-scope/", set_client_scope, name="set_client_scope"),
+    path("set-warehouse-scope/", set_warehouse_scope, name="set_warehouse_scope"),
+    path("set-supplier-scope/", set_supplier_scope, name="set_supplier_scope"),
 ]

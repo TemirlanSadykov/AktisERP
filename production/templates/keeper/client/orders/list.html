@@ -20,16 +20,27 @@
   </nav>
 
   <div class="container maincontr">
-    <!-- Navigation tabs for filtering -->
+    <!-- Status tabs -->
     <ul class="nav nav-tabs" role="tablist">
       <li class="nav-item">
-        <a href="?term=upcoming" class="nav-link {% if term_filter == 'upcoming' or not term_filter %}active{% endif %}" id="upcoming-tab" role="tab" aria-controls="upcoming" aria-selected="true">
-          {% trans 'Upcoming' %}
+        <a href="?status=new"
+          class="nav-link {% if status_filter == "new" %}active{% endif %}"
+          id="status-new" role="tab" aria-selected="{% if status_filter == "new" %}true{% else %}false{% endif %}">
+          {% trans 'На ожидании формирования' %}
         </a>
       </li>
       <li class="nav-item">
-        <a href="?term=passed" class="nav-link {% if term_filter == 'passed' %}active{% endif %}" id="passed-tab" role="tab" aria-controls="passed" aria-selected="false">
-          {% trans 'Passed' %}
+        <a href="?status=in_progress"
+          class="nav-link {% if status_filter == "in_progress" %}active{% endif %}"
+          id="status-inprogress" role="tab" aria-selected="{% if status_filter == "in_progress" %}true{% else %}false{% endif %}">
+          {% trans 'В процессе' %}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="?status=completed"
+          class="nav-link {% if status_filter == "completed" %}active{% endif %}"
+          id="status-completed" role="tab" aria-selected="{% if status_filter == "completed" %}true{% else %}false{% endif %}">
+          {% trans 'Готовые к отправке' %}
         </a>
       </li>
     </ul>
@@ -37,6 +48,7 @@
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="orders" role="tabpanel">
         <br/>
+        <!-- Date range filter (preserves current status) -->
         <div class="form-row align-items-center">
           <form method="get" class="date-filter-form">
             <div class="form-row align-items-center mb-3">
@@ -47,11 +59,12 @@
               <div class="col-auto">
                 <button type="submit" class="btn btn-primary">{% trans 'Filter' %}</button>
               </div>
-              {# Preserve the current term filter when submitting the form #}
-              <input type="hidden" name="term" value="{{ term_filter }}">
+              <!-- preserve status -->
+              <input type="hidden" name="status" value="{{ status_filter }}">
             </div>
           </form>
         </div>
+
         <br /><br />
         <div class="table-responsive">
           <table class="table table-striped">
@@ -74,7 +87,13 @@
                   <td>{{ order_info.order.order_number }}</td>
                   <td>{{ order_info.order.launch }}</td>
                   <td>{{ order_info.order.term }}</td>
-                  <td>{{ order_info.days_left }}</td>
+                  <td>
+                    {% if order_info.days_left is not None %}
+                      {{ order_info.days_left }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
                   <td>
                     <a href="{% url 'client_order_detail_keeper' order_info.order.pk %}" class="btn btn-sm btn-primary">
                       {% trans "View" %}
@@ -94,34 +113,35 @@
     <br />
   </div>
 
+  <!-- Pagination (preserves all current params except page) -->
   <nav aria-label="Page navigation" class="mt-3" style="flex-direction: column !important;">
     {% if is_paginated %}
       <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?term={{ term_filter }}&page=1">&laquo; {% trans 'first' %}</a>
+            <a class="page-link" href="?{{ qs }}&page=1">&laquo; {% trans 'first' %}</a>
           </li>
           <li class="page-item">
-            <a class="page-link" href="?term={{ term_filter }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
+            <a class="page-link" href="?{{ qs }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
           </li>
         {% endif %}
         {% for num in paginator.page_range %}
           {% if page_obj.number == num %}
-            <li class="page-item">
-              <a class="page-link active" href="?term={{ term_filter }}&page={{ num }}">{{ num }}</a>
+            <li class="page-item active">
+              <a class="page-link" href="?{{ qs }}&page={{ num }}">{{ num }}</a>
             </li>
           {% else %}
             <li class="page-item">
-              <a class="page-link" href="?term={{ term_filter }}&page={{ num }}">{{ num }}</a>
+              <a class="page-link" href="?{{ qs }}&page={{ num }}">{{ num }}</a>
             </li>
           {% endif %}
         {% endfor %}
         {% if page_obj.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?term={{ term_filter }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
+            <a class="page-link" href="?{{ qs }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
           </li>
           <li class="page-item">
-            <a class="page-link" href="?term={{ term_filter }}&page={{ paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
+            <a class="page-link" href="?{{ qs }}&page={{ paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
           </li>
         {% endif %}
       </ul>
