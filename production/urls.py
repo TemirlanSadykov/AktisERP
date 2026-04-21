@@ -327,4 +327,6 @@ urlpatterns = [
     path("set-client-scope/", set_client_scope, name="set_client_scope"),
     path("set-warehouse-scope/", set_warehouse_scope, name="set_warehouse_scope"),
     path("set-supplier-scope/", set_supplier_scope, name="set_supplier_scope"),
+
+    path('suppliers/extract/', supplier_extract, name='supplier_extract'),
 ]

@@ -26,7 +26,20 @@
     <div class="col-md-12">
       <!-- <div class="card"> -->
         <div class="card-header">
-          <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Supplier" %}</h2>
+          <div class="row">
+            <div class="col-md-9" style="margin:auto">
+              <h2 class="card-title" style="margin-bottom: 0px !important;">{% trans "Create New Supplier" %}</h2>
+            </div>
+            <div class="col-md-3 text-right">
+              <button type="button"
+                      class="btn completebutton"
+                      data-toggle="modal"
+                      data-target="#extractModal"
+                      >
+                  Extract from file
+              </button>
+            </div>
+          </div>
         </div>
         <div class="card-body">
           <form method="post">
@@ -50,4 +63,72 @@
     </div>
   </div>
 </div>
+<div class="modal fade" id="extractModal" tabindex="-1" data-backdrop="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="extractForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Extract from file</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <input type="file" name="file" id="extract-file" class="form-control" accept=".docx">
+          <div id="extract-status" class="small mt-2 text-muted"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Extract</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById("extractForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const statusEl = document.getElementById("extract-status");
+    const fileInput = document.getElementById("extract-file");
+
+    if (!fileInput.files.length) {
+        statusEl.textContent = "Please select a file.";
+        return;
+    }
+
+    statusEl.textContent = "Extracting…";
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+    fetch("{% url 'supplier_extract' %}", {
+        method: "POST",
+        body: formData,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) {
+            statusEl.textContent = data.error;
+            return;
+        }
+
+        // Pre-fill fields
+        document.getElementById("id_name").value = data.name;
+        document.getElementById("id_contact_info").value = data.contact_info;
+        document.getElementById("id_description").value = data.description;
+
+        // Close modal
+        $('#extractModal').modal('hide');
+        fileInput.value = "";
+        statusEl.textContent = "";
+    })
+    .catch(() => {
+        statusEl.textContent = "Unexpected error.";
+    });
+});
+</script>
+
 {% endblock %}

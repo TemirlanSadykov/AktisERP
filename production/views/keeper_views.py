@@ -21,6 +21,8 @@ from django.db.models import Sum, Prefetch
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
+from docx import Document
+from openai import OpenAI
 
 from ..utils import apply_client_scope
 from ..decorators import keeper_required
@@ -285,7 +287,106 @@ class SupplierCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context['sidebar_type'] = 'keeper'
         return context
+    
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+def extract_text_from_docx(file_obj):
+    doc = Document(file_obj)
+    lines = []
+
+    # 1) Normal paragraphs
+    for p in doc.paragraphs:
+        text = p.text.strip()
+        if text:
+            lines.append(text)
+
+    # 2) Text inside tables (this is where your fields are)
+    for table in doc.tables:
+        for row in table.rows:
+            cells = [c.text.strip() for c in row.cells]
+            if any(cells):
+                # e.g. "Название компании | Pakipek Group"
+                lines.append(" | ".join(cells))
+
+    # Debug: see exactly what GPT will get
+    return "\n".join(lines)
+
+
+def gpt_extract(raw_text: str) -> dict:
+    """
+    Expected input contains lines like:
+    'Название компании | Pakipek Group'
+    'Тел., Факс, е-мейл, сайт | T.:+9022..., F.:..., info@..., www...'
+
+    We want:
+    {
+        "name": "Pakipek Group",
+        "contact_info": "T.:+9022..., F.:..., info@..., www...",
+        "description": "short summary in Russian or empty"
+    }
+    """
+
+    system_prompt = """
+Ты — бот для извлечения данных из "Карточки поставщика".
+
+Тебе дают текст, который содержит строки формата:
+- "Название компании | Pakipek Group"
+- "Тел., Факс, е-мейл, сайт | T.:+9022..., F.:..., info@..., www..."
+
+Нужно:
+- name: значение из строки, которая начинается с "Название компании"
+- contact_info: значение из строки, которая начинается с "Тел., Факс, е-мейл, сайт"
+- description: очень короткое описание поставщика и вида продукции на русском.
+  Можно использовать любые другие строки (например, вид продукции, примечания).
+  Если подходящей информации нет — вернуть пустую строку.
+
+Если какого-то поля нет в тексте, верни пустую строку "".
+
+Ответь **строго валидным JSON** вида:
+{"name": "...", "contact_info": "...", "description": "..."} и ничего больше.
+    """
+
+    resp = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": raw_text},
+        ],
+    )
+
+    content = resp.choices[0].message.content
+    data = json.loads(content)
+
+    return {
+        "name": data.get("name", "") or "",
+        "contact_info": data.get("contact_info", "") or "",
+        "description": data.get("description", "") or "",
+    }
+
+@login_required
+@require_POST
+def supplier_extract(request):
+    file = request.FILES.get("file")
+    if not file:
+        return JsonResponse({"success": False, "error": "No file uploaded"}, status=400)
+
+    try:
+        raw_text = extract_text_from_docx(file)
+        extracted = gpt_extract(raw_text)
+
+        return JsonResponse({
+            "success": True,
+            "name": extracted["name"],
+            "contact_info": extracted["contact_info"],
+            "description": extracted["description"],
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=500)
 
 @method_decorator([login_required, keeper_required], name='dispatch')
 class SupplierDetailView(DetailView):
